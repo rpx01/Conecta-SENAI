@@ -6,6 +6,10 @@ class GerenciadorInstrutores {
 
         this.tabelaBody = document.getElementById('tabelaCorpoDocente');
         this.btnAdicionar = document.getElementById('btnAdicionarNovo');
+        this.btnAplicarFiltros = document.getElementById('btnAplicarFiltros');
+        this.btnLimparFiltros = document.getElementById('btnLimparFiltros');
+        this.filtroNome = document.getElementById('filtroNome');
+        this.filtroStatus = document.getElementById('filtroStatus');
         this.modalInstrutor = new bootstrap.Modal(document.getElementById('modalInstrutor'));
         this.modalExcluir = new bootstrap.Modal(document.getElementById('modalExcluirInstrutor'));
         this.form = document.getElementById('formInstrutor');
@@ -18,6 +22,12 @@ class GerenciadorInstrutores {
 
     registrarEventos() {
         this.btnAdicionar.addEventListener('click', () => this.novoInstrutor());
+        if (this.btnAplicarFiltros) {
+            this.btnAplicarFiltros.addEventListener('click', () => this.aplicarFiltros());
+        }
+        if (this.btnLimparFiltros) {
+            this.btnLimparFiltros.addEventListener('click', () => this.limparFiltros());
+        }
         this.form.addEventListener('submit', (e) => {
             e.preventDefault();
             this.salvarInstrutor();
@@ -67,9 +77,9 @@ class GerenciadorInstrutores {
         `;
     }
 
-    renderizarTabela() {
+    renderizarTabela(lista = this.instrutores) {
         this.tabelaBody.innerHTML = '';
-        this.instrutores.forEach(inst => {
+        lista.forEach(inst => {
             const row = document.createElement('tr');
             row.dataset.id = inst.id;
             row.innerHTML = `
@@ -93,6 +103,23 @@ class GerenciadorInstrutores {
         } catch (err) {
             exibirAlerta('Erro ao carregar instrutores', 'danger');
         }
+    }
+
+    aplicarFiltros() {
+        const termo = (this.filtroNome.value || '').toLowerCase();
+        const status = this.filtroStatus.value;
+        const filtrados = this.instrutores.filter(i => {
+            const matchNome = i.nome.toLowerCase().includes(termo);
+            const matchStatus = !status || i.status === status;
+            return matchNome && matchStatus;
+        });
+        this.renderizarTabela(filtrados);
+    }
+
+    limparFiltros() {
+        if (this.filtroNome) this.filtroNome.value = '';
+        if (this.filtroStatus) this.filtroStatus.value = '';
+        this.renderizarTabela();
     }
 
     novoInstrutor() {

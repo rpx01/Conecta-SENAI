@@ -5,7 +5,14 @@ document.addEventListener('DOMContentLoaded', () => {
     verificarPermissaoAdmin();
 
     const confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
+    const turmaModal = new bootstrap.Modal(document.getElementById('turmaModal'));
     let turmaParaExcluir = null;
+
+    document.getElementById('turmaModal').addEventListener('hidden.bs.modal', () => {
+        document.getElementById('turmaForm').reset();
+        document.getElementById('turmaId').value = '';
+        document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
+    });
 
     function renderizarLinhaTurma(turma) {
         return `
@@ -68,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('turmaForm').reset();
             document.getElementById('turmaId').value = '';
             document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
+            turmaModal.hide();
             carregarTurmas();
         } catch (error) {
             exibirAlerta(`Erro ao salvar turma: ${error.message}`, 'danger');
@@ -83,7 +91,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('turmaId').value = id;
         document.getElementById('nomeTurma').value = nome;
         document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-check-circle me-2"></i>Atualizar';
+        turmaModal.show();
         document.getElementById('nomeTurma').focus();
+    };
+
+    window.novaTurma = function() {
+        document.getElementById('turmaForm').reset();
+        document.getElementById('turmaId').value = '';
+        document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
+        turmaModal.show();
     };
 
     window.confirmarExclusao = function(id, nome) {

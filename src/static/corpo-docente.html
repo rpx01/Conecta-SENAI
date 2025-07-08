@@ -102,7 +102,7 @@
             </div>
 
             <main class="col-lg-9 col-md-12">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="page-header">
                     <h2 class="mb-0">Gestão de Corpo Docente</h2>
                     <button id="btnAdicionarNovo" class="btn btn-primary">
                         <i class="bi bi-plus-circle me-2"></i>NOVO INSTRUTOR
@@ -114,6 +114,28 @@
                         <h5 class="card-title mb-0"><i class="bi bi-funnel me-2"></i>Filtros</h5>
                     </div>
                     <div class="card-body">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                <label for="filtroNome" class="form-label">Nome</label>
+                                <input type="text" class="form-control" id="filtroNome" placeholder="Nome do instrutor">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="filtroStatus" class="form-label">Status</label>
+                                <select id="filtroStatus" class="form-select">
+                                    <option value="">Todos</option>
+                                    <option value="ativo">Ativo</option>
+                                    <option value="inativo">Inativo</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5 text-end">
+                                <button id="btnAplicarFiltros" type="button" class="btn btn-primary me-2">
+                                    <i class="bi bi-search me-1"></i>Filtrar
+                                </button>
+                                <button id="btnLimparFiltros" type="button" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle me-1"></i>Limpar
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

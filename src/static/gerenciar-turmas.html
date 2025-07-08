@@ -111,17 +111,41 @@
             
             <main class="col-lg-9 col-md-12">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h1 class="mb-0">Gerenciar Turmas</h1>
+                    <h2 class="mb-0">Gerenciar Turmas</h2>
                     <button class="btn btn-primary" onclick="novaTurma()">
-                        <i class="bi bi-plus-circle me-2"></i>Adicionar Turma
+                        <i class="bi bi-plus-circle me-2"></i>ADICIONAR TURMA
                     </button>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="bi bi-funnel me-2"></i>Filtros</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="filtroBusca" class="form-label">Buscar</label>
+                                <input type="text" class="form-control" id="filtroBusca" placeholder="Nome da turma...">
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button type="button" class="btn btn-primary me-2" onclick="aplicarFiltros()">
+                                    <i class="bi bi-search me-1"></i>Filtrar
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="limparFiltros()">
+                                    <i class="bi bi-x-circle me-1"></i>Limpar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="alertContainer"></div>
 
-                <div class="card">
+                <div class="card mt-4">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">Lista de Turmas</h5>
+                        <h5 class="card-title mb-0"><i class="bi bi-list me-2"></i>LISTA DE TURMAS</h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">

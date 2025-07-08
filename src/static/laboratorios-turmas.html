@@ -87,35 +87,49 @@
             </div>
             
             <main class="col-lg-9 col-md-12">
-                <h2 class="mb-4">Gerenciamento de Laboratórios e Turmas</h2>
-                
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">Gerenciamento de Laboratórios e Turmas</h2>
+                    <div>
+                        <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#laboratorioModal">
+                            <i class="bi bi-plus-circle me-2"></i>ADICIONAR LABORATÓRIO
+                        </button>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#turmaModal">
+                            <i class="bi bi-plus-circle me-2"></i>ADICIONAR TURMA
+                        </button>
+                    </div>
+                </div>
+
                 <div id="alertContainer"></div>
-                
+
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">Cadastro de Laboratórios</h5>
+                        <h5 class="card-title mb-0"><i class="bi bi-funnel me-2"></i>Filtros</h5>
                     </div>
                     <div class="card-body">
-                        <form id="laboratorioForm" class="row g-3 mb-4">
-                            <div class="col-md-8">
-                                <input type="hidden" id="laboratorioId">
-                                <label for="nomeLaboratorio" class="form-label">Nome do Laboratório</label>
-                                <input type="text" class="form-control" id="nomeLaboratorio" placeholder="Ex: Lab 01" required>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="filtroBusca" class="form-label">Buscar</label>
+                                <input type="text" class="form-control" id="filtroBusca" placeholder="Nome...">
                             </div>
-                            <div class="col-md-5">
-                                <label for="classeIconeLaboratorio" class="form-label">Classe do Ícone</label>
-                                <input type="text" class="form-control" id="classeIconeLaboratorio" placeholder="Ex: bi-robot">
-                                <small class="form-text text-muted">
-                                    Cole a classe do <a href="https://icons.getbootstrap.com/" target="_blank">Bootstrap Icons</a> aqui.
-                                </small>
-                            </div>
-                            <div class="col-md-4 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary w-100" id="btnSalvarLaboratorio">
-                                    <i class="bi bi-plus-circle me-2"></i>Adicionar
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button type="button" class="btn btn-primary me-2" onclick="aplicarFiltros()">
+                                    <i class="bi bi-search me-1"></i>Filtrar
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="limparFiltros()">
+                                    <i class="bi bi-x-circle me-1"></i>Limpar
                                 </button>
                             </div>
-                        </form>
-                        
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="bi bi-list me-2"></i>LISTA DE LABORATÓRIOS</h5>
+                    </div>
+                    <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-striped table-hover">
                                 <thead>
@@ -139,25 +153,12 @@
                         </div>
                     </div>
                 </div>
-                
-                <div class="card">
+
+                <div class="card mt-4">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">Cadastro de Turmas</h5>
+                        <h5 class="card-title mb-0"><i class="bi bi-list me-2"></i>LISTA DE TURMAS</h5>
                     </div>
                     <div class="card-body">
-                        <form id="turmaForm" class="row g-3 mb-4">
-                            <div class="col-md-8">
-                                <input type="hidden" id="turmaId">
-                                <label for="nomeTurma" class="form-label">Nome da Turma</label>
-                                <input type="text" class="form-control" id="nomeTurma" placeholder="Ex: Informática 3º Ano" required>
-                            </div>
-                            <div class="col-md-4 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary w-100" id="btnSalvarTurma">
-                                    <i class="bi bi-plus-circle me-2"></i>Adicionar
-                                </button>
-                            </div>
-                        </form>
-                        
                         <div class="table-responsive">
                             <table class="table table-striped table-hover">
                                 <thead>
@@ -211,6 +212,67 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-danger" id="btnConfirmarExclusao">Excluir</button>
+                </div>
+            </div>
+</div>
+</div>
+
+    <div class="modal fade" id="laboratorioModal" tabindex="-1" aria-labelledby="laboratorioModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="laboratorioModalLabel">Novo Laboratório</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="laboratorioForm" class="row g-3">
+                        <input type="hidden" id="laboratorioId">
+                        <div class="col-12">
+                            <label for="nomeLaboratorio" class="form-label">Nome do Laboratório</label>
+                            <input type="text" class="form-control" id="nomeLaboratorio" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="classeIconeLaboratorio" class="form-label">Classe do Ícone</label>
+                            <input type="text" class="form-control" id="classeIconeLaboratorio">
+                            <small class="form-text text-muted">
+                                Cole a classe do <a href="https://icons.getbootstrap.com/" target="_blank">Bootstrap Icons</a> aqui.
+                            </small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="laboratorioForm" class="btn btn-primary" id="btnSalvarLaboratorio">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        <span class="btn-text"><i class="bi bi-plus-circle me-2"></i>Adicionar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="turmaModal" tabindex="-1" aria-labelledby="turmaModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="turmaModalLabel">Nova Turma</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="turmaForm" class="row g-3">
+                        <input type="hidden" id="turmaId">
+                        <div class="col-12">
+                            <label for="nomeTurma" class="form-label">Nome da Turma</label>
+                            <input type="text" class="form-control" id="nomeTurma" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="turmaForm" class="btn btn-primary" id="btnSalvarTurma">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        <span class="btn-text"><i class="bi bi-plus-circle me-2"></i>Adicionar</span>
+                    </button>
                 </div>
             </div>
         </div>

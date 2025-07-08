@@ -1,4 +1,4 @@
-# Agenda_SENAI
+# Conecta_SENAI
 Agenda de laboratórios e salas do SENAI
 
 ## Changelog

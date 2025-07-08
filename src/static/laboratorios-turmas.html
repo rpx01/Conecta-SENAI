@@ -87,35 +87,28 @@
             </div>
             
             <main class="col-lg-9 col-md-12">
-                <h2 class="mb-4">Gerenciamento de Laboratórios e Turmas</h2>
-                
-                <div id="alertContainer"></div>
-                
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">Gerenciamento de Laboratórios e Turmas</h2>
+                    <button class="btn btn-primary" onclick="novoLaboratorio()">
+                        <i class="bi bi-plus-circle me-2"></i>NOVO LABORATÓRIO
+                    </button>
+                </div>
+
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">Cadastro de Laboratórios</h5>
+                        <h5 class="card-title mb-0"><i class="bi bi-funnel me-2"></i>Filtros</h5>
                     </div>
                     <div class="card-body">
-                        <form id="laboratorioForm" class="row g-3 mb-4">
-                            <div class="col-md-8">
-                                <input type="hidden" id="laboratorioId">
-                                <label for="nomeLaboratorio" class="form-label">Nome do Laboratório</label>
-                                <input type="text" class="form-control" id="nomeLaboratorio" placeholder="Ex: Lab 01" required>
-                            </div>
-                            <div class="col-md-5">
-                                <label for="classeIconeLaboratorio" class="form-label">Classe do Ícone</label>
-                                <input type="text" class="form-control" id="classeIconeLaboratorio" placeholder="Ex: bi-robot">
-                                <small class="form-text text-muted">
-                                    Cole a classe do <a href="https://icons.getbootstrap.com/" target="_blank">Bootstrap Icons</a> aqui.
-                                </small>
-                            </div>
-                            <div class="col-md-4 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary w-100" id="btnSalvarLaboratorio">
-                                    <i class="bi bi-plus-circle me-2"></i>Adicionar
-                                </button>
-                            </div>
-                        </form>
-                        
+                    </div>
+                </div>
+
+                <div id="alertContainer"></div>
+
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="bi bi-list me-2"></i>LISTA DE LABORATÓRIOS</h5>
+                    </div>
+                    <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-striped table-hover">
                                 <thead>
@@ -139,25 +132,13 @@
                         </div>
                     </div>
                 </div>
-                
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Cadastro de Turmas</h5>
+
+                <div class="card mt-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0"><i class="bi bi-list me-2"></i>LISTA DE TURMAS</h5>
+                        <button class="btn btn-primary btn-sm" onclick="novaTurma()"><i class="bi bi-plus-circle me-2"></i>NOVA TURMA</button>
                     </div>
-                    <div class="card-body">
-                        <form id="turmaForm" class="row g-3 mb-4">
-                            <div class="col-md-8">
-                                <input type="hidden" id="turmaId">
-                                <label for="nomeTurma" class="form-label">Nome da Turma</label>
-                                <input type="text" class="form-control" id="nomeTurma" placeholder="Ex: Informática 3º Ano" required>
-                            </div>
-                            <div class="col-md-4 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary w-100" id="btnSalvarTurma">
-                                    <i class="bi bi-plus-circle me-2"></i>Adicionar
-                                </button>
-                            </div>
-                        </form>
-                        
+                    <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-striped table-hover">
                                 <thead>
@@ -216,6 +197,65 @@
         </div>
     </div>
 
+    <div class="modal fade" id="laboratorioModal" tabindex="-1" aria-labelledby="laboratorioModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="laboratorioModalLabel">Novo Laboratório</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="laboratorioForm">
+                        <input type="hidden" id="laboratorioId">
+                        <div class="mb-3">
+                            <label for="nomeLaboratorio" class="form-label">Nome do Laboratório</label>
+                            <input type="text" class="form-control" id="nomeLaboratorio" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="classeIconeLaboratorio" class="form-label">Classe do Ícone</label>
+                            <input type="text" class="form-control" id="classeIconeLaboratorio">
+                            <small class="form-text text-muted">
+                                Cole a classe do <a href="https://icons.getbootstrap.com/" target="_blank">Bootstrap Icons</a> aqui.
+                            </small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="laboratorioForm" class="btn btn-primary" id="btnSalvarLaboratorio">
+                        <i class="bi bi-plus-circle me-2"></i>Adicionar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="turmaModal" tabindex="-1" aria-labelledby="turmaModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="turmaModalLabel">Nova Turma</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="turmaForm">
+                        <input type="hidden" id="turmaId">
+                        <div class="mb-3">
+                            <label for="nomeTurma" class="form-label">Nome da Turma</label>
+                            <input type="text" class="form-control" id="nomeTurma" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="turmaForm" class="btn btn-primary" id="btnSalvarTurma">
+                        <i class="bi bi-plus-circle me-2"></i>Adicionar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.4/dist/purify.min.js"></script>
     <script src="/js/app.js"></script>
@@ -227,6 +267,8 @@
             
             // Variáveis para controle dos modais
             const confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
+            const laboratorioModal = new bootstrap.Modal(document.getElementById('laboratorioModal'));
+            const turmaModal = new bootstrap.Modal(document.getElementById('turmaModal'));
             let itemParaExcluir = { tipo: null, id: null };
             
             // Carrega os dados iniciais
@@ -356,6 +398,7 @@
                     document.getElementById('laboratorioForm').reset();
                     document.getElementById('laboratorioId').value = '';
                     document.getElementById('btnSalvarLaboratorio').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
+                    laboratorioModal.hide();
                     carregarLaboratorios();
                 } catch (error) {
                     exibirAlerta(`Erro ao salvar laboratório: ${error.message}`, 'danger');
@@ -387,6 +430,7 @@
                     document.getElementById('turmaForm').reset();
                     document.getElementById('turmaId').value = '';
                     document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
+                    turmaModal.hide();
                     carregarTurmas();
                 } catch (error) {
                     exibirAlerta(`Erro ao salvar turma: ${error.message}`, 'danger');
@@ -399,6 +443,7 @@
                 document.getElementById('nomeLaboratorio').value = nome;
                 document.getElementById('classeIconeLaboratorio').value = classe || '';
                 document.getElementById('btnSalvarLaboratorio').innerHTML = '<i class="bi bi-check-circle me-2"></i>Atualizar';
+                laboratorioModal.show();
                 document.getElementById('nomeLaboratorio').focus();
             };
             
@@ -407,6 +452,7 @@
                 document.getElementById('turmaId').value = id;
                 document.getElementById('nomeTurma').value = nome;
                 document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-check-circle me-2"></i>Atualizar';
+                turmaModal.show();
                 document.getElementById('nomeTurma').focus();
             };
             
@@ -447,6 +493,20 @@
                     exibirAlerta(`Erro ao excluir turma: ${error.message}`, 'danger');
                 }
             }
+
+            window.novoLaboratorio = function() {
+                document.getElementById('laboratorioForm').reset();
+                document.getElementById('laboratorioId').value = '';
+                document.getElementById('btnSalvarLaboratorio').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
+                laboratorioModal.show();
+            };
+
+            window.novaTurma = function() {
+                document.getElementById('turmaForm').reset();
+                document.getElementById('turmaId').value = '';
+                document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
+                turmaModal.show();
+            };
         });
     </script>
     <script>

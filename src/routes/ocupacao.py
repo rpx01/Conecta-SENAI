@@ -218,8 +218,14 @@ def criar_ocupacao():
             return jsonify({'erro': 'Instrutor não encontrado'}), 404
     
     try:
-        data_inicio = datetime.strptime(payload.data_inicio, '%Y-%m-%d').date()
-        data_fim = datetime.strptime(payload.data_fim, '%Y-%m-%d').date()
+        data_inicio = (
+            datetime.strptime(payload.data_inicio, '%Y-%m-%d').date()
+            if payload.data_inicio else ocupacao_original.data
+        )
+        data_fim = (
+            datetime.strptime(payload.data_fim, '%Y-%m-%d').date()
+            if payload.data_fim else ocupacao_original.data
+        )
 
         if data_inicio > data_fim:
             return jsonify({'erro': 'Data de início deve ser anterior ou igual à data de fim'}), 400
@@ -359,8 +365,8 @@ def atualizar_ocupacao(id):
         # 6. Prepara os dados para a recriação.
         sala_id = payload.sala_id if payload.sala_id is not None else ocupacao_original.sala_id
         instrutor_id = payload.instrutor_id if payload.instrutor_id is not None else ocupacao_original.instrutor_id
-        data_inicio = datetime.strptime(payload.data_inicio, '%Y-%m-%d').date()
-        data_fim = datetime.strptime(payload.data_fim, '%Y-%m-%d').date()
+        data_inicio = payload.data_inicio and datetime.strptime(payload.data_inicio, "%Y-%m-%d").date() or ocupacao_original.data
+        data_fim = payload.data_fim and datetime.strptime(payload.data_fim, "%Y-%m-%d").date() or ocupacao_original.data
         turno = payload.turno if payload.turno is not None else ocupacao_original.get_turno()
 
         if data_inicio > data_fim:
@@ -415,6 +421,9 @@ def atualizar_ocupacao(id):
             'ocupacoes': [o.to_dict() for o in ocupacoes_criadas]
         }), 200
 
+    except ValueError as e:
+        db.session.rollback()
+        return jsonify({'erro': str(e)}), 400
     except Exception as e:
         # 10. Se qualquer passo falhar, desfaz tudo (rollback).
         db.session.rollback()

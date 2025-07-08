@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     verificarAutenticacao();
     verificarPermissaoAdmin();
 
+    let listaTurmas = [];
+
     const confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
     const turmaModal = new bootstrap.Modal(document.getElementById('turmaModal'));
     let turmaParaExcluir = null;
@@ -33,13 +35,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function carregarTurmas() {
-        await preencherTabela('turmasTable', '/turmas', renderizarLinhaTurma);
+        listaTurmas = await preencherTabela('turmasTable', '/turmas', renderizarLinhaTurma);
+        aplicarFiltros();
+    }
+
+    function atualizarTabela(lista) {
+        const tbody = document.getElementById('turmasTableBody');
+        tbody.innerHTML = '';
+        if (!lista || lista.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center">Nenhuma turma encontrada.</td></tr>`;
+            return;
+        }
+        lista.forEach(t => {
+            tbody.insertAdjacentHTML('beforeend', renderizarLinhaTurma(t));
+        });
+    }
+
+    function aplicarFiltros() {
+        const termo = (document.getElementById('filtroBusca').value || '').toLowerCase();
+        const filtradas = listaTurmas.filter(t => t.nome.toLowerCase().includes(termo));
+        atualizarTabela(filtradas);
+    }
+
+    function limparFiltros() {
+        document.getElementById('filtroBusca').value = '';
+        atualizarTabela(listaTurmas);
     }
 
     document.getElementById('turmaForm').addEventListener('submit', function(e) {
         e.preventDefault();
         salvarTurma();
     });
+
+    const btnFiltrar = document.getElementById('btnAplicarFiltros');
+    const btnLimpar = document.getElementById('btnLimparFiltros');
+    const inputBusca = document.getElementById('filtroBusca');
+    if (btnFiltrar) btnFiltrar.addEventListener('click', aplicarFiltros);
+    if (btnLimpar) btnLimpar.addEventListener('click', limparFiltros);
+    if (inputBusca) {
+        inputBusca.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') aplicarFiltros();
+        });
+    }
 
     document.getElementById('btnConfirmarExclusao').addEventListener('click', function() {
         if (turmaParaExcluir !== null) {

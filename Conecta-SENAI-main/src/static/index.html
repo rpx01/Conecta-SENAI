@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistema de Agenda de Laboratório</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAIEAYAAADIFSHsAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGYktHRAAAAAAAAPlDu38AAAAHdElNRQfpBgoBOhQj05UdAAADXUlEQVRIx92UbUzUdQDHP7/73zXgyjs6uPA8Kg82BgyYFDLNbt1YuWkOcqvZow8V4pouXYLQA3OSTHCGBBtl6RuaY7nVKtwCshU2EQRbK7BJhweUHOw87gTugfv/f72IttYbhRe59Xn/3b6f74uvsFpdrqam4ccBIK2DWyGRSNAe1Y7LfFjblWdZcQg2VjjrHKcheGGmLFoJ39T19nuq4KX3ntyYHYLwZ9FCNRcGbEMlXiukD6c6zQegs7TH5KkG+6b7ku+RMFY08W1wC/gGAlnhT2B3y7PHVo3AYdtHLT0GKGzLed9mg5ncuReijXCuqzc02giKouwXO27Z/l/4A7oF8c23nYkSQwMiRInB6oac6uXLQHVp3fIcBI7MPhx5HlIqLenGHkh6LfF0wna4kj9S7/saPMnX+wIDkOlytFqC8MzVJ5SMPZC119FniQNzeNlQXB8U3MjOSimGla22kyYV8iYziqz1kLIjadSYD9Yf7+1NMIAMy0xZu1jxv0k0LQxA2W1ndAgEiCThEdXQ++LPRde3grt2fHw6G9JrUucSi8HhsP9iPgOaTyuWd4N6VkuTN0GdVN+UzeCd8uXOlsLkO/7yuQdgnWvVyhWfgjESHzQkgLPpodX29XBjbfBgeBBcwwVj91+Eu07pm3XNIDvp4dpSxf+ps0TkZvbJzyGp3DwSPw0Pltl2m0YhWj7/lrofpk74j83lQNgebYhtg5QSi874FTh+tX9grofAczOm6Hpo93b/4K6BkTf+qAiYYPm2JI8xH7xW31NzVdB6vH3voAKqqtZrJyE+M67SUACzVaEP59uBt0Upa5Y+gH7RCQN6dCDShE+8C2fN5yfcW+DS5cGLE3qIbpiv0Log2DZ7JPI6nM+8/N24EwwX9BVKEELd4bZYB3T6e8qvbYXgyzNfRrbDgZKGNd/ng9KiuMXHMF8Tq9X6YfrKzRMRJwxYhgq9jaBoSp2YgtChyCNqKihduoO6XQC8upQhxF8nKOWikwo6BMhLDDIB8ieZIMtBbGCdcAAdtPA0yC+kX+4E+hnCCxwV+3gMyCNDJIP4XXSwC3DJV2gDeZVR/CBcFJAKwi3a2QkyKrOpBfkbY0yDOMwenCDOiKMUA2EixP7LAf4nLHyAP3Cni9wZYp1/AkYRW5V0uSBfAAAAAElFTkSuQmCC">
+    <link href="/css/styles.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="/selecao-sistema.html">
+                <img src="/img/senai-logo.png" alt="SENAI" height="28" class="me-2">
+                <span class="navbar-brand-text">Sistema de Agenda de Laboratório</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+    <li class="nav-item">
+        <a class="nav-link active" href="/index.html"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/calendario.html"><i class="bi bi-calendar3 me-1"></i> Calendário</a>
+    </li>
+    <li class="nav-item admin-only">
+        <a class="nav-link" href="/laboratorios-turmas.html"><i class="bi bi-building me-1"></i> Laboratórios e Turmas</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/novo-agendamento.html"><i class="bi bi-plus-circle me-1"></i> Novo Agendamento</a>
+    </li>
+</ul>
+
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle me-1"></i>
+                            <span id="userName">Usuário</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" href="/perfil.html">
+                                    <i class="bi bi-person me-2"></i> Meu Perfil
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="#" id="btnLogout">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Sair
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-lg-3 d-none d-lg-block">
+                <div class="sidebar rounded shadow-sm">
+                    <h5 class="mb-3">Menu Principal</h5>
+                    <div class="nav flex-column">
+                        <a class="nav-link active" href="/index.html">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                        <a class="nav-link" href="/calendario.html">
+                            <i class="bi bi-calendar3"></i> Calendário
+                        </a>
+                        <a class="nav-link admin-only" href="/laboratorios-turmas.html">
+                            <i class="bi bi-building"></i> Laboratórios e Turmas
+                        </a>
+                        <a class="nav-link" href="/novo-agendamento.html">
+                            <i class="bi bi-plus-circle"></i> Novo Agendamento
+                        </a>
+                        <a class="nav-link" href="/perfil.html">
+                            <i class="bi bi-person"></i> Meu Perfil
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <main class="col-lg-9">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Dashboard - Agenda de Laboratórios</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <a href="/novo-agendamento.html" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i> Novo Agendamento
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-lg-3 col-md-6 mb-4"><div class="card kpi-card">
+                        <div class="card-body"><div class="d-flex justify-content-between align-items-center">
+                            <div><h6 class="kpi-title text-uppercase">Laboratórios Ativos</h6><h2 class="kpi-number" id="totalLabsAtivos">-</h2></div>
+                            <i class="bi bi-display kpi-icon"></i>
+                        </div></div>
+                    </div></div>
+                    <div class="col-lg-3 col-md-6 mb-4"><div class="card kpi-card">
+                        <div class="card-body"><div class="d-flex justify-content-between align-items-center">
+                            <div><h6 class="kpi-title text-uppercase">Turmas Ativas</h6><h2 class="kpi-number" id="totalTurmasAtivas">-</h2></div>
+                            <i class="bi bi-people kpi-icon"></i>
+                        </div></div>
+                    </div></div>
+                    <div class="col-lg-3 col-md-6 mb-4"><div class="card kpi-card">
+                        <div class="card-body"><div class="d-flex justify-content-between align-items-center">
+                            <div><h6 class="kpi-title text-uppercase">Agendamentos Hoje</h6><h2 class="kpi-number" id="agendamentosHoje">-</h2></div>
+                            <i class="bi bi-calendar-check kpi-icon"></i>
+                        </div></div>
+                    </div></div>
+                    <div class="col-lg-3 col-md-6 mb-4"><div class="card kpi-card">
+                        <div class="card-body"><div class="d-flex justify-content-between align-items-center">
+                            <div><h6 class="kpi-title text-uppercase">Esta Semana</h6><h2 class="kpi-number" id="agendamentosSemana">-</h2></div>
+                            <i class="bi bi-calendar-week kpi-icon"></i>
+                        </div></div>
+                    </div></div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header"><h5 class="card-title mb-0"><i class="bi bi-clock me-2"></i>Próximos Agendamentos</h5></div>
+                            <div class="card-body" id="proximosAgendamentosContainer">
+                                </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header"><h5 class="card-title mb-0"><i class="bi bi-bar-chart me-2"></i>Laboratórios Mais Utilizados (Este Mês)</h5></div>
+                            <div class="card-body">
+                                <canvas id="graficoLabsMaisUtilizados" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header"><h5 class="card-title mb-0"><i class="bi bi-graph-up me-2"></i>Tendência Mensal de Agendamentos</h5></div>
+                            <div class="card-body">
+                                <canvas id="graficoTendenciaMensal" height="100"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <footer class="mt-5 py-3 bg-dark text-white">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; 2025 Sistema de Agenda de Laboratório</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">Versão 1.0</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <div class="modal fade" id="agendamentoModal" tabindex="-1" aria-labelledby="agendamentoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="agendamentoModalLabel">Detalhes do Agendamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body" id="agendamentoModalBody">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" id="btnEditarAgendamento">Editar</button>
+                    <button type="button" class="btn btn-danger" id="btnExcluirAgendamento">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmacaoModal" tabindex="-1" aria-labelledby="confirmacaoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmacaoModalLabel">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarExclusao">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.4/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/dashboard-laboratorios.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            carregarKpis();
+            carregarProximosAgendamentos();
+            carregarLabsMaisUtilizados();
+            carregarTendenciaMensal();
+            if (!isUserAdmin()) {
+                document.body.classList.add('read-only');
+            }
+        });
+    </script>
+    <div aria-live="polite" aria-atomic="true" class="position-relative">
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>
+</div>
+</body>
+</html>

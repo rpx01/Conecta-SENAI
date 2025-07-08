@@ -1,8 +1,8 @@
 
 :root {
-  --header-color: #003366;
-  --primary-color: #00539F;
-  --accent-color: #00A9E0;
+  --header-color: #164194;
+  --primary-color: #164194;
+  --accent-color: #008BD2;
   --secondary-color: #e6f4ff;
   --success-color: #52c41a;
   --danger-color: #ff4d4f;
@@ -20,7 +20,7 @@
 }
 
 body {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Gibson', 'Exo 2', Calibri, sans-serif;
   font-size: 14px;
   color: var(--text-color);
   background-color: var(--background-color);
@@ -34,7 +34,7 @@ body {
 }
 
 .card, .btn, .badge, .form-control, .form-select, .modal-content, .input-group-text {
-  border-radius: 0 !important;
+  border-radius: 4px;
 }
 
 
@@ -124,7 +124,7 @@ small, .small {
 
 .sidebar .nav-link.active::before {
   content: ">";
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Gibson', 'Exo 2', Calibri, sans-serif;
   color: var(--accent-color);
   font-weight: 900;
   margin-right: 8px;
@@ -139,7 +139,8 @@ small, .small {
 
 .card {
   border: 1px solid #dee2e6;
-  box-shadow: none;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   margin-bottom: 20px;
 }
 
@@ -218,7 +219,7 @@ small, .small {
 }
 
 .btn-group .btn {
-  border-radius: 0 !important;
+  border-radius: 4px !important;
 }
 
 .btn-group > .btn:not(:last-child) {
@@ -668,7 +669,7 @@ footer {
 }
 
 .fc-toolbar-title {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Gibson', 'Exo 2', Calibri, sans-serif;
   color: var(--primary-color);
 }
 .fc-button-primary {

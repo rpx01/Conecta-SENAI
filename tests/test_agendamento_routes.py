@@ -143,3 +143,57 @@ def test_delete_agendamento_non_owner_forbidden(client, non_admin_auth_headers, 
         headers=non_admin_auth_headers,
     )
     assert resp_forbidden.status_code == 403
+
+
+def test_non_admin_crud_own_agendamento(client, non_admin_auth_headers):
+    headers = non_admin_auth_headers
+
+    create_resp = client.post(
+        '/api/agendamentos',
+        json={
+            'data': date.today().isoformat(),
+            'laboratorio': 'LabUser',
+            'turma': '1X',
+            'turno': 'Manhã',
+            'horarios': ['08:00']
+        },
+        headers=headers,
+    )
+    assert create_resp.status_code == 201
+    ag_id = create_resp.get_json()['id']
+
+    update_resp = client.put(
+        f'/api/agendamentos/{ag_id}',
+        json={'turma': '1Y'},
+        headers=headers,
+    )
+    assert update_resp.status_code == 200
+    assert update_resp.get_json()['turma'] == '1Y'
+
+    delete_resp = client.delete(f'/api/agendamentos/{ag_id}', headers=headers)
+    assert delete_resp.status_code == 200
+
+
+def test_non_admin_update_other_forbidden(client, login_admin, non_admin_auth_headers):
+    token, _ = login_admin(client)
+    admin_headers = {'Authorization': f'Bearer {token}'}
+
+    resp = client.post(
+        '/api/agendamentos',
+        json={
+            'data': date.today().isoformat(),
+            'laboratorio': 'LabOut',
+            'turma': '3A',
+            'turno': 'Manhã',
+            'horarios': ['08:00']
+        },
+        headers=admin_headers,
+    )
+    ag_id = resp.get_json()['id']
+
+    resp_forbidden = client.put(
+        f'/api/agendamentos/{ag_id}',
+        json={'turma': '3B'},
+        headers=non_admin_auth_headers,
+    )
+    assert resp_forbidden.status_code == 403

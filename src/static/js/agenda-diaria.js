@@ -109,23 +109,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     const renderizarDetalhesDia = (agendamentosPorTurno) => {
         const dataFormatada = dataSelecionada.toISOString().split('T')[0];
+        const usuario = getUsuarioLogado();
         agendaContainer.innerHTML = ['Manhã', 'Tarde', 'Noite'].map(turno => {
             const dadosTurno = agendamentosPorTurno[turno] || { agendamentos: [], horarios_disponiveis: [] };
             return `
             <div class="card turno-card">
                 <div class="card-header">> ${turno.toUpperCase()}</div>
                 <div class="card-body">
-                    ${dadosTurno.agendamentos.length > 0 ? `<h6><i class="bi bi-calendar-x-fill"></i> Horários Ocupados</h6>` + dadosTurno.agendamentos.map(ag => `
+                    ${dadosTurno.agendamentos.length > 0 ? `<h6><i class="bi bi-calendar-x-fill"></i> Horários Ocupados</h6>` + dadosTurno.agendamentos.map(ag => {
+                        const podeGerenciar = isAdmin() || (usuario && ag.usuario_id === usuario.id);
+                        return `
                         <div class="agendamento-item">
                             <div class="agendamento-info">
                                 <strong>${escapeHTML(ag.turma_nome)}</strong><br>
                                 <span class="text-muted small"><i class="bi bi-clock-fill"></i> ${calcularIntervaloDeTempo(ag.horarios)}</span>
                             </div>
-                            <div class="agendamento-acoes btn-group">
+                            ${podeGerenciar ? `<div class="agendamento-acoes btn-group">
                                 <a href="/novo-agendamento.html?id=${ag.id}" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a>
                                 <button class="btn btn-sm btn-outline-danger btn-excluir" data-id="${ag.id}" title="Excluir"><i class="bi bi-trash"></i></button>
-                            </div>
-                        </div>`).join('') : ''
+                            </div>` : ''}
+                        </div>`;
+                    }).join('') : ''
                     }
                     <h6 class="${dadosTurno.agendamentos.length > 0 ? 'mt-4' : ''}"><i class="bi bi-calendar-check-fill"></i> Horários Disponíveis</h6>
                     ${dadosTurno.horarios_disponiveis.length > 0 ? dadosTurno.horarios_disponiveis.map(h => `<span class="badge bg-light text-dark border me-1 mb-1">${h}</span>`).join('') : '<p class="text-muted small">Todos os horários deste turno estão ocupados.</p>'}

@@ -518,38 +518,48 @@ def agenda_diaria_laboratorios():
 
 @agendamento_bp.route('/agendamentos/verificar-disponibilidade', methods=['GET'])
 def verificar_disponibilidade():
-    """
-    Verifica a disponibilidade de horários para um laboratório em uma data e turno específicos.
-    Retorna os agendamentos existentes para que o frontend possa determinar quais horários estão ocupados.
-    """
+    """Retorna horários já reservados para um laboratório/data/turno."""
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
-    
-    # Obtém os parâmetros da requisição
+
     data_str = request.args.get('data')
-    laboratorio = request.args.get('laboratorio')
+    laboratorio_nome = request.args.get('laboratorio')
     turno = request.args.get('turno')
-    
-    # Validação de parâmetros
-    if not all([data_str, laboratorio, turno]):
+
+    if not all([data_str, laboratorio_nome, turno]):
         return jsonify({'erro': 'Parâmetros incompletos. Forneça data, laboratorio e turno.'}), 400
-    
-    # Converte a data para o formato correto
+
     try:
         data = datetime.strptime(data_str, '%Y-%m-%d').date()
     except ValueError:
         return jsonify({'erro': 'Formato de data inválido. Use YYYY-MM-DD'}), 400
-    
-    # Consulta agendamentos existentes para o laboratório, data e turno especificados
+
+    laboratorio_obj = Laboratorio.query.filter_by(nome=laboratorio_nome).first()
+
     agendamentos = Agendamento.query.filter(
         Agendamento.data == data,
-        Agendamento.laboratorio == laboratorio,
+        Agendamento.laboratorio == laboratorio_nome,
         Agendamento.turno == turno
     ).all()
 
-    # Retorna os agendamentos encontrados
-    return jsonify([a.to_dict() for a in agendamentos])
+    horarios_reservados = []
+    for ag in agendamentos:
+        try:
+            hrs = ag.horarios if isinstance(ag.horarios, list) else json.loads(ag.horarios)
+            if isinstance(hrs, list):
+                horarios_reservados.extend(hrs)
+        except Exception:
+            pass
+
+    horarios_reservados = sorted(set(horarios_reservados))
+
+    return jsonify({
+        'data': data.isoformat(),
+        'turno': turno,
+        'laboratorio_id': laboratorio_obj.id if laboratorio_obj else None,
+        'horarios_reservados': horarios_reservados,
+    })
 
 
 @agendamento_bp.route('/agendamentos/export', methods=['GET'])

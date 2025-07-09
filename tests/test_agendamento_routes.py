@@ -75,8 +75,10 @@ def test_verificar_disponibilidade_e_conflitos(client, login_admin):
         'turno': 'Manhã'
     }, headers=headers)
     assert resp_check.status_code == 200
-    resultados = resp_check.get_json()
-    assert any(a['id'] == ag_id for a in resultados)
+    dados = resp_check.get_json()
+    assert 'horarios_reservados' in dados
+    assert 'laboratorio_id' in dados
+    assert '08:00' in dados['horarios_reservados']
 
     # Consulta disponibilidade em data diferente (deve estar livre)
     resp_livre = client.get('/api/agendamentos/verificar-disponibilidade', query_string={
@@ -85,7 +87,8 @@ def test_verificar_disponibilidade_e_conflitos(client, login_admin):
         'turno': 'Manhã'
     }, headers=headers)
     assert resp_livre.status_code == 200
-    assert resp_livre.get_json() == []
+    dados_livres = resp_livre.get_json()
+    assert dados_livres['horarios_reservados'] == []
 
     # Tenta criar agendamento parcialmente sobreposto
     resp_conf = client.post('/api/agendamentos', json={

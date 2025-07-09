@@ -182,6 +182,7 @@
             let modoEdicao = false;
             let agendamentoId = null;
             let horariosOcupados = [];
+            let horariosAgendamentoAtual = [];
             
             // Horários disponíveis por turno
             const horariosPorTurno = {
@@ -397,31 +398,12 @@
                 }
 
                 try {
-                    // Busca os agendamentos existentes para o laboratório, data e turno selecionados
-                    const agendamentosExistentes = await chamarAPI(`/agendamentos/verificar-disponibilidade?data=${data}&laboratorio=${encodeURIComponent(laboratorio)}&turno=${encodeURIComponent(turno)}`);
-                    
-                    // Extrai os horários já ocupados
-                    horariosOcupados = [];
-                    agendamentosExistentes.forEach(agendamento => {
-                        try {
-                            const horarios = JSON.parse(agendamento.horarios);
-                            horariosOcupados = [...horariosOcupados, ...horarios];
-                        } catch (e) {
-                            console.error('Erro ao processar horários:', e);
-                        }
-                    });
-                    
-                    // Se estiver em modo de edição, não considera os horários do próprio agendamento como ocupados
-                    if (modoEdicao && agendamentoId) {
-                        const agendamentoAtual = agendamentosExistentes.find(a => a.id === parseInt(agendamentoId));
-                        if (agendamentoAtual) {
-                            try {
-                                const horariosAtuais = JSON.parse(agendamentoAtual.horarios);
-                                horariosOcupados = horariosOcupados.filter(h => !horariosAtuais.includes(h));
-                            } catch (e) {
-                                console.error('Erro ao processar horários do agendamento atual:', e);
-                            }
-                        }
+                    const resultado = await chamarAPI(`/agendamentos/verificar-disponibilidade?data=${data}&laboratorio=${encodeURIComponent(laboratorio)}&turno=${encodeURIComponent(turno)}`);
+
+                    horariosOcupados = Array.isArray(resultado.horarios_reservados) ? resultado.horarios_reservados : [];
+
+                    if (modoEdicao && horariosAgendamentoAtual.length > 0) {
+                        horariosOcupados = horariosOcupados.filter(h => !horariosAgendamentoAtual.includes(h));
                     }
                     
                     // Renderiza os horários disponíveis
@@ -532,13 +514,15 @@
                         document.getElementById('turma').value = agendamento.turma;
                         document.getElementById('turno').value = agendamento.turno;
 
+                        // Guarda horários atuais para que não sejam considerados ocupados
+                        horariosAgendamentoAtual = Array.isArray(agendamento.horarios) ? agendamento.horarios : JSON.parse(agendamento.horarios || '[]');
+
                         // Verifica horários disponíveis e renderiza os horários do turno
                         await verificarHorariosDisponiveis();
 
                         // Marca os horários selecionados
-                        const horariosSelecionados = JSON.parse(agendamento.horarios);
                         document.querySelectorAll('input[name="horarios"]').forEach(checkbox => {
-                            if (horariosSelecionados.includes(checkbox.value)) {
+                            if (horariosAgendamentoAtual.includes(checkbox.value)) {
                                 checkbox.checked = true;
                             }
                         });

@@ -15,7 +15,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.security import check_password_hash
 from src.utils.error_handler import handle_internal_error
 from src.auth import (
-    verificar_autenticacao,
+    verificar_autenticacao,  # noqa: F401 - reexportado para outros módulos
     verificar_admin,
     login_required,
     admin_required,

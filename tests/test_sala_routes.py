@@ -51,7 +51,7 @@ def test_criar_sala_dados_invalidos(client, login_admin):
 def test_atualizar_sala_nome_duplicado(client, login_admin):
     token, _ = login_admin(client)
     headers = {'Authorization': f'Bearer {token}'}
-    r1 = client.post('/api/salas', json={'nome': 'SalaA', 'capacidade': 10}, headers=headers)
+    client.post('/api/salas', json={'nome': 'SalaA', 'capacidade': 10}, headers=headers)
     r2 = client.post('/api/salas', json={'nome': 'SalaB', 'capacidade': 10}, headers=headers)
     sala_b = r2.get_json()['id']
     resp = client.put(f'/api/salas/{sala_b}', json={'nome': 'SalaA'}, headers=headers)

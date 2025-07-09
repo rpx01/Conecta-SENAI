@@ -1,14 +1,13 @@
 """
 Inicializa a aplicacao Flask e registra os blueprints.
 """
+import os
+import logging
 from flask import Flask
 from flask_migrate import Migrate
 from src.limiter import limiter
-import os
-import logging
 
 from src.models import db
-migrate = Migrate()
 from src.routes.agendamento import agendamento_bp
 from src.routes.instrutor import instrutor_bp
 from src.routes.laboratorio import laboratorio_bp
@@ -18,6 +17,8 @@ from src.routes.sala import sala_bp
 from src.routes.turma import turma_bp
 from src.routes.user import user_bp
 from src.models.recurso import Recurso
+
+migrate = Migrate()
 
 def create_admin(app):
     """Cria o usuário administrador padrão de forma idempotente."""

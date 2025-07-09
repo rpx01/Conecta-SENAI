@@ -1,5 +1,5 @@
 """Rotas para gerenciamento de ocupacoes de salas."""
-from flask import Blueprint, request, jsonify, make_response, send_file, current_app
+from flask import Blueprint, request, jsonify, make_response, send_file
 from src.models import db
 from src.models.ocupacao import Ocupacao
 from src.models.sala import Sala
@@ -47,7 +47,6 @@ def listar_ocupacoes():
     data_inicio_str = request.args.get('data_inicio')
     data_fim_str = request.args.get('data_fim')
     sala_id = request.args.get('sala_id', type=int)
-    turno = request.args.get('turno')
     instrutor_id = request.args.get('instrutor_id', type=int)
     status = request.args.get('status')
     tipo_ocupacao = request.args.get('tipo_ocupacao')

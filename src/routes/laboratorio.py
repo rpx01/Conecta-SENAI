@@ -1,7 +1,7 @@
 """Rotas para gerenciamento de laboratorios."""
-from flask import Blueprint, request, jsonify, g
+from flask import Blueprint, request, jsonify
 from src.models import db
-from src.models.laboratorio_turma import Laboratorio, Turma
+from src.models.laboratorio_turma import Laboratorio
 from src.auth import login_required, admin_required
 from sqlalchemy.exc import SQLAlchemyError
 from src.utils.error_handler import handle_internal_error
@@ -39,8 +39,6 @@ def criar_laboratorio():
     Cria um novo laboratório.
     Apenas administradores podem criar laboratórios.
     """
-    user = g.current_user
-    
     data = request.json
     
     # Validação de dados
@@ -71,8 +69,6 @@ def atualizar_laboratorio(id):
     Atualiza um laboratório existente.
     Apenas administradores podem atualizar laboratórios.
     """
-    user = g.current_user
-    
     laboratorio = db.session.get(Laboratorio, id)
     if not laboratorio:
         return jsonify({'erro': 'Laboratório não encontrado'}), 404
@@ -105,8 +101,6 @@ def remover_laboratorio(id):
     Remove um laboratório.
     Apenas administradores podem remover laboratórios.
     """
-    user = g.current_user
-    
     laboratorio = db.session.get(Laboratorio, id)
     if not laboratorio:
         return jsonify({'erro': 'Laboratório não encontrado'}), 404

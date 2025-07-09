@@ -82,30 +82,27 @@ small, .small {
   color: #ffffff;
 }
 
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+  min-width: 0;
+}
+
 .navbar-brand img {
   height: 30px;
   margin-right: 10px;
 }
 
-/* Garante que nomes de sistema longos não ultrapassem a barra lateral */
 .navbar-brand-text {
-  display: inline-block;
-  max-width: 220px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-@media (max-width: 991.98px) {
+@media (max-width: 600px) {
   .navbar-brand-text {
-    max-width: 180px;
-  }
-}
-
-@media (max-width: 767.98px) {
-  .navbar-brand-text {
-    max-width: 140px;
-    font-size: 0.9rem;
+    display: none;
   }
 }
 

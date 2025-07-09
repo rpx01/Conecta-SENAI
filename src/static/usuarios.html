@@ -15,7 +15,7 @@
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="/selecao-sistema.html">
                 <img src="/img/senai-logo.png" alt="SENAI" height="28" class="me-2">
-                <span class="navbar-brand-text">Gerenciamento de Usuários</span>
+                <span class="navbar-brand-text" title="Gerenciamento de Usuários">Gerenciamento de Usuários</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -153,10 +153,6 @@
                             <input type="email" class="form-control" id="email" name="email" required>
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Nome de Usuário</label>
-                            <input type="text" class="form-control" id="username" name="username" required>
-                        </div>
                         
                         <div class="mb-3">
                             <label for="senha" class="form-label">Senha</label>
@@ -282,21 +278,19 @@
                 const usuarioId = document.getElementById('usuarioId').value;
                 const nome = document.getElementById('nome').value;
                 const email = document.getElementById('email').value;
-                const username = document.getElementById('username').value;
                 const senha = document.getElementById('senha').value;
                 const tipo = document.getElementById('tipo').value;
-                
+
                 // Validação básica
-                if (!nome || !email || !username || (!usuarioId && !senha)) {
+                if (!nome || !email || (!usuarioId && !senha)) {
                     exibirAlerta('Preencha todos os campos obrigatórios', 'warning');
                     return;
                 }
-                
+
                 try {
                     const dadosUsuario = {
                         nome,
                         email,
-                        username,
                         tipo
                     };
                     
@@ -336,7 +330,6 @@
                     document.getElementById('usuarioId').value = usuario.id;
                     document.getElementById('nome').value = usuario.nome;
                     document.getElementById('email').value = usuario.email;
-                    document.getElementById('username').value = usuario.username;
                     document.getElementById('senha').value = '';
                     document.getElementById('tipo').value = usuario.tipo;
                     

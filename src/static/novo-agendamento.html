@@ -593,10 +593,10 @@
 });
 </script>
 <script>
+    // Usuários comuns também podem criar agendamentos, então
+    // não aplicamos o modo de apenas visualização nessa página
     document.addEventListener('DOMContentLoaded', () => {
-        if (!isUserAdmin()) {
-            document.body.classList.add('read-only');
-        }
+        // Nada a fazer aqui
     });
 </script>
 <div aria-live="polite" aria-atomic="true" class="position-relative">

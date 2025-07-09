@@ -216,9 +216,8 @@
             carregarProximosAgendamentos();
             carregarLabsMaisUtilizados();
             carregarTendenciaMensal();
-            if (!isUserAdmin()) {
-                document.body.classList.add('read-only');
-            }
+            // Usuários comuns também podem criar e editar agendamentos
+            // portanto não aplicamos o modo somente leitura aqui
         });
     </script>
     <div aria-live="polite" aria-atomic="true" class="position-relative">

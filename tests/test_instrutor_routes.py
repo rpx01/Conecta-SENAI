@@ -38,7 +38,7 @@ def test_criar_instrutor_dados_incompletos(client, app):
 
 def test_atualizar_instrutor_email_duplicado(client, app):
     headers = admin_headers(app)
-    r1 = client.post('/api/instrutores', json={'nome': 'A', 'email': 'a@example.com'}, headers=headers)
+    client.post('/api/instrutores', json={'nome': 'A', 'email': 'a@example.com'}, headers=headers)
     r2 = client.post('/api/instrutores', json={'nome': 'B', 'email': 'b@example.com'}, headers=headers)
     instrutor_b = r2.get_json()['id']
     resp = client.put(f'/api/instrutores/{instrutor_b}', json={'email': 'a@example.com'}, headers=headers)

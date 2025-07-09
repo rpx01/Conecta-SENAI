@@ -6,7 +6,7 @@ from src.models.sala import Sala
 from src.models.recurso import Recurso
 from src.models.ocupacao import Ocupacao
 from src.routes.user import verificar_autenticacao, verificar_admin
-from datetime import datetime, date, time
+from datetime import datetime, date
 from pydantic import ValidationError
 from src.schemas import SalaCreateSchema, SalaUpdateSchema
 

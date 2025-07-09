@@ -1,6 +1,6 @@
 import os
 import sys
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 import jwt
 
 import pytest

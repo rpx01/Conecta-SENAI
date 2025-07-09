@@ -22,7 +22,7 @@ def test_atualizar_turma_nome_duplicado(client, login_admin):
     token, _ = login_admin(client)
     headers = {'Authorization': f'Bearer {token}'}
 
-    r1 = client.post('/api/turmas', json={'nome': 'A'}, headers=headers)
+    client.post('/api/turmas', json={'nome': 'A'}, headers=headers)
     r2 = client.post('/api/turmas', json={'nome': 'B'}, headers=headers)
     turma_b = r2.get_json()['id']
 

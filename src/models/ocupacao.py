@@ -1,10 +1,6 @@
 """Modelo de ocupacao de sala."""
 from src.models import db
-from src.models.user import User
-from src.models.sala import Sala
-from src.models.instrutor import Instrutor
 from datetime import datetime, date, time, timedelta
-import json
 
 # Mapeamento padrão de turnos utilizado em diversos pontos do sistema
 TURNOS_PADRAO = {

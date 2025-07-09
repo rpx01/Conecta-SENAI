@@ -592,13 +592,6 @@
     setTimeout(preencherCampos, 500);
 });
 </script>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        if (!isUserAdmin()) {
-            document.body.classList.add('read-only');
-        }
-    });
-</script>
 <div aria-live="polite" aria-atomic="true" class="position-relative">
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>
 </div>

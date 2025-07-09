@@ -3,6 +3,9 @@ import sys
 from datetime import datetime, timedelta
 import jwt
 
+os.environ['ADMIN_EMAIL'] = 'admin@example.com'
+os.environ['ADMIN_USERNAME'] = 'admin'
+
 import pytest
 from flask import Flask
 

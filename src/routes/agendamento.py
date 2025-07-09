@@ -492,7 +492,12 @@ def agenda_diaria_laboratorios():
 
         dados_finais[turno] = {
             "agendamentos": [
-                {"id": ag.id, "turma_nome": ag.turma, "horarios": ag.horarios}
+                {
+                    "id": ag.id,
+                    "turma_nome": ag.turma,
+                    "horarios": ag.horarios,
+                    "usuario_id": ag.usuario_id,
+                }
                 for ag in agendamentos_do_turno
             ],
             "horarios_disponiveis": horarios_disponiveis,

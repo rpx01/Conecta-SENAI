@@ -481,12 +481,18 @@ def agenda_diaria_laboratorios():
 
         horarios_ocupados = set()
         for ag in agendamentos_do_turno:
-            try:
-                horarios_agendados = json.loads(ag.horarios)
-                for h in horarios_agendados:
-                    horarios_ocupados.add(h)
-            except (json.JSONDecodeError, TypeError):
+            horarios_agendados = ag.horarios
+            if isinstance(horarios_agendados, str):
+                try:
+                    horarios_agendados = json.loads(horarios_agendados)
+                except json.JSONDecodeError:
+                    horarios_agendados = []
+
+            if not isinstance(horarios_agendados, list):
                 continue
+
+            for h in horarios_agendados:
+                horarios_ocupados.add(h)
 
         horarios_disponiveis = [h for h in horarios_possiveis if h not in horarios_ocupados]
 

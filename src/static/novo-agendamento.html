@@ -523,7 +523,7 @@
                     document.getElementById('data').value = agendamento.data.split('T')[0];
                     
                     // Aguarda o carregamento dos laboratórios e turmas antes de selecionar
-                    setTimeout(() => {
+                    setTimeout(async () => {
                         const labSelect = document.getElementById('laboratorio');
                         const optionLab = Array.from(labSelect.options).find(o => o.textContent === agendamento.laboratorio);
                         if (optionLab) {
@@ -531,28 +531,24 @@
                         }
                         document.getElementById('turma').value = agendamento.turma;
                         document.getElementById('turno').value = agendamento.turno;
-                        
+
                         // Verifica horários disponíveis e renderiza os horários do turno
-                        verificarHorariosDisponiveis();
-                        
+                        await verificarHorariosDisponiveis();
+
                         // Marca os horários selecionados
                         const horariosSelecionados = JSON.parse(agendamento.horarios);
-                        setTimeout(() => {
-                            document.querySelectorAll('input[name="horarios"]').forEach(checkbox => {
-                                if (horariosSelecionados.includes(checkbox.value)) {
-                                    checkbox.checked = true;
-                                }
-                            });
-                        }, 500);
-                        
+                        document.querySelectorAll('input[name="horarios"]').forEach(checkbox => {
+                            if (horariosSelecionados.includes(checkbox.value)) {
+                                checkbox.checked = true;
+                            }
+                        });
+
                         // Se for administrador, seleciona o usuário responsável
                         if (isAdmin() && agendamento.usuario_id) {
-                            setTimeout(() => {
-                                const selectUsuario = document.getElementById('usuario_id');
-                                if (selectUsuario) {
-                                    selectUsuario.value = agendamento.usuario_id;
-                                }
-                            }, 500);
+                            const selectUsuario = document.getElementById('usuario_id');
+                            if (selectUsuario) {
+                                selectUsuario.value = agendamento.usuario_id;
+                            }
                         }
                     }, 500);
                 } catch (error) {

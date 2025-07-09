@@ -190,3 +190,60 @@ def test_atualizar_usuario_senha_invalida(client):
     )
     assert resp_put.status_code == 400
     assert 'erro' in resp_put.get_json()
+
+
+def test_non_root_admin_cannot_downgrade_admin(client, login_admin):
+    # Root admin cria outro usuario e promove a admin
+    token_root, _ = login_admin(client)
+    headers_root = {'Authorization': f'Bearer {token_root}'}
+
+    resp_create = client.post(
+        '/api/usuarios',
+        json={'nome': 'Outro', 'email': 'outro@example.com', 'senha': 'Senha@123'},
+        environ_base={'REMOTE_ADDR': '1.1.1.13'},
+    )
+    assert resp_create.status_code == 201
+    novo_id = resp_create.get_json()['id']
+
+    resp_promote = client.put(
+        f'/api/usuarios/{novo_id}', json={'tipo': 'admin'}, headers=headers_root
+    )
+    assert resp_promote.status_code == 200
+
+    resp_login = client.post(
+        '/api/login', json={'email': 'outro@example.com', 'senha': 'Senha@123'}
+    )
+    token_new = resp_login.get_json()['token']
+    headers_new = {'Authorization': f'Bearer {token_new}'}
+
+    with client.application.app_context():
+        root_id = User.query.filter_by(username='admin').first().id
+
+    resp_downgrade = client.put(
+        f'/api/usuarios/{root_id}', json={'tipo': 'comum'}, headers=headers_new
+    )
+    assert resp_downgrade.status_code == 403
+
+
+def test_root_admin_can_downgrade_admin(client, login_admin):
+    token_root, _ = login_admin(client)
+    headers_root = {'Authorization': f'Bearer {token_root}'}
+
+    resp_create = client.post(
+        '/api/usuarios',
+        json={'nome': 'Temp', 'email': 'temp@example.com', 'senha': 'Senha@123'},
+        environ_base={'REMOTE_ADDR': '1.1.1.14'},
+    )
+    assert resp_create.status_code == 201
+    admin_id = resp_create.get_json()['id']
+
+    resp_promote = client.put(
+        f'/api/usuarios/{admin_id}', json={'tipo': 'admin'}, headers=headers_root
+    )
+    assert resp_promote.status_code == 200
+
+    resp_downgrade = client.put(
+        f'/api/usuarios/{admin_id}', json={'tipo': 'comum'}, headers=headers_root
+    )
+    assert resp_downgrade.status_code == 200
+    assert resp_downgrade.get_json()['tipo'] == 'comum'

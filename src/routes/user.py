@@ -1,5 +1,6 @@
 """Rotas para gerenciamento de usuarios."""
 from flask import Blueprint, request, jsonify, current_app, g
+import os
 
 from src.limiter import limiter
 import re
@@ -206,7 +207,26 @@ def atualizar_usuario(id):
     if 'tipo' in data and verificar_admin(user):
         if data['tipo'] not in ['comum', 'admin']:
             return jsonify({'erro': 'Tipo de usuário inválido'}), 400
-        usuario.tipo = data['tipo']
+
+        novo_tipo = data['tipo']
+
+        # Evita que administradores comuns rebaixem outros administradores
+        if usuario.tipo == 'admin' and novo_tipo == 'comum':
+            admin_email = os.getenv('ADMIN_EMAIL')
+            admin_username = os.getenv('ADMIN_USERNAME')
+            is_root = False
+            if admin_email and user.email == admin_email:
+                is_root = True
+            if admin_username and user.username == admin_username:
+                is_root = True
+
+            if not is_root:
+                return (
+                    jsonify({'erro': 'Você não tem permissão para rebaixar um administrador'}),
+                    403,
+                )
+
+        usuario.tipo = novo_tipo
     
     # Atualiza a senha se fornecida
     if 'senha' in data:

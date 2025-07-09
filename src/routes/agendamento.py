@@ -1,5 +1,5 @@
 """Rotas de agendamento de laboratorios."""
-from flask import Blueprint, request, jsonify, make_response, send_file
+from flask import Blueprint, request, jsonify, make_response, send_file, g
 from datetime import datetime, date, timedelta
 import json
 import calendar
@@ -13,6 +13,7 @@ from src.models.agendamento import Agendamento
 from src.models.laboratorio_turma import Laboratorio, Turma
 from src.models.user import User
 from src.routes.user import verificar_autenticacao, verificar_admin
+from src.auth import login_required
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import func, extract
 from src.utils.error_handler import handle_internal_error
@@ -61,15 +62,14 @@ def obter_agendamento(id):
     return jsonify(agendamento.to_dict())
 
 @agendamento_bp.route('/agendamentos', methods=['POST'])
+@login_required
 def criar_agendamento():
     """
     Cria um novo agendamento.
     Usuários comuns só podem criar agendamentos para si mesmos.
     Administradores podem criar agendamentos para qualquer usuário.
     """
-    autenticado, user = verificar_autenticacao(request)
-    if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
+    user = g.current_user
     
     data = request.json
     

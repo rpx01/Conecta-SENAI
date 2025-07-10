@@ -8,7 +8,7 @@ class OcupacaoCreateSchema(BaseModel):
     data_fim: str
     turno: str
     instrutor_id: Optional[int] = None
-    tipo_ocupacao: Optional[str] = 'aula_regular'
+    tipo_ocupacao: Optional[str] = None
     recorrencia: Optional[str] = 'unica'
     status: Optional[str] = 'confirmado'
     observacoes: Optional[str] = None

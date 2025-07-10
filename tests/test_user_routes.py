@@ -17,6 +17,16 @@ def test_criar_usuario(client):
     assert data['email'] == 'novo@example.com'
 
 
+def test_criar_usuario_senha_invalida(client):
+    resp = client.post(
+        '/api/usuarios',
+        json={'nome': 'Fraco', 'email': 'fraco@example.com', 'senha': 'curta'},
+        environ_base={'REMOTE_ADDR': '1.1.1.15'}
+    )
+    assert resp.status_code == 400
+    assert 'erro' in resp.get_json()
+
+
 def test_login(client):
     response = client.post('/api/login', json={'email': 'admin@example.com', 'senha': 'Password1!'})
     assert response.status_code == 200
@@ -63,13 +73,13 @@ def test_atualizar_senha_requer_verificacao(client):
     headers = {'Authorization': f'Bearer {token}'}
 
     # Falta senha_atual
-    resp_put = client.put(f'/api/usuarios/{user_id}', json={'senha': 'Nova1!'}, headers=headers)
+    resp_put = client.put(f'/api/usuarios/{user_id}', json={'senha': 'NovaSeg1!'}, headers=headers)
     assert resp_put.status_code == 400
 
     # Senha atual incorreta
     resp_put = client.put(
         f'/api/usuarios/{user_id}',
-        json={'senha': 'Nova1!', 'senha_atual': 'Errada1!'},
+        json={'senha': 'NovaSeg1!', 'senha_atual': 'Errada1!'},
         headers=headers,
     )
     assert resp_put.status_code == 403
@@ -77,13 +87,13 @@ def test_atualizar_senha_requer_verificacao(client):
     # Senha atual correta
     resp_put = client.put(
         f'/api/usuarios/{user_id}',
-        json={'senha': 'Nova1!', 'senha_atual': 'Original1!'},
+        json={'senha': 'NovaSeg1!', 'senha_atual': 'Original1!'},
         headers=headers,
     )
     assert resp_put.status_code == 200
 
     # login com nova senha deve funcionar
-    resp_login2 = client.post('/api/login', json={'email': 'teste@example.com', 'senha': 'Nova1!'})
+    resp_login2 = client.post('/api/login', json={'email': 'teste@example.com', 'senha': 'NovaSeg1!'})
     assert resp_login2.status_code == 200
 
 

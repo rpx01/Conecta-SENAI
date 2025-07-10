@@ -6,6 +6,7 @@ import logging
 from flask import Flask
 from flask_migrate import Migrate
 from src.limiter import limiter
+from src.redis_client import init_redis
 
 from src.models import db
 from src.routes.agendamento import agendamento_bp
@@ -84,6 +85,7 @@ def create_app():
 
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['REDIS_URL'] = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 
     secret_key = os.getenv('SECRET_KEY') or os.getenv('FLASK_SECRET_KEY')
     if not secret_key:
@@ -94,6 +96,7 @@ def create_app():
 
     db.init_app(app)
     migrate.init_app(app, db)
+    init_redis(app)
     limiter.init_app(app)
 
     app.register_blueprint(user_bp, url_prefix='/api')

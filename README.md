@@ -19,11 +19,14 @@ Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para detalhes das versões.
    export SECRET_KEY="sua-chave-secreta"
    export ADMIN_EMAIL="seu-email-admin"
    export ADMIN_PASSWORD="senha-segura"
+   export REDIS_URL="redis://localhost:6379/0"
    ```
 
    A aplicação também reconhece a variável `FLASK_SECRET_KEY`. Uma das duas deve estar definida; se nenhuma estiver presente, a aplicação aborta a inicialização. Use um valor longo e aleatório (por exemplo, `export SECRET_KEY=$(openssl rand -hex 32)`).
 
    Se `DATABASE_URL` não for informado ou estiver vazio, o sistema utiliza por padrão um banco SQLite local (`agenda_laboratorio.db`).
+
+   Um servidor Redis precisa estar ativo no endereço definido em `REDIS_URL` para que a limitação de requisições e a revogação de tokens funcionem corretamente.
 
 3. Execute as migrações do banco para criar as tabelas necessárias:
 

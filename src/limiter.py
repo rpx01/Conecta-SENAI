@@ -7,7 +7,7 @@ import os
 
 limiter = Limiter(
     get_remote_address,
-    storage_uri=os.environ.get("REDIS_URL", "memory://"),
+    storage_uri=os.environ.get("REDIS_URL", "redis://localhost:6379/0"),
     storage_options={"socket_connect_timeout": 30},
     strategy="fixed-window",
 )

@@ -12,15 +12,13 @@ Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para detalhes das versões.
    poetry install
    ```
 
-2. Defina as variáveis de ambiente antes de rodar a aplicação ou os testes:
+2. Copie o arquivo `.env.example` para `.env` e ajuste as variáveis de ambiente:
 
    ```bash
-   export DATABASE_URL="postgresql://usuario:senha@host:5432/banco"
-   export SECRET_KEY="sua-chave-secreta"
-   export ADMIN_EMAIL="seu-email-admin"
-   export ADMIN_PASSWORD="senha-segura"
-   export REDIS_URL="redis://localhost:6379/0"
+   cp .env.example .env
+   # edite o arquivo .env com seus dados
    ```
+Todas as variáveis disponíveis estão listadas em `.env.example`.
 
    A aplicação também reconhece a variável `FLASK_SECRET_KEY`. Uma das duas deve estar definida; se nenhuma estiver presente, a aplicação aborta a inicialização. Use um valor longo e aleatório (por exemplo, `export SECRET_KEY=$(openssl rand -hex 32)`).
 
@@ -57,13 +55,13 @@ Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para detalhes das versões.
 
 Uma alternativa é rodar a aplicação em um container Docker. Para construir a imagem execute:
 
-```bash
+   ```bash
 docker build -t agenda-senai .
 ```
 
 Em seguida, inicie o container usando as variáveis definidas em um arquivo `.env`:
 
-```bash
+   ```bash
 docker run -p 8000:8000 --env-file .env agenda-senai
 ```
 

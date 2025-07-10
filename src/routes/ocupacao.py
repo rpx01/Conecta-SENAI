@@ -5,7 +5,7 @@ from src.models.ocupacao import Ocupacao
 from src.models.sala import Sala
 from src.models.instrutor import Instrutor
 from src.routes.user import verificar_autenticacao, verificar_admin
-from src.utils.decorators import admin_required
+from src.auth import admin_required
 from sqlalchemy.exc import SQLAlchemyError
 from src.utils.error_handler import handle_internal_error
 from datetime import datetime, date, time, timedelta
@@ -190,7 +190,7 @@ def obter_ocupacao(id):
     return jsonify(dados)
 
 @ocupacao_bp.route('/ocupacoes', methods=['POST'])
-@admin_required()
+@admin_required
 def criar_ocupacao():
     """
     Cria uma nova ocupação.
@@ -318,7 +318,7 @@ def criar_ocupacao():
         return handle_internal_error(e)
 
 @ocupacao_bp.route('/ocupacoes/<int:id>', methods=['PUT'])
-@admin_required()
+@admin_required
 def atualizar_ocupacao(id):
     """
     Atualiza uma ocupação existente. Para garantir a consistência de agendamentos
@@ -430,7 +430,7 @@ def atualizar_ocupacao(id):
         db.session.rollback()
         return jsonify({'erro': f'Falha ao atualizar a ocupação: {str(e)}'}), 500
 @ocupacao_bp.route('/ocupacoes/<int:id>', methods=['DELETE'])
-@admin_required()
+@admin_required
 def remover_ocupacao(id):
     """
     Remove uma ocupação.

@@ -8,6 +8,7 @@ from src.routes.user import verificar_autenticacao, verificar_admin
 from src.auth import admin_required
 from sqlalchemy.exc import SQLAlchemyError
 from src.utils.error_handler import handle_internal_error
+from src.utils.audit import log_action
 from datetime import datetime, date, time, timedelta
 from pydantic import ValidationError
 from src.schemas import OcupacaoCreateSchema, OcupacaoUpdateSchema
@@ -16,7 +17,7 @@ from io import StringIO, BytesIO
 from openpyxl import Workbook
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-from sqlalchemy import and_, or_, func, extract
+from sqlalchemy import and_, or_, func, extract, desc
 
 ocupacao_bp = Blueprint('ocupacao', __name__)
 
@@ -308,6 +309,8 @@ def criar_ocupacao():
             dia += timedelta(days=1)
 
         db.session.commit()
+        for oc in ocupacoes_criadas:
+            log_action(user.id, 'create', 'Ocupacao', oc.id, oc.to_dict())
 
         return jsonify([o.to_dict() for o in ocupacoes_criadas]), 201
         
@@ -416,7 +419,9 @@ def atualizar_ocupacao(id):
         
         # 9. Comita a transação.
         db.session.commit()
-        
+        for oc in ocupacoes_criadas:
+            log_action(user.id, 'update', 'Ocupacao', oc.id, oc.to_dict())
+
         return jsonify({
             'mensagem': 'Ocupação atualizada com sucesso!',
             'ocupacoes': [o.to_dict() for o in ocupacoes_criadas]
@@ -457,10 +462,13 @@ def remover_ocupacao(id):
             ocupacoes = Ocupacao.query.filter_by(grupo_ocupacao_id=grupo_id).all()
 
         quantidade = len(ocupacoes)
+        dados = [oc.to_dict() for oc in ocupacoes]
         for oc in ocupacoes:
             db.session.delete(oc)
 
         db.session.commit()
+        for info in dados:
+            log_action(user.id, 'delete', 'Ocupacao', info['id'], info)
         return jsonify({'mensagem': 'Ocupação removida com sucesso', 'removidas': quantidade})
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -866,4 +874,36 @@ def obter_tendencia_ocupacoes():
         })
 
     return jsonify(dados_formatados)
+
+
+@ocupacao_bp.route('/dashboard/salas/utilizacao', methods=['GET'])
+def salas_utilizacao_mes():
+    """Retorna contagem de ocupações por sala no mês atual."""
+    autenticado, user = verificar_autenticacao(request)
+    if not autenticado:
+        return jsonify({'erro': 'Não autenticado'}), 401
+
+    if not verificar_admin(user):
+        return jsonify({'erro': 'Permissão negada'}), 403
+
+    hoje = date.today()
+    inicio_mes = hoje.replace(day=1)
+    if hoje.month == 12:
+        fim_mes = date(hoje.year + 1, 1, 1) - timedelta(days=1)
+    else:
+        fim_mes = date(hoje.year, hoje.month + 1, 1) - timedelta(days=1)
+
+    resultados = db.session.query(
+        Sala.nome,
+        func.count(Ocupacao.id).label('total')
+    ).join(Sala, Sala.id == Ocupacao.sala_id).filter(
+        Ocupacao.data >= inicio_mes,
+        Ocupacao.data <= fim_mes,
+        Ocupacao.status.in_(['confirmado', 'pendente'])
+    ).group_by(Sala.id, Sala.nome).order_by(desc('total')).all()
+
+    return jsonify([
+        {'sala': sala, 'total': total}
+        for sala, total in resultados
+    ])
 

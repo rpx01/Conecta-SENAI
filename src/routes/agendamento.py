@@ -17,6 +17,7 @@ from src.auth import login_required
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import func, extract
 from src.utils.error_handler import handle_internal_error
+from src.utils.audit import log_action
 
 agendamento_bp = Blueprint('agendamento', __name__)
 
@@ -126,6 +127,7 @@ def criar_agendamento():
         )
         db.session.add(novo_agendamento)
         db.session.commit()
+        log_action(user.id, 'create', 'Agendamento', novo_agendamento.id, novo_agendamento.to_dict())
         return jsonify(novo_agendamento.to_dict()), 201
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -202,6 +204,7 @@ def atualizar_agendamento(id):
     
     try:
         db.session.commit()
+        log_action(user.id, 'update', 'Agendamento', agendamento.id, agendamento.to_dict())
         return jsonify(agendamento.to_dict())
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -229,6 +232,7 @@ def remover_agendamento(id):
     try:
         db.session.delete(agendamento)
         db.session.commit()
+        log_action(user.id, 'delete', 'Agendamento', agendamento.id, agendamento.to_dict())
         return jsonify({'mensagem': 'Agendamento removido com sucesso'})
     except SQLAlchemyError as e:
         db.session.rollback()

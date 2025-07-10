@@ -310,6 +310,11 @@ def login():
             senha_ok = False
 
         if not senha_ok:
+            current_app.logger.warning(
+                "Tentativa de login inválida para %s do IP %s",
+                email,
+                request.remote_addr,
+            )
             return jsonify(success=False, message="Credenciais inválidas"), 401
 
         access_token = gerar_token_acesso(usuario)

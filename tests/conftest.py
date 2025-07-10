@@ -5,6 +5,7 @@ import jwt
 
 os.environ['ADMIN_EMAIL'] = 'admin@example.com'
 os.environ['ADMIN_USERNAME'] = 'admin'
+os.environ['DISABLE_REDIS'] = '1'
 
 import pytest
 from flask import Flask

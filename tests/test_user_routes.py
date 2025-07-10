@@ -1,6 +1,7 @@
 
 import jwt
 import uuid
+import logging
 from datetime import datetime, timedelta
 from src.models.user import User
 from src.routes.user import gerar_refresh_token
@@ -144,12 +145,18 @@ def test_login_dados_incompletos(client):
     assert 'message' in data
 
 
-def test_login_invalido(client):
-    resp = client.post('/api/login', json={'email': 'admin@example.com', 'senha': 'errada'})
+def test_login_invalido(client, caplog):
+    with caplog.at_level(logging.WARNING):
+        resp = client.post(
+            '/api/login',
+            json={'email': 'admin@example.com', 'senha': 'errada'},
+            environ_base={'REMOTE_ADDR': '2.2.2.2'},
+        )
     assert resp.status_code == 401
     data = resp.get_json()
     assert data['success'] is False
     assert 'message' in data
+    assert any('2.2.2.2' in rec.getMessage() for rec in caplog.records)
 
 
 def test_refresh_sem_token(client):

@@ -41,12 +41,8 @@ async function realizarLogin(email, senha) {
 
             console.log('Login response JSON:', response.status, data);
 
-            if (response.ok && data && data.token) {
+            if (response.ok && data) {
                 // Armazena os dados do usuário no localStorage
-                localStorage.setItem('token', data.token);
-                if (data.refresh_token) {
-                    localStorage.setItem('refresh_token', data.refresh_token);
-                }
                 localStorage.setItem('usuario', JSON.stringify(data.usuario));
                 localStorage.setItem('isAdmin', data.usuario.tipo === 'admin');
 
@@ -83,16 +79,10 @@ async function realizarLogin(email, senha) {
  * Realiza o logout do usuário
  */
 function realizarLogout() {
-    const refresh = localStorage.getItem('refresh_token');
-    if (refresh) {
-        fetch(`${API_URL}/logout`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refresh_token: refresh })
-        }).catch(() => {});
-    }
-    localStorage.removeItem('token');
-    localStorage.removeItem('refresh_token');
+    fetch(`${API_URL}/logout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    }).catch(() => {});
     localStorage.removeItem('usuario');
     window.location.href = '/admin-login.html';
 }
@@ -101,62 +91,6 @@ function realizarLogout() {
  * Verifica se o usuário está autenticado
  * @returns {boolean} - True se autenticado, false caso contrário
  */
-function getToken() {
-    return localStorage.getItem('token');
-}
-
-function getRefreshToken() {
-    return localStorage.getItem('refresh_token');
-}
-
-async function tentarAtualizarToken() {
-    const refresh = getRefreshToken();
-    if (!refresh) return false;
-    try {
-        const resp = await fetch(`${API_URL}/refresh`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refresh_token: refresh })
-        });
-        if (!resp.ok) {
-            return false;
-        }
-        const data = await resp.json();
-        if (data.token) {
-            localStorage.setItem('token', data.token);
-            return true;
-        }
-        return false;
-    } catch (e) {
-        return false;
-    }
-}
-
-function decodeTokenPayload(token) {
-    try {
-        const payload = token.split('.')[1];
-        const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
-        return JSON.parse(decoded);
-    } catch (e) {
-        return null;
-    }
-}
-
-function tokenExpirado(token) {
-    const dados = decodeTokenPayload(token);
-    if (!dados || !dados.exp) return true;
-    return Date.now() >= dados.exp * 1000;
-}
-
-function estaAutenticado() {
-    const token = getToken();
-    if (!token || tokenExpirado(token)) {
-        realizarLogout();
-        return false;
-    }
-    return true;
-}
-
 /**
  * Obtém os dados do usuário logado
  * @returns {Object|null} - Objeto com os dados do usuário ou null se não estiver autenticado
@@ -197,7 +131,8 @@ function ajustarVisibilidadePorPapel() {
  * Redireciona para a página de login se o usuário não estiver autenticado
  */
 function verificarAutenticacao() {
-    if (!estaAutenticado()) {
+    const usuario = getUsuarioLogado();
+    if (!usuario) {
         window.location.href = '/admin-login.html';
         return false;
     }
@@ -236,13 +171,12 @@ function verificarPermissaoAdmin() {
     const currentPage = window.location.pathname;
     const loginPage = '/admin-login.html';
     const registerPage = '/register.html';
-    const token = getToken();
+    const usuario = getUsuarioLogado();
 
-    if (token && !tokenExpirado(token)) {
+    if (usuario) {
         // Se estiver autenticado e na página pública, envia para o dashboard adequado
         if (currentPage === loginPage || currentPage === registerPage) {
-            const usuario = getUsuarioLogado();
-            if (usuario && usuario.tipo === 'admin') {
+            if (usuario.tipo === 'admin') {
                 window.location.href = '/selecao-sistema.html';
             } else {
                 window.location.href = '/index.html';
@@ -268,16 +202,6 @@ async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = tru
     const headers = {
         'Content-Type': 'application/json'
     };
-
-    if (requerAuth) {
-        const token = getToken();
-        if (!token) {
-            console.error('Token não encontrado. Redirecionando para login...');
-            realizarLogout();
-            throw new Error('Não autenticado');
-        }
-        headers['Authorization'] = `Bearer ${token}`;
-    }
     
     // Garante que o endpoint comece com /
     const endpointFormatado = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
@@ -286,7 +210,8 @@ async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = tru
     
     const options = {
         method,
-        headers
+        headers,
+        credentials: 'include'
     };
     
     if (body && (method === 'POST' || method === 'PUT')) {
@@ -298,8 +223,6 @@ async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = tru
 
         // Verifica se a resposta indica falta de autorização e redireciona imediatamente
         if (response.status === 401) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('refresh_token');
             localStorage.removeItem('usuario');
             window.location.href = '/admin-login.html';
             throw new Error('Sessão expirada');
@@ -532,13 +455,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    // Desconecta automaticamente se o token expirar enquanto a página estiver aberta
-    setInterval(function() {
-        const t = getToken();
-        if (!t || tokenExpirado(t)) {
-            realizarLogout();
-        }
-    }, 60000);
+
     
     // Verifica se é a página de seleção de sistema
     if (paginaAtual === '/selecao-sistema.html') {
@@ -728,7 +645,6 @@ async function carregarLaboratoriosParaFiltro(seletorElemento) {
 async function exportarDados(endpoint, formato, nomeArquivo) {
     try {
         const response = await fetch(`${API_URL}${endpoint}?formato=${formato}`, {
-            headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         if (!response.ok) {
             throw new Error('Erro ao exportar dados');

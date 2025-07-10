@@ -23,6 +23,9 @@ def test_login(client):
     json_data = response.get_json()
     assert 'token' in json_data
     assert 'refresh_token' in json_data
+    cookies = response.headers.getlist('Set-Cookie')
+    assert any('access_token=' in c for c in cookies)
+    assert any('refresh_token=' in c for c in cookies)
 
 
 def test_listar_usuarios(client, login_admin):

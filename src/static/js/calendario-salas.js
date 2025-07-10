@@ -87,7 +87,6 @@ async function carregarOcupacoes(dataInicio, dataFim) {
         
         const response = await fetch(`${API_URL}/ocupacoes/calendario?${params.toString()}`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
         
@@ -129,7 +128,6 @@ async function carregarResumoPeriodo(dataInicio, dataFim) {
 
         const response = await fetch(`${API_URL}/ocupacoes/resumo-periodo?${params.toString()}`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
 
@@ -300,7 +298,6 @@ async function carregarSalasParaFiltro() {
     try {
         const response = await fetch(`${API_URL}/salas?status=ativa`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
         
@@ -324,7 +321,6 @@ async function carregarInstrutoresParaFiltro() {
     try {
         const response = await fetch(`${API_URL}/instrutores?status=ativo`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
         
@@ -348,7 +344,6 @@ async function carregarTiposOcupacao() {
     try {
         const response = await fetch(`${API_URL}/ocupacoes/tipos`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
         
@@ -623,7 +618,6 @@ async function confirmarExclusaoOcupacao(modo) {
         const response = await fetch(url, {
             method: 'DELETE',
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
         

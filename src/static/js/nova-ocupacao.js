@@ -42,7 +42,6 @@ async function carregarTiposOcupacao() {
     try {
         const response = await fetch(`${API_URL}/ocupacoes/tipos`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
         
@@ -66,7 +65,6 @@ async function carregarSalas() {
     try {
         const response = await fetch(`${API_URL}/salas?status=ativa`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
         
@@ -90,7 +88,6 @@ async function carregarInstrutores() {
     try {
         const response = await fetch(`${API_URL}/instrutores?status=ativo`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
         
@@ -114,7 +111,6 @@ async function carregarTurmasSelect() {
     try {
         const response = await fetch(`${API_URL}/turmas`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
         if (response.ok) {
@@ -168,7 +164,6 @@ async function carregarOcupacaoParaEdicao(id) {
     try {
         const response = await fetch(`${API_URL}/ocupacoes/${id}`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
         
@@ -241,7 +236,6 @@ async function verificarDisponibilidade() {
 
         const response = await fetch(`${API_URL}/ocupacoes/verificar-disponibilidade?${params.toString()}`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
 
@@ -301,7 +295,6 @@ async function salvarOcupacao() {
             method: method,
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${getToken()}`
             },
             body: JSON.stringify(formData)
         });

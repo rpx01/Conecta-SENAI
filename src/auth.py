@@ -10,13 +10,16 @@ from src.models.user import User
 
 
 def verificar_autenticacao(req):
-    """Verifica o token JWT no cabeçalho Authorization."""
+    """Verifica o token JWT no cabeçalho Authorization ou cookie."""
     auth_header = req.headers.get('Authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
+    token = None
+    if auth_header and auth_header.startswith('Bearer '):
+        token = auth_header.split(' ')[1]
+    else:
+        token = req.cookies.get('access_token')
+    if not token:
         g.token_message = None
         return False, None
-
-    token = auth_header.split(' ')[1]
     try:
         dados = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
         jti = dados.get('jti')

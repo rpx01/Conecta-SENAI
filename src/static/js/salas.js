@@ -35,7 +35,6 @@ class GerenciadorSalas {
         try {
             const response = await fetch(`${API_URL}/salas/recursos`, {
                 headers: {
-                    'Authorization': `Bearer ${getToken()}`
                 }
             });
         
@@ -82,7 +81,6 @@ class GerenciadorSalas {
         
         const response = await fetch(`${API_URL}/salas?${params.toString()}`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
 
@@ -214,7 +212,6 @@ class GerenciadorSalas {
     try {
         const response = await fetch(`${API_URL}/salas/${id}`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
         
@@ -294,7 +291,6 @@ class GerenciadorSalas {
             method: isEdicao ? 'PUT' : 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${getToken()}`
             },
             body: JSON.stringify(formData)
         });
@@ -362,7 +358,6 @@ class GerenciadorSalas {
         const response = await fetch(`${API_URL}/salas/${salaId}`, {
             method: 'DELETE',
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
         

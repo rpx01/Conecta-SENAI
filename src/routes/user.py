@@ -319,15 +319,25 @@ def login():
             current_app.logger.error(f"Erro ao salvar refresh token: {e}")
             return jsonify(success=False, message="Erro ao salvar token"), 500
 
-        return (
-            jsonify(
-                message="Login successful",
-                token=access_token,
-                refresh_token=refresh_token,
-                usuario=usuario.to_dict(),
-            ),
-            200,
+        resp = jsonify(
+            message="Login successful",
+            token=access_token,
+            refresh_token=refresh_token,
+            usuario=usuario.to_dict(),
         )
+        resp.set_cookie(
+            "access_token",
+            access_token,
+            httponly=True,
+            samesite="Lax",
+        )
+        resp.set_cookie(
+            "refresh_token",
+            refresh_token,
+            httponly=True,
+            samesite="Lax",
+        )
+        return resp, 200
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(f"Erro ao fazer login: {e}")
@@ -340,21 +350,28 @@ def login():
 @user_bp.route('/refresh', methods=['POST'])
 def refresh_token():
     data = request.json or {}
-    token = data.get('refresh_token')
+    token = data.get('refresh_token') or request.cookies.get('refresh_token')
     if not token:
         return jsonify({'erro': 'Refresh token obrigatório'}), 400
     usuario = verificar_refresh_token(token)
     if not usuario:
         return jsonify({'erro': 'Refresh token inválido'}), 401
     novo_token = gerar_token_acesso(usuario)
-    return jsonify({'token': novo_token})
+    resp = jsonify({'token': novo_token})
+    resp.set_cookie(
+        "access_token",
+        novo_token,
+        httponly=True,
+        samesite="Lax",
+    )
+    return resp
 
 
 @user_bp.route('/logout', methods=['POST'])
 def logout():
     """Revoga o token de acesso atual e/ou o refresh token."""
     auth_header = request.headers.get('Authorization')
-    token = auth_header.split(' ')[1] if auth_header else None
+    token = auth_header.split(' ')[1] if auth_header else request.cookies.get('access_token')
 
     if token:
         try:
@@ -373,7 +390,7 @@ def logout():
             return jsonify({'erro': 'Token inválido'}), 401
 
     data = request.json or {}
-    refresh = data.get('refresh_token')
+    refresh = data.get('refresh_token') or request.cookies.get('refresh_token')
     if refresh:
         rt = RefreshToken.query.filter_by(token_hash=_hash_token(refresh)).first()
         if rt:
@@ -383,4 +400,7 @@ def logout():
     if not token and not refresh:
         return jsonify({'erro': 'Token obrigatório'}), 400
 
-    return jsonify({'mensagem': 'Logout realizado'})
+    resp = jsonify({'mensagem': 'Logout realizado'})
+    resp.set_cookie('access_token', '', expires=0)
+    resp.set_cookie('refresh_token', '', expires=0)
+    return resp

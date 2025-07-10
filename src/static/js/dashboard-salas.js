@@ -9,7 +9,6 @@ let relatorioMensal = {};
 async function carregarIndicadoresMensais() {
     try {
         const salasResp = await fetch(`${API_URL}/salas?status=ativa`, {
-            headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         const salas = salasResp.ok ? await salasResp.json() : [];
         const totalSalas = salas.length;
@@ -22,7 +21,6 @@ async function carregarIndicadoresMensais() {
             const iniStr = inicio.toISOString().split('T')[0];
             const fimStr = fim.toISOString().split('T')[0];
             const resp = await fetch(`${API_URL}/ocupacoes?data_inicio=${iniStr}&data_fim=${fimStr}&status=confirmado`, {
-                headers: { 'Authorization': `Bearer ${getToken()}` }
             });
             const ocup = resp.ok ? await resp.json() : [];
             const salasOcupadas = new Set(ocup.map(o => o.sala_id)).size;
@@ -54,7 +52,6 @@ async function carregarEstatisticasGerais() {
         // Carrega total de salas ativas
         const responseSalas = await fetch(`${API_URL}/salas?status=ativa`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
         
@@ -66,7 +63,6 @@ async function carregarEstatisticasGerais() {
         // Carrega total de instrutores ativos
         const responseInstrutores = await fetch(`${API_URL}/instrutores?status=ativo`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
         
@@ -79,7 +75,6 @@ async function carregarEstatisticasGerais() {
         const hoje = new Date().toISOString().split('T')[0];
         const responseHoje = await fetch(`${API_URL}/ocupacoes?data_inicio=${hoje}&data_fim=${hoje}&status=confirmado`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
         
@@ -93,7 +88,6 @@ async function carregarEstatisticasGerais() {
         const fimSemana = getFimSemana();
         const responseSemana = await fetch(`${API_URL}/ocupacoes?data_inicio=${inicioSemana}&data_fim=${fimSemana}&status=confirmado`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
         
@@ -117,7 +111,6 @@ async function carregarProximasOcupacoes() {
         
         const response = await fetch(`${API_URL}/ocupacoes?data_inicio=${hoje}&data_fim=${fimPeriodo}&status=confirmado`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
         
@@ -207,7 +200,6 @@ async function carregarRelatorioMensal() {
         if (isAdmin()) {
             const response = await fetch(`${API_URL}/ocupacoes/relatorio?data_inicio=${dataInicio}&data_fim=${dataFim}`, {
                 headers: {
-                    'Authorization': `Bearer ${getToken()}`
                 }
             });
             
@@ -234,7 +226,6 @@ async function carregarDadosBasicos(dataInicio, dataFim) {
         // Carrega ocupações do usuário no período
         const response = await fetch(`${API_URL}/ocupacoes?data_inicio=${dataInicio}&data_fim=${dataFim}`, {
             headers: {
-                'Authorization': `Bearer ${getToken()}`
             }
         });
         
@@ -486,7 +477,6 @@ async function carregarTendenciaMensal() {
     try {
         const ano = new Date().getFullYear();
         const response = await fetch(`${API_URL}/ocupacoes/tendencia?ano=${ano}`, {
-            headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         if (response.ok) {
             const dados = await response.json();

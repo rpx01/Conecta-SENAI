@@ -1,6 +1,8 @@
 # Conecta_SENAI
 Agenda de laboratórios e salas do SENAI
 
+[![CI](https://github.com/<OWNER>/<REPO>/actions/workflows/ci.yml/badge.svg)](https://github.com/<OWNER>/<REPO>/actions/workflows/ci.yml)
+
 ## Changelog
 Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para detalhes das versões.
 
@@ -88,4 +90,11 @@ A aplicação ficará disponível em [http://localhost:8000](http://localhost:80
 | `POST` | `/api/ocupacoes` | Criação de ocupação de sala |
 | `GET` | `/api/ocupacoes` | Consulta de ocupações |
 | `DELETE` | `/api/ocupacoes/<id>` | Remoção de ocupação |
+
+## Integração Contínua
+
+Este repositório possui um fluxo de integração contínua configurado no GitHub
+Actions. O workflow `.github/workflows/ci.yml` instala as dependências do
+projeto e executa o `flake8`, o `bandit` e a suíte de testes com `pytest` a
+cada push ou pull request para a branch `main`.
 

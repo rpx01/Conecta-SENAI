@@ -4,8 +4,6 @@ from src.models import db
 from src.models.ocupacao import Ocupacao
 from src.models.sala import Sala
 from src.models.instrutor import Instrutor
-from src.models.apontamento import Apontamento
-from src.models.centro_custo import CentroCusto
 from src.routes.user import verificar_autenticacao, verificar_admin
 from src.auth import admin_required
 from sqlalchemy.exc import SQLAlchemyError
@@ -311,21 +309,6 @@ def criar_ocupacao():
             dia += timedelta(days=1)
 
         db.session.commit()
-        auto_apontar = data.get('auto_apontar') and payload.instrutor_id and data.get('centro_custo_id')
-        if auto_apontar:
-            centro = db.session.get(CentroCusto, data.get('centro_custo_id'))
-            for oc in ocupacoes_criadas:
-                horas = oc.get_duracao_minutos() / 60
-                apont = Apontamento(
-                    data=oc.data,
-                    horas=horas,
-                    descricao=oc.curso_evento,
-                    instrutor_id=oc.instrutor_id,
-                    centro_custo_id=centro.id,
-                    ocupacao_id=oc.id,
-                )
-                db.session.add(apont)
-            db.session.commit()
         for oc in ocupacoes_criadas:
             log_action(user.id, 'create', 'Ocupacao', oc.id, oc.to_dict())
 

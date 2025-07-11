@@ -9,7 +9,6 @@ class InstrutorCreateSchema(BaseModel):
     disponibilidade: Optional[List[str]] = Field(default_factory=list)
     status: Optional[str] = 'ativo'
     observacoes: Optional[str] = None
-    custo_hora: Optional[float] = 0
 
 class InstrutorUpdateSchema(BaseModel):
     nome: Optional[str] = None
@@ -19,4 +18,3 @@ class InstrutorUpdateSchema(BaseModel):
     disponibilidade: Optional[List[str]] = None
     status: Optional[str] = None
     observacoes: Optional[str] = None
-    custo_hora: Optional[float] = None

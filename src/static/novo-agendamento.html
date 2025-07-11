@@ -488,7 +488,7 @@
                     usuarios.forEach(usuario => {
                         const option = document.createElement('option');
                         option.value = usuario.id;
-                        option.textContent = `${usuario.nome} (${usuario.username})`;
+                        option.textContent = `${usuario.nome} (${usuario.email})`;
                         selectUsuario.appendChild(option);
                     });
                 } catch (error) {

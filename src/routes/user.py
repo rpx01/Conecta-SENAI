@@ -166,14 +166,9 @@ def criar_usuario():
 
     # Cria o usuário
     try:
-        import uuid
-        username_base = email.split('@')[0]
-        username_unico = f"{username_base}_{uuid.uuid4().hex[:4]}"
-
         novo_usuario = User(
             nome=nome,
             email=email,
-            username=username_unico,
             senha=senha,
             tipo='comum'
         )
@@ -225,12 +220,7 @@ def atualizar_usuario(id):
         # Evita que administradores comuns rebaixem outros administradores
         if usuario.tipo == 'admin' and novo_tipo == 'comum':
             admin_email = os.getenv('ADMIN_EMAIL')
-            admin_username = os.getenv('ADMIN_USERNAME')
-            is_root = False
-            if admin_email and user.email == admin_email:
-                is_root = True
-            if admin_username and user.username == admin_username:
-                is_root = True
+            is_root = admin_email and user.email == admin_email
 
             if not is_root:
                 return (

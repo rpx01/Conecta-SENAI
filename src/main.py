@@ -40,7 +40,6 @@ def create_admin(app):
                 admin = User(
                     nome='Administrador',
                     email=admin_email,
-                    username='admin',
                     senha=admin_password,
                     tipo='admin'
                 )

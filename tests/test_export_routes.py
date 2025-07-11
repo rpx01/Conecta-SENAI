@@ -28,7 +28,7 @@ def app_agendamentos():
     app.register_blueprint(agendamento_bp, url_prefix='/api')
     with app.app_context():
         db.create_all()
-        admin = User(nome='Admin', email='admin@example.com', username='admin', senha='Password1!', tipo='admin')
+        admin = User(nome='Admin', email='admin@example.com', senha='Password1!', tipo='admin')
         db.session.add(admin)
         db.session.commit()
     return app
@@ -83,7 +83,7 @@ def app_ocupacoes():
     app.register_blueprint(ocupacao_bp, url_prefix='/api')
     with app.app_context():
         db.create_all()
-        user = User(nome='Admin', email='admin@example.com', username='admin', senha='Password1!', tipo='admin')
+        user = User(nome='Admin', email='admin@example.com', senha='Password1!', tipo='admin')
         sala = Sala(nome='Sala', capacidade=10)
         db.session.add_all([user, sala])
         db.session.commit()

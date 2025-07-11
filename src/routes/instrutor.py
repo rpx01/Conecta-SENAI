@@ -38,11 +38,8 @@ def listar_instrutores():
     
     # Ordena por nome
     instrutores = query.order_by(Instrutor.nome).all()
-    result = [i.to_dict() for i in instrutores]
-    if not verificar_admin(user):
-        for r in result:
-            r.pop('custo_hora', None)
-    return jsonify(result)
+    
+    return jsonify([instrutor.to_dict() for instrutor in instrutores])
 
 @instrutor_bp.route('/instrutores/<int:id>', methods=['GET'])
 def obter_instrutor(id):
@@ -56,10 +53,8 @@ def obter_instrutor(id):
     instrutor = db.session.get(Instrutor, id)
     if not instrutor:
         return jsonify({'erro': 'Instrutor não encontrado'}), 404
-    data_resp = instrutor.to_dict()
-    if not verificar_admin(user):
-        data_resp.pop('custo_hora', None)
-    return jsonify(data_resp)
+    
+    return jsonify(instrutor.to_dict())
 
 @instrutor_bp.route('/instrutores', methods=['POST'])
 def criar_instrutor():
@@ -95,8 +90,7 @@ def criar_instrutor():
             telefone=payload.telefone,
             area_atuacao=payload.area_atuacao,
             disponibilidade=payload.disponibilidade,
-            status=status,
-            custo_hora=payload.custo_hora or 0
+            status=status
         )
         novo_instrutor.observacoes = payload.observacoes
         
@@ -161,17 +155,11 @@ def atualizar_instrutor(id):
 
     if payload.observacoes is not None:
         instrutor.observacoes = payload.observacoes
-
-    if payload.custo_hora is not None:
-        instrutor.custo_hora = payload.custo_hora
     
     
     try:
         db.session.commit()
-        data_resp = instrutor.to_dict()
-        if not verificar_admin(user):
-            data_resp.pop('custo_hora', None)
-        return jsonify(data_resp)
+        return jsonify(instrutor.to_dict())
     except SQLAlchemyError as e:
         db.session.rollback()
         return handle_internal_error(e)

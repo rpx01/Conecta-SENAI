@@ -86,8 +86,8 @@ async function carregarOcupacoes(dataInicio, dataFim) {
         if (turno) params.append('turno', turno);
         
         const response = await fetch(`${API_URL}/ocupacoes/calendario?${params.toString()}`, {
-            headers: {
-            }
+            headers: {},
+            credentials: 'include'
         });
         
         if (response.ok) {
@@ -127,8 +127,8 @@ async function carregarResumoPeriodo(dataInicio, dataFim) {
         if (turno) params.append('turno', turno);
 
         const response = await fetch(`${API_URL}/ocupacoes/resumo-periodo?${params.toString()}`, {
-            headers: {
-            }
+            headers: {},
+            credentials: 'include'
         });
 
         if (response.ok) {
@@ -297,8 +297,8 @@ function mostrarResumoDia(dataStr) {
 async function carregarSalasParaFiltro() {
     try {
         const response = await fetch(`${API_URL}/salas?status=ativa`, {
-            headers: {
-            }
+            headers: {},
+            credentials: 'include'
         });
         
         if (response.ok) {
@@ -320,8 +320,8 @@ async function carregarSalasParaFiltro() {
 async function carregarInstrutoresParaFiltro() {
     try {
         const response = await fetch(`${API_URL}/instrutores?status=ativo`, {
-            headers: {
-            }
+            headers: {},
+            credentials: 'include'
         });
         
         if (response.ok) {
@@ -343,8 +343,8 @@ async function carregarInstrutoresParaFiltro() {
 async function carregarTiposOcupacao() {
     try {
         const response = await fetch(`${API_URL}/ocupacoes/tipos`, {
-            headers: {
-            }
+            headers: {},
+            credentials: 'include'
         });
         
         if (response.ok) {
@@ -617,8 +617,8 @@ async function confirmarExclusaoOcupacao(modo) {
 
         const response = await fetch(url, {
             method: 'DELETE',
-            headers: {
-            }
+            headers: {},
+            credentials: 'include'
         });
         
         const result = await response.json();

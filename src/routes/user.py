@@ -13,6 +13,7 @@ from src.models.refresh_token import RefreshToken
 import hashlib
 from src.redis_client import redis_conn
 from sqlalchemy.exc import SQLAlchemyError
+import requests
 from werkzeug.security import check_password_hash
 from src.utils.error_handler import handle_internal_error
 from src.auth import (
@@ -23,6 +24,16 @@ from src.auth import (
 )
 
 user_bp = Blueprint('user', __name__)
+
+# chaves do Google reCAPTCHA
+RECAPTCHA_SITE_KEY = os.getenv('RECAPTCHA_SITE_KEY') or os.getenv('SITE_KEY')
+RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY') or os.getenv('CAPTCHA_SECRET_KEY') or os.getenv('SECRET_KEY')
+
+
+@user_bp.route('/recaptcha/site-key', methods=['GET'])
+def obter_site_key():
+    """Retorna a site key pública do reCAPTCHA."""
+    return jsonify({'site_key': RECAPTCHA_SITE_KEY or ''})
 
 PASSWORD_REGEX = re.compile(
     r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$'
@@ -298,6 +309,24 @@ def login():
 
         email = dados.get('email', '').strip()
         senha = dados.get('senha')
+        recaptcha_token = dados.get('recaptcha_token')
+
+        # Valida reCAPTCHA caso a chave esteja configurada
+        recaptcha_secret = current_app.config.get('RECAPTCHA_SECRET_KEY')
+        if recaptcha_secret:
+            if not recaptcha_token:
+                return jsonify(success=False, message='Verificação reCAPTCHA obrigatória'), 400
+            try:
+                verify_resp = requests.post(
+                    'https://www.google.com/recaptcha/api/siteverify',
+                    data={'secret': recaptcha_secret, 'response': recaptcha_token},
+                    timeout=5
+                )
+                verify_data = verify_resp.json()
+                if not verify_data.get('success'):
+                    return jsonify(success=False, message='Verificação reCAPTCHA falhou. Tente novamente.'), 400
+            except requests.RequestException:
+                return jsonify(success=False, message='Falha ao verificar reCAPTCHA'), 400
 
         if not email or not senha:
             return jsonify(success=False, message="Email e senha são obrigatórios"), 400

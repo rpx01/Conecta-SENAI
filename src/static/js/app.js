@@ -26,14 +26,14 @@ function sanitizeHTML(html) {
  * @param {string} senha - Senha do usuário
  * @returns {Promise} - Promise com o resultado do login
  */
-async function realizarLogin(email, senha) {
+async function realizarLogin(email, senha, recaptchaToken = '') {
     try {
         const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ email, senha })
+            body: JSON.stringify({ email, senha, recaptcha_token: recaptchaToken })
         });
         const contentType = response.headers.get('Content-Type');
         if (contentType && contentType.includes('application/json')) {

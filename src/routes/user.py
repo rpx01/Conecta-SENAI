@@ -28,6 +28,7 @@ user_bp = Blueprint('user', __name__)
 # chaves do Google reCAPTCHA
 RECAPTCHA_SITE_KEY = os.getenv('RECAPTCHA_SITE_KEY') or os.getenv('SITE_KEY')
 RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY') or os.getenv('CAPTCHA_SECRET_KEY') or os.getenv('SECRET_KEY')
+RECAPTCHA_THRESHOLD = float(os.getenv('RECAPTCHA_THRESHOLD', '0.5'))
 
 
 @user_bp.route('/recaptcha/site-key', methods=['GET'])
@@ -323,7 +324,12 @@ def login():
                     timeout=5
                 )
                 verify_data = verify_resp.json()
-                if not verify_data.get('success'):
+                threshold = current_app.config.get('RECAPTCHA_THRESHOLD', 0.5)
+                if (
+                    not verify_data.get('success')
+                    or verify_data.get('action') != 'login'
+                    or verify_data.get('score', 0) < threshold
+                ):
                     return jsonify(success=False, message='Verificação reCAPTCHA falhou. Tente novamente.'), 400
             except requests.RequestException:
                 return jsonify(success=False, message='Falha ao verificar reCAPTCHA'), 400

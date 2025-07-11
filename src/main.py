@@ -99,6 +99,10 @@ def create_app():
     init_redis(app)
     limiter.init_app(app)
 
+    # Configura chaves do reCAPTCHA (opcional)
+    app.config['RECAPTCHA_SITE_KEY'] = os.getenv('RECAPTCHA_SITE_KEY') or os.getenv('SITE_KEY')
+    app.config['RECAPTCHA_SECRET_KEY'] = os.getenv('RECAPTCHA_SECRET_KEY') or os.getenv('CAPTCHA_SECRET_KEY') or os.getenv('SECRET_KEY')
+
     app.register_blueprint(user_bp, url_prefix='/api')
     app.register_blueprint(agendamento_bp, url_prefix='/api')
     app.register_blueprint(notificacao_bp, url_prefix='/api')

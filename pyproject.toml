@@ -26,6 +26,7 @@ dependencies = [
     "flask-limiter (==3.12)",
     "flask-migrate (==4.0.5)",
     "flask-jwt-extended (==4.6.0)"
+    ,"requests (==2.31.0)"
 ]
 
 [tool.poetry]

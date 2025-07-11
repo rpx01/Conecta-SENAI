@@ -2,10 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     // Garante que o usuário está autenticado
-    if (!estaAutenticado()) {
-        window.location.href = '/admin-login.html';
-        return;
-    }
+    if (!verificarAutenticacao()) return;
     
     // Atualiza o nome do usuário na navbar
     const usuario = getUsuarioLogado();

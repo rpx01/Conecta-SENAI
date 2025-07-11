@@ -285,10 +285,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Verifica autenticação
-            if (!estaAutenticado()) {
-                window.location.href = '/admin-login.html';
-                return;
-            }
+            if (!verificarAutenticacao()) return;
             
             // Verifica se é administrador
             const usuario = getUsuarioLogado();

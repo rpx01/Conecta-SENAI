@@ -332,10 +332,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Verifica autenticação
-            if (!estaAutenticado()) {
-                window.location.href = '/admin-login.html';
-                return;
-            }
+            if (!verificarAutenticacao()) return;
             
             // Atualiza nome do usuário na navbar
             const usuario = getUsuarioLogado();

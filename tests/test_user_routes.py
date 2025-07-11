@@ -45,7 +45,7 @@ def test_listar_usuarios(client, login_admin):
     response = client.get('/api/usuarios', headers=headers)
     assert response.status_code == 200
     usuarios = response.get_json()
-    assert any(u['username'] == 'admin' for u in usuarios)
+    assert any(u['email'] == 'admin@example.com' for u in usuarios)
 
 
 def test_refresh_token(client, login_admin):
@@ -171,7 +171,7 @@ def test_logout_sem_token(client):
 
 def test_logout_com_token_expirado(client):
     with client.application.app_context():
-        user = User.query.filter_by(username='admin').first()
+        user = User.query.filter_by(email='admin@example.com').first()
         expired_token = jwt.encode(
             {
                 'user_id': user.id,
@@ -237,7 +237,7 @@ def test_non_root_admin_cannot_downgrade_admin(client, login_admin):
     headers_new = {'Authorization': f'Bearer {token_new}'}
 
     with client.application.app_context():
-        root_id = User.query.filter_by(username='admin').first().id
+        root_id = User.query.filter_by(email='admin@example.com').first().id
 
     resp_downgrade = client.put(
         f'/api/usuarios/{root_id}', json={'tipo': 'comum'}, headers=headers_new

@@ -40,7 +40,6 @@ def app():
         admin = User(
             nome='Admin',
             email='admin@example.com',
-            username='admin',
             senha='Password1!',
             tipo='admin'
         )
@@ -48,7 +47,6 @@ def app():
         comum = User(
             nome='Usuario',
             email='usuario@example.com',
-            username='usuario',
             senha='Password1!',
             tipo='comum'
         )
@@ -66,7 +64,7 @@ def client(app):
 @pytest.fixture
 def non_admin_auth_headers(app):
     with app.app_context():
-        user = User.query.filter_by(username='usuario').first()
+        user = User.query.filter_by(email='usuario@example.com').first()
         token = jwt.encode({
             'user_id': user.id,
             'nome': user.nome,
@@ -80,7 +78,7 @@ def non_admin_auth_headers(app):
 def login_admin():
     def _login(client):
         with client.application.app_context():
-            user = User.query.filter_by(username='admin').first()
+            user = User.query.filter_by(email='admin@example.com').first()
             token = gerar_token_acesso(user)
             refresh = gerar_refresh_token(user)
         return token, refresh

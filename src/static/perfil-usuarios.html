@@ -92,11 +92,6 @@
                                         <input type="email" class="form-control" id="email" name="email" required>
                                     </div>
                                     
-                                    <div class="mb-3">
-                                        <label for="username" class="form-label">Nome de Usuário</label>
-                                        <input type="text" class="form-control" id="username" name="username" readonly>
-                                        <div class="form-text">O nome de usuário não pode ser alterado.</div>
-                                    </div>
                                     
                                     <div class="mb-3">
                                         <label for="tipo" class="form-label">Tipo de Usuário</label>
@@ -254,7 +249,6 @@
                 // Preenche o formulário
                 document.getElementById('nome').value = dadosUsuario.nome;
                 document.getElementById('email').value = dadosUsuario.email;
-                document.getElementById('username').value = dadosUsuario.username;
                 document.getElementById('tipo').value = dadosUsuario.tipo === 'admin' ? 'Administrador' : 'Comum';
                 
                 // Atualiza os dados no localStorage

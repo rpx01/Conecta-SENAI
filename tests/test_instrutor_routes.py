@@ -5,7 +5,7 @@ from src.models.user import User
 
 def admin_headers(app):
     with app.app_context():
-        user = User.query.filter_by(username='admin').first()
+        user = User.query.filter_by(email='admin@example.com').first()
         token = jwt.encode(
             {
                 'user_id': user.id,

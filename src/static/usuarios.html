@@ -96,7 +96,6 @@
                                     <tr>
                                         <th>ID</th>
                                         <th>Nome</th>
-                                        <th>Username</th>
                                         <th>Email</th>
                                         <th>Tipo</th>
                                         <th>Ações</th>
@@ -104,7 +103,7 @@
                                 </thead>
                                 <tbody id="usuariosTableBody">
                                     <tr>
-                                        <td colspan="6" class="text-center">
+                                        <td colspan="5" class="text-center">
                                             <div class="spinner-border text-primary" role="status">
                                                 <span class="visually-hidden">Carregando...</span>
                                             </div>
@@ -236,7 +235,7 @@
                     const tableBody = document.getElementById('usuariosTableBody');
                     
                     if (usuarios.length === 0) {
-                        tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum usuário encontrado.</td></tr>';
+                        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum usuário encontrado.</td></tr>';
                         return;
                     }
                     
@@ -246,7 +245,6 @@
                             <tr>
                                 <td>${usuario.id}</td>
                                 <td>${usuario.nome}</td>
-                                <td>${usuario.username}</td>
                                 <td>${usuario.email}</td>
                                 <td>
                                     <span class="badge ${usuario.tipo === 'admin' ? 'bg-danger' : 'bg-primary'}">
@@ -268,7 +266,7 @@
                     tableBody.innerHTML = html;
                 } catch (error) {
                     document.getElementById('usuariosTableBody').innerHTML = 
-                        '<tr><td colspan="6" class="text-center text-danger">Erro ao carregar usuários.</td></tr>';
+                        '<tr><td colspan="5" class="text-center text-danger">Erro ao carregar usuários.</td></tr>';
                     console.error('Erro ao carregar usuários:', error);
                 }
             }

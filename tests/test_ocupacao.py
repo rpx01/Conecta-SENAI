@@ -29,7 +29,6 @@ def app():
         user = User(
             nome='Test',
             email='test@example.com',
-            username='test',
             senha='Password1!',
             tipo='admin'
         )

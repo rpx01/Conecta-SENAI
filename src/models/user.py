@@ -11,7 +11,6 @@ class User(db.Model):
         id (int): Identificador único do usuário
         nome (str): Nome completo do usuário
         email (str): Email do usuário (único)
-        username (str): Nome de usuário para login (único)
         senha_hash (str): Hash da senha do usuário
         tipo (str): Tipo de usuário ('comum' ou 'admin')
         data_criacao (datetime): Data de criação do registro
@@ -22,7 +21,6 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
-    username = db.Column(db.String(50), unique=True, nullable=False)
     senha_hash = db.Column(db.String(256), nullable=False)
     tipo = db.Column(db.String(20), nullable=False, default='comum')
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
@@ -31,20 +29,18 @@ class User(db.Model):
     # Relacionamento com agendamentos
     agendamentos = db.relationship('Agendamento', backref='usuario', lazy=True)
     
-    def __init__(self, nome, email, username, senha, tipo='comum'):
+    def __init__(self, nome, email, senha, tipo='comum'):
         """
         Inicializa um novo usuário.
         
         Parâmetros:
             nome (str): Nome completo do usuário
             email (str): Email do usuário
-            username (str): Nome de usuário para login
             senha (str): Senha do usuário (será armazenada como hash)
             tipo (str, opcional): Tipo de usuário ('comum' ou 'admin'). Padrão é 'comum'.
         """
         self.nome = nome
         self.email = email
-        self.username = username
         self.set_senha(senha)
         self.tipo = tipo
     
@@ -92,7 +88,6 @@ class User(db.Model):
             'id': self.id,
             'nome': self.nome,
             'email': self.email,
-            'username': self.username,
             'tipo': self.tipo,
             'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,
             'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None
@@ -105,4 +100,4 @@ class User(db.Model):
         Retorna:
             str: Representação em string
         """
-        return f"<User {self.username}>"
+        return f"<User {self.email}>"

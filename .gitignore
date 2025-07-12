@@ -16,3 +16,5 @@ env/
 # OS/editor artifacts
 .DS_Store
 *.swp
+migrations/
+instance/

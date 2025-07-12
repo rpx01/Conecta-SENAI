@@ -90,9 +90,6 @@ A aplicação ficará disponível em [http://localhost:8000](http://localhost:80
 | `POST` | `/api/ocupacoes` | Criação de ocupação de sala |
 | `GET` | `/api/ocupacoes` | Consulta de ocupações |
 | `DELETE` | `/api/ocupacoes/<id>` | Remoção de ocupação |
-| `POST` | `/api/centros-custo` | Criação de centro de custo |
-| `GET` | `/api/apontamentos` | Listagem de apontamentos |
-| `GET` | `/api/rateio/relatorio` | Relatório financeiro |
 
 ## Integração Contínua
 

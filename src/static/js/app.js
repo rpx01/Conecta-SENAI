@@ -45,7 +45,6 @@ async function realizarLogin(email, senha, recaptchaToken = '') {
                 // Armazena os dados do usuário no localStorage
                 localStorage.setItem('usuario', JSON.stringify(data.usuario));
                 localStorage.setItem('isAdmin', data.usuario.tipo === 'admin');
-                localStorage.setItem('isFinanceiro', data.usuario.tipo === 'financeiro');
 
                 // Após o login, redireciona sempre para a página de seleção de sistema
                 window.location.href = '/selecao-sistema.html';
@@ -110,17 +109,8 @@ function isAdmin() {
     return usuario && usuario.tipo === 'admin';
 }
 
-function isFinanceiro() {
-    const usuario = getUsuarioLogado();
-    return usuario && usuario.tipo === 'financeiro';
-}
-
 function isUserAdmin() {
     return localStorage.getItem('isAdmin') === 'true';
-}
-
-function isUserFinanceiro() {
-    return localStorage.getItem('isFinanceiro') === 'true';
 }
 
 // Função para ajustar a visibilidade dos elementos com base no papel do usuário

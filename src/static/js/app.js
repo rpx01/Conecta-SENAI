@@ -109,34 +109,19 @@ function isAdmin() {
     return usuario && usuario.tipo === 'admin';
 }
 
-function isInstrutor() {
-    const usuario = getUsuarioLogado();
-    return usuario && usuario.tipo === 'instrutor';
-}
-
-function hasAcessoFinanceiro() {
-    return isAdmin() || isInstrutor();
-}
-
 function isUserAdmin() {
     return localStorage.getItem('isAdmin') === 'true';
 }
 
 // Função para ajustar a visibilidade dos elementos com base no papel do usuário
 function ajustarVisibilidadePorPapel() {
+    // A função isAdmin() já deve existir no seu app.js e ler do localStorage
     if (!isAdmin()) {
         // Encontra todos os elementos que são apenas para administradores
         const adminElements = document.querySelectorAll('.admin-only');
 
         // Oculta cada um deles
         adminElements.forEach(el => {
-            el.style.display = 'none';
-        });
-    }
-
-    if (!hasAcessoFinanceiro()) {
-        const financeElements = document.querySelectorAll('.finance-only');
-        financeElements.forEach(el => {
             el.style.display = 'none';
         });
     }
@@ -417,32 +402,6 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
     }
 }
 
-function adicionarMenuFinanceiro(containerSelector) {
-    const container = document.querySelector(containerSelector);
-    if (!container || container.querySelector('.financeiro-section')) return;
-
-    const header = document.createElement('h6');
-    header.className = 'mt-3 finance-only financeiro-section';
-    header.textContent = 'Gestão Financeira';
-
-    const lastItem = container.querySelector('a[href="/perfil.html"], a[href="/perfil-salas.html"], a[href="/perfil-usuarios.html"]');
-    container.insertBefore(header, lastItem);
-
-    const links = [
-        {href: '/apontamentos.html', icon: 'bi-clock-history', text: 'Apontamentos'},
-        {href: '/dashboard-rateio.html', icon: 'bi-pie-chart', text: 'Dashboard de Rateio'},
-        {href: '/gerenciar-centros-custo.html', icon: 'bi-wallet2', text: 'Centros de Custo'}
-    ];
-
-    links.forEach(info => {
-        const link = document.createElement('a');
-        link.className = 'nav-link finance-only';
-        link.href = info.href;
-        link.innerHTML = `<i class="bi ${info.icon}"></i> ${info.text}`;
-        container.insertBefore(link, lastItem);
-    });
-}
-
 /**
  * Adiciona ao menu do usuário um botão para retornar à tela de seleção de sistema
  */
@@ -521,10 +480,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // CHAMA A NOVA FUNÇÃO PARA AJUSTAR A INTERFACE
     ajustarVisibilidadePorPapel();
-
-    if (hasAcessoFinanceiro()) {
-        adicionarMenuFinanceiro('.sidebar .nav.flex-column');
-    }
     
     // Adiciona o link para Laboratórios e Turmas somente no módulo de Agenda
     if (isAdmin()) {
@@ -572,7 +527,6 @@ function configurarObservadoresMenu() {
     // Configura o observador para a sidebar
     const sidebarObserver = new MutationObserver(function(mutations) {
         adicionarLinkLabTurmas('.sidebar .nav.flex-column', false);
-        adicionarMenuFinanceiro('.sidebar .nav.flex-column');
     });
     
     const sidebar = document.querySelector('.sidebar .nav.flex-column');

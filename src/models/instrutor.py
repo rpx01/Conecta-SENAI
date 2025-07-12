@@ -16,6 +16,7 @@ class Instrutor(db.Model):
     disponibilidade = db.Column(db.JSON)
     status = db.Column(db.String(20), default='ativo')  # ativo, inativo, licenca
     observacoes = db.Column(db.Text)
+    custo_hora = db.Column(db.Numeric(10, 2), nullable=False, default=0.0)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -96,7 +97,7 @@ class Instrutor(db.Model):
             Ocupacao.status.in_(['confirmado', 'pendente'])
         ).all()
     
-    def to_dict(self):
+    def to_dict(self, include_custo=False):
         """
         Converte o objeto para dicionário.
         """
@@ -112,6 +113,9 @@ class Instrutor(db.Model):
             'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,
             'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None
         }
+        if include_custo:
+            result['custo_hora'] = float(self.custo_hora)
+        return result
     
     def __repr__(self):
         return f'<Instrutor {self.nome}>'

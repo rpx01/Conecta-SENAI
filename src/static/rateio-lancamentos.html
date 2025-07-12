@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Lançamento de Rateio</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="/selecao-sistema.html">
+                <img src="/img/senai-logo.png" alt="SENAI" height="28" class="me-2">
+                <span class="navbar-brand-text">Controle de Rateio</span>
+            </a>
+        </div>
+    </nav>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-3 d-none d-lg-block">
+                <div class="sidebar rounded shadow-sm">
+                    <div class="nav flex-column">
+                        <a class="nav-link active" href="/rateio-lancamentos.html"><i class="bi bi-list"></i> Lançamentos</a>
+                        <a class="nav-link" href="/rateio-config.html"><i class="bi bi-gear"></i> Configurações</a>
+                        <a class="nav-link" href="/rateio-instrutores.html"><i class="bi bi-people"></i> Instrutores</a>
+                    </div>
+                </div>
+            </div>
+            <main class="col-lg-9 col-md-12">
+                <div class="page-header">
+                    <h2 class="mb-0">Lançamento de Rateio</h2>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="selectInstrutor" class="form-label">Selecione o Instrutor</label>
+                                <select id="selectInstrutor" class="form-select"></select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="selectAno" class="form-label">Ano</label>
+                                <select id="selectAno" class="form-select"></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="mesesTimeline" class="mb-4" style="display: none;">
+                    <h5>Selecione o Mês</h5>
+                    <div class="d-flex flex-wrap gap-2" id="mesesContainer"></div>
+                </div>
+
+                <div id="areaLancamento" class="card" style="display: none;">
+                    <div class="card-header">
+                        <h5 class="mb-0" id="tituloLancamento">Lançamentos para Mês/Ano</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="lancamentosContainer"></div>
+                        <hr>
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <label for="selectConfig" class="form-label">Adicionar Rateio</label>
+                                <select id="selectConfig" class="form-select"></select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="inputPercentual" class="form-label">Percentual (%)</label>
+                                <input type="number" id="inputPercentual" class="form-control" min="1" max="100">
+                            </div>
+                            <div class="col-md-3 pt-4">
+                                <button id="btnAdicionarLancamento" class="btn btn-outline-primary w-100">Adicionar</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Total Lançado: <span id="totalPercentual">0</span>%</strong>
+                        </div>
+                        <button id="btnSalvarLancamentos" class="btn btn-success">
+                            <i class="bi bi-save me-2"></i>Salvar Lançamentos do Mês
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/rateio-lancamentos.js"></script>
+</body>
+</html>

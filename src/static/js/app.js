@@ -109,6 +109,11 @@ function isAdmin() {
     return usuario && usuario.tipo === 'admin';
 }
 
+function isInstrutor() {
+    const usuario = getUsuarioLogado();
+    return usuario && usuario.tipo === 'instrutor';
+}
+
 function isUserAdmin() {
     return localStorage.getItem('isAdmin') === 'true';
 }
@@ -402,6 +407,41 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
     }
 }
 
+function adicionarMenuFinanceiro(containerSelector) {
+    const container = document.querySelector(containerSelector);
+    if (!container) return;
+
+    const usuario = getUsuarioLogado();
+    if (!usuario || (usuario.tipo !== 'admin' && usuario.tipo !== 'instrutor')) return;
+
+    if (container.querySelector('#menu-financeiro')) return;
+
+    const titulo = document.createElement('div');
+    titulo.id = 'menu-financeiro';
+    titulo.className = 'nav-link disabled fw-bold mt-3';
+    titulo.textContent = 'Gestão Financeira';
+
+    const linkAp = document.createElement('a');
+    linkAp.className = 'nav-link ms-3';
+    linkAp.href = '/apontamentos.html';
+    linkAp.innerHTML = '<i class="bi bi-clock-history"></i> Apontamentos';
+
+    const linkDash = document.createElement('a');
+    linkDash.className = 'nav-link ms-3';
+    linkDash.href = '/dashboard-rateio.html';
+    linkDash.innerHTML = '<i class="bi bi-pie-chart"></i> Dashboard Rateio';
+
+    const linkCC = document.createElement('a');
+    linkCC.className = 'nav-link ms-3 admin-only';
+    linkCC.href = '/gerenciar-centros-custo.html';
+    linkCC.innerHTML = '<i class="bi bi-wallet2"></i> Gerenciar Centros de Custo';
+
+    container.appendChild(titulo);
+    container.appendChild(linkAp);
+    container.appendChild(linkDash);
+    container.appendChild(linkCC);
+}
+
 /**
  * Adiciona ao menu do usuário um botão para retornar à tela de seleção de sistema
  */
@@ -497,15 +537,14 @@ document.addEventListener('DOMContentLoaded', function() {
         ];
 
         if (!paginasOcupacao.includes(paginaAtual)) {
-            // Adiciona no menu da navbar
             adicionarLinkLabTurmas('.navbar-nav.me-auto', true);
-
-            // Adiciona no menu lateral (sidebar)
             adicionarLinkLabTurmas('.sidebar .nav.flex-column', false);
-
-            // Configura observadores para garantir que os links sejam adicionados mesmo após modificações no DOM
             configurarObservadoresMenu();
         }
+    }
+
+    if (isAdmin() || isInstrutor()) {
+        adicionarMenuFinanceiro('.sidebar .nav.flex-column');
     }
 });
 
@@ -527,6 +566,7 @@ function configurarObservadoresMenu() {
     // Configura o observador para a sidebar
     const sidebarObserver = new MutationObserver(function(mutations) {
         adicionarLinkLabTurmas('.sidebar .nav.flex-column', false);
+        adicionarMenuFinanceiro('.sidebar .nav.flex-column');
     });
     
     const sidebar = document.querySelector('.sidebar .nav.flex-column');

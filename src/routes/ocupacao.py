@@ -305,6 +305,19 @@ def criar_ocupacao():
                 grupo_ocupacao_id=grupo_id
             )
             db.session.add(nova_ocupacao)
+            db.session.flush()
+
+            if payload.instrutor_id:
+                from src.models.apontamento import Apontamento
+                ap = Apontamento(
+                    data=dia,
+                    horas=nova_ocupacao.get_duracao_minutos() / 60,
+                    descricao=payload.curso_evento,
+                    status='confirmado',
+                    instrutor_id=payload.instrutor_id,
+                    ocupacao_id=nova_ocupacao.id
+                )
+                db.session.add(ap)
             ocupacoes_criadas.append(nova_ocupacao)
             dia += timedelta(days=1)
 

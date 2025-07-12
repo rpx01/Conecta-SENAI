@@ -20,6 +20,7 @@ from src.routes.sala import sala_bp
 from src.routes.turma import turma_bp
 from src.routes.agendamento import agendamento_bp
 from src.routes.instrutor import instrutor_bp
+from src.routes.rateio import rateio_bp
 
 @pytest.fixture
 def app():
@@ -34,6 +35,7 @@ def app():
     app.register_blueprint(turma_bp, url_prefix='/api')
     app.register_blueprint(agendamento_bp, url_prefix='/api')
     app.register_blueprint(instrutor_bp, url_prefix='/api')
+    app.register_blueprint(rateio_bp, url_prefix='/api')
 
     with app.app_context():
         db.create_all()
@@ -51,6 +53,13 @@ def app():
             tipo='comum'
         )
         db.session.add(comum)
+        financeiro = User(
+            nome='Financeiro',
+            email='financeiro@example.com',
+            senha='Password1!',
+            tipo='financeiro'
+        )
+        db.session.add(financeiro)
         sala = Sala(nome='Sala Teste', capacidade=10)
         db.session.add(sala)
         db.session.commit()
@@ -79,6 +88,18 @@ def login_admin():
     def _login(client):
         with client.application.app_context():
             user = User.query.filter_by(email='admin@example.com').first()
+            token = gerar_token_acesso(user)
+            refresh = gerar_refresh_token(user)
+        return token, refresh
+
+    return _login
+
+
+@pytest.fixture
+def login_financeiro():
+    def _login(client):
+        with client.application.app_context():
+            user = User.query.filter_by(email='financeiro@example.com').first()
             token = gerar_token_acesso(user)
             refresh = gerar_refresh_token(user)
         return token, refresh

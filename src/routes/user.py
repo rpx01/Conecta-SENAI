@@ -212,7 +212,7 @@ def atualizar_usuario(id):
     
     # Apenas administradores podem alterar o tipo de usuário
     if 'tipo' in data and verificar_admin(user):
-        if data['tipo'] not in ['comum', 'admin']:
+        if data['tipo'] not in ['comum', 'admin', 'financeiro']:
             return jsonify({'erro': 'Tipo de usuário inválido'}), 400
 
         novo_tipo = data['tipo']

@@ -12,7 +12,7 @@ class User(db.Model):
         nome (str): Nome completo do usuário
         email (str): Email do usuário (único)
         senha_hash (str): Hash da senha do usuário
-        tipo (str): Tipo de usuário ('comum', 'financeiro' ou 'admin')
+        tipo (str): Tipo de usuário ('comum' ou 'admin')
         data_criacao (datetime): Data de criação do registro
         data_atualizacao (datetime): Data da última atualização do registro
     """
@@ -37,7 +37,7 @@ class User(db.Model):
             nome (str): Nome completo do usuário
             email (str): Email do usuário
             senha (str): Senha do usuário (será armazenada como hash)
-            tipo (str, opcional): Tipo de usuário ('comum', 'financeiro' ou 'admin'). Padrão é 'comum'.
+            tipo (str, opcional): Tipo de usuário ('comum' ou 'admin'). Padrão é 'comum'.
         """
         self.nome = nome
         self.email = email

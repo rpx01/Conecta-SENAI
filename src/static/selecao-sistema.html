@@ -90,6 +90,20 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-5 mb-4 finance-only">
+                <div class="card sistema-card h-100" onclick="window.location.href='/rateio-dashboard.html'">
+                    <div class="card-body text-center p-5">
+                        <div class="sistema-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <h3 class="card-title">Controle de Rateio</h3>
+                        <p class="card-text">Gestão de custos e apontamento de horas de instrutores.</p>
+                        <div class="mt-4">
+                            <span class="badge bg-success">Disponível</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -120,12 +134,18 @@
                 document.getElementById('userName').textContent = usuario.nome;
             }
 
-            // LÓGICA PARA OCULTAR O CARD DE ADMIN PARA USUÁRIOS COMUNS
+            // LÓGICA PARA OCULTAR CARDS DE ACORDO COM O PERFIL DO USUÁRIO
             if (!isAdmin()) {
                 const adminCard = document.querySelector('.admin-only');
                 if (adminCard) {
                     adminCard.style.display = 'none';
                 }
+            }
+
+            if (!isAdmin() && !isInstrutor()) {
+                document.querySelectorAll('.finance-only').forEach(c => {
+                    c.style.display = 'none';
+                });
             }
 
             // Configura o botão de logout

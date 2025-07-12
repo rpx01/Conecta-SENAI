@@ -20,6 +20,9 @@ from src.routes.sala import sala_bp
 from src.routes.turma import turma_bp
 from src.routes.agendamento import agendamento_bp
 from src.routes.instrutor import instrutor_bp
+from src.routes.centro_custo import centro_custo_bp
+from src.routes.apontamento import apontamento_bp
+from src.routes.rateio import rateio_bp
 
 @pytest.fixture
 def app():
@@ -34,6 +37,9 @@ def app():
     app.register_blueprint(turma_bp, url_prefix='/api')
     app.register_blueprint(agendamento_bp, url_prefix='/api')
     app.register_blueprint(instrutor_bp, url_prefix='/api')
+    app.register_blueprint(centro_custo_bp, url_prefix='/api')
+    app.register_blueprint(apontamento_bp, url_prefix='/api')
+    app.register_blueprint(rateio_bp, url_prefix='/api')
 
     with app.app_context():
         db.create_all()

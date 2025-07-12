@@ -15,6 +15,7 @@ class Instrutor(db.Model):
     area_atuacao = db.Column(db.String(100))  # Departamento ou área de especialização
     disponibilidade = db.Column(db.JSON)
     status = db.Column(db.String(20), default='ativo')  # ativo, inativo, licenca
+    custo_hora = db.Column(db.Numeric(10, 2))
     observacoes = db.Column(db.Text)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -23,13 +24,14 @@ class Instrutor(db.Model):
     ocupacoes = db.relationship('Ocupacao', backref='instrutor', lazy=True)
     
     def __init__(self, nome, email=None, telefone=None, area_atuacao=None,
-                 disponibilidade=None, status='ativo'):
+                 disponibilidade=None, status='ativo', custo_hora=None):
         self.nome = nome
         self.email = email
         self.telefone = telefone
         self.area_atuacao = area_atuacao
         self.disponibilidade = disponibilidade or []
         self.status = status
+        self.custo_hora = custo_hora
     
     def get_disponibilidade(self):
         """
@@ -96,7 +98,7 @@ class Instrutor(db.Model):
             Ocupacao.status.in_(['confirmado', 'pendente'])
         ).all()
     
-    def to_dict(self):
+    def to_dict(self, include_custo=False):
         """
         Converte o objeto para dicionário.
         """
@@ -112,6 +114,9 @@ class Instrutor(db.Model):
             'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,
             'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None
         }
+        if include_custo:
+            data['custo_hora'] = float(self.custo_hora) if self.custo_hora is not None else None
+        return data
     
     def __repr__(self):
         return f'<Instrutor {self.nome}>'

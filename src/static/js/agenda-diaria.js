@@ -22,6 +22,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const navHojeBtn = document.getElementById('nav-hoje');
     const navSeguinteBtn = document.getElementById('nav-seguinte');
     const confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmarExclusaoModal'));
+    const detalhesModal = new bootstrap.Modal(document.getElementById('detalhesReservaModal'));
+    const detalhesContent = document.getElementById('detalhesReservaContent');
 
     // --- FUNÇÃO DE INICIALIZAÇÃO ---
     const inicializarPagina = async () => {
@@ -119,7 +121,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ${dadosTurno.agendamentos.length > 0 ? `<h6><i class="bi bi-calendar-x-fill"></i> Horários Ocupados</h6>` + dadosTurno.agendamentos.map(ag => {
                         const podeGerenciar = isAdmin() || (usuario && ag.usuario_id === usuario.id);
                         return `
-                        <div class="agendamento-item">
+                        <div class="agendamento-item" data-id="${ag.id}">
                             <div class="agendamento-info">
                                 <strong>${escapeHTML(ag.turma_nome)}</strong><br>
                                 <span class="text-muted small"><i class="bi bi-clock-fill"></i> ${calcularIntervaloDeTempo(ag.horarios)}</span>
@@ -131,8 +133,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>`;
                     }).join('') : ''
                     }
+                    ${dadosTurno.horarios_disponiveis.length > 0 ? `
                     <h6 class="${dadosTurno.agendamentos.length > 0 ? 'mt-4' : ''}"><i class="bi bi-calendar-check-fill"></i> Horários Disponíveis</h6>
-                    ${dadosTurno.horarios_disponiveis.length > 0 ? dadosTurno.horarios_disponiveis.map(h => `<span class="badge bg-light text-dark border me-1 mb-1">${h}</span>`).join('') : '<p class="text-muted small">Todos os horários deste turno estão ocupados.</p>'}
+                    ${dadosTurno.horarios_disponiveis.map(h => `<span class="badge bg-light text-dark border me-1 mb-1">${h}</span>`).join('')}
+                    ` : ''}
                 </div>
                 <div class="card-footer text-end">
                     <a href="/novo-agendamento.html?lab_id=${labSelecionadoId}&data=${dataFormatada}&turno=${turno}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Novo Agendamento</a>
@@ -153,12 +157,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
 
-        // ** DELEGAÇÃO DE EVENTOS PARA EXCLUSÃO **
+        // ** DELEGAÇÃO DE EVENTOS PARA EXCLUSÃO E DETALHES **
         agendaContainer.addEventListener('click', (e) => {
             const btnExcluir = e.target.closest('.btn-excluir');
             if (btnExcluir) {
                 agendamentoParaExcluirId = btnExcluir.dataset.id;
                 confirmacaoModal.show();
+                return;
+            }
+
+            const item = e.target.closest('.agendamento-item');
+            if (item && !e.target.closest('.agendamento-acoes')) {
+                const id = item.dataset.id;
+                if (id) mostrarDetalhesReserva(id);
             }
         });
 
@@ -172,6 +183,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             const tempos = listaHorarios.flatMap(h => h.split(' - '));
             return `${tempos[0]} - ${tempos[tempos.length - 1]}`;
         } catch(e) { return ''; }
+    };
+
+    const mostrarDetalhesReserva = async (id) => {
+        try {
+            const dados = await chamarAPI(`/agendamentos/${id}/detalhes`);
+            const intervalo = calcularIntervaloDeTempo(dados.horarios);
+            detalhesContent.innerHTML = `
+                <p><strong>Reservado por:</strong> ${escapeHTML(dados.usuario_nome || '')}</p>
+                <p><strong>Data:</strong> ${formatarData(dados.data)}</p>
+                <p><strong>Horário:</strong> ${intervalo}</p>
+                <p><strong>Local:</strong> ${escapeHTML(dados.laboratorio)} - ${escapeHTML(dados.turno)}</p>
+                ${dados.observacoes ? `<p><strong>Observações:</strong> ${escapeHTML(dados.observacoes)}</p>` : ''}
+            `;
+            detalhesModal.show();
+        } catch (error) {
+            exibirAlerta('Erro ao carregar detalhes da reserva', 'danger');
+        }
     };
     
     const executarExclusao = async () => {

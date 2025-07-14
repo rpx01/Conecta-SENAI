@@ -30,6 +30,7 @@ def create_admin(app):
         try:
             admin_email = os.environ.get('ADMIN_EMAIL')
             admin_password = os.environ.get('ADMIN_PASSWORD')
+            admin_username = os.environ.get('ADMIN_USERNAME') or admin_email.split('@')[0]
             if not admin_email or not admin_password:
                 logging.error(
                     "ADMIN_EMAIL e ADMIN_PASSWORD precisam estar definidos para criar o usuário administrador"
@@ -42,7 +43,8 @@ def create_admin(app):
                     nome='Administrador',
                     email=admin_email,
                     senha=admin_password,
-                    tipo='admin'
+                    tipo='admin',
+                    username=admin_username
                 )
                 db.session.add(admin)
                 db.session.commit()

@@ -153,6 +153,7 @@ def criar_usuario():
     email = dados.get("email", "").strip()
     nome = dados.get("nome")
     senha = dados.get("senha")
+    username = dados.get("username") or email.split('@')[0]
 
     # Validação de dados
     if not all([nome, email, senha]):
@@ -177,7 +178,13 @@ def criar_usuario():
 
     # Cria o usuário
     try:
-        novo_usuario = User(nome=nome, email=email, senha=senha, tipo="comum")
+        novo_usuario = User(
+            nome=nome,
+            email=email,
+            senha=senha,
+            tipo="comum",
+            username=username,
+        )
         db.session.add(novo_usuario)
         db.session.commit()
         return jsonify(novo_usuario.to_dict()), 201
@@ -192,6 +199,7 @@ def registrar_usuario():
     nome = request.form.get("nome", "").strip()
     email = request.form.get("email", "").strip()
     senha = request.form.get("senha")
+    username = request.form.get("username") or email.split('@')[0]
     confirmar = request.form.get("confirmarSenha")
 
     if not all([nome, email, senha, confirmar]):
@@ -214,7 +222,13 @@ def registrar_usuario():
         return jsonify({"erro": "Este e-mail já está registado"}), 400
 
     try:
-        novo_usuario = User(nome=nome, email=email, senha=senha, tipo="comum")
+        novo_usuario = User(
+            nome=nome,
+            email=email,
+            senha=senha,
+            tipo="comum",
+            username=username,
+        )
         db.session.add(novo_usuario)
         db.session.commit()
     except SQLAlchemyError as e:  # pragma: no cover

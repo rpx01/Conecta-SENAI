@@ -73,9 +73,6 @@ def obter_agendamento_detalhes(id):
     if not agendamento:
         return jsonify({'erro': 'Agendamento não encontrado'}), 404
 
-    if not verificar_admin(user) and agendamento.usuario_id != user.id:
-        return jsonify({'erro': 'Permissão negada'}), 403
-
     dados = agendamento.to_dict()
     dados['usuario_nome'] = agendamento.usuario.nome if agendamento.usuario else None
     return jsonify(dados)

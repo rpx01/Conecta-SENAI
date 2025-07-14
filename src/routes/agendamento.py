@@ -59,8 +59,26 @@ def obter_agendamento(id):
     # Verifica permissões
     if not verificar_admin(user) and agendamento.usuario_id != user.id:
         return jsonify({'erro': 'Permissão negada'}), 403
-    
+
     return jsonify(agendamento.to_dict())
+
+@agendamento_bp.route('/agendamentos/<int:id>/detalhes', methods=['GET'])
+def obter_agendamento_detalhes(id):
+    """Retorna detalhes completos de um agendamento, incluindo nome do usuário."""
+    autenticado, user = verificar_autenticacao(request)
+    if not autenticado:
+        return jsonify({'erro': 'Não autenticado'}), 401
+
+    agendamento = db.session.get(Agendamento, id)
+    if not agendamento:
+        return jsonify({'erro': 'Agendamento não encontrado'}), 404
+
+    if not verificar_admin(user) and agendamento.usuario_id != user.id:
+        return jsonify({'erro': 'Permissão negada'}), 403
+
+    dados = agendamento.to_dict()
+    dados['usuario_nome'] = agendamento.usuario.nome if agendamento.usuario else None
+    return jsonify(dados)
 
 @agendamento_bp.route('/agendamentos', methods=['POST'])
 @login_required

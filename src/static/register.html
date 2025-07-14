@@ -92,7 +92,7 @@
                 window.location.href = '/index.html';
                 return;
             }
-            
+
             const passwordInput = document.getElementById('senha');
             const passwordHelp = document.getElementById('passwordHelp');
             const senhaRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
@@ -113,14 +113,12 @@
                 e.preventDefault();
                 const btn = document.getElementById('btnRegistrar');
                 const spinner = btn.querySelector('.spinner-border');
-                btn.disabled = true;
-                spinner.classList.remove('d-none');
 
                 const nome = document.getElementById('nome').value;
                 const email = document.getElementById('email').value;
                 const senha = document.getElementById('senha').value;
                 const confirmarSenha = document.getElementById('confirmarSenha').value;
-                
+
                 if (!senhaRegex.test(senha)) {
                     exibirAlerta('A senha não atende aos requisitos de complexidade.', 'danger');
                     return;
@@ -130,16 +128,19 @@
                     exibirAlerta('As senhas não coincidem. Por favor, tente novamente.', 'danger');
                     return;
                 }
-                
+
+                btn.disabled = true;
+                spinner.classList.remove('d-none');
+
                 try {
                     const data = await chamarAPI('/usuarios', 'POST', {
                         nome,
                         email,
                         senha
                     }, false);
-                    
+
                     exibirAlerta('Registro realizado com sucesso! Redirecionando para o login...', 'success');
-                    
+
                     // Redireciona para a página de login após 2 segundos
                     setTimeout(() => {
                         window.location.href = '/admin-login.html';

@@ -20,6 +20,7 @@ class User(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
+    username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     senha_hash = db.Column(db.String(256), nullable=False)
     tipo = db.Column(db.String(20), nullable=False, default='comum')
@@ -29,7 +30,7 @@ class User(db.Model):
     # Relacionamento com agendamentos
     agendamentos = db.relationship('Agendamento', backref='usuario', lazy=True)
     
-    def __init__(self, nome, email, senha, tipo='comum'):
+    def __init__(self, nome, email, senha, tipo='comum', username=None):
         """
         Inicializa um novo usuário.
         
@@ -41,6 +42,7 @@ class User(db.Model):
         """
         self.nome = nome
         self.email = email
+        self.username = username or email.split('@')[0]
         self.set_senha(senha)
         self.tipo = tipo
     
@@ -87,6 +89,7 @@ class User(db.Model):
         return {
             'id': self.id,
             'nome': self.nome,
+            'username': self.username,
             'email': self.email,
             'tipo': self.tipo,
             'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,

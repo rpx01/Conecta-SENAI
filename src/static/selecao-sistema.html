@@ -152,12 +152,11 @@
                 document.getElementById('userName').textContent = usuario.nome;
             }
 
-            // LÓGICA PARA OCULTAR O CARD DE ADMIN PARA USUÁRIOS COMUNS
+            // LÓGICA PARA OCULTAR OS CARDS DE ADMIN PARA USUÁRIOS COMUNS
             if (!isAdmin()) {
-                const adminCard = document.querySelector('.admin-only');
-                if (adminCard) {
-                    adminCard.style.display = 'none';
-                }
+                document.querySelectorAll('.admin-only').forEach(el => {
+                    el.style.display = 'none';
+                });
             }
 
             // Configura o botão de logout

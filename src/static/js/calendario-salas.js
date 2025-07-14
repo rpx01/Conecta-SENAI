@@ -42,7 +42,9 @@ function inicializarCalendario() {
             return `+${num} mais`;
         },
         eventClick: function(info) {
-            mostrarDetalhesOcupacao(info.event.extendedProps);
+            if (isUserAdmin()) {
+                mostrarDetalhesOcupacao(info.event.extendedProps);
+            }
         },
         dateClick: function(info) {
             mostrarResumoDia(info.dateStr);

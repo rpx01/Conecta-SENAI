@@ -87,9 +87,6 @@ def listar_ocupacoes():
     if curso_evento:
         query = query.filter(Ocupacao.curso_evento.ilike(f'%{curso_evento}%'))
     
-    # Controle de acesso: usuários comuns só veem suas próprias ocupações
-    if not verificar_admin(user):
-        query = query.filter(Ocupacao.usuario_id == user.id)
     
     # Ordena por data e horário
     ocupacoes = query.order_by(Ocupacao.data, Ocupacao.horario_inicio).all()
@@ -106,10 +103,7 @@ def exportar_ocupacoes():
 
     formato = request.args.get('formato', 'csv').lower()
 
-    if verificar_admin(user):
-        ocupacoes = Ocupacao.query.all()
-    else:
-        ocupacoes = Ocupacao.query.filter_by(usuario_id=user.id).all()
+    ocupacoes = Ocupacao.query.all()
 
     if formato == 'pdf':
         buffer = BytesIO()
@@ -169,9 +163,6 @@ def obter_ocupacao(id):
     if not ocupacao:
         return jsonify({'erro': 'Ocupação não encontrada'}), 404
 
-    # Controle de acesso: usuários comuns só podem ver suas próprias ocupações
-    if not verificar_admin(user) and ocupacao.usuario_id != user.id:
-        return jsonify({'erro': 'Permissão negada'}), 403
 
     dados = ocupacao.to_dict()
 
@@ -594,9 +585,6 @@ def obter_ocupacoes_calendario():
             Ocupacao.horario_fim == fim
         )
     
-    # Controle de acesso: usuários comuns só veem suas próprias ocupações
-    if not verificar_admin(user):
-        query = query.filter(Ocupacao.usuario_id == user.id)
     
     ocupacoes = query.order_by(Ocupacao.data, Ocupacao.horario_inicio).all()
     
@@ -684,8 +672,6 @@ def obter_resumo_periodo():
             Ocupacao.horario_fim == fim
         )
 
-    if not verificar_admin(user):
-        query = query.filter(Ocupacao.usuario_id == user.id)
 
     ocupacoes = query.all()
 

@@ -83,6 +83,7 @@
                                         <th>UO</th>
                                         <th>CR</th>
                                         <th>Classe de Valor</th>
+                                        <th>Descrição</th>
                                         <th>Ações</th>
                                     </tr>
                                 </thead>
@@ -95,11 +96,27 @@
         </div>
     </div>
 
+    <div class="modal fade" id="confirmacaoModal" tabindex="-1" aria-labelledby="confirmacaoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmacaoModalLabel">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body" id="confirmacaoModalBody"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarExclusao">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="configModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Nova Configuração de Rateio</h5>
+                    <h5 class="modal-title" id="modalConfigLabel">Nova Configuração de Rateio</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -119,6 +136,10 @@
                         <div class="mb-3">
                             <label for="classe_valor" class="form-label">Classe de Valor</label>
                             <input type="text" class="form-control" id="classe_valor" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="descricao" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="descricao" rows="3"></textarea>
                         </div>
                     </form>
                 </div>

@@ -1,67 +1,128 @@
-class RateioConfigApp {
-    constructor() {
-        this.tableBody = document.getElementById('configsTableBody');
-        this.btnSalvar = document.getElementById('btnSalvarConfig');
-        this.modal = new bootstrap.Modal(document.getElementById('configModal'));
-        this.form = document.getElementById('configForm');
-        this.registrarEventos();
-        this.carregarConfigs();
+// Conteudo atualizado para rateio-config.js
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Validação de autenticação e permissões
+    if (!verificarAutenticacao() || !isAdmin()) {
+        window.location.href = '/selecao-sistema.html';
+        return;
     }
 
-    registrarEventos() {
-        this.btnSalvar.addEventListener('click', () => this.salvar());
-    }
+    const configModal = new bootstrap.Modal(document.getElementById('configModal'));
+    const confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
+    const form = document.getElementById('configForm');
+    const tableBody = document.getElementById('configsTableBody');
+    let configEmEdicaoId = null;
+    let configParaExcluirId = null;
 
-    async carregarConfigs() {
+    // Função para carregar e renderizar as configurações
+    async function carregarConfiguracoes() {
         try {
             const configs = await chamarAPI('/rateio-configs');
-            this.tableBody.innerHTML = configs.map(c => `
-                <tr data-id="${c.id}">
-                    <td>${escapeHTML(c.filial)}</td>
-                    <td>${escapeHTML(c.uo)}</td>
-                    <td>${escapeHTML(c.cr)}</td>
-                    <td>${escapeHTML(c.classe_valor)}</td>
-                    <td><button class="btn btn-sm btn-danger btn-excluir" data-id="${c.id}"><i class="bi bi-trash"></i></button></td>
-                </tr>`).join('');
-            this.tableBody.querySelectorAll('.btn-excluir').forEach(btn => {
-                btn.addEventListener('click', (e) => this.excluir(e.currentTarget.dataset.id));
+            tableBody.innerHTML = ''; // Limpa a tabela
+            if (configs.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center">Nenhuma configuração encontrada.</td></tr>`;
+                return;
+            }
+            configs.forEach(config => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${escapeHTML(config.filial)}</td>
+                    <td>${escapeHTML(config.uo)}</td>
+                    <td>${escapeHTML(config.cr)}</td>
+                    <td>${escapeHTML(config.classe_valor)}</td>
+                    <td>${escapeHTML(config.descricao || '')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1 btn-editar" data-id="${config.id}" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger btn-excluir" data-id="${config.id}" title="Excluir">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
             });
-        } catch (e) {
-            exibirAlerta(e.message, 'danger');
+        } catch (error) {
+            exibirAlerta(`Erro ao carregar configurações: ${error.message}`, 'danger');
         }
     }
 
-    async salvar() {
-        const data = {
-            filial: this.form.filial.value,
-            uo: this.form.uo.value,
-            cr: this.form.cr.value,
-            classe_valor: this.form.classe_valor.value
+    // Função para abrir o modal em modo de edição ou criação
+    function abrirModal(config = null) {
+        form.reset();
+        if (config) {
+            configEmEdicaoId = config.id;
+            document.getElementById('modalConfigLabel').textContent = 'Editar Configuração';
+            document.getElementById('filial').value = config.filial;
+            document.getElementById('uo').value = config.uo;
+            document.getElementById('cr').value = config.cr;
+            document.getElementById('classe_valor').value = config.classe_valor;
+            document.getElementById('descricao').value = config.descricao || '';
+        } else {
+            configEmEdicaoId = null;
+            document.getElementById('modalConfigLabel').textContent = 'Nova Configuração';
+        }
+        configModal.show();
+    }
+
+    // Salvar (Criar ou Editar)
+    document.getElementById('btnSalvarConfig').addEventListener('click', async () => {
+        const dados = {
+            filial: document.getElementById('filial').value,
+            uo: document.getElementById('uo').value,
+            cr: document.getElementById('cr').value,
+            classe_valor: document.getElementById('classe_valor').value,
+            descricao: document.getElementById('descricao').value
         };
-        try {
-            await chamarAPI('/rateio-configs', 'POST', data);
-            this.modal.hide();
-            this.form.reset();
-            await this.carregarConfigs();
-            exibirAlerta('Configuração salva!', 'success');
-        } catch (e) {
-            exibirAlerta(e.message, 'danger');
-        }
-    }
 
-    async excluir(id) {
-        if (!confirm('Excluir esta configuração?')) return;
         try {
-            await chamarAPI(`/rateio-configs/${id}`, 'DELETE');
-            await this.carregarConfigs();
-        } catch (e) {
-            exibirAlerta(e.message, 'danger');
+            if (configEmEdicaoId) {
+                await chamarAPI(`/rateio-configs/${configEmEdicaoId}`, 'PUT', dados);
+                exibirAlerta('Configuração atualizada com sucesso!', 'success');
+            } else {
+                await chamarAPI('/rateio-configs', 'POST', dados);
+                exibirAlerta('Configuração criada com sucesso!', 'success');
+            }
+            configModal.hide();
+            carregarConfiguracoes();
+        } catch (error) {
+            exibirAlerta(`Erro ao salvar: ${error.message}`, 'danger');
         }
-    }
-}
+    });
 
-document.addEventListener('DOMContentLoaded', () => {
-    verificarAutenticacao();
-    verificarPermissaoAdmin();
-    new RateioConfigApp();
+    // Lidar com cliques na tabela (delegação de eventos)
+    tableBody.addEventListener('click', async (e) => {
+        const btnEditar = e.target.closest('.btn-editar');
+        const btnExcluir = e.target.closest('.btn-excluir');
+
+        if (btnEditar) {
+            const id = btnEditar.dataset.id;
+            const config = await chamarAPI(`/rateio-configs/${id}`); // Busca os dados mais recentes
+            abrirModal(config);
+        }
+
+        if (btnExcluir) {
+            configParaExcluirId = btnExcluir.dataset.id;
+            document.getElementById('confirmacaoModalBody').textContent = 'Tem certeza que deseja excluir esta configuração? Esta ação não pode ser desfeita.';
+            confirmacaoModal.show();
+        }
+    });
+
+    // Confirmação de exclusão
+    document.getElementById('btnConfirmarExclusao').addEventListener('click', async () => {
+        if (!configParaExcluirId) return;
+        try {
+            await chamarAPI(`/rateio-configs/${configParaExcluirId}`, 'DELETE');
+            exibirAlerta('Configuração excluída com sucesso!', 'success');
+            carregarConfiguracoes();
+        } catch (error) {
+            exibirAlerta(`Erro ao excluir: ${error.message}`, 'danger');
+        } finally {
+            confirmacaoModal.hide();
+            configParaExcluirId = null;
+        }
+    });
+
+    // Carregamento inicial
+    carregarConfiguracoes();
 });

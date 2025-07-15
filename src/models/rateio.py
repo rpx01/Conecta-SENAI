@@ -10,6 +10,7 @@ class RateioConfig(db.Model):
     uo = db.Column('unidade_organizacional', db.String(100), nullable=False)
     cr = db.Column('centro_resultado', db.String(100), nullable=False)
     classe_valor = db.Column(db.String(100), nullable=False)
+    descricao = db.Column(db.String(255), nullable=True)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
 
     __table_args__ = (
@@ -23,7 +24,8 @@ class RateioConfig(db.Model):
             'uo': self.uo,
             'cr': self.cr,
             'classe_valor': self.classe_valor,
-            'descricao': f"{self.filial} | {self.uo} | {self.cr} | {self.classe_valor}",
+            'descricao': self.descricao,
+            'descricao_completa': f"{self.filial} | {self.uo} | {self.cr} | {self.classe_valor}",
         }
 
 class LancamentoRateio(db.Model):

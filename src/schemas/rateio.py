@@ -6,6 +6,7 @@ class RateioConfigCreateSchema(BaseModel):
     uo: str
     cr: str
     classe_valor: str
+    descricao: str | None = None
 
 class LancamentoItemSchema(BaseModel):
     rateio_config_id: int

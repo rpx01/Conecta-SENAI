@@ -28,11 +28,16 @@ Todas as variáveis disponíveis estão listadas em `.env.example`.
 
    Um servidor Redis precisa estar ativo no endereço definido em `REDIS_URL` para que a limitação de requisições e a revogação de tokens funcionem corretamente.
 
-3. Execute as migrações do banco para criar as tabelas necessárias:
+3. Execute as migrações do banco para criar as tabelas necessárias ou
+   atualizar o esquema após mudanças no código:
 
    ```bash
    flask --app src.main db upgrade
    ```
+
+   Sempre que atualizar o projeto, rode novamente este comando para
+   garantir que novas colunas (como `descricao` em `rateio_configs`)
+   estejam presentes no banco de dados.
 
 4. Execute a suíte de testes para verificar se tudo está funcionando:
 

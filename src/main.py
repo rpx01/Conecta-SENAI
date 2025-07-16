@@ -20,7 +20,7 @@ from src.routes.user import user_bp
 from src.routes.rateio import rateio_bp
 from src.models.recurso import Recurso
 
-migrate = Migrate()
+migrate = Migrate(directory=os.path.join(os.path.dirname(__file__), '..', 'migrations'))
 
 def create_admin(app):
     """Cria o usuário administrador padrão de forma idempotente."""

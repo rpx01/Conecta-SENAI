@@ -693,6 +693,22 @@ def listar_logs_agenda():
             return jsonify({'erro': 'Formato de data inválido'}), 400
 
     logs = query.order_by(LogAgendamento.timestamp.desc()).all()
+
+    def intervalo(horarios):
+        try:
+            if not horarios:
+                return None
+            if isinstance(horarios, str):
+                horarios = json.loads(horarios)
+            tempos = [h.split(' - ') for h in horarios]
+            if not tempos:
+                return None
+            inicio = tempos[0][0]
+            fim = tempos[-1][1]
+            return f"{inicio} - {fim}"
+        except Exception:
+            return None
+
     return jsonify([
         {
             'id': l.id,
@@ -703,6 +719,7 @@ def listar_logs_agenda():
             'data_agendamento': l.data_agendamento.isoformat() if l.data_agendamento else None,
             'dados_antes': l.dados_antes,
             'dados_depois': l.dados_depois,
+            'intervalo_horarios': intervalo((l.dados_depois or {}).get('horarios') or (l.dados_antes or {}).get('horarios')),
             'timestamp': l.timestamp.isoformat(),
         }
         for l in logs
@@ -719,8 +736,23 @@ def exportar_logs_agenda():
     logs = LogAgendamento.query.order_by(LogAgendamento.timestamp.desc()).all()
     si = StringIO()
     writer = csv.writer(si)
-    writer.writerow(['Data/Hora', 'Usuário', 'Ação', 'Laboratório', 'Turno', 'Data Agendamento'])
+    writer.writerow(['Data/Hora', 'Usuário', 'Ação', 'Laboratório', 'Turno', 'Data Agendamento', 'Horário'])
+
+    def intervalo(horarios):
+        try:
+            if not horarios:
+                return ''
+            if isinstance(horarios, str):
+                horarios = json.loads(horarios)
+            tempos = [h.split(' - ') for h in horarios]
+            if not tempos:
+                return ''
+            return f"{tempos[0][0]} - {tempos[-1][1]}"
+        except Exception:
+            return ''
+
     for l in logs:
+        horarios = (l.dados_depois or {}).get('horarios') or (l.dados_antes or {}).get('horarios')
         writer.writerow([
             l.timestamp.isoformat(),
             l.usuario,
@@ -728,6 +760,7 @@ def exportar_logs_agenda():
             l.laboratorio,
             l.turno,
             l.data_agendamento.isoformat() if l.data_agendamento else '',
+            intervalo(horarios),
         ])
     output = make_response(si.getvalue())
     output.headers['Content-Disposition'] = 'attachment; filename=logs_agenda.csv'

@@ -269,7 +269,7 @@ async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = tru
 function formatarData(dataISO) {
     if (!dataISO) return '';
     const [parteData] = dataISO.split('T');
-    const data = new Date(`${parteData}T00:00:00`);
+    const data = new Date(`${parteData}T00:00:00-03:00`);
     return data.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 }
 
@@ -403,6 +403,46 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
     }
 }
 
+// Adiciona o link para a página de Logs
+function adicionarLinkLogs(containerSelector, isNavbar = false) {
+    const container = document.querySelector(containerSelector);
+    if (!container) return;
+
+    const linkExistente = container.querySelector('a[href="/logs-agenda.html"]');
+    if (linkExistente) return;
+
+    if (isNavbar) {
+        const navItem = document.createElement('li');
+        navItem.className = 'nav-item admin-only';
+
+        const link = document.createElement('a');
+        link.className = 'nav-link';
+        link.href = '/logs-agenda.html';
+        link.innerHTML = '<i class="bi bi-journal-text me-1"></i> Logs';
+
+        navItem.appendChild(link);
+
+        const lastItem = container.querySelector('.dropdown');
+        if (lastItem) {
+            container.insertBefore(navItem, lastItem);
+        } else {
+            container.appendChild(navItem);
+        }
+    } else {
+        const link = document.createElement('a');
+        link.className = 'nav-link admin-only';
+        link.href = '/logs-agenda.html';
+        link.innerHTML = '<i class="bi bi-journal-text"></i> Logs';
+
+        const lastItem = container.querySelector('a[href="/perfil.html"], a[href="/perfil-salas.html"], a[href="/perfil-usuarios.html"]');
+        if (lastItem) {
+            container.insertBefore(link, lastItem);
+        } else {
+            container.appendChild(link);
+        }
+    }
+}
+
 /**
  * Adiciona ao menu do usuário um botão para retornar à tela de seleção de sistema
  */
@@ -502,13 +542,12 @@ document.addEventListener('DOMContentLoaded', function() {
         ];
 
         if (!paginasOcupacao.includes(paginaAtual)) {
-            // Adiciona no menu da navbar
-            adicionarLinkLabTurmas('.navbar-nav.me-auto', true);
-
-            // Adiciona no menu lateral (sidebar)
+            adicionarLinkLabTurmas('.navbar-nav.ms-auto', true);
             adicionarLinkLabTurmas('.sidebar .nav.flex-column', false);
 
-            // Configura observadores para garantir que os links sejam adicionados mesmo após modificações no DOM
+            adicionarLinkLogs('.navbar-nav.ms-auto', true);
+            adicionarLinkLogs('.sidebar .nav.flex-column', false);
+
             configurarObservadoresMenu();
         }
     }
@@ -521,17 +560,19 @@ document.addEventListener('DOMContentLoaded', function() {
 function configurarObservadoresMenu() {
     // Configura o observador para a navbar
     const navbarObserver = new MutationObserver(function(mutations) {
-        adicionarLinkLabTurmas('.navbar-nav.me-auto', true);
+        adicionarLinkLabTurmas('.navbar-nav.ms-auto', true);
+        adicionarLinkLogs('.navbar-nav.ms-auto', true);
     });
-    
-    const navbar = document.querySelector('.navbar-nav.me-auto');
+
+    const navbar = document.querySelector('.navbar-nav.ms-auto');
     if (navbar) {
         navbarObserver.observe(navbar, { childList: true, subtree: true });
     }
-    
+
     // Configura o observador para a sidebar
     const sidebarObserver = new MutationObserver(function(mutations) {
         adicionarLinkLabTurmas('.sidebar .nav.flex-column', false);
+        adicionarLinkLogs('.sidebar .nav.flex-column', false);
     });
     
     const sidebar = document.querySelector('.sidebar .nav.flex-column');

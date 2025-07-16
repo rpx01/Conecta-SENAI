@@ -268,8 +268,9 @@ async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = tru
  */
 function formatarData(dataISO) {
     if (!dataISO) return '';
-    const data = new Date(dataISO);
-    return data.toLocaleDateString('pt-BR');
+    const [parteData] = dataISO.split('T');
+    const data = new Date(`${parteData}T00:00:00`);
+    return data.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 }
 
 /**

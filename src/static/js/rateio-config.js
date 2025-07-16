@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             configs.forEach(config => {
                 const tr = document.createElement('tr');
+                tr.dataset.id = config.id;
                 tr.innerHTML = `
                     <td>${escapeHTML(config.filial)}</td>
                     <td>${escapeHTML(config.uo)}</td>
@@ -96,13 +97,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const btnExcluir = e.target.closest('.btn-excluir');
 
         if (btnEditar) {
-            const id = btnEditar.dataset.id;
+            const id = btnEditar.closest('tr').dataset.id;
             const config = await chamarAPI(`/rateio-configs/${id}`); // Busca os dados mais recentes
             abrirModal(config);
         }
 
         if (btnExcluir) {
-            configParaExcluirId = btnExcluir.dataset.id;
+            configParaExcluirId = btnExcluir.closest('tr').dataset.id;
             document.getElementById('confirmacaoModalBody').textContent = 'Tem certeza que deseja excluir esta configuração? Esta ação não pode ser desfeita.';
             confirmacaoModal.show();
         }

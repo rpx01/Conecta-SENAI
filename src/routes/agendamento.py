@@ -18,8 +18,28 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import func, extract
 from src.utils.error_handler import handle_internal_error
 from src.utils.audit import log_action
+from src.models.log_agendamento import LogAgendamento
 
 agendamento_bp = Blueprint('agendamento', __name__)
+
+
+def registrar_log_agenda(user, acao, antes, depois):
+    """Registra informações detalhadas dos agendamentos."""
+    try:
+        ref = depois or antes or {}
+        log = LogAgendamento(
+            usuario=user.nome if user else 'Sistema',
+            tipo_acao=acao,
+            laboratorio=ref.get('laboratorio'),
+            turno=ref.get('turno'),
+            data_agendamento=ref.get('data'),
+            dados_antes=antes,
+            dados_depois=depois,
+        )
+        db.session.add(log)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 @agendamento_bp.route('/agendamentos', methods=['GET'])
 def listar_agendamentos():
@@ -143,6 +163,7 @@ def criar_agendamento():
         db.session.add(novo_agendamento)
         db.session.commit()
         log_action(user.id, 'create', 'Agendamento', novo_agendamento.id, novo_agendamento.to_dict())
+        registrar_log_agenda(user, 'create', None, novo_agendamento.to_dict())
         return jsonify(novo_agendamento.to_dict()), 201
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -168,7 +189,8 @@ def atualizar_agendamento(id):
         return jsonify({'erro': 'Permissão negada'}), 403
     
     data = request.json
-    
+    estado_anterior = agendamento.to_dict()
+
     # Processa a data se fornecida
     data_agendamento = agendamento.data
     if 'data' in data:
@@ -219,8 +241,10 @@ def atualizar_agendamento(id):
     
     try:
         db.session.commit()
-        log_action(user.id, 'update', 'Agendamento', agendamento.id, agendamento.to_dict())
-        return jsonify(agendamento.to_dict())
+        dados_depois = agendamento.to_dict()
+        log_action(user.id, 'update', 'Agendamento', agendamento.id, dados_depois)
+        registrar_log_agenda(user, 'update', estado_anterior, dados_depois)
+        return jsonify(dados_depois)
     except SQLAlchemyError as e:
         db.session.rollback()
         return handle_internal_error(e)
@@ -244,10 +268,12 @@ def remover_agendamento(id):
     if not verificar_admin(user) and agendamento.usuario_id != user.id:
         return jsonify({'erro': 'Permissão negada'}), 403
     
+    estado_anterior = agendamento.to_dict()
     try:
         db.session.delete(agendamento)
         db.session.commit()
-        log_action(user.id, 'delete', 'Agendamento', agendamento.id, agendamento.to_dict())
+        log_action(user.id, 'delete', 'Agendamento', agendamento.id, estado_anterior)
+        registrar_log_agenda(user, 'delete', estado_anterior, None)
         return jsonify({'mensagem': 'Agendamento removido com sucesso'})
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -640,6 +666,72 @@ def exportar_agendamentos():
     output = make_response(si.getvalue())
     output.headers["Content-Disposition"] = "attachment; filename=agendamentos.csv"
     output.headers["Content-Type"] = "text/csv"
+    return output
+
+
+@agendamento_bp.route('/logs-agenda', methods=['GET'])
+def listar_logs_agenda():
+    """Lista logs de agendamentos com filtros opcionais."""
+    autenticado, user = verificar_autenticacao(request)
+    if not autenticado or not verificar_admin(user):
+        return jsonify({'erro': 'Permissão negada'}), 403
+
+    query = LogAgendamento.query
+    usuario = request.args.get('usuario')
+    tipo = request.args.get('tipo')
+    data_acao = request.args.get('data')
+
+    if usuario:
+        query = query.filter(LogAgendamento.usuario.ilike(f'%{usuario}%'))
+    if tipo:
+        query = query.filter(LogAgendamento.tipo_acao == tipo)
+    if data_acao:
+        try:
+            dia = datetime.strptime(data_acao, '%Y-%m-%d').date()
+            query = query.filter(func.date(LogAgendamento.timestamp) == dia)
+        except ValueError:
+            return jsonify({'erro': 'Formato de data inválido'}), 400
+
+    logs = query.order_by(LogAgendamento.timestamp.desc()).all()
+    return jsonify([
+        {
+            'id': l.id,
+            'usuario': l.usuario,
+            'tipo_acao': l.tipo_acao,
+            'laboratorio': l.laboratorio,
+            'turno': l.turno,
+            'data_agendamento': l.data_agendamento.isoformat() if l.data_agendamento else None,
+            'dados_antes': l.dados_antes,
+            'dados_depois': l.dados_depois,
+            'timestamp': l.timestamp.isoformat(),
+        }
+        for l in logs
+    ])
+
+
+@agendamento_bp.route('/logs-agenda/export', methods=['GET'])
+def exportar_logs_agenda():
+    """Exporta logs de agendamentos em CSV."""
+    autenticado, user = verificar_autenticacao(request)
+    if not autenticado or not verificar_admin(user):
+        return jsonify({'erro': 'Permissão negada'}), 403
+
+    logs = LogAgendamento.query.order_by(LogAgendamento.timestamp.desc()).all()
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(['Data/Hora', 'Usuário', 'Ação', 'Laboratório', 'Turno', 'Data Agendamento'])
+    for l in logs:
+        writer.writerow([
+            l.timestamp.isoformat(),
+            l.usuario,
+            l.tipo_acao,
+            l.laboratorio,
+            l.turno,
+            l.data_agendamento.isoformat() if l.data_agendamento else '',
+        ])
+    output = make_response(si.getvalue())
+    output.headers['Content-Disposition'] = 'attachment; filename=logs_agenda.csv'
+    output.headers['Content-Type'] = 'text/csv'
     return output
 
 def verificar_conflitos_horarios(data, laboratorio, horarios_list, agendamento_id=None):

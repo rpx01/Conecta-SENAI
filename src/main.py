@@ -4,7 +4,7 @@ Inicializa a aplicacao Flask e registra os blueprints.
 import os
 import logging
 from flask import Flask
-from flask_migrate import Migrate, upgrade
+from flask_migrate import Migrate, upgrade, init, migrate as migrate_cmd
 from src.limiter import limiter
 from src.redis_client import init_redis
 
@@ -20,7 +20,8 @@ from src.routes.user import user_bp
 from src.routes.rateio import rateio_bp
 from src.models.recurso import Recurso
 
-migrate = Migrate(directory=os.path.join(os.path.dirname(__file__), '..', 'migrations'))
+MIGRATIONS_DIR = os.path.join(os.path.dirname(__file__), '..', 'migrations')
+migrate = Migrate(directory=MIGRATIONS_DIR)
 
 def create_admin(app):
     """Cria o usuário administrador padrão de forma idempotente."""
@@ -125,9 +126,24 @@ def create_app():
         return app.send_static_file(path)
 
     with app.app_context():
+        if not os.path.exists(MIGRATIONS_DIR):
+            logging.info("Pasta de migrations nao encontrada, inicializando...")
+            try:
+                init(directory=MIGRATIONS_DIR)
+                migrate_cmd(directory=MIGRATIONS_DIR)
+            except Exception as e:  # pragma: no cover - primeira migracao opcional
+                logging.error("Erro ao criar migrations: %s", str(e))
+
+        versions_dir = os.path.join(MIGRATIONS_DIR, 'versions')
+        if not os.path.exists(versions_dir) or not os.listdir(versions_dir):
+            try:
+                migrate_cmd(directory=MIGRATIONS_DIR)
+            except Exception as e:  # pragma: no cover - geracao opcional
+                logging.error("Erro ao gerar migrations: %s", str(e))
+
         db.create_all()
         try:
-            upgrade()
+            upgrade(directory=MIGRATIONS_DIR)
         except Exception as e:  # pragma: no cover - migracao opcional
             logging.error("Erro ao aplicar migrations: %s", str(e))
         create_admin(app)

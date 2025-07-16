@@ -4,7 +4,7 @@ Inicializa a aplicacao Flask e registra os blueprints.
 import os
 import logging
 from flask import Flask
-from flask_migrate import Migrate
+from flask_migrate import Migrate, upgrade
 from src.limiter import limiter
 from src.redis_client import init_redis
 
@@ -126,6 +126,10 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        try:
+            upgrade()
+        except Exception as e:  # pragma: no cover - migracao opcional
+            logging.error("Erro ao aplicar migrations: %s", str(e))
         create_admin(app)
         create_default_recursos(app)
 

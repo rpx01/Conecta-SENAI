@@ -104,6 +104,27 @@ def get_lancamentos():
     return jsonify([l.to_dict() for l in lancamentos])
 
 
+@rateio_bp.route('/rateio/lancamentos-ano', methods=['GET'])
+@admin_required
+def get_lancamentos_ano():
+    """Retorna todos os lancamentos de um instrutor em um determinado ano."""
+    instrutor_id = request.args.get('instrutor_id', type=int)
+    ano = request.args.get('ano', type=int)
+
+    if not instrutor_id or not ano:
+        return jsonify({'erro': 'Parâmetros instrutor_id e ano são obrigatórios'}), 400
+
+    lancamentos = LancamentoRateio.query.filter_by(instrutor_id=instrutor_id, ano=ano).all()
+
+    agrupados = {}
+    for l in lancamentos:
+        agrupados.setdefault(l.mes, []).append(l.to_dict())
+
+    # Garante um dicionário com todas as chaves de 1 a 12
+    resultado = {mes: agrupados.get(mes, []) for mes in range(1, 13)}
+    return jsonify(resultado)
+
+
 @rateio_bp.route('/rateio/lancamentos', methods=['POST'])
 @admin_required
 def salvar_lancamentos():

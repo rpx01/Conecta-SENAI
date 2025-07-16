@@ -86,39 +86,49 @@
                     </div>
                 </div>
 
-                <div id="mesesTimeline" class="mb-4" style="display: none;">
-                    <h5>Selecione o Mês</h5>
-                    <div class="d-flex flex-wrap gap-2" id="mesesContainer"></div>
+                <div id="grid-anual-container" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4 mt-4" style="display: none;">
                 </div>
 
-                <div id="areaLancamento" class="card" style="display: none;">
-                    <div class="card-header">
-                        <h5 class="mb-0" id="tituloLancamento">Lançamentos para Mês/Ano</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="lancamentosContainer"></div>
-                        <hr>
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <label for="selectConfig" class="form-label">Adicionar Rateio</label>
-                                <select id="selectConfig" class="form-select"></select>
+                <div class="modal fade" id="lancamentoModal" tabindex="-1" aria-labelledby="lancamentoModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="lancamentoModalLabel">Lançamentos para Mês / Ano</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
-                            <div class="col-md-3">
-                                <label for="inputPercentual" class="form-label">Percentual (%)</label>
-                                <input type="number" id="inputPercentual" class="form-control" min="1" max="100">
+                            <div class="modal-body">
+                                <div id="lancamentosAtuaisContainer"></div>
+                                <hr>
+                                <h6>Adicionar Novo Rateio</h6>
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-6">
+                                        <label for="selectConfigModal" class="form-label">Configuração</label>
+                                        <select id="selectConfigModal" class="form-select"></select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="inputPercentualModal" class="form-label">Percentual (%)</label>
+                                        <input type="number" id="inputPercentualModal" class="form-control" min="1" max="100">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button id="btnAdicionarRateioModal" class="btn btn-outline-primary w-100">Adicionar</button>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <strong>Total Lançado:</strong>
+                                    <strong id="totalPercentualModal">0%</strong>
+                                </div>
+                                <div class="progress mt-1" style="height: 20px;">
+                                    <div id="progressBarModal" class="progress-bar" role="progressbar" style="width: 0%;"></div>
+                                </div>
                             </div>
-                            <div class="col-md-3 pt-4">
-                                <button id="btnAdicionarLancamento" class="btn btn-outline-primary w-100">Adicionar</button>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-success" id="btnSalvarModal">
+                                    <i class="bi bi-save me-1"></i> Salvar Alterações
+                                </button>
                             </div>
                         </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>Total Lançado: <span id="totalPercentual">0</span>%</strong>
-                        </div>
-                        <button id="btnSalvarLancamentos" class="btn btn-success">
-                            <i class="bi bi-save me-2"></i>Salvar Lançamentos do Mês
-                        </button>
                     </div>
                 </div>
             </main>

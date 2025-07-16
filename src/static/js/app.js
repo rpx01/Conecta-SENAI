@@ -538,7 +538,8 @@ document.addEventListener('DOMContentLoaded', function() {
             '/usuarios.html',
             '/perfil.html',
             '/perfil-usuarios.html',
-            '/gerenciar-turmas.html'
+            '/gerenciar-turmas.html',
+            '/logs-rateio.html'
         ];
 
         if (!paginasOcupacao.includes(paginaAtual)) {

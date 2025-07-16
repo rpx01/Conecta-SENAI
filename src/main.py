@@ -116,6 +116,8 @@ def create_app():
     app.register_blueprint(instrutor_bp, url_prefix='/api')
     app.register_blueprint(ocupacao_bp, url_prefix='/api')
     app.register_blueprint(rateio_bp, url_prefix='/api')
+    from src.routes.treinamento import treinamento_bp
+    app.register_blueprint(treinamento_bp, url_prefix='/api')
 
     @app.route('/')
     def index():

@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function atualizarTabela(logs) {
         tabelaBody.innerHTML = '';
         if (!logs || logs.length === 0) {
-            tabelaBody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum registro encontrado.</td></tr>';
+            tabelaBody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum registro encontrado.</td></tr>';
             return;
         }
         logs.forEach(l => {
@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${escapeHTML(l.laboratorio || '')}</td>
                 <td>${escapeHTML(l.turno || '')}</td>
                 <td>${l.data_agendamento ? escapeHTML(formatarData(l.data_agendamento)) : ''}</td>
+                <td>${l.intervalo_horarios ? escapeHTML(l.intervalo_horarios) : ''}</td>
             </tr>`;
             tabelaBody.insertAdjacentHTML('beforeend', row);
         });

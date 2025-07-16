@@ -54,7 +54,7 @@ class LancamentosApp {
         try {
             const configs = await chamarAPI('/rateio-configs');
             this.selectConfig.innerHTML = '<option value="">Selecione</option>' +
-                configs.map(c => `<option value="${c.id}">${escapeHTML(c.descricao)}</option>`).join('');
+                configs.map(c => `<option value="${c.id}">${escapeHTML(c.classe_valor)}</option>`).join('');
         } catch (e) {
             exibirAlerta(e.message, 'danger');
         }
@@ -86,7 +86,7 @@ class LancamentosApp {
                 badgeClass = 'bg-warning';
                 badgeText = `Parcial (${total}%)`;
             }
-            const itens = dados.map(d => `<li class="list-group-item">${escapeHTML(d.rateio_config.descricao)}: ${d.percentual}%</li>`).join('');
+            const itens = dados.map(d => `<li class="list-group-item">${escapeHTML(d.rateio_config.classe_valor)}: ${d.percentual}%</li>`).join('');
             const card = document.createElement('div');
             card.className = 'col';
             card.dataset.mes = m;
@@ -134,7 +134,7 @@ class LancamentosApp {
         div.className = 'input-group mb-2';
         div.dataset.id = lancamento.rateio_config_id;
         div.innerHTML = `
-            <span class="input-group-text flex-grow-1">${escapeHTML(lancamento.rateio_config.descricao)}</span>
+            <span class="input-group-text flex-grow-1">${escapeHTML(lancamento.rateio_config.classe_valor)}</span>
             <input type="number" class="form-control percentual" value="${lancamento.percentual}" min="0" max="100">
             <button class="btn btn-outline-danger btn-remover" type="button"><i class="bi bi-trash"></i></button>`;
         div.querySelector('.btn-remover').addEventListener('click', () => {
@@ -150,7 +150,7 @@ class LancamentosApp {
         const percent = parseFloat(this.inputPercentual.value || '0');
         if (!configId || percent <= 0) return;
         const selected = this.selectConfig.selectedOptions[0].textContent;
-        this.criarLinha({ rateio_config_id: parseInt(configId, 10), percentual: percent, rateio_config: { descricao: selected } });
+        this.criarLinha({ rateio_config_id: parseInt(configId, 10), percentual: percent, rateio_config: { classe_valor: selected } });
         this.inputPercentual.value = '';
         this.atualizarTotal();
     }
@@ -197,7 +197,7 @@ class LancamentosApp {
             badgeClass = 'bg-warning';
             badgeText = `Parcial (${total}%)`;
         }
-        const itens = dados.map(d => `<li class="list-group-item">${escapeHTML(d.rateio_config.descricao)}: ${d.percentual}%</li>`).join('');
+        const itens = dados.map(d => `<li class="list-group-item">${escapeHTML(d.rateio_config.classe_valor)}: ${d.percentual}%</li>`).join('');
         card.innerHTML = `
             <div class="card h-100 month-card">
                 <div class="card-header d-flex justify-content-between align-items-center">

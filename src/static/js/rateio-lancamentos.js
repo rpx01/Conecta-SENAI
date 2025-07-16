@@ -2,18 +2,22 @@ class LancamentosApp {
     constructor() {
         this.selectInstrutor = document.getElementById('selectInstrutor');
         this.selectAno = document.getElementById('selectAno');
-        this.selectConfig = document.getElementById('selectConfig');
-        this.inputPercentual = document.getElementById('inputPercentual');
-        this.btnAdicionar = document.getElementById('btnAdicionarLancamento');
-        this.btnSalvar = document.getElementById('btnSalvarLancamentos');
-        this.mesesContainer = document.getElementById('mesesContainer');
-        this.mesesTimeline = document.getElementById('mesesTimeline');
-        this.areaLancamento = document.getElementById('areaLancamento');
-        this.lancamentosContainer = document.getElementById('lancamentosContainer');
-        this.tituloLancamento = document.getElementById('tituloLancamento');
-        this.totalPercentual = document.getElementById('totalPercentual');
+        this.gridContainer = document.getElementById('grid-anual-container');
+
+        this.modalEl = document.getElementById('lancamentoModal');
+        this.modal = new bootstrap.Modal(this.modalEl);
+        this.modalTitle = document.getElementById('lancamentoModalLabel');
+        this.lancamentosContainer = document.getElementById('lancamentosAtuaisContainer');
+        this.selectConfig = document.getElementById('selectConfigModal');
+        this.inputPercentual = document.getElementById('inputPercentualModal');
+        this.btnAdicionar = document.getElementById('btnAdicionarRateioModal');
+        this.btnSalvar = document.getElementById('btnSalvarModal');
+        this.totalPercentual = document.getElementById('totalPercentualModal');
+        this.progressBar = document.getElementById('progressBarModal');
+
+        this.dadosAno = {};
         this.mesAtual = null;
-        this.anoAtual = new Date().getFullYear();
+
         this.registrarEventos();
         this.carregarInstrutores();
         this.preencherAnos();
@@ -21,8 +25,8 @@ class LancamentosApp {
     }
 
     registrarEventos() {
-        this.selectAno.addEventListener('change', () => this.renderizarMeses());
-        this.selectInstrutor.addEventListener('change', () => this.renderizarMeses());
+        this.selectInstrutor.addEventListener('change', () => this.carregarAno());
+        this.selectAno.addEventListener('change', () => this.carregarAno());
         this.btnAdicionar.addEventListener('click', () => this.adicionarItem());
         this.btnSalvar.addEventListener('click', () => this.salvar());
     }
@@ -56,34 +60,73 @@ class LancamentosApp {
         }
     }
 
-    renderizarMeses() {
+    async carregarAno() {
         const instrutorId = this.selectInstrutor.value;
         if (!instrutorId) return;
-        this.mesesContainer.innerHTML = '';
-        for (let m = 1; m <= 12; m++) {
-            const btn = document.createElement('button');
-            btn.className = 'btn btn-outline-secondary';
-            btn.textContent = m.toString().padStart(2, '0');
-            btn.addEventListener('click', () => this.carregarLancamentos(m));
-            this.mesesContainer.appendChild(btn);
-        }
-        this.mesesTimeline.style.display = 'block';
-    }
-
-    async carregarLancamentos(mes) {
-        this.mesAtual = mes;
-        const instrutorId = this.selectInstrutor.value;
         const ano = parseInt(this.selectAno.value, 10);
-        this.tituloLancamento.textContent = `Lançamentos para ${mes.toString().padStart(2, '0')}/${ano}`;
         try {
-            const lancamentos = await chamarAPI(`/rateio/lancamentos?instrutor_id=${instrutorId}&ano=${ano}&mes=${mes}`);
-            this.lancamentosContainer.innerHTML = '';
-            lancamentos.forEach(l => this.criarLinha(l));
-            this.atualizarTotal();
-            this.areaLancamento.style.display = 'block';
+            this.dadosAno = await chamarAPI(`/rateio/lancamentos-ano?instrutor_id=${instrutorId}&ano=${ano}`);
+            this.renderizarGrid();
         } catch (e) {
             exibirAlerta(e.message, 'danger');
         }
+    }
+
+    renderizarGrid() {
+        this.gridContainer.innerHTML = '';
+        for (let m = 1; m <= 12; m++) {
+            const dados = this.dadosAno[m] || [];
+            const total = dados.reduce((a, b) => a + b.percentual, 0);
+            let badgeClass = 'bg-light text-dark border';
+            let badgeText = 'Vazio';
+            if (total === 100) {
+                badgeClass = 'bg-success';
+                badgeText = 'Completo (100%)';
+            } else if (total > 0) {
+                badgeClass = 'bg-warning';
+                badgeText = `Parcial (${total}%)`;
+            }
+            const itens = dados.map(d => `<li class="list-group-item">${escapeHTML(d.rateio_config.descricao)}: ${d.percentual}%</li>`).join('');
+            const card = document.createElement('div');
+            card.className = 'col';
+            card.dataset.mes = m;
+            card.innerHTML = `
+                <div class="card h-100 month-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">${this.nomeMes(m)}</h6>
+                        <span class="badge ${badgeClass}">${badgeText}</span>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            ${itens || '<li class="list-group-item text-muted">Sem lançamentos</li>'}
+                        </ul>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-primary btn-sm w-100" data-mes="${m}">
+                            <i class="bi bi-pencil-square me-1"></i> Gerenciar Lançamentos
+                        </button>
+                    </div>
+                </div>`;
+            card.querySelector('button').addEventListener('click', () => this.abrirModal(m));
+            this.gridContainer.appendChild(card);
+        }
+        this.gridContainer.style.display = 'flex';
+    }
+
+    nomeMes(m) {
+        const nomes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+        return nomes[m - 1];
+    }
+
+    abrirModal(mes) {
+        this.mesAtual = mes;
+        const ano = parseInt(this.selectAno.value, 10);
+        this.modalTitle.textContent = `Lançamentos para ${this.nomeMes(mes)} / ${ano}`;
+        const dados = this.dadosAno[mes] || [];
+        this.lancamentosContainer.innerHTML = '';
+        dados.forEach(l => this.criarLinha(l));
+        this.atualizarTotal();
+        this.modal.show();
     }
 
     criarLinha(lancamento) {
@@ -107,7 +150,7 @@ class LancamentosApp {
         const percent = parseFloat(this.inputPercentual.value || '0');
         if (!configId || percent <= 0) return;
         const selected = this.selectConfig.selectedOptions[0].textContent;
-        this.criarLinha({ rateio_config_id: configId, percentual: percent, rateio_config: { descricao: selected } });
+        this.criarLinha({ rateio_config_id: parseInt(configId, 10), percentual: percent, rateio_config: { descricao: selected } });
         this.inputPercentual.value = '';
         this.atualizarTotal();
     }
@@ -115,7 +158,8 @@ class LancamentosApp {
     atualizarTotal() {
         const valores = Array.from(this.lancamentosContainer.querySelectorAll('.percentual')).map(i => parseFloat(i.value) || 0);
         const total = valores.reduce((a, b) => a + b, 0);
-        this.totalPercentual.textContent = total.toFixed(2);
+        this.totalPercentual.textContent = `${total}%`;
+        this.progressBar.style.width = `${total}%`;
     }
 
     async salvar() {
@@ -129,10 +173,49 @@ class LancamentosApp {
         }));
         try {
             await chamarAPI('/rateio/lancamentos', 'POST', { instrutor_id: parseInt(instrutorId, 10), ano, mes, lancamentos });
+            const atualizados = await chamarAPI(`/rateio/lancamentos?instrutor_id=${instrutorId}&ano=${ano}&mes=${mes}`);
+            this.dadosAno[mes] = atualizados;
+            this.atualizarCard(mes);
+            this.modal.hide();
             exibirAlerta('Lançamentos salvos!', 'success');
         } catch (e) {
             exibirAlerta(e.message, 'danger');
         }
+    }
+
+    atualizarCard(mes) {
+        const card = this.gridContainer.querySelector(`[data-mes="${mes}"]`);
+        if (!card) return;
+        const dados = this.dadosAno[mes] || [];
+        const total = dados.reduce((a, b) => a + b.percentual, 0);
+        let badgeClass = 'bg-light text-dark border';
+        let badgeText = 'Vazio';
+        if (total === 100) {
+            badgeClass = 'bg-success';
+            badgeText = 'Completo (100%)';
+        } else if (total > 0) {
+            badgeClass = 'bg-warning';
+            badgeText = `Parcial (${total}%)`;
+        }
+        const itens = dados.map(d => `<li class="list-group-item">${escapeHTML(d.rateio_config.descricao)}: ${d.percentual}%</li>`).join('');
+        card.innerHTML = `
+            <div class="card h-100 month-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">${this.nomeMes(mes)}</h6>
+                    <span class="badge ${badgeClass}">${badgeText}</span>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        ${itens || '<li class="list-group-item text-muted">Sem lançamentos</li>'}
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-primary btn-sm w-100" data-mes="${mes}">
+                        <i class="bi bi-pencil-square me-1"></i> Gerenciar Lançamentos
+                    </button>
+                </div>
+            </div>`;
+        card.querySelector('button').addEventListener('click', () => this.abrirModal(mes));
     }
 }
 

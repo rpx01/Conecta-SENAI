@@ -1,7 +1,8 @@
 function formatarDataHora(dataISO) {
     if (!dataISO) return '';
-    const data = new Date(dataISO);
-    return data.toLocaleString('pt-BR');
+    const entrada = dataISO.endsWith('Z') || dataISO.includes('+') ? dataISO : `${dataISO}Z`;
+    const data = new Date(entrada);
+    return data.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 }
 
 document.addEventListener('DOMContentLoaded', () => {

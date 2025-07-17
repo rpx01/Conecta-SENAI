@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 <span class="text-muted small"><i class="bi bi-clock-fill"></i> ${calcularIntervaloDeTempo(ag.horarios)}</span>
                             </div>
                             ${podeGerenciar ? `<div class="agendamento-acoes btn-group">
-                                <a href="/novo-agendamento.html?id=${ag.id}" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a>
+                                <a href="/laboratorios/laboratorios-agendamento.html?id=${ag.id}" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a>
                                 <button class="btn btn-sm btn-outline-danger btn-excluir" data-id="${ag.id}" title="Excluir"><i class="bi bi-trash"></i></button>
                             </div>` : ''}
                         </div>`;
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ` : ''}
                 </div>
                 <div class="card-footer text-end">
-                    <a href="/novo-agendamento.html?lab_id=${labSelecionadoId}&data=${dataFormatada}&turno=${turno}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Novo Agendamento</a>
+                    <a href="/laboratorios/laboratorios-agendamento.html?lab_id=${labSelecionadoId}&data=${dataFormatada}&turno=${turno}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Novo Agendamento</a>
                 </div>
             </div>`;
         }).join('');

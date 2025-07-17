@@ -570,7 +570,7 @@ function editarOcupacao(id) {
     if (resumoModal) resumoModal.hide();
 
     // Redireciona para edição (implementar página de edição)
-    window.location.href = `/ocupacao/novo-agendamento-sala.html?editar=${id}`;
+    window.location.href = `/ocupacao/ocupacao-agendamento.html?editar=${id}`;
 }
 
 // Exclui ocupação a partir do resumo do dia

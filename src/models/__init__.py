@@ -18,3 +18,12 @@ __all__ = [
     "LancamentoRateio",
     "LogLancamentoRateio",
 ]
+from .treinamento import Treinamento, TurmaTreinamento, MaterialDidatico, Inscricao, ListaPresenca  # noqa: E402
+
+__all__.extend([
+    "Treinamento",
+    "TurmaTreinamento",
+    "MaterialDidatico",
+    "Inscricao",
+    "ListaPresenca",
+])

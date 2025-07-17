@@ -18,7 +18,6 @@ from src.routes.sala import sala_bp
 from src.routes.turma import turma_bp
 from src.routes.user import user_bp
 from src.routes.rateio import rateio_bp
-from src.routes.treinamento import treinamento_bp
 from src.models.recurso import Recurso
 
 MIGRATIONS_DIR = os.path.join(os.path.dirname(__file__), '..', 'migrations')
@@ -117,7 +116,6 @@ def create_app():
     app.register_blueprint(instrutor_bp, url_prefix='/api')
     app.register_blueprint(ocupacao_bp, url_prefix='/api')
     app.register_blueprint(rateio_bp, url_prefix='/api')
-    app.register_blueprint(treinamento_bp, url_prefix='/api')
 
     @app.route('/')
     def index():

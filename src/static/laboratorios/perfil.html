@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Perfil - Gerenciamento de Usuarios</title>
+    <title>Meu Perfil - Sistema de Agenda de Laboratório</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -15,19 +15,30 @@
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="/selecao-sistema.html">
                 <img src="/img/senai-logo.png" alt="SENAI" height="28" class="me-2">
-                <span class="navbar-brand-text" title="Gerenciamento de Usuarios">Gerenciamento de Usuarios</span>
+                <span class="navbar-brand-text" title="Agenda de Laboratórios">Agenda de Laboratórios</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/usuarios.html">
-                            <i class="bi bi-people-fill me-1"></i> Lista de Usuários
-                        </a>
-                    </li>
-                </ul>
+    <li class="nav-item">
+        <a class="nav-link" href="/laboratorios/index.html"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/laboratorios/calendario.html"><i class="bi bi-calendar3 me-1"></i> Calendário</a>
+    </li>
+    <li class="nav-item admin-only">
+        <a class="nav-link" href="/laboratorios/laboratorios-turmas.html"><i class="bi bi-building me-1"></i> Laboratórios e Turmas</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/laboratorios/novo-agendamento.html"><i class="bi bi-plus-circle me-1"></i> Novo Agendamento</a>
+    </li>
+    <li class="nav-item admin-only">
+        <a class="nav-link" href="/laboratorios/logs-agenda.html"><i class="bi bi-journal-text me-1"></i> Logs</a>
+    </li>
+</ul>
+
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -36,7 +47,7 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li>
-                                <a class="dropdown-item active" href="/perfil-usuarios.html">
+                                <a class="dropdown-item active" href="/laboratorios/perfil.html">
                                     <i class="bi bi-person me-2"></i> Meu Perfil
                                 </a>
                             </li>
@@ -59,10 +70,22 @@
                 <div class="sidebar rounded shadow-sm">
                     <h5 class="mb-3">Menu Principal</h5>
                     <div class="nav flex-column">
-                        <a class="nav-link" href="/usuarios.html">
-                            <i class="bi bi-people-fill"></i> Lista de Usuários
+                        <a class="nav-link" href="/laboratorios/index.html">
+                            <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
-                        <a class="nav-link active" href="/perfil-usuarios.html">
+                        <a class="nav-link" href="/laboratorios/calendario.html">
+                            <i class="bi bi-calendar3"></i> Calendário
+                        </a>
+                        <a class="nav-link admin-only" href="/laboratorios/laboratorios-turmas.html">
+                            <i class="bi bi-building"></i> Laboratórios e Turmas
+                        </a>
+                        <a class="nav-link" href="/laboratorios/novo-agendamento.html">
+                            <i class="bi bi-plus-circle"></i> Novo Agendamento
+                        </a>
+                        <a class="nav-link admin-only" href="/laboratorios/logs-agenda.html">
+                            <i class="bi bi-journal-text"></i> Logs
+                        </a>
+                        <a class="nav-link active" href="/laboratorios/perfil.html">
                             <i class="bi bi-person"></i> Meu Perfil
                         </a>
                     </div>
@@ -141,6 +164,10 @@
                             </div>
                             <div class="card-body">
                                 <div class="mb-3">
+                                    <h6>Total de Agendamentos</h6>
+                                    <p id="totalAgendamentos" class="h4">-</p>
+                                </div>
+                                <div class="mb-3">
                                     <h6>Membro desde</h6>
                                     <p id="membroDesde" class="h4">-</p>
                                 </div>
@@ -156,7 +183,7 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-6">
-                    <p class="mb-0">&copy; 2025 Gerenciamento de Usuarios</p>
+                    <p class="mb-0">&copy; 2025 Sistema de Agenda de Laboratório</p>
                 </div>
                 <div class="col-md-6 text-md-end">
                     <p class="mb-0">Versão 1.0</p>
@@ -176,6 +203,8 @@
             // Carrega os dados do usuário
             carregarDadosUsuario();
             
+            // Carrega estatísticas
+            carregarEstatisticas();
             
             // Event listener para o formulário de perfil
             document.getElementById('perfilForm').addEventListener('submit', async function(e) {
@@ -264,6 +293,15 @@
             }
         }
         
+        // Função para carregar estatísticas
+        async function carregarEstatisticas() {
+            try {
+                const agendamentos = await chamarAPI('/agendamentos');
+                document.getElementById('totalAgendamentos').textContent = agendamentos.length;
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
     </script>
 <div aria-live="polite" aria-atomic="true" class="position-relative">
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>

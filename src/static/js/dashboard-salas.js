@@ -35,7 +35,7 @@ async function carregarIndicadoresMensais() {
             document.getElementById(`totalSalasMes${prefixo}`).textContent = dados.totalSalas;
             document.getElementById(`salasOcupadasMes${prefixo}`).textContent = dados.salasOcupadas;
             document.getElementById(`salasLivresMes${prefixo}`).textContent = dados.totalSalas - dados.salasOcupadas;
-            document.getElementById(linkEl).href = `/ocupacao/calendario-salas.html?mes=${dados.iniStr.substring(0,7)}`;
+            document.getElementById(linkEl).href = `/ocupacao/ocupacao-calendario.html?mes=${dados.iniStr.substring(0,7)}`;
         }
 
         preencher('Anterior', anterior, 'linkMesAnterior');

@@ -539,7 +539,13 @@ document.addEventListener('DOMContentLoaded', function() {
             '/perfil.html',
             '/perfil-usuarios.html',
             '/gerenciar-turmas.html',
-            '/logs-rateio.html'
+            '/logs-rateio.html',
+            '/treinamentos/portal.html',
+            '/treinamentos/meus-treinamentos.html',
+            '/treinamentos/catalogo-treinamentos.html',
+            '/treinamentos/gestao-turmas.html',
+            '/treinamentos/dashboard-treinamentos.html',
+            '/treinamentos/participantes-turma.html'
         ];
 
         if (!paginasOcupacao.includes(paginaAtual)) {

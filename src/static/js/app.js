@@ -173,19 +173,30 @@ function verificarPermissaoAdmin() {
     const registerPage = '/register.html';
     const usuario = getUsuarioLogado();
 
+    const paginasProtegidas = ![loginPage, registerPage].includes(currentPage);
+    const naoEstaNaRaiz = !['/', '/selecao-sistema.html'].includes(currentPage);
+
+    if (!usuario && paginasProtegidas) {
+        window.location.href = loginPage;
+        return;
+    }
+
     if (usuario) {
-        // Se estiver autenticado e na página pública, envia para o dashboard adequado
         if (currentPage === loginPage || currentPage === registerPage) {
-            if (usuario.tipo === 'admin') {
-                window.location.href = '/selecao-sistema.html';
-            } else {
-                window.location.href = '/index.html';
-            }
+            window.location.href = '/selecao-sistema.html';
+            return;
         }
-    } else {
-        // Não autenticado: redireciona para o login caso tente acessar página protegida
-        if (currentPage !== loginPage && currentPage !== registerPage) {
-            window.location.href = loginPage;
+
+        if (
+            naoEstaNaRaiz &&
+            paginasProtegidas &&
+            !currentPage.startsWith('/laboratorios/') &&
+            !currentPage.startsWith('/ocupacao/') &&
+            !currentPage.startsWith('/rateio/') &&
+            !currentPage.startsWith('/admin/') &&
+            !currentPage.startsWith('/treinamentos/')
+        ) {
+            window.location.href = '/selecao-sistema.html';
         }
     }
 })();
@@ -363,7 +374,7 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
     if (!container) return;
     
     // Verifica se o link já existe para evitar duplicação
-    const linkExistente = container.querySelector('a[href="/laboratorios-turmas.html"]');
+    const linkExistente = container.querySelector('a[href="/laboratorios/laboratorios-turmas.html"]');
     if (linkExistente) return;
     
     // Cria o elemento do link baseado no tipo de menu
@@ -374,7 +385,7 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
         
         const link = document.createElement('a');
         link.className = 'nav-link';
-        link.href = '/laboratorios-turmas.html';
+        link.href = '/laboratorios/laboratorios-turmas.html';
         link.innerHTML = '<i class="bi bi-building me-1"></i> Laboratórios e Turmas';
         
         navItem.appendChild(link);
@@ -390,11 +401,11 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
         // Para sidebar (menu lateral)
         const link = document.createElement('a');
         link.className = 'nav-link admin-only';
-        link.href = '/laboratorios-turmas.html';
+        link.href = '/laboratorios/laboratorios-turmas.html';
         link.innerHTML = '<i class="bi bi-building"></i> Laboratórios e Turmas';
         
         // Insere antes do último item (Meu Perfil)
-        const lastItem = container.querySelector('a[href="/perfil.html"], a[href="/perfil-salas.html"], a[href="/perfil-usuarios.html"]');
+        const lastItem = container.querySelector('a[href="/laboratorios/perfil.html"], a[href="/ocupacao/perfil-salas.html"], a[href="/admin/perfil-usuarios.html"]');
         if (lastItem) {
             container.insertBefore(link, lastItem);
         } else {
@@ -408,7 +419,7 @@ function adicionarLinkLogs(containerSelector, isNavbar = false) {
     const container = document.querySelector(containerSelector);
     if (!container) return;
 
-    const linkExistente = container.querySelector('a[href="/logs-agenda.html"]');
+    const linkExistente = container.querySelector('a[href="/laboratorios/logs-agenda.html"]');
     if (linkExistente) return;
 
     if (isNavbar) {
@@ -417,7 +428,7 @@ function adicionarLinkLogs(containerSelector, isNavbar = false) {
 
         const link = document.createElement('a');
         link.className = 'nav-link';
-        link.href = '/logs-agenda.html';
+        link.href = '/laboratorios/logs-agenda.html';
         link.innerHTML = '<i class="bi bi-journal-text me-1"></i> Logs';
 
         navItem.appendChild(link);
@@ -431,10 +442,10 @@ function adicionarLinkLogs(containerSelector, isNavbar = false) {
     } else {
         const link = document.createElement('a');
         link.className = 'nav-link admin-only';
-        link.href = '/logs-agenda.html';
+        link.href = '/laboratorios/logs-agenda.html';
         link.innerHTML = '<i class="bi bi-journal-text"></i> Logs';
 
-        const lastItem = container.querySelector('a[href="/perfil.html"], a[href="/perfil-salas.html"], a[href="/perfil-usuarios.html"]');
+        const lastItem = container.querySelector('a[href="/laboratorios/perfil.html"], a[href="/ocupacao/perfil-salas.html"], a[href="/admin/perfil-usuarios.html"]');
         if (lastItem) {
             container.insertBefore(link, lastItem);
         } else {
@@ -507,7 +518,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Páginas que requerem permissão de administrador
-    if (paginaAtual === '/usuarios.html' || paginaAtual === '/laboratorios-turmas.html') {
+    if (paginaAtual === '/admin/usuarios.html' || paginaAtual === '/laboratorios/laboratorios-turmas.html') {
         if (!verificarPermissaoAdmin()) {
             return;
         }
@@ -525,21 +536,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Adiciona o link para Laboratórios e Turmas somente no módulo de Agenda
     if (isAdmin()) {
         const paginasOcupacao = [
-            '/dashboard-salas.html',
-            '/calendario-salas.html',
-            '/gerenciar-salas.html',
-            '/corpo-docente.html',
-            '/novo-agendamento-sala.html',
-            '/perfil-rateio.html',
-            '/rateio-lancamentos.html',
-            '/rateio-config.html',
-            '/rateio-instrutores.html',
-            '/perfil-salas.html',
-            '/usuarios.html',
-            '/perfil.html',
-            '/perfil-usuarios.html',
-            '/gerenciar-turmas.html',
-            '/logs-rateio.html',
+            '/ocupacao/dashboard-salas.html',
+            '/ocupacao/calendario-salas.html',
+            '/ocupacao/gerenciar-salas.html',
+            '/ocupacao/corpo-docente.html',
+            '/ocupacao/novo-agendamento-sala.html',
+            '/rateio/perfil-rateio.html',
+            '/rateio/rateio-lancamentos.html',
+            '/rateio/rateio-config.html',
+            '/rateio/rateio-instrutores.html',
+            '/ocupacao/perfil-salas.html',
+            '/admin/usuarios.html',
+            '/laboratorios/perfil.html',
+            '/admin/perfil-usuarios.html',
+            '/ocupacao/gerenciar-turmas.html',
+            '/rateio/logs-rateio.html',
             '/treinamentos/portal.html',
             '/treinamentos/meus-treinamentos.html',
             '/treinamentos/catalogo-treinamentos.html',
@@ -608,7 +619,7 @@ function atualizarInterfaceUsuario() {
     });
     
     // Carrega notificações no dashboard
-    if (window.location.pathname === '/index.html') {
+    if (window.location.pathname === '/laboratorios/index.html') {
         carregarNotificacoes();
     }
 }

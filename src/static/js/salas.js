@@ -384,7 +384,7 @@ class GerenciadorSalas {
 // Ver ocupações de uma sala
     verOcupacoesSala(id) {
         // Redireciona para o calendário com filtro da sala
-        window.location.href = `/calendario-salas.html?sala_id=${id}`;
+        window.location.href = `/ocupacao/calendario-salas.html?sala_id=${id}`;
     }
 
 }

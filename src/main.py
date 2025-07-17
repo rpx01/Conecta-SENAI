@@ -3,7 +3,7 @@ Inicializa a aplicacao Flask e registra os blueprints.
 """
 import os
 import logging
-from flask import Flask
+from flask import Flask, redirect
 from flask_migrate import Migrate, upgrade, init, migrate as migrate_cmd
 from src.limiter import limiter
 from src.redis_client import init_redis
@@ -119,7 +119,7 @@ def create_app():
 
     @app.route('/')
     def index():
-        return app.send_static_file('index.html')
+        return redirect('/selecao-sistema.html')
 
     @app.route('/<path:path>')
     def static_file(path):

@@ -16,7 +16,6 @@ from src.routes.notificacao import notificacao_bp
 from src.routes.ocupacao import ocupacao_bp
 from src.routes.sala import sala_bp
 from src.routes.turma import turma_bp
-from src.routes.treinamento import treinamento_bp
 from src.routes.user import user_bp
 from src.routes.rateio import rateio_bp
 from src.models.recurso import Recurso
@@ -113,7 +112,6 @@ def create_app():
     app.register_blueprint(notificacao_bp, url_prefix='/api')
     app.register_blueprint(laboratorio_bp, url_prefix='/api')
     app.register_blueprint(turma_bp, url_prefix='/api')
-    app.register_blueprint(treinamento_bp, url_prefix='/api')
     app.register_blueprint(sala_bp, url_prefix='/api')
     app.register_blueprint(instrutor_bp, url_prefix='/api')
     app.register_blueprint(ocupacao_bp, url_prefix='/api')

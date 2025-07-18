@@ -1,106 +1,96 @@
 from flask import Blueprint, request, jsonify
 from src.models import db
 from src.models.treinamento import Treinamento, MaterialDidatico
-from src.auth import admin_required, login_required
+from src.schemas.treinamento import TreinamentoCreateSchema
+from src.auth import admin_required
+from pydantic import ValidationError
 
-admin_treinamento_bp = Blueprint('admin_treinamento', __name__, url_prefix='/admin')
+admin_treinamento_bp = Blueprint('admin_treinamento', __name__)
 
-
+# ROTA GET (LISTAR TODOS) - CORRIGE O ERRO 404
 @admin_treinamento_bp.route('/treinamentos', methods=['GET'])
-@login_required
-def listar_todos():
-    treinamentos = Treinamento.query.order_by(Treinamento.nome).all()
-    return jsonify([t.to_dict() for t in treinamentos])
+@admin_required
+def listar_treinamentos():
+    try:
+        treinamentos = Treinamento.query.order_by(Treinamento.nome).all()
+        return jsonify([t.to_dict_full() for t in treinamentos]), 200
+    except Exception as e:
+        return jsonify({"erro": f"Erro interno: {str(e)}"}), 500
 
-
+# ROTA GET (BUSCAR UM) - PARA O BOTÃO EDITAR
 @admin_treinamento_bp.route('/treinamentos/<int:id>', methods=['GET'])
-@login_required
+@admin_required
 def obter_treinamento(id):
-    treinamento = db.session.get(Treinamento, id)
-    if not treinamento:
-        return jsonify({'erro': 'Treinamento não encontrado'}), 404
+    treinamento = Treinamento.query.get_or_404(id)
     return jsonify(treinamento.to_dict_full())
 
-
+# ROTA POST (CRIAR) - PARA O BOTÃO SALVAR (NOVO)
 @admin_treinamento_bp.route('/treinamentos', methods=['POST'])
 @admin_required
 def criar_treinamento():
-    data = request.json or {}
-    nome = (data.get('nome') or '').strip()
-    codigo = (data.get('codigo') or '').strip() or None
-    carga_horaria = data.get('carga_horaria')
-    max_alunos = data.get('max_alunos')
-    materiais = data.get('materiais', [])
+    dados = request.get_json()
+    try:
+        TreinamentoCreateSchema(**dados)  # Apenas para validação
 
-    if not nome or carga_horaria is None or max_alunos is None:
-        return jsonify({'erro': 'Dados incompletos'}), 400
+        novo_treinamento = Treinamento(
+            nome=dados.get('nome'),
+            codigo=dados.get('codigo'),
+            carga_horaria=dados.get('carga_horaria'),
+            max_alunos=dados.get('max_alunos')
+        )
+        db.session.add(novo_treinamento)
 
-    if Treinamento.query.filter_by(nome=nome).first():
-        return jsonify({'erro': 'Treinamento já existe'}), 400
+        # Adiciona material didático se houver
+        if dados.get('materiais'):
+            for mat in dados['materiais']:
+                if mat.get('url'):
+                    novo_material = MaterialDidatico(
+                        descricao=mat.get('descricao', 'Material Principal'),
+                        url=mat.get('url'),
+                        treinamento=novo_treinamento
+                    )
+                    db.session.add(novo_material)
 
-    treinamento = Treinamento(
-        nome=nome,
-        codigo=codigo,
-        carga_horaria=carga_horaria,
-        max_alunos=max_alunos,
-    )
-    db.session.add(treinamento)
-    db.session.flush()
+        db.session.commit()
+        return jsonify(novo_treinamento.to_dict_full()), 201
+    except ValidationError as e:
+        return jsonify({"erro": e.errors()}), 400
+    except Exception:
+        db.session.rollback()
+        return jsonify({"erro": "Erro interno ao criar treinamento"}), 500
 
-    for mat in materiais:
-        desc = (mat.get('descricao') or '').strip()
-        url = (mat.get('url') or '').strip() or None
-        if desc:
-            db.session.add(MaterialDidatico(treinamento_id=treinamento.id, descricao=desc, url=url))
-
-    db.session.commit()
-    return jsonify(treinamento.to_dict()), 201
-
-
+# ROTA PUT (ATUALIZAR) - PARA O BOTÃO SALVAR (EDITAR)
 @admin_treinamento_bp.route('/treinamentos/<int:id>', methods=['PUT'])
 @admin_required
 def atualizar_treinamento(id):
-    treinamento = db.session.get(Treinamento, id)
-    if not treinamento:
-        return jsonify({'erro': 'Treinamento não encontrado'}), 404
+    treinamento = Treinamento.query.get_or_404(id)
+    dados = request.get_json()
 
-    data = request.json or {}
-    if 'nome' in data:
-        nome = (data.get('nome') or '').strip()
-        if not nome:
-            return jsonify({'erro': 'Nome não pode ser vazio'}), 400
-        existente = Treinamento.query.filter_by(nome=nome).first()
-        if existente and existente.id != id:
-            return jsonify({'erro': 'Já existe treinamento com este nome'}), 400
-        treinamento.nome = nome
+    treinamento.nome = dados.get('nome', treinamento.nome)
+    treinamento.codigo = dados.get('codigo', treinamento.codigo)
+    treinamento.carga_horaria = dados.get('carga_horaria', treinamento.carga_horaria)
+    treinamento.max_alunos = dados.get('max_alunos', treinamento.max_alunos)
 
-    if 'codigo' in data:
-        treinamento.codigo = (data.get('codigo') or '').strip() or None
-
-    if 'carga_horaria' in data and data.get('carga_horaria') is not None:
-        treinamento.carga_horaria = data.get('carga_horaria')
-
-    if 'max_alunos' in data and data.get('max_alunos') is not None:
-        treinamento.max_alunos = data.get('max_alunos')
-
-    if 'materiais' in data:
-        treinamento.materiais.delete()
-        for mat in data.get('materiais') or []:
-            desc = (mat.get('descricao') or '').strip()
-            url = (mat.get('url') or '').strip() or None
-            if desc:
-                treinamento.materiais.append(MaterialDidatico(descricao=desc, url=url))
+    # Lógica para atualizar material (simplificada)
+    if dados.get('materiais'):
+        MaterialDidatico.query.filter_by(treinamento_id=id).delete()
+        for mat in dados['materiais']:
+            if mat.get('url'):
+                novo_material = MaterialDidatico(
+                    descricao=mat.get('descricao', 'Material Principal'),
+                    url=mat.get('url'),
+                    treinamento_id=id
+                )
+                db.session.add(novo_material)
 
     db.session.commit()
-    return jsonify(treinamento.to_dict())
+    return jsonify(treinamento.to_dict_full()), 200
 
-
+# ROTA DELETE (EXCLUIR) - PARA O BOTÃO EXCLUIR
 @admin_treinamento_bp.route('/treinamentos/<int:id>', methods=['DELETE'])
 @admin_required
-def remover_treinamento(id):
-    treinamento = db.session.get(Treinamento, id)
-    if not treinamento:
-        return jsonify({'erro': 'Treinamento não encontrado'}), 404
+def excluir_treinamento(id):
+    treinamento = Treinamento.query.get_or_404(id)
     db.session.delete(treinamento)
     db.session.commit()
-    return jsonify({'mensagem': 'Treinamento removido'})
+    return jsonify({"mensagem": "Treinamento excluído com sucesso"}), 200

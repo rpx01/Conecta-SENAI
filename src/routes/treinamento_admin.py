@@ -3,7 +3,7 @@ from src.models import db
 from src.models.treinamento import Treinamento, MaterialDidatico
 from src.auth import admin_required, login_required
 
-admin_treinamento_bp = Blueprint('admin_treinamento', __name__)
+admin_treinamento_bp = Blueprint('admin_treinamento', __name__, url_prefix='/admin')
 
 
 @admin_treinamento_bp.route('/treinamentos', methods=['GET'])
@@ -19,7 +19,7 @@ def obter_treinamento(id):
     treinamento = db.session.get(Treinamento, id)
     if not treinamento:
         return jsonify({'erro': 'Treinamento não encontrado'}), 404
-    return jsonify(treinamento.to_dict())
+    return jsonify(treinamento.to_dict_full())
 
 
 @admin_treinamento_bp.route('/treinamentos', methods=['POST'])

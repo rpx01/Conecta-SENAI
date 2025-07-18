@@ -1,6 +1,11 @@
 from flask import Blueprint, request, jsonify, g
 from src.models import db
-from src.models.treinamento import Treinamento, TurmaTreinamento, Inscricao, MaterialDidatico
+from src.models.treinamento import (
+    Treinamento,
+    TurmaTreinamento,
+    Inscricao,
+    MaterialDidatico,
+)
 from src.models.instrutor import Instrutor
 from src.models.user import User
 from src.auth import admin_required, login_required
@@ -15,6 +20,73 @@ treinamento_bp = Blueprint('treinamento', __name__)
 def listar_treinamentos():
     treinamentos = Treinamento.query.order_by(Treinamento.nome).all()
     return jsonify([t.to_dict() for t in treinamentos])
+
+
+@treinamento_bp.route('/treinamentos/<int:id>', methods=['GET'])
+@login_required
+def obter_treinamento(id):
+    treinamento = db.session.get(Treinamento, id)
+    if not treinamento:
+        return jsonify({'erro': 'Treinamento não encontrado'}), 404
+    return jsonify(treinamento.to_dict())
+
+
+@treinamento_bp.route('/treinamentos', methods=['POST'])
+@admin_required
+def criar_treinamento():
+    data = request.json or {}
+    nome = (data.get('nome') or '').strip()
+    carga_horaria = data.get('carga_horaria')
+    codigo = (data.get('codigo') or '').strip() or None
+
+    if not nome or carga_horaria is None:
+        return jsonify({'erro': 'Nome e carga_horaria são obrigatórios'}), 400
+
+    if Treinamento.query.filter_by(nome=nome).first():
+        return jsonify({'erro': 'Treinamento já existe'}), 400
+
+    novo = Treinamento(nome=nome, codigo=codigo, carga_horaria=carga_horaria)
+    db.session.add(novo)
+    db.session.commit()
+    return jsonify(novo.to_dict()), 201
+
+
+@treinamento_bp.route('/treinamentos/<int:id>', methods=['PUT'])
+@admin_required
+def atualizar_treinamento(id):
+    treinamento = db.session.get(Treinamento, id)
+    if not treinamento:
+        return jsonify({'erro': 'Treinamento não encontrado'}), 404
+
+    data = request.json or {}
+    if 'nome' in data:
+        nome = (data.get('nome') or '').strip()
+        if not nome:
+            return jsonify({'erro': 'Nome não pode ser vazio'}), 400
+        existente = Treinamento.query.filter_by(nome=nome).first()
+        if existente and existente.id != id:
+            return jsonify({'erro': 'Já existe treinamento com este nome'}), 400
+        treinamento.nome = nome
+
+    if 'codigo' in data:
+        treinamento.codigo = (data.get('codigo') or '').strip() or None
+
+    if 'carga_horaria' in data and data.get('carga_horaria') is not None:
+        treinamento.carga_horaria = data.get('carga_horaria')
+
+    db.session.commit()
+    return jsonify(treinamento.to_dict())
+
+
+@treinamento_bp.route('/treinamentos/<int:id>', methods=['DELETE'])
+@admin_required
+def remover_treinamento(id):
+    treinamento = db.session.get(Treinamento, id)
+    if not treinamento:
+        return jsonify({'erro': 'Treinamento não encontrado'}), 404
+    db.session.delete(treinamento)
+    db.session.commit()
+    return jsonify({'mensagem': 'Treinamento removido'})
 
 
 @treinamento_bp.route('/turmas_disponiveis', methods=['GET'])
@@ -47,3 +119,105 @@ def inscrever_em_turma():
     db.session.commit()
 
     return jsonify({"mensagem": "Inscrição realizada com sucesso!"}), 201
+
+
+@treinamento_bp.route('/turmas', methods=['GET'])
+@login_required
+def listar_turmas():
+    turmas = TurmaTreinamento.query.order_by(TurmaTreinamento.data_inicio).all()
+    return jsonify([t.to_dict() for t in turmas])
+
+
+@treinamento_bp.route('/turmas/<int:id>', methods=['GET'])
+@login_required
+def obter_turma(id):
+    turma = db.session.get(TurmaTreinamento, id)
+    if not turma:
+        return jsonify({'erro': 'Turma não encontrada'}), 404
+    return jsonify(turma.to_dict())
+
+
+@treinamento_bp.route('/turmas', methods=['POST'])
+@admin_required
+def criar_turma():
+    data = request.json or {}
+    treinamento_id = data.get('treinamento_id')
+    data_inicio = data.get('data_inicio')
+    data_fim = data.get('data_fim')
+    instrutores = data.get('instrutores', [])
+
+    if not treinamento_id or not data_inicio or not data_fim:
+        return jsonify({'erro': 'treinamento_id, data_inicio e data_fim são obrigatórios'}), 400
+
+    turma = TurmaTreinamento(
+        treinamento_id=treinamento_id,
+        data_inicio=datetime.fromisoformat(data_inicio).date(),
+        data_fim=datetime.fromisoformat(data_fim).date(),
+    )
+
+    for inst_id in instrutores:
+        instrutor = db.session.get(Instrutor, inst_id)
+        if instrutor:
+            turma.instrutores.append(instrutor)
+
+    db.session.add(turma)
+    db.session.commit()
+    return jsonify(turma.to_dict()), 201
+
+
+@treinamento_bp.route('/turmas/<int:id>', methods=['PUT'])
+@admin_required
+def atualizar_turma(id):
+    turma = db.session.get(TurmaTreinamento, id)
+    if not turma:
+        return jsonify({'erro': 'Turma não encontrada'}), 404
+
+    data = request.json or {}
+
+    if 'data_inicio' in data:
+        turma.data_inicio = datetime.fromisoformat(data['data_inicio']).date()
+
+    if 'data_fim' in data:
+        turma.data_fim = datetime.fromisoformat(data['data_fim']).date()
+
+    if 'status' in data:
+        turma.status = data['status']
+
+    if 'instrutores' in data:
+        turma.instrutores.clear()
+        for inst_id in data['instrutores']:
+            instrutor = db.session.get(Instrutor, inst_id)
+            if instrutor:
+                turma.instrutores.append(instrutor)
+
+    db.session.commit()
+    return jsonify(turma.to_dict())
+
+
+@treinamento_bp.route('/turmas/<int:id>', methods=['DELETE'])
+@admin_required
+def remover_turma(id):
+    turma = db.session.get(TurmaTreinamento, id)
+    if not turma:
+        return jsonify({'erro': 'Turma não encontrada'}), 404
+    db.session.delete(turma)
+    db.session.commit()
+    return jsonify({'mensagem': 'Turma removida'})
+
+
+@treinamento_bp.route('/dashboard/kpis', methods=['GET'])
+@login_required
+def obter_kpis():
+    total_treinamentos = Treinamento.query.count()
+    total_turmas = TurmaTreinamento.query.count()
+    total_inscricoes = Inscricao.query.count()
+    turmas_ativas = TurmaTreinamento.query.filter(
+        TurmaTreinamento.status.in_(['A realizar', 'Em andamento'])
+    ).count()
+
+    return jsonify({
+        'total_treinamentos': total_treinamentos,
+        'total_turmas': total_turmas,
+        'total_inscricoes': total_inscricoes,
+        'turmas_ativas': turmas_ativas,
+    })

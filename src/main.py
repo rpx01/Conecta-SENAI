@@ -121,7 +121,11 @@ def create_app():
     app.register_blueprint(rateio_bp, url_prefix='/api')
     app.register_blueprint(treinamento_bp, url_prefix='/api')
     app.register_blueprint(admin_treinamento_bp, url_prefix='/api/admin')
-    app.register_blueprint(user_treinamento_bp, url_prefix='/api/user')
+    app.register_blueprint(
+        user_treinamento_bp,
+        url_prefix='/api/user',
+        name='treinamento_user',
+    )
 
     @app.route('/')
     def index():

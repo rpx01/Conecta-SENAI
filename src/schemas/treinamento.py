@@ -9,5 +9,4 @@ class TreinamentoCreateSchema(BaseModel):
     nome: str
     codigo: Optional[str] = None
     carga_horaria: int = Field(gt=0)
-    max_alunos: int = Field(gt=0)
     materiais: Optional[List[MaterialDidaticoSchema]] = None

@@ -35,8 +35,7 @@ def criar_treinamento():
         novo_treinamento = Treinamento(
             nome=dados.get('nome'),
             codigo=dados.get('codigo'),
-            carga_horaria=dados.get('carga_horaria'),
-            max_alunos=dados.get('max_alunos')
+            carga_horaria=dados.get('carga_horaria')
         )
         db.session.add(novo_treinamento)
 
@@ -69,7 +68,6 @@ def atualizar_treinamento(id):
     treinamento.nome = dados.get('nome', treinamento.nome)
     treinamento.codigo = dados.get('codigo', treinamento.codigo)
     treinamento.carga_horaria = dados.get('carga_horaria', treinamento.carga_horaria)
-    treinamento.max_alunos = dados.get('max_alunos', treinamento.max_alunos)
 
     # Lógica para atualizar material (simplificada)
     if dados.get('materiais'):

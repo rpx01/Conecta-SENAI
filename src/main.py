@@ -81,19 +81,6 @@ def create_default_recursos(app):
         db.session.commit()
 
 
-def ensure_max_alunos_column(app):
-    """Adiciona coluna max_alunos caso falte em bancos antigos."""
-    with app.app_context():
-        insp = sa.inspect(db.engine)
-        cols = [c['name'] for c in insp.get_columns('treinamentos')]
-        if 'max_alunos' not in cols:
-            db.session.execute(sa.text(
-                "ALTER TABLE treinamentos ADD COLUMN max_alunos INTEGER NOT NULL DEFAULT 20"
-            ))
-            db.session.execute(sa.text(
-                "ALTER TABLE treinamentos ALTER COLUMN max_alunos DROP DEFAULT"
-            ))
-            db.session.commit()
 
 
 def create_app():
@@ -172,7 +159,6 @@ def create_app():
             upgrade(directory=MIGRATIONS_DIR)
         except Exception as e:  # pragma: no cover - migracao opcional
             logging.error("Erro ao aplicar migrations: %s", str(e))
-        ensure_max_alunos_column(app)
         create_admin(app)
         create_default_recursos(app)
 

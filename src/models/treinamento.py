@@ -17,8 +17,6 @@ class Treinamento(db.Model):
     nome = db.Column(db.String(200), nullable=False, unique=True)
     codigo = db.Column(db.String(50), unique=True, nullable=True)
     carga_horaria = db.Column(db.Integer, nullable=False)
-    max_alunos = db.Column(db.Integer, nullable=False, default=20)
-    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
 
     materiais = db.relationship('MaterialDidatico', backref='treinamento', lazy=True, cascade='all, delete-orphan')
     turmas = db.relationship('TurmaTreinamento', backref='treinamento', lazy=True)
@@ -29,7 +27,6 @@ class Treinamento(db.Model):
             'nome': self.nome,
             'codigo': self.codigo,
             'carga_horaria': self.carga_horaria,
-            'max_alunos': self.max_alunos,
             'materiais': [m.to_dict() for m in self.materiais],
         }
 
@@ -39,7 +36,6 @@ class Treinamento(db.Model):
             'nome': self.nome,
             'codigo': self.codigo,
             'carga_horaria': self.carga_horaria,
-            'max_alunos': self.max_alunos,
             'materiais': [m.to_dict() for m in self.materiais],
         }
 

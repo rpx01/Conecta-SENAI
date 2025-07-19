@@ -15,6 +15,26 @@ from datetime import datetime
 treinamento_bp = Blueprint('treinamento', __name__)
 
 
+@treinamento_bp.route('/catalogo', methods=['GET'])
+def catalogo_publico():
+    """Retorna lista simplificada de treinamentos."""
+    treinamentos = Treinamento.query.with_entities(
+        Treinamento.id,
+        Treinamento.nome,
+        Treinamento.codigo,
+        Treinamento.carga_horaria,
+    ).order_by(Treinamento.nome).all()
+    return jsonify([
+        {
+            'id': t.id,
+            'nome': t.nome,
+            'codigo': t.codigo,
+            'carga_horaria': t.carga_horaria,
+        }
+        for t in treinamentos
+    ])
+
+
 @treinamento_bp.route('/treinamentos', methods=['GET'])
 @login_required
 def listar_treinamentos():

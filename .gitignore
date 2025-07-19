@@ -16,3 +16,7 @@ env/
 # OS/editor artifacts
 .DS_Store
 *.swp
+
+# Database files
+agenda_laboratorio.db
+instance/

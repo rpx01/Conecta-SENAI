@@ -22,6 +22,7 @@ from src.routes.treinamento import treinamento_bp
 from src.routes.treinamento_admin import admin_treinamento_bp
 from src.routes.treinamento_user import user_treinamento_bp
 from src.models.recurso import Recurso
+import sqlalchemy as sa
 
 MIGRATIONS_DIR = os.path.join(os.path.dirname(__file__), '..', 'migrations')
 migrate = Migrate(directory=MIGRATIONS_DIR)
@@ -78,6 +79,21 @@ def create_default_recursos(app):
             if not Recurso.query.filter_by(nome=nome).first():
                 db.session.add(Recurso(nome=nome))
         db.session.commit()
+
+
+def ensure_max_alunos_column(app):
+    """Adiciona coluna max_alunos caso falte em bancos antigos."""
+    with app.app_context():
+        insp = sa.inspect(db.engine)
+        cols = [c['name'] for c in insp.get_columns('treinamentos')]
+        if 'max_alunos' not in cols:
+            db.session.execute(sa.text(
+                "ALTER TABLE treinamentos ADD COLUMN max_alunos INTEGER NOT NULL DEFAULT 20"
+            ))
+            db.session.execute(sa.text(
+                "ALTER TABLE treinamentos ALTER COLUMN max_alunos DROP DEFAULT"
+            ))
+            db.session.commit()
 
 
 def create_app():
@@ -156,6 +172,7 @@ def create_app():
             upgrade(directory=MIGRATIONS_DIR)
         except Exception as e:  # pragma: no cover - migracao opcional
             logging.error("Erro ao aplicar migrations: %s", str(e))
+        ensure_max_alunos_column(app)
         create_admin(app)
         create_default_recursos(app)
 

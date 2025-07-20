@@ -28,6 +28,7 @@ dependencies = [
     "flask-jwt-extended (==4.6.0)"
     ,"requests (==2.31.0)"
     ,"flask-cors (==4.0.0)"
+    ,"flask-login (==0.6.3)"
 ]
 
 [tool.poetry]
@@ -58,6 +59,7 @@ redis = "5.0.1"
 flask-limiter = "3.12"
 flask-migrate = "4.0.5"
 flask-jwt-extended = "4.6.0"
+flask-login = "0.6.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "8.4.1"

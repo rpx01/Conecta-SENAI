@@ -8,8 +8,12 @@ alembic==1.16.4
     # via flask-migrate
 blinker==1.9.0
     # via flask
+certifi==2025.7.14
+    # via requests
 cffi==1.17.1
     # via cryptography
+charset-normalizer==3.4.2
+    # via requests
 click==8.2.1
     # via flask
 cryptography==45.0.5
@@ -19,13 +23,19 @@ deprecated==1.2.18
 flask==3.1.1
     # via
     #   -r requirements.txt
+    #   flask-cors
     #   flask-jwt-extended
     #   flask-limiter
+    #   flask-login
     #   flask-migrate
     #   flask-sqlalchemy
+flask-cors==6.0.1
+    # via -r requirements.txt
 flask-jwt-extended==4.6.0
     # via -r requirements.txt
 flask-limiter==3.12
+    # via -r requirements.txt
+flask-login==0.6.3
     # via -r requirements.txt
 flask-migrate==4.1.0
     # via -r requirements.txt
@@ -37,6 +47,8 @@ greenlet==3.2.3
     # via sqlalchemy
 gunicorn==23.0.0
     # via -r requirements.txt
+idna==3.10
+    # via requests
 itsdangerous==2.2.0
     # via flask
 jinja2==3.1.6
@@ -75,6 +87,8 @@ python-dotenv==1.0.0
     # via -r requirements.txt
 redis==5.0.1
     # via -r requirements.txt
+requests==2.32.4
+    # via -r requirements.txt
 rich==13.9.4
     # via flask-limiter
 sqlalchemy==2.0.23
@@ -86,10 +100,14 @@ typing-extensions==4.14.0
     #   alembic
     #   limits
     #   sqlalchemy
+urllib3==2.5.0
+    # via requests
 werkzeug==3.1.3
     # via
     #   -r requirements.txt
     #   flask
+    #   flask-cors
     #   flask-jwt-extended
+    #   flask-login
 wrapt==1.17.2
     # via deprecated

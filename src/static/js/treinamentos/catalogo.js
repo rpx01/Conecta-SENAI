@@ -9,7 +9,7 @@ async function carregarTreinamentos() {
   const tbody = document.getElementById('tabela-catalogo');
   tbody.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
   try {
-    const dados = await chamarAPI('/user/treinamentos');
+    const dados = await chamarAPI('/admin/treinamentos');
     tbody.innerHTML = '';
     if (!Array.isArray(dados) || !dados.length) {
       tbody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum treinamento cadastrado.</td></tr>';

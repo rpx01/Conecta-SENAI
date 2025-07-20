@@ -193,8 +193,7 @@ function verificarPermissaoAdmin() {
             !currentPage.startsWith('/laboratorios/') &&
             !currentPage.startsWith('/ocupacao/') &&
             !currentPage.startsWith('/rateio/') &&
-            !currentPage.startsWith('/admin/') &&
-            !currentPage.startsWith('/treinamentos/')
+            !currentPage.startsWith('/admin/')
         ) {
             window.location.href = '/selecao-sistema.html';
         }
@@ -550,13 +549,7 @@ document.addEventListener('DOMContentLoaded', function() {
             '/laboratorios/laboratorios-perfil.html',
             '/admin/admin-perfil.html',
             '/ocupacao/ocupacao-turmas.html',
-            '/rateio/rateio-logs.html',
-            '/treinamentos/portal.html',
-            '/treinamentos/meus-treinamentos.html',
-            '/treinamentos/catalogo-treinamentos.html',
-            '/treinamentos/gestao-turmas.html',
-            '/treinamentos/dashboard-treinamentos.html',
-            '/treinamentos/participantes-turma.html'
+            '/rateio/rateio-logs.html'
         ];
 
         if (!paginasOcupacao.includes(paginaAtual)) {

@@ -9,8 +9,7 @@ async function carregarTreinamentos() {
   const tbody = document.getElementById('tabela-catalogo');
   tbody.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
   try {
-    const resp = await fetch('/api/admin/treinamentos', {headers:{'Accept':'application/json'}});
-    const dados = await resp.json();
+    const dados = await chamarAPI('/admin/treinamentos');
     tbody.innerHTML = '';
     if (!Array.isArray(dados) || !dados.length) {
       tbody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum treinamento cadastrado.</td></tr>';
@@ -57,12 +56,13 @@ async function cliqueTabela(e){
   const id = e.target.closest('button')?.dataset.edit || e.target.closest('button')?.dataset.del;
   if(!id) return;
   if(e.target.closest('[data-edit]')){
-    const resp = await fetch(`/api/admin/treinamentos/${id}`);
-    if(resp.ok){ abrirModal(await resp.json()); }
+    const resp = await chamarAPI(`/admin/treinamentos/${id}`, 'GET');
+    abrirModal(resp);
   } else if(e.target.closest('[data-del]')){
     if(confirm('Excluir este treinamento?')){
-      const resp = await fetch(`/api/admin/treinamentos/${id}`,{method:'DELETE'});
-      if(resp.ok){ mostrarAlerta('Treinamento excluído com sucesso'); carregarTreinamentos(); }
+      await chamarAPI(`/admin/treinamentos/${id}`, 'DELETE');
+      mostrarAlerta('Treinamento excluído com sucesso');
+      carregarTreinamentos();
     }
   }
 }
@@ -77,13 +77,13 @@ async function salvarTreinamento(evt){
     materiais: document.getElementById('materiais').value.split(/\n+/).filter(Boolean).map(url => ({url}))
   };
   const metodo = treinamentoId ? 'PUT' : 'POST';
-  const url = treinamentoId ? `/api/admin/treinamentos/${treinamentoId}` : '/api/admin/treinamentos';
-  const resp = await fetch(url,{method:metodo,headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)});
-  if(resp.ok){
+  const url = treinamentoId ? `/admin/treinamentos/${treinamentoId}` : '/admin/treinamentos';
+  try {
+    await chamarAPI(url, metodo, dados);
     modal.hide();
     mostrarAlerta('Treinamento salvo com sucesso');
     carregarTreinamentos();
-  } else {
+  } catch {
     mostrarAlerta('Erro ao salvar', 'danger');
   }
 }

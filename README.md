@@ -29,8 +29,14 @@ Todas as variáveis disponíveis estão listadas em `.env.example`.
    Um servidor Redis precisa estar ativo no endereço definido em `REDIS_URL` para que a limitação de requisições e a revogação de tokens funcionem corretamente.
 
 3. Execute as migrações do banco para criar as tabelas necessárias ou
-   atualizar o esquema após mudanças no código. O diretório `migrations`
-   será criado automaticamente caso ainda não exista:
+   atualizar o esquema após mudanças no código. Caso o diretório
+   `migrations` ainda não exista, inicie-o primeiro:
+
+   ```bash
+   flask --app src.main db init
+   ```
+
+   Em seguida aplique as migrações:
 
    ```bash
    flask --app src.main db upgrade
@@ -67,8 +73,14 @@ Uma alternativa é rodar a aplicação em um container Docker. Para construir a 
 docker build -t agenda-senai .
 ```
 
-As migrações não são mais distribuídas no repositório. O diretório será criado
-automaticamente quando a aplicação rodar o comando de upgrade.
+As migrações não são mais distribuídas no repositório. Se o diretório
+`migrations` não existir, crie-o com:
+
+```bash
+flask --app src.main db init
+```
+
+Em seguida execute o comando de upgrade normalmente.
 
 Em seguida, inicie o container usando as variáveis definidas em um arquivo `.env`:
 

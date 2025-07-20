@@ -7,6 +7,7 @@ from logging.handlers import RotatingFileHandler
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_migrate import Migrate, upgrade
+import flask_migrate
 from flask_login import LoginManager, login_user
 
 from src.models import db
@@ -110,6 +111,10 @@ def create_app():
 
         try:
             # Aplica as migrations do banco de dados
+            env_path = os.path.join(migrations_dir, "env.py")
+            if not os.path.exists(env_path):
+                flask_migrate.init(directory=migrations_dir)
+                flask_migrate.migrate(directory=migrations_dir, message="initial")
             upgrade(directory=migrations_dir)
             app.logger.info("Migrations aplicadas com sucesso.")
         except Exception as e:

@@ -132,7 +132,7 @@ def create_app():
 
     @app.route('/')
     def index():
-        return redirect('/selecao-sistema.html')
+        return redirect('/admin-login.html')
 
     @app.route('/<path:path>')
     def static_file(path):

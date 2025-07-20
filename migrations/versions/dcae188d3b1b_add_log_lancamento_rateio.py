@@ -24,6 +24,7 @@ def upgrade():
         sa.Column('classe_valor', sa.String(length=100), nullable=True),
         sa.Column('percentual', sa.Float, nullable=True),
         sa.Column('observacao', sa.Text, nullable=True),
+        checkfirst=True,
     )
 
 

@@ -9,7 +9,7 @@ async function carregarTreinamentos() {
   const tbody = document.getElementById('tabela-catalogo');
   tbody.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
   try {
-    const dados = await chamarAPI('/admin/treinamentos');
+    const dados = await chamarAPI('/user/treinamentos');
     tbody.innerHTML = '';
     if (!Array.isArray(dados) || !dados.length) {
       tbody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum treinamento cadastrado.</td></tr>';
@@ -56,11 +56,11 @@ async function cliqueTabela(e){
   const id = e.target.closest('button')?.dataset.edit || e.target.closest('button')?.dataset.del;
   if(!id) return;
   if(e.target.closest('[data-edit]')){
-    const resp = await chamarAPI(`/admin/treinamentos/${id}`, 'GET');
+    const resp = await chamarAPI(`/user/treinamentos/${id}`, 'GET');
     abrirModal(resp);
   } else if(e.target.closest('[data-del]')){
     if(confirm('Excluir este treinamento?')){
-      await chamarAPI(`/admin/treinamentos/${id}`, 'DELETE');
+      await chamarAPI(`/user/treinamentos/${id}`, 'DELETE');
       mostrarAlerta('Treinamento excluído com sucesso');
       carregarTreinamentos();
     }
@@ -77,7 +77,7 @@ async function salvarTreinamento(evt){
     materiais: document.getElementById('materiais').value.split(/\n+/).filter(Boolean).map(url => ({url}))
   };
   const metodo = treinamentoId ? 'PUT' : 'POST';
-  const url = treinamentoId ? `/admin/treinamentos/${treinamentoId}` : '/admin/treinamentos';
+  const url = treinamentoId ? `/user/treinamentos/${treinamentoId}` : '/user/treinamentos';
   try {
     await chamarAPI(url, metodo, dados);
     modal.hide();

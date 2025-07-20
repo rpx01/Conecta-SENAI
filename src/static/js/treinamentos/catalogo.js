@@ -49,7 +49,7 @@ function abrirModal(data={}) {
   document.getElementById('codigo').value = data.codigo || '';
   document.getElementById('carga_horaria').value = data.carga_horaria || '';
   document.getElementById('max_alunos').value = data.max_alunos || 20;
-  document.getElementById('materiais').value = (data.materiais||[]).map(m=>m.url).join('\n');
+  document.getElementById('materiais').value = (data.materiais_didaticos||[]).map(m=>m.url).join('\n');
   modal.show();
 }
 

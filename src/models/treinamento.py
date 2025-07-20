@@ -15,19 +15,43 @@ class Treinamento(db.Model):
     codigo = db.Column(db.String(50), unique=True, nullable=True)
     carga_horaria = db.Column(db.Integer, nullable=False)
     max_alunos = db.Column(db.Integer, nullable=False, default=20)
+    materiais = db.Column(db.Text, nullable=True)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
 
-    materiais = db.relationship('MaterialDidatico', backref='treinamento', lazy='dynamic', cascade='all, delete-orphan')
-    turmas = db.relationship('TurmaTreinamento', backref='treinamento', lazy='dynamic', cascade='all, delete-orphan')
+    materiais_didaticos = db.relationship(
+        'MaterialDidatico',
+        backref='treinamento',
+        lazy='dynamic',
+        cascade='all, delete-orphan'
+    )
+    turmas = db.relationship(
+        'TurmaTreinamento',
+        backref='treinamento',
+        lazy='dynamic',
+        cascade='all, delete-orphan'
+    )
 
-    def to_dict_full(self):
+    def to_dict(self):
+        """Retorna representacao simples do treinamento."""
         return {
             'id': self.id,
             'nome': self.nome,
             'codigo': self.codigo,
             'carga_horaria': self.carga_horaria,
             'max_alunos': self.max_alunos,
-            'materiais': [m.to_dict() for m in self.materiais]
+            'materiais': self.materiais,
+        }
+
+    def to_dict_full(self):
+        """Inclui materiais didáticos relacionados."""
+        return {
+            'id': self.id,
+            'nome': self.nome,
+            'codigo': self.codigo,
+            'carga_horaria': self.carga_horaria,
+            'max_alunos': self.max_alunos,
+            'materiais': self.materiais,
+            'materiais_didaticos': [m.to_dict() for m in self.materiais_didaticos],
         }
 
 class TurmaTreinamento(db.Model):

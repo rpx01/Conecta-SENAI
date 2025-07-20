@@ -36,7 +36,6 @@ def catalogo_publico():
 
 
 @treinamento_bp.route('/treinamentos', methods=['GET'])
-@login_required
 def listar_treinamentos():
     treinamentos = Treinamento.query.order_by(Treinamento.nome).all()
     return jsonify([t.to_dict() for t in treinamentos])
@@ -57,15 +56,35 @@ def criar_treinamento():
     data = request.json or {}
     nome = (data.get('nome') or '').strip()
     carga_horaria = data.get('carga_horaria')
+    max_alunos = data.get('max_alunos')
     codigo = (data.get('codigo') or '').strip() or None
+    materiais = (data.get('materiais') or '').strip() or None
 
-    if not nome or carga_horaria is None:
-        return jsonify({'erro': 'Nome e carga_horaria são obrigatórios'}), 400
+    if not nome or carga_horaria is None or max_alunos is None:
+        return jsonify({'erro': "Campos 'nome', 'carga_horaria' e 'max_alunos' são obrigatórios."}), 400
+
+    try:
+        carga_horaria = int(carga_horaria)
+        max_alunos = int(max_alunos)
+    except (TypeError, ValueError):
+        return jsonify({'erro': 'carga_horaria e max_alunos devem ser inteiros'}), 400
+
+    if carga_horaria <= 0 or max_alunos <= 0:
+        return jsonify({'erro': 'Valores devem ser positivos'}), 400
 
     if Treinamento.query.filter_by(nome=nome).first():
         return jsonify({'erro': 'Treinamento já existe'}), 400
 
-    novo = Treinamento(nome=nome, codigo=codigo, carga_horaria=carga_horaria)
+    if codigo and Treinamento.query.filter_by(codigo=codigo).first():
+        return jsonify({'erro': 'Já existe um treinamento com este código'}), 400
+
+    novo = Treinamento(
+        nome=nome,
+        codigo=codigo,
+        carga_horaria=carga_horaria,
+        max_alunos=max_alunos,
+        materiais=materiais,
+    )
     db.session.add(novo)
     db.session.commit()
     return jsonify(novo.to_dict()), 201
@@ -93,6 +112,15 @@ def atualizar_treinamento(id):
 
     if 'carga_horaria' in data and data.get('carga_horaria') is not None:
         treinamento.carga_horaria = data.get('carga_horaria')
+
+    if 'max_alunos' in data and data.get('max_alunos') is not None:
+        try:
+            treinamento.max_alunos = int(data.get('max_alunos'))
+        except (TypeError, ValueError):
+            return jsonify({'erro': 'max_alunos deve ser inteiro'}), 400
+
+    if 'materiais' in data:
+        treinamento.materiais = (data.get('materiais') or '').strip() or None
 
     db.session.commit()
     return jsonify(treinamento.to_dict())

@@ -37,7 +37,13 @@ def criar_treinamento():
     if dados.get('materiais'):
         for mat in dados['materiais']:
             if mat.get('url'):
-                db.session.add(MaterialDidatico(descricao=mat.get('descricao', 'Material'), url=mat['url'], treinamento=novo_treinamento))
+                db.session.add(
+                    MaterialDidatico(
+                        descricao=mat.get('descricao', 'Material'),
+                        url=mat['url'],
+                        treinamento=novo_treinamento,
+                    )
+                )
 
     db.session.commit()
     return jsonify(novo_treinamento.to_dict_full()), 201
@@ -57,7 +63,13 @@ def atualizar_treinamento(id):
     if dados.get('materiais'):
         for mat in dados['materiais']:
             if mat.get('url'):
-                db.session.add(MaterialDidatico(descricao=mat.get('descricao', 'Material'), url=mat['url'], treinamento_id=id))
+                db.session.add(
+                    MaterialDidatico(
+                        descricao=mat.get('descricao', 'Material'),
+                        url=mat['url'],
+                        treinamento_id=id,
+                    )
+                )
 
     db.session.commit()
     return jsonify(treinamento.to_dict_full())

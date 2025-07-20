@@ -154,11 +154,11 @@ def create_app():
             except Exception as e:  # pragma: no cover - geracao opcional
                 logging.error("Erro ao gerar migrations: %s", str(e))
 
-        db.create_all()
         try:
             upgrade(directory=MIGRATIONS_DIR)
         except Exception as e:  # pragma: no cover - migracao opcional
             logging.error("Erro ao aplicar migrations: %s", str(e))
+        db.create_all()
         create_admin(app)
         create_default_recursos(app)
 

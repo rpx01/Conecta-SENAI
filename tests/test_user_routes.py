@@ -267,3 +267,35 @@ def test_root_admin_can_downgrade_admin(client, login_admin):
     )
     assert resp_downgrade.status_code == 200
     assert resp_downgrade.get_json()['tipo'] == 'comum'
+
+
+def test_atualizar_usuario_novos_campos(client):
+    resp = client.post(
+        '/api/usuarios',
+        json={'nome': 'Novo', 'email': 'novo2@example.com', 'senha': 'Senha@123'},
+        environ_base={'REMOTE_ADDR': '1.1.1.16'}
+    )
+    assert resp.status_code == 201
+    user_id = resp.get_json()['id']
+
+    resp_login = client.post('/api/login', json={'email': 'novo2@example.com', 'senha': 'Senha@123'})
+    assert resp_login.status_code == 200
+    token = resp_login.get_json()['token']
+    headers = {'Authorization': f'Bearer {token}'}
+
+    resp_put = client.put(
+        f'/api/usuarios/{user_id}',
+        json={
+            'nome': 'Novo Nome',
+            'email': 'novo2@example.com',
+            'data_nascimento': '2000-01-02',
+            'cpf': '123.456.789-00',
+            'empresa': 'ACME'
+        },
+        headers=headers,
+    )
+    assert resp_put.status_code == 200
+    data = resp_put.get_json()
+    assert data['cpf'] == '123.456.789-00'
+    assert data['empresa'] == 'ACME'
+    assert data['data_nascimento'] == '2000-01-02'

@@ -123,13 +123,13 @@ def create_app():
         # Cria o usuário administrador se não existir
         try:
             admin_email = os.getenv("ADMIN_EMAIL")
-            admin_password = os.getenv("ADMIN_PASSWORD") or os.getenv("ADMIN_SENHA")
+            admin_senha = os.getenv("ADMIN_SENHA")
 
             if admin_email and not User.query.filter_by(email=admin_email).first():
                 admin_user = User(
                     nome="Administrador",
                     email=admin_email,
-                    senha=admin_password,
+                    senha=admin_senha,
                     tipo="admin",
                 )
                 db.session.add(admin_user)

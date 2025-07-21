@@ -11,15 +11,18 @@ from flask_login import LoginManager, login_user
 
 from src.models import db
 from src.models.user import User
+from src.routes.auth import auth_bp
 from src.routes.user import user_bp, bcrypt
-from src.routes.agendamento import agendamento_bp
-from src.routes.instrutor import instrutor_bp
-from src.routes.laboratorio import laboratorio_bp
-from src.routes.notificacao import notificacao_bp
-from src.routes.ocupacao import ocupacao_bp
-from src.routes.rateio import rateio_bp
-from src.routes.sala import sala_bp
-from src.routes.turma import turma_bp
+from src.routes.treinamento_admin import admin_treinamento_bp
+from src.routes.treinamento_user import user_treinamento_bp
+from src.routes.agendamento_admin import admin_agendamento_bp
+from src.routes.agendamento_user import user_agendamento_bp
+from src.routes.laboratorio_admin import admin_laboratorio_bp
+from src.routes.laboratorio_user import user_laboratorio_bp
+from src.routes.rateio_admin import admin_rateio_bp
+from src.routes.rateio_user import user_rateio_bp
+from src.routes.ocupacao_admin import admin_ocupacao_bp
+from src.routes.ocupacao_user import user_ocupacao_bp
 
 # Configuração do logging
 if not os.path.exists("logs"):
@@ -94,15 +97,18 @@ def create_app():
         return db.session.get(User, int(user_id))
 
     # Registra as rotas (blueprints) da aplicação
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(user_bp, url_prefix="/api")
-    app.register_blueprint(agendamento_bp, url_prefix="/api")
-    app.register_blueprint(instrutor_bp, url_prefix="/api")
-    app.register_blueprint(laboratorio_bp, url_prefix="/api")
-    app.register_blueprint(notificacao_bp, url_prefix="/api")
-    app.register_blueprint(ocupacao_bp, url_prefix="/api")
-    app.register_blueprint(rateio_bp, url_prefix="/api")
-    app.register_blueprint(sala_bp, url_prefix="/api")
-    app.register_blueprint(turma_bp, url_prefix="/api")
+    app.register_blueprint(admin_treinamento_bp, url_prefix="/api/admin")
+    app.register_blueprint(user_treinamento_bp, url_prefix="/api/user")
+    app.register_blueprint(admin_agendamento_bp, url_prefix="/api/admin")
+    app.register_blueprint(user_agendamento_bp, url_prefix="/api/user")
+    app.register_blueprint(admin_laboratorio_bp, url_prefix="/api/admin")
+    app.register_blueprint(user_laboratorio_bp, url_prefix="/api/user")
+    app.register_blueprint(admin_rateio_bp, url_prefix="/api/admin")
+    app.register_blueprint(user_rateio_bp, url_prefix="/api/user")
+    app.register_blueprint(admin_ocupacao_bp, url_prefix="/api/admin")
+    app.register_blueprint(user_ocupacao_bp, url_prefix="/api/user")
 
 
     with app.app_context():

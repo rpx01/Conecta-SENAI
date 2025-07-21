@@ -3,10 +3,15 @@ Inicializa a aplicacao Flask e registra os blueprints.
 """
 import os
 import logging
+import traceback
+import sys
 from flask import Flask, redirect
 from flask_migrate import Migrate, upgrade, init, migrate as migrate_cmd
 from src.limiter import limiter
 from src.redis_client import init_redis
+
+logging.basicConfig(stream=sys.stdout, level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 from src.models import db
 from src.routes.agendamento import agendamento_bp
@@ -81,7 +86,6 @@ def create_default_recursos(app):
 
 def create_app():
     """Fábrica de aplicação usada pelo Flask."""
-    logging.basicConfig(level=logging.INFO)
     app = Flask(__name__, static_url_path='', static_folder='static')
 
     migrations_dir = os.path.join(project_root, 'migrations')
@@ -155,7 +159,15 @@ def create_app():
     return app
 
 
-app = create_app()
+try:
+    logging.info("Iniciando a criação da aplicação Flask...")
+    app = create_app()
+    logging.info("Aplicação Flask criada com sucesso.")
+except Exception as e:
+    logging.error("!!!!!! FALHA CRÍTICA AO INICIAR A APLICAÇÃO !!!!!!")
+    logging.error(f"Erro: {e}")
+    logging.error(f"Traceback: {traceback.format_exc()}")
+    raise e
 
 if __name__ == '__main__':
     debug = os.getenv('FLASK_DEBUG', '0').lower() in ('1', 'true', 't', 'yes')

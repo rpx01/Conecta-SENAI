@@ -2,6 +2,7 @@
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from src.models import db
+from .user_info import UserInfo
 
 class User(db.Model):
     """
@@ -29,6 +30,8 @@ class User(db.Model):
     
     # Relacionamento com agendamentos
     agendamentos = db.relationship('Agendamento', backref='usuario', lazy=True)
+    # Informações opcionais
+    info = db.relationship('UserInfo', uselist=False, back_populates='user', cascade='all, delete-orphan')
     
     def __init__(self, nome, email, senha, tipo='comum', username=None):
         """
@@ -45,6 +48,8 @@ class User(db.Model):
         self.username = username or email.split('@')[0]
         self.set_senha(senha)
         self.tipo = tipo
+        # Cria registro de informações opcionais associado
+        self.info = UserInfo()
     
     def set_senha(self, senha):
         """
@@ -93,7 +98,10 @@ class User(db.Model):
             'email': self.email,
             'tipo': self.tipo,
             'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,
-            'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None
+            'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None,
+            'cpf': self.info.cpf if self.info else None,
+            'data_nascimento': self.info.data_nascimento.isoformat() if self.info and self.info.data_nascimento else None,
+            'empresa': self.info.empresa if self.info else None,
         }
     
     def __repr__(self):

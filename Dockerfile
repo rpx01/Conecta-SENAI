@@ -29,13 +29,8 @@ COPY ./src ./src
 # Migrations are created at runtime; ensure directory exists
 RUN mkdir -p /app/migrations
 
-# Copia o script de entrypoint e concede permissao de execucao
-COPY docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh
-
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl -f http://localhost:8080/ || exit 1
 
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "src.main:app"]
+CMD ["gunicorn", "src.main:app", "--bind", "0.0.0.0:8080"]

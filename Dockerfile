@@ -26,8 +26,7 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /usr/local /usr/local
 COPY ./src ./src
-# Migrations are created at runtime; ensure directory exists
-RUN mkdir -p /app/migrations
+# Migrations are created at runtime by Flask-Migrate
 
 EXPOSE 8080
 

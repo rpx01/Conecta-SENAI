@@ -10,7 +10,6 @@ import jwt
 import uuid
 from src.models import db
 from src.models.user import User
-from src.models.user_info import UserInfo
 from src.models.refresh_token import RefreshToken
 import hashlib
 from src.redis_client import redis_conn
@@ -155,9 +154,6 @@ def criar_usuario():
     nome = dados.get("nome")
     senha = dados.get("senha")
     username = dados.get("username") or email.split('@')[0]
-    cpf = dados.get("cpf")
-    data_nascimento = dados.get("data_nascimento")
-    empresa = dados.get("empresa")
 
     # Validação de dados
     if not all([nome, email, senha]):
@@ -189,14 +185,6 @@ def criar_usuario():
             tipo="comum",
             username=username,
         )
-        if cpf or data_nascimento or empresa:
-            novo_usuario.info.cpf = cpf
-            if data_nascimento:
-                try:
-                    novo_usuario.info.data_nascimento = datetime.strptime(data_nascimento, "%Y-%m-%d").date()
-                except ValueError:
-                    return jsonify({"erro": "Data de nascimento inválida"}), 400
-            novo_usuario.info.empresa = empresa
         db.session.add(novo_usuario)
         db.session.commit()
         return jsonify(novo_usuario.to_dict()), 201
@@ -213,9 +201,6 @@ def registrar_usuario():
     senha = request.form.get("senha")
     username = request.form.get("username") or email.split('@')[0]
     confirmar = request.form.get("confirmarSenha")
-    cpf = request.form.get("cpf")
-    data_nascimento = request.form.get("data_nascimento")
-    empresa = request.form.get("empresa")
 
     if not all([nome, email, senha, confirmar]):
         return jsonify({"erro": "Dados incompletos"}), 400
@@ -244,14 +229,6 @@ def registrar_usuario():
             tipo="comum",
             username=username,
         )
-        if cpf or data_nascimento or empresa:
-            novo_usuario.info.cpf = cpf
-            if data_nascimento:
-                try:
-                    novo_usuario.info.data_nascimento = datetime.strptime(data_nascimento, "%Y-%m-%d").date()
-                except ValueError:
-                    return jsonify({"erro": "Data de nascimento inválida"}), 400
-            novo_usuario.info.empresa = empresa
         db.session.add(novo_usuario)
         db.session.commit()
     except SQLAlchemyError as e:  # pragma: no cover
@@ -293,23 +270,6 @@ def atualizar_usuario(id):
         if email_existente and email_existente.id != id:
             return jsonify({"erro": "Email já cadastrado para outro usuário"}), 400
         usuario.email = data["email"]
-
-    if any(k in data for k in ("cpf", "data_nascimento", "empresa")):
-        if not usuario.info:
-            usuario.info = UserInfo()
-        if "cpf" in data:
-            usuario.info.cpf = data["cpf"] or None
-        if "data_nascimento" in data:
-            valor = data["data_nascimento"]
-            if valor:
-                try:
-                    usuario.info.data_nascimento = datetime.strptime(valor, "%Y-%m-%d").date()
-                except ValueError:
-                    return jsonify({"erro": "Data de nascimento inválida"}), 400
-            else:
-                usuario.info.data_nascimento = None
-        if "empresa" in data:
-            usuario.info.empresa = data["empresa"] or None
 
     # Apenas administradores podem alterar o tipo de usuário
     if "tipo" in data and verificar_admin(user):

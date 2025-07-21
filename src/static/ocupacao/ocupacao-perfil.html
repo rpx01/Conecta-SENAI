@@ -132,21 +132,6 @@
                                         <label for="email" class="form-label">Email</label>
                                         <input type="email" class="form-control" id="email" name="email" required>
                                     </div>
-
-                                    <div class="mb-3">
-                                        <label for="cpf" class="form-label">CPF</label>
-                                        <input type="text" class="form-control" id="cpf" name="cpf">
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="dataNascimento" class="form-label">Data de Nascimento</label>
-                                        <input type="date" class="form-control" id="dataNascimento" name="dataNascimento">
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="empresa" class="form-label">Empresa</label>
-                                        <input type="text" class="form-control" id="empresa" name="empresa">
-                                    </div>
                                     
                                     
                                     <div class="mb-3">
@@ -245,27 +230,18 @@
                 
                 const nome = document.getElementById('nome').value;
                 const email = document.getElementById('email').value;
-                const cpf = document.getElementById('cpf').value;
-                const dataNascimento = document.getElementById('dataNascimento').value;
-                const empresa = document.getElementById('empresa').value;
                 
                 try {
                     const usuario = getUsuarioLogado();
                     
                     await chamarAPI(`/usuarios/${usuario.id}`, 'PUT', {
                         nome,
-                        email,
-                        cpf,
-                        data_nascimento: dataNascimento,
-                        empresa
+                        email
                     });
                     
                     // Atualiza os dados no localStorage
                     usuario.nome = nome;
                     usuario.email = email;
-                    usuario.cpf = cpf;
-                    usuario.data_nascimento = dataNascimento || null;
-                    usuario.empresa = empresa;
                     localStorage.setItem('usuario', JSON.stringify(usuario));
                     
                     // Atualiza o nome na navbar
@@ -320,9 +296,6 @@
                 // Preenche o formulário
                 document.getElementById('nome').value = dadosUsuario.nome;
                 document.getElementById('email').value = dadosUsuario.email;
-                document.getElementById('cpf').value = dadosUsuario.cpf || '';
-                document.getElementById('dataNascimento').value = dadosUsuario.data_nascimento ? dadosUsuario.data_nascimento.split('T')[0] : '';
-                document.getElementById('empresa').value = dadosUsuario.empresa || '';
                 document.getElementById('tipo').value = dadosUsuario.tipo === 'admin' ? 'Administrador' : 'Comum';
                 
                 // Atualiza os dados no localStorage

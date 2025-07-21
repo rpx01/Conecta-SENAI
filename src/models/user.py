@@ -24,9 +24,6 @@ class User(db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     senha_hash = db.Column(db.String(256), nullable=False)
     tipo = db.Column(db.String(20), nullable=False, default='comum')
-    cpf = db.Column(db.String(14), unique=True, nullable=True)
-    data_nascimento = db.Column(db.Date, nullable=True)
-    empresa = db.Column(db.String(100), nullable=True)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -94,9 +91,6 @@ class User(db.Model):
             'nome': self.nome,
             'username': self.username,
             'email': self.email,
-            'cpf': self.cpf,
-            'data_nascimento': self.data_nascimento.isoformat() if self.data_nascimento else None,
-            'empresa': self.empresa,
             'tipo': self.tipo,
             'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,
             'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None

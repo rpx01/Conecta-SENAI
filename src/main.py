@@ -11,7 +11,7 @@ from flask_login import LoginManager, login_user
 
 from src.models import db
 from src.models.user import User
-from src.routes.user import user_bp
+from src.routes.user import user_bp, bcrypt
 from src.routes.agendamento import agendamento_bp
 from src.routes.instrutor import instrutor_bp
 from src.routes.laboratorio import laboratorio_bp
@@ -66,6 +66,7 @@ def create_app():
         app.config.from_object("src.config.DevelopmentConfig")
         
     db.init_app(app)
+    bcrypt.init_app(app)
 
     # --- INÍCIO DA ALTERAÇÃO ---
     # Define o caminho absoluto para a pasta de migrations

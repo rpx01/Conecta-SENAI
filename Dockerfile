@@ -33,5 +33,4 @@ EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl -f http://localhost:8080/ || exit 1
 
-#CMD ["gunicorn", "--bind", "0.0.0.0:@PORT", "--log-level", "debug", "src.main:app"]
-CMD gunicorn --bind 0.0.0.0:$PORT --log-level debug src.main:app
+CMD ["/bin/sh", "-c", "gunicorn --bind 0.0.0.0:$PORT --log-level debug src.main:app"]

@@ -179,6 +179,11 @@ def login_google():
 @app.route("/")
 def index():
     """Rota inicial da API."""
+    # Quando a requisição vier de um navegador esperando HTML,
+    # redirecionamos para a página de login.
+    if "text/html" in request.headers.get("Accept", ""):
+        return redirect("/admin-login.html")
+
     return f"Bem-vindo à API do Conecta SENAI! {datetime.now().isoformat()}"
 
 

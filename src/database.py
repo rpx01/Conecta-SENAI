@@ -5,7 +5,8 @@ from sqlalchemy.orm import sessionmaker
 from alembic.config import Config
 from alembic import command
 
-from .models import Base, User
+from .models import db
+from .models.user import User
 
 logging.basicConfig(level=logging.INFO)
 
@@ -42,9 +43,11 @@ def create_admin_user():
         admin = db.query(User).filter(User.username == "admin").first()
         if not admin:
             admin_user = User(
+                nome="Administrador",
                 username="admin",
                 email="admin@example.com",
-                hashed_password="a_senha_deve_ser_um_hash_seguro"
+                senha="admin",
+                tipo="admin",
             )
             db.add(admin_user)
             db.commit()
@@ -52,7 +55,9 @@ def create_admin_user():
         else:
             logging.info("Usu\u00e1rio administrador j\u00e1 existe.")
     except Exception as e:
-        logging.error(f"Erro ao verificar ou criar o usu\u00e1rio administrador: {e}")
+        logging.error(
+            f"Erro ao verificar ou criar o usuário administrador: {e}"
+        )
         db.rollback()
     finally:
         db.close()

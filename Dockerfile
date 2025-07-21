@@ -27,9 +27,10 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /usr/local /usr/local
 COPY ./src ./src
 COPY ./migrations ./migrations
+COPY alembic.ini ./
 
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl -f http://localhost:8080/ || exit 1
 
-CMD ["gunicorn", "src.main:app", "--bind", "0.0.0.0:8080"]
+CMD ["bash", "-c", "alembic upgrade head && gunicorn src.main:app --bind 0.0.0.0:8080"]

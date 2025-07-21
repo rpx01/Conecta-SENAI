@@ -15,9 +15,6 @@ class User(db.Model):
         tipo (str): Tipo de usuário ('comum' ou 'admin')
         data_criacao (datetime): Data de criação do registro
         data_atualizacao (datetime): Data da última atualização do registro
-        data_nascimento (date): Data de nascimento do usuário (opcional)
-        cpf (str): CPF do usuário (opcional)
-        empresa (str): Empresa do usuário (opcional)
     """
     __tablename__ = 'usuarios'
     
@@ -28,14 +25,7 @@ class User(db.Model):
     senha_hash = db.Column(db.String(256), nullable=False)
     tipo = db.Column(db.String(20), nullable=False, default='comum')
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
-    data_atualizacao = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
-    )
-
-    # Novos campos opcionais
-    data_nascimento = db.Column(db.Date, nullable=True)
-    cpf = db.Column(db.String(14), unique=True, nullable=True)
-    empresa = db.Column(db.String(100), nullable=True)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relacionamento com agendamentos
     agendamentos = db.relationship('Agendamento', backref='usuario', lazy=True)
@@ -102,9 +92,6 @@ class User(db.Model):
             'username': self.username,
             'email': self.email,
             'tipo': self.tipo,
-            'data_nascimento': self.data_nascimento.isoformat() if self.data_nascimento else None,
-            'cpf': self.cpf,
-            'empresa': self.empresa,
             'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,
             'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None
         }

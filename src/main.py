@@ -1,201 +1,163 @@
-"""Módulo principal da aplicação Flask."""
-import logging
+"""
+Inicializa a aplicacao Flask e registra os blueprints.
+"""
 import os
-from datetime import datetime
-from logging.handlers import RotatingFileHandler
-
-from flask import Flask, jsonify, request
-from flask_cors import CORS
-from flask_migrate import Migrate, upgrade
-from flask_login import LoginManager, login_user
+import logging
+from flask import Flask, redirect
+from flask_migrate import Migrate, upgrade, init, migrate as migrate_cmd
+from src.limiter import limiter
+from src.redis_client import init_redis
 
 from src.models import db
-from src.models.user import User
-from src.routes.auth import auth_bp
-from src.routes.user import user_bp, bcrypt
-from src.routes.treinamento_admin import admin_treinamento_bp
-from src.routes.treinamento_user import user_treinamento_bp
-from src.routes.agendamento_admin import admin_agendamento_bp
-from src.routes.agendamento_user import user_agendamento_bp
-from src.routes.laboratorio_admin import admin_laboratorio_bp
-from src.routes.laboratorio_user import user_laboratorio_bp
-from src.routes.rateio_admin import admin_rateio_bp
-from src.routes.rateio_user import user_rateio_bp
-from src.routes.ocupacao_admin import admin_ocupacao_bp
-from src.routes.ocupacao_user import user_ocupacao_bp
+from src.routes.agendamento import agendamento_bp
+from src.routes.instrutor import instrutor_bp
+from src.routes.laboratorio import laboratorio_bp
+from src.routes.notificacao import notificacao_bp
+from src.routes.ocupacao import ocupacao_bp
+from src.routes.sala import sala_bp
+from src.routes.turma import turma_bp
+from src.routes.user import user_bp
+from src.routes.rateio import rateio_bp
+from src.models.recurso import Recurso
+import sqlalchemy as sa
 
-# Configuração do logging
-if not os.path.exists("logs"):
-    os.makedirs("logs")
-file_handler = RotatingFileHandler(
-    "logs/app.log", maxBytes=10240, backupCount=10
-)
-file_handler.setFormatter(
-    logging.Formatter(
-        "%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]"
-    )
-)
-file_handler.setLevel(logging.INFO)
+MIGRATIONS_DIR = os.path.join(os.path.dirname(__file__), '..', 'migrations')
+migrate = Migrate(directory=MIGRATIONS_DIR)
+
+def create_admin(app):
+    """Cria o usuário administrador padrão de forma idempotente."""
+    from src.models.user import User
+    from sqlalchemy.exc import SQLAlchemyError
+    with app.app_context():
+        try:
+            admin_email = os.environ.get('ADMIN_EMAIL')
+            admin_password = os.environ.get('ADMIN_PASSWORD')
+            admin_username = os.environ.get('ADMIN_USERNAME') or admin_email.split('@')[0]
+            if not admin_email or not admin_password:
+                logging.error(
+                    "ADMIN_EMAIL e ADMIN_PASSWORD precisam estar definidos para criar o usuário administrador"
+                )
+                return
+
+            admin = User.query.filter_by(email=admin_email).first()
+            if not admin:
+                admin = User(
+                    nome='Administrador',
+                    email=admin_email,
+                    senha=admin_password,
+                    tipo='admin',
+                    username=admin_username
+                )
+                db.session.add(admin)
+                db.session.commit()
+                logging.info("Usuário administrador criado com sucesso!")
+            else:
+                logging.info("Usuário administrador já existe.")
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            logging.error("Erro ao criar usuário administrador: %s", str(e))
+
+
+def create_default_recursos(app):
+    """Garante que os recursos padrao existam de forma idempotente."""
+    with app.app_context():
+        padrao = [
+            "tv",
+            "projetor",
+            "quadro_branco",
+            "climatizacao",
+            "computadores",
+            "wifi",
+            "bancadas",
+            "armarios",
+            "tomadas",
+        ]
+        for nome in padrao:
+            if not Recurso.query.filter_by(nome=nome).first():
+                db.session.add(Recurso(nome=nome))
+        db.session.commit()
+
+
 
 
 def create_app():
-    """
-    Cria e configura uma instância da aplicação Flask.
+    """Fábrica de aplicação usada pelo Flask."""
+    logging.basicConfig(level=logging.INFO)
+    app = Flask(__name__, static_url_path='', static_folder='static')
 
-    Esta função é a fábrica da aplicação, responsável por inicializar a aplicação,
-    configurar o banco de dados, registrar as rotas (blueprints) e definir
-    outras configurações essenciais como CORS e logging.
+    db_uri = os.getenv("DATABASE_URL", "sqlite:///agenda_laboratorio.db").strip()
+    if db_uri.startswith('postgres://'):
+        db_uri = db_uri.replace('postgres://', 'postgresql://', 1)
 
-    O ambiente de configuração (desenvolvimento, teste, produção) é determinado
-    pela variável de ambiente FLASK_CONFIG.
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['REDIS_URL'] = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 
-    Returns:
-        Flask: A instância da aplicação Flask configurada.
-    """
-    app = Flask(__name__)
-    app.logger.addHandler(file_handler)
-    app.logger.setLevel(logging.INFO)
+    secret_key = os.getenv('SECRET_KEY') or os.getenv('FLASK_SECRET_KEY')
+    if not secret_key:
+        raise RuntimeError(
+            "SECRET_KEY environment variable must be set for JWT signing"
+        )
+    app.config['SECRET_KEY'] = secret_key
 
-    # Prioriza a configuração do Railway, se disponível
-    config_type = os.getenv("FLASK_CONFIG", "development")
-    if os.getenv("DATABASE_URL"):
-        config_type = "production"
-
-    if config_type == "testing":
-        app.config.from_object("src.config.TestingConfig")
-    elif config_type == "production":
-        app.config.from_object("src.config.ProductionConfig")
-    else:
-        app.config.from_object("src.config.DevelopmentConfig")
-        
     db.init_app(app)
-    bcrypt.init_app(app)
+    migrate.init_app(app, db)
+    init_redis(app)
+    limiter.init_app(app)
 
-    # --- INÍCIO DA ALTERAÇÃO ---
-    # Define o caminho absoluto para a pasta de migrations
-    # Isso garante que o Alembic (ferramenta de migração) encontre os arquivos
-    # independentemente de onde o script de inicialização for executado.
-    basedir = os.path.abspath(os.path.dirname(__file__))
-    migrations_dir = os.path.join(basedir, '..', 'migrations')
-    Migrate(app, db, directory=migrations_dir)
-    # --- FIM DA ALTERAÇÃO ---
+    # Configura chaves do reCAPTCHA (opcional)
+    app.config['RECAPTCHA_SITE_KEY'] = os.getenv('RECAPTCHA_SITE_KEY') or os.getenv('SITE_KEY')
+    app.config['RECAPTCHA_SECRET_KEY'] = os.getenv('RECAPTCHA_SECRET_KEY') or os.getenv('CAPTCHA_SECRET_KEY') or os.getenv('SECRET_KEY')
+    app.config['RECAPTCHA_THRESHOLD'] = float(os.getenv('RECAPTCHA_THRESHOLD', '0.5'))
 
-    # Habilita CORS para todas as origens, permitindo que o frontend
-    # se comunique com a API sem erros de política de mesma origem.
-    CORS(app, supports_credentials=True)
+    app.register_blueprint(user_bp, url_prefix='/api')
+    app.register_blueprint(agendamento_bp, url_prefix='/api')
+    app.register_blueprint(notificacao_bp, url_prefix='/api')
+    app.register_blueprint(laboratorio_bp, url_prefix='/api')
+    app.register_blueprint(turma_bp, url_prefix='/api')
+    app.register_blueprint(sala_bp, url_prefix='/api')
+    app.register_blueprint(instrutor_bp, url_prefix='/api')
+    app.register_blueprint(ocupacao_bp, url_prefix='/api')
+    app.register_blueprint(rateio_bp, url_prefix='/api')
 
-    # Configuração do Flask-Login
-    login_manager = LoginManager()
-    login_manager.init_app(app)
+    @app.route('/')
+    def index():
+        return redirect('/admin-login.html')
 
-    @login_manager.user_loader
-    def load_user(user_id):
-        """
-        Carrega um usuário pelo seu ID.
-        Esta função é usada pelo Flask-Login para gerenciar a sessão do usuário.
-        """
-        return db.session.get(User, int(user_id))
-
-    # Registra as rotas (blueprints) da aplicação
-    app.register_blueprint(auth_bp, url_prefix="/api/auth")
-    app.register_blueprint(user_bp, url_prefix="/api")
-    app.register_blueprint(admin_treinamento_bp, url_prefix="/api/admin")
-    app.register_blueprint(user_treinamento_bp, url_prefix="/api/user")
-    app.register_blueprint(admin_agendamento_bp, url_prefix="/api/admin")
-    app.register_blueprint(user_agendamento_bp, url_prefix="/api/user")
-    app.register_blueprint(admin_laboratorio_bp, url_prefix="/api/admin")
-    app.register_blueprint(user_laboratorio_bp, url_prefix="/api/user")
-    app.register_blueprint(admin_rateio_bp, url_prefix="/api/admin")
-    app.register_blueprint(user_rateio_bp, url_prefix="/api/user")
-    app.register_blueprint(admin_ocupacao_bp, url_prefix="/api/admin")
-    app.register_blueprint(user_ocupacao_bp, url_prefix="/api/user")
-
+    @app.route('/<path:path>')
+    def static_file(path):
+        return app.send_static_file(path)
 
     with app.app_context():
-        # Cria as tabelas do banco de dados se não existirem
+        if not os.path.exists(MIGRATIONS_DIR):
+            logging.info("Pasta de migrations nao encontrada, inicializando...")
+            try:
+                init(directory=MIGRATIONS_DIR)
+                migrate_cmd(directory=MIGRATIONS_DIR)
+            except Exception as e:  # pragma: no cover - primeira migracao opcional
+                logging.error("Erro ao criar migrations: %s", str(e))
+
+        versions_dir = os.path.join(MIGRATIONS_DIR, 'versions')
+        if not os.path.exists(versions_dir) or not os.listdir(versions_dir):
+            try:
+                migrate_cmd(directory=MIGRATIONS_DIR)
+            except Exception as e:  # pragma: no cover - geracao opcional
+                logging.error("Erro ao gerar migrations: %s", str(e))
+
+        try:
+            upgrade(directory=MIGRATIONS_DIR)
+        except Exception as e:  # pragma: no cover - migracao opcional
+            logging.error("Erro ao aplicar migrations: %s", str(e))
         db.create_all()
-
-        try:
-            # Aplica as migrations do banco de dados
-            upgrade(directory=migrations_dir)
-            app.logger.info("Migrations aplicadas com sucesso.")
-        except Exception as e:
-            app.logger.error(f"Erro ao aplicar migrations: {e}")
-            
-        # Cria o usuário administrador se não existir
-        try:
-            admin_email = os.getenv("ADMIN_EMAIL")
-            admin_senha = os.getenv("ADMIN_SENHA")
-
-            if admin_email and not User.query.filter_by(email=admin_email).first():
-                admin_user = User(
-                    nome="Administrador",
-                    email=admin_email,
-                    senha=admin_senha,
-                    tipo="admin",
-                )
-                db.session.add(admin_user)
-                db.session.commit()
-                app.logger.info("Usuário administrador criado com sucesso.")
-        except Exception as e:
-            app.logger.error(f"Erro ao criar usuário administrador: {e}")
-            db.session.rollback()
+        create_admin(app)
+        create_default_recursos(app)
 
     return app
 
 
 app = create_app()
 
-@app.route("/login-google", methods=["POST"])
-def login_google():
-    """
-    Rota para autenticação via Google.
-    Recebe o token do Google, verifica e loga o usuário.
-    """
-    data = request.get_json()
-    email = data.get("email")
-    nome = data.get("nome")
-
-    if not email:
-        return jsonify({"erro": "Email não fornecido"}), 400
-
-    try:
-        usuario = User.query.filter_by(email=email).first()
-
-        if not usuario:
-            # Se o usuário não existe, cria um novo
-            usuario = User(nome=nome, email=email, senha=os.urandom(16))
-            db.session.add(usuario)
-            db.session.commit()
-            
-        # Loga o usuário
-        login_user(usuario)
-        
-        return jsonify(usuario.to_dict())
-
-    except Exception as e:
-        app.logger.error(f"Erro ao fazer login: {e}")
-        return jsonify({"erro": "Erro interno ao processar login"}), 500
-
-
-@app.route("/")
-def index():
-    """Rota inicial da API."""
-    return f"Bem-vindo à API do Conecta SENAI! {datetime.now().isoformat()}"
-
-
-@app.errorhandler(404)
-def not_found_error(error):
-    """Handler para erros 404 (Não Encontrado)."""
-    return jsonify({"erro": "Recurso não encontrado"}), 404
-
-
-@app.errorhandler(500)
-def internal_error(error):
-    """Handler para erros 500 (Erro Interno do Servidor)."""
-    db.session.rollback()
-    return jsonify({"erro": "Erro interno do servidor"}), 500
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+if __name__ == '__main__':
+    debug = os.getenv('FLASK_DEBUG', '0').lower() in ('1', 'true', 't', 'yes')
+    port = int(os.getenv('PORT', '5000'))
+    app.run(debug=debug, host='127.0.0.1', port=port)

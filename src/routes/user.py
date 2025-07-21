@@ -271,6 +271,18 @@ def atualizar_usuario(id):
             return jsonify({"erro": "Email já cadastrado para outro usuário"}), 400
         usuario.email = data["email"]
 
+    if "cpf" in data:
+        usuario.cpf = data["cpf"]
+    if "data_nascimento" in data and data.get("data_nascimento"):
+        try:
+            usuario.data_nascimento = datetime.strptime(data["data_nascimento"], '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            pass
+    else:
+        usuario.data_nascimento = None
+    if "empresa" in data:
+        usuario.empresa = data["empresa"]
+
     # Apenas administradores podem alterar o tipo de usuário
     if "tipo" in data and verificar_admin(user):
         if data["tipo"] not in ["comum", "admin"]:

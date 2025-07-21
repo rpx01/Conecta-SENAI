@@ -32,5 +32,5 @@ COPY alembic.ini ./migrations/
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl -f http://localhost:8080/ || exit 1
-
-CMD ["bash", "-c", "alembic upgrade head && gunicorn src.main:app --bind 0.0.0.0:8080"]
+# Comando temporário para depurar a conexão com o banco de dados
+CMD ["python", "-c", "from src.database import init_db; init_db()"]

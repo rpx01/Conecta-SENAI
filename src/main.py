@@ -21,7 +21,8 @@ from src.routes.rateio import rateio_bp
 from src.models.recurso import Recurso
 import sqlalchemy as sa
 
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+MIGRATIONS_DIR = os.path.join(os.path.dirname(__file__), '..', 'migrations')
+migrate = Migrate(directory=MIGRATIONS_DIR)
 
 def create_admin(app):
     """Cria o usuário administrador padrão de forma idempotente."""
@@ -100,8 +101,7 @@ def create_app():
     app.config['SECRET_KEY'] = secret_key
 
     db.init_app(app)
-    migrations_dir = os.path.join(project_root, 'migrations')
-    Migrate(app, db, directory=migrations_dir)
+    migrate.init_app(app, db)
     init_redis(app)
     limiter.init_app(app)
 
@@ -129,25 +129,26 @@ def create_app():
         return app.send_static_file(path)
 
     with app.app_context():
-        if not os.path.exists(migrations_dir):
+        if not os.path.exists(MIGRATIONS_DIR):
             logging.info("Pasta de migrations nao encontrada, inicializando...")
             try:
-                init(directory=migrations_dir)
-                migrate_cmd(directory=migrations_dir)
+                init(directory=MIGRATIONS_DIR)
+                migrate_cmd(directory=MIGRATIONS_DIR)
             except Exception as e:  # pragma: no cover - primeira migracao opcional
                 logging.error("Erro ao criar migrations: %s", str(e))
 
-        versions_dir = os.path.join(migrations_dir, 'versions')
+        versions_dir = os.path.join(MIGRATIONS_DIR, 'versions')
         if not os.path.exists(versions_dir) or not os.listdir(versions_dir):
             try:
-                migrate_cmd(directory=migrations_dir)
+                migrate_cmd(directory=MIGRATIONS_DIR)
             except Exception as e:  # pragma: no cover - geracao opcional
                 logging.error("Erro ao gerar migrations: %s", str(e))
 
         try:
-            upgrade(directory=migrations_dir)
+            upgrade(directory=MIGRATIONS_DIR)
         except Exception as e:  # pragma: no cover - migracao opcional
             logging.error("Erro ao aplicar migrations: %s", str(e))
+        db.create_all()
         create_admin(app)
         create_default_recursos(app)
 

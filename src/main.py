@@ -129,28 +129,7 @@ def create_app():
     def static_file(path):
         return app.send_static_file(path)
 
-    with app.app_context():
-        if not os.path.exists(migrations_dir):
-            logging.info("Pasta de migrations nao encontrada, inicializando...")
-            try:
-                init(directory=migrations_dir)
-                migrate_cmd(directory=migrations_dir)
-            except Exception as e:  # pragma: no cover - primeira migracao opcional
-                logging.error("Erro ao criar migrations: %s", str(e))
-
-        versions_dir = os.path.join(migrations_dir, 'versions')
-        if not os.path.exists(versions_dir) or not os.listdir(versions_dir):
-            try:
-                migrate_cmd(directory=migrations_dir)
-            except Exception as e:  # pragma: no cover - geracao opcional
-                logging.error("Erro ao gerar migrations: %s", str(e))
-
-        try:
-            upgrade(directory=migrations_dir)
-        except Exception as e:  # pragma: no cover - migracao opcional
-            logging.error("Erro ao aplicar migrations: %s", str(e))
-        create_admin(app)
-        create_default_recursos(app)
+    # Migrations e dados iniciais sao aplicados no script de entrypoint
 
     return app
 

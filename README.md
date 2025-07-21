@@ -29,8 +29,14 @@ Todas as variáveis disponíveis estão listadas em `.env.example`.
    Um servidor Redis precisa estar ativo no endereço definido em `REDIS_URL` para que a limitação de requisições e a revogação de tokens funcionem corretamente.
 
 3. Execute as migrações do banco para criar as tabelas necessárias ou
-   atualizar o esquema após mudanças no código. As migrações já fazem
-   parte do repositório, então basta aplicá-las com:
+   atualizar o esquema após mudanças no código. Caso o diretório
+   `migrations` ainda não exista, inicie-o primeiro:
+
+   ```bash
+   flask --app src.main db init
+   ```
+
+   Em seguida aplique as migrações:
 
    ```bash
    flask --app src.main db upgrade
@@ -67,12 +73,14 @@ Uma alternativa é rodar a aplicação em um container Docker. Para construir a 
 docker build -t agenda-senai .
 ```
 
-As imagens Docker já incluem o diretório `migrations`. Após construir a
-imagem, aplique as migrações dentro do container executando:
+As migrações não são mais distribuídas no repositório. Se o diretório
+`migrations` não existir, crie-o com:
 
 ```bash
-flask --app src.main db upgrade
+flask --app src.main db init
 ```
+
+Em seguida execute o comando de upgrade normalmente.
 
 Em seguida, inicie o container usando as variáveis definidas em um arquivo `.env`:
 
@@ -88,8 +96,8 @@ A aplicação ficará disponível em [http://localhost:8000](http://localhost:80
 - `src/routes/` - Blueprints com as rotas REST de cada recurso.
 - `src/models/` - Definições das tabelas e regras de negócios.
 - `src/static/` - Arquivos estáticos de frontend (HTML, CSS e JavaScript).
-- `migrations/` - Migrações versionadas do banco de dados gerenciadas pelo
-  Alembic.
+- `migrations/` - Criado automaticamente em tempo de execução para armazenar as
+  migrações do banco de dados.
 - `tests/` - Casos de teste automatizados.
 
 ## Principais Endpoints da API

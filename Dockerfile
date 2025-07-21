@@ -26,7 +26,8 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /usr/local /usr/local
 COPY ./src ./src
-COPY ./migrations ./migrations
+# Migrations are created at runtime; ensure directory exists
+RUN mkdir -p /app/migrations
 
 EXPOSE 8080
 

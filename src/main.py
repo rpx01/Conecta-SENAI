@@ -129,9 +129,8 @@ def create_app():
         return app.send_static_file(path)
 
     with app.app_context():
-        env_path = os.path.join(MIGRATIONS_DIR, 'env.py')
-        if not os.path.exists(env_path):
-            logging.info("Inicializando diret\u00f3rio de migrations...")
+        if not os.path.exists(MIGRATIONS_DIR):
+            logging.info("Pasta de migrations nao encontrada, inicializando...")
             try:
                 init(directory=MIGRATIONS_DIR)
                 migrate_cmd(directory=MIGRATIONS_DIR)

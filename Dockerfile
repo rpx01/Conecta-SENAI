@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /usr/local /usr/local
 COPY ./src ./src
 COPY ./migrations ./migrations
-COPY alembic.ini ./
+COPY alembic.ini ./migrations/
 
 EXPOSE 8080
 

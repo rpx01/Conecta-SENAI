@@ -1,23 +1,58 @@
 import os
+import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
 from alembic.config import Config
 from alembic import command
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///agenda_laboratorio.db").strip()
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+from .models import Base, User
+
+logging.basicConfig(level=logging.INFO)
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("A vari\u00e1vel de ambiente DATABASE_URL n\u00e3o foi definida.")
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
 
 
 def init_db():
-    """Inicializa o banco de dados e aplica as migracoes."""
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    alembic_cfg = Config(os.path.join(project_root, "alembic.ini"))
-    alembic_cfg.set_main_option("sqlalchemy.url", DATABASE_URL)
-    command.upgrade(alembic_cfg, "head")
+    """Inicializa o banco de dados e aplica as migra\u00e7\u00f5es do Alembic."""
+    try:
+        alembic_cfg_path = '/app/migrations/alembic.ini'
+        alembic_cfg = Config(alembic_cfg_path)
 
+        logging.info("Configurando a URL do banco de dados para o Alembic...")
+        alembic_cfg.set_main_option('sqlalchemy.url', DATABASE_URL)
+
+        logging.info("Aplicando migra\u00e7\u00f5es do banco de dados (upgrade head)...")
+        command.upgrade(alembic_cfg, "head")
+        logging.info("Migra\u00e7\u00f5es aplicadas com sucesso.")
+
+    except Exception as e:
+        logging.error(f"Ocorreu um erro ao aplicar as migra\u00e7\u00f5es: {e}")
+        raise
+
+
+def create_admin_user():
+    """Cria um usu\u00e1rio administrador se ele ainda n\u00e3o existir."""
+    db = SessionLocal()
+    try:
+        admin = db.query(User).filter(User.username == "admin").first()
+        if not admin:
+            admin_user = User(
+                username="admin",
+                email="admin@example.com",
+                hashed_password="a_senha_deve_ser_um_hash_seguro"
+            )
+            db.add(admin_user)
+            db.commit()
+            logging.info("Usu\u00e1rio administrador criado com sucesso.")
+        else:
+            logging.info("Usu\u00e1rio administrador j\u00e1 existe.")
+    except Exception as e:
+        logging.error(f"Erro ao verificar ou criar o usu\u00e1rio administrador: {e}")
+        db.rollback()
+    finally:
+        db.close()

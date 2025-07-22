@@ -109,6 +109,16 @@ function editarTreinamento(id) {
     });
 }
 
+function limparFormularioTreinamento() {
+    document.getElementById('treinamentoForm').reset();
+    document.getElementById('treinamentoId').value = '';
+}
+
+function novoTreinamento() {
+    limparFormularioTreinamento();
+    new bootstrap.Modal(document.getElementById('treinamentoModal')).show();
+}
+
 async function excluirTreinamento(id) {
     if (!confirm('Excluir treinamento?')) return;
     try {
@@ -177,6 +187,18 @@ async function editarTurma(id) {
     document.getElementById('dataFim').value = t.data_termino || '';
     document.getElementById('dataPratica').value = t.data_treinamento_pratico || '';
     atualizarCampoPratica();
+    new bootstrap.Modal(document.getElementById('turmaModal')).show();
+}
+
+function limparFormularioTurma() {
+    document.getElementById('turmaForm').reset();
+    document.getElementById('turmaId').value = '';
+    atualizarCampoPratica();
+}
+
+function novaTurma() {
+    limparFormularioTurma();
+    carregarTreinamentosSelect();
     new bootstrap.Modal(document.getElementById('turmaModal')).show();
 }
 

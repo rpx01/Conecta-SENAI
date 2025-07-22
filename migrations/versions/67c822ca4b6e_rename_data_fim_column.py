@@ -15,10 +15,18 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table('turmas_treinamento') as batch_op:
-        batch_op.alter_column('data_termino', new_column_name='data_fim')
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    columns = [col["name"] for col in inspector.get_columns("turmas_treinamento")]
+    if "data_termino" in columns and "data_fim" not in columns:
+        with op.batch_alter_table("turmas_treinamento") as batch_op:
+            batch_op.alter_column("data_termino", new_column_name="data_fim")
 
 
 def downgrade() -> None:
-    with op.batch_alter_table('turmas_treinamento') as batch_op:
-        batch_op.alter_column('data_fim', new_column_name='data_termino')
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    columns = [col["name"] for col in inspector.get_columns("turmas_treinamento")]
+    if "data_fim" in columns and "data_termino" not in columns:
+        with op.batch_alter_table("turmas_treinamento") as batch_op:
+            batch_op.alter_column("data_fim", new_column_name="data_termino")

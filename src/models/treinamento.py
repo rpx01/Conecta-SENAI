@@ -57,6 +57,7 @@ class TurmaTreinamento(db.Model):
     data_inicio = db.Column(db.Date, nullable=False)
     data_termino = db.Column("data_fim", db.Date, nullable=False)
     data_treinamento_pratico = db.Column(db.Date)
+    status = db.Column(db.String(20), nullable=False, default="aberta")
 
     treinamento = db.relationship(
         "Treinamento", back_populates="turmas"
@@ -73,6 +74,7 @@ class TurmaTreinamento(db.Model):
             "data_inicio": self.data_inicio.strftime("%Y-%m-%d"),
             "data_termino": self.data_termino.strftime("%Y-%m-%d"),
             "data_treinamento_pratico": self.data_treinamento_pratico.strftime("%Y-%m-%d") if self.data_treinamento_pratico else None,
+            "status": self.status,
             "inscritos": self.inscricoes.count(),
         }
 

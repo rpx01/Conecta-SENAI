@@ -228,6 +228,7 @@ def criar_turma_treinamento():
         data_inicio=payload.data_inicio,
         data_termino=payload.data_termino,
         data_treinamento_pratico=payload.data_treinamento_pratico,
+        status=payload.status or "aberta",
     )
     try:
         db.session.add(turma)
@@ -261,6 +262,8 @@ def atualizar_turma_treinamento(turma_id):
         turma.data_termino = payload.data_termino
     if payload.data_treinamento_pratico is not None:
         turma.data_treinamento_pratico = payload.data_treinamento_pratico
+    if payload.status is not None:
+        turma.status = payload.status
     try:
         db.session.commit()
         return jsonify(turma.to_dict())

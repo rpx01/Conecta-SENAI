@@ -42,6 +42,7 @@ class TurmaTreinamentoCreateSchema(BaseModel):
     data_inicio: date
     data_termino: date
     data_treinamento_pratico: Optional[date] = None
+    status: Optional[str] = "aberta"
 
 
 class TurmaTreinamentoUpdateSchema(BaseModel):
@@ -51,3 +52,4 @@ class TurmaTreinamentoUpdateSchema(BaseModel):
     data_inicio: Optional[date] = None
     data_termino: Optional[date] = None
     data_treinamento_pratico: Optional[date] = None
+    status: Optional[str] = None

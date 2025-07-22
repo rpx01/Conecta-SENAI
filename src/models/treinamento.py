@@ -31,8 +31,12 @@ class Treinamento(db.Model):
             "carga_horaria": self.carga_horaria,
             "tem_pratica": self.tem_pratica,
             "links_materiais": self.links_materiais,
-            "data_criacao": self.data_criacao.isoformat() if self.data_criacao else None,
-            "data_atualizacao": self.data_atualizacao.isoformat() if self.data_atualizacao else None,
+            "data_criacao": (
+                self.data_criacao.isoformat() if self.data_criacao else None
+            ),
+            "data_atualizacao": (
+                self.data_atualizacao.isoformat() if self.data_atualizacao else None
+            ),
         }
 
     def __repr__(self):
@@ -45,7 +49,9 @@ class TurmaTreinamento(db.Model):
     __tablename__ = "turmas_treinamento"
 
     id = db.Column(db.Integer, primary_key=True)
-    treinamento_id = db.Column(db.Integer, db.ForeignKey("treinamentos.id"), nullable=False)
+    treinamento_id = db.Column(
+        db.Integer, db.ForeignKey("treinamentos.id"), nullable=False
+    )
     data_inicio = db.Column(db.Date, nullable=False)
     data_termino = db.Column(db.Date, nullable=False)
     data_treinamento_pratico = db.Column(db.Date)
@@ -59,8 +65,14 @@ class TurmaTreinamento(db.Model):
             "id": self.id,
             "treinamento_id": self.treinamento_id,
             "data_inicio": self.data_inicio.isoformat() if self.data_inicio else None,
-            "data_termino": self.data_termino.isoformat() if self.data_termino else None,
-            "data_treinamento_pratico": self.data_treinamento_pratico.isoformat() if self.data_treinamento_pratico else None,
+            "data_termino": (
+                self.data_termino.isoformat() if self.data_termino else None
+            ),
+            "data_treinamento_pratico": (
+                self.data_treinamento_pratico.isoformat()
+                if self.data_treinamento_pratico
+                else None
+            ),
         }
 
     def __repr__(self):
@@ -73,7 +85,8 @@ class InscricaoTreinamento(db.Model):
     __tablename__ = "inscricoes_treinamento"
 
     id = db.Column(db.Integer, primary_key=True)
-    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False)
+    # Para inscrições manuais é permitido não associar a um usuário do sistema.
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True)
     turma_id = db.Column(
         db.Integer, db.ForeignKey("turmas_treinamento.id"), nullable=False
     )
@@ -95,9 +108,13 @@ class InscricaoTreinamento(db.Model):
             "nome": self.nome,
             "email": self.email,
             "cpf": self.cpf,
-            "data_nascimento": self.data_nascimento.isoformat() if self.data_nascimento else None,
+            "data_nascimento": (
+                self.data_nascimento.isoformat() if self.data_nascimento else None
+            ),
             "empresa": self.empresa,
-            "data_inscricao": self.data_inscricao.isoformat() if self.data_inscricao else None,
+            "data_inscricao": (
+                self.data_inscricao.isoformat() if self.data_inscricao else None
+            ),
         }
 
     def __repr__(self):

@@ -128,3 +128,32 @@ Ele realiza três etapas:
 3. Aplica a nova migration com `flask db upgrade`.
 
 Um workflow opcional (`.github/workflows/migrations.yml`) executa o mesmo processo em PRs e falha caso existam migrations não versionadas. Assim, ao abrir um PR, verifique se novas migrations foram geradas e commitadas.
+
+### Passo a passo para rodar as migrations
+
+1. Certifique-se de que a variável `DATABASE_URL` está configurada no arquivo `.env`.
+2. Aplique as migrations pendentes executando:
+
+```bash
+flask --app src.main db upgrade
+```
+
+3. Caso tenha alterado algum modelo, gere uma nova migration automática e aplique-a:
+
+```bash
+flask --app src.main db migrate -m "Descricao da mudança"
+flask --app src.main db upgrade
+```
+
+Você também pode usar o script que já realiza essas etapas de uma vez:
+
+```bash
+./scripts/auto_migrate.sh "Descricao da mudança"
+```
+
+### Checklist após alterar modelos
+
+- [ ] Atualize ou crie os arquivos em `src/models/`.
+- [ ] Rode `./scripts/auto_migrate.sh "Descrição"` para gerar e aplicar a migration.
+- [ ] Inclua os arquivos de migration em `migrations/versions/` no commit.
+- [ ] Execute `pytest` para garantir que todos os testes continuam passando.

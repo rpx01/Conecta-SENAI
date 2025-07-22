@@ -193,7 +193,8 @@ function verificarPermissaoAdmin() {
             !currentPage.startsWith('/laboratorios/') &&
             !currentPage.startsWith('/ocupacao/') &&
             !currentPage.startsWith('/rateio/') &&
-            !currentPage.startsWith('/admin/')
+            !currentPage.startsWith('/admin/') &&
+            !currentPage.startsWith('/treinamentos/')
         ) {
             window.location.href = '/selecao-sistema.html';
         }

@@ -1,6 +1,8 @@
 """Modelos relacionados a treinamentos."""
 
-from datetime import datetime, date
+"""Modelos relacionados a treinamentos."""
+
+from datetime import datetime
 
 from src.models import db
 
@@ -13,13 +15,19 @@ class Treinamento(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(150), nullable=False)
     codigo = db.Column(db.String(50), unique=True, nullable=False)
+    # Colunas adicionais
     capacidade_maxima = db.Column(db.Integer)
     carga_horaria = db.Column(db.Integer)
     tem_pratica = db.Column(db.Boolean, default=False)
     links_materiais = db.Column(db.JSON)
+
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_atualizacao = db.Column(
         db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+    turmas = db.relationship(
+        "TurmaTreinamento", back_populates="treinamento", lazy="dynamic"
     )
 
     def to_dict(self):
@@ -30,13 +38,7 @@ class Treinamento(db.Model):
             "capacidade_maxima": self.capacidade_maxima,
             "carga_horaria": self.carga_horaria,
             "tem_pratica": self.tem_pratica,
-            "links_materiais": self.links_materiais,
-            "data_criacao": (
-                self.data_criacao.isoformat() if self.data_criacao else None
-            ),
-            "data_atualizacao": (
-                self.data_atualizacao.isoformat() if self.data_atualizacao else None
-            ),
+            "links_materiais": self.links_materiais or [],
         }
 
     def __repr__(self):
@@ -57,22 +59,21 @@ class TurmaTreinamento(db.Model):
     data_treinamento_pratico = db.Column(db.Date)
 
     treinamento = db.relationship(
-        "Treinamento", backref=db.backref("turmas", lazy=True)
+        "Treinamento", back_populates="turmas"
+    )
+    inscricoes = db.relationship(
+        "InscricaoTreinamento", backref="turma", lazy="dynamic"
     )
 
     def to_dict(self):
         return {
             "id": self.id,
             "treinamento_id": self.treinamento_id,
-            "data_inicio": self.data_inicio.isoformat() if self.data_inicio else None,
-            "data_termino": (
-                self.data_termino.isoformat() if self.data_termino else None
-            ),
-            "data_treinamento_pratico": (
-                self.data_treinamento_pratico.isoformat()
-                if self.data_treinamento_pratico
-                else None
-            ),
+            "nome_treinamento": self.treinamento.nome if self.treinamento else "N/A",
+            "data_inicio": self.data_inicio.strftime("%Y-%m-%d"),
+            "data_termino": self.data_termino.strftime("%Y-%m-%d"),
+            "data_treinamento_pratico": self.data_treinamento_pratico.strftime("%Y-%m-%d") if self.data_treinamento_pratico else None,
+            "inscritos": self.inscricoes.count(),
         }
 
     def __repr__(self):
@@ -85,8 +86,7 @@ class InscricaoTreinamento(db.Model):
     __tablename__ = "inscricoes_treinamento"
 
     id = db.Column(db.Integer, primary_key=True)
-    # Para inscrições manuais é permitido não associar a um usuário do sistema.
-    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False)
     turma_id = db.Column(
         db.Integer, db.ForeignKey("turmas_treinamento.id"), nullable=False
     )
@@ -97,9 +97,6 @@ class InscricaoTreinamento(db.Model):
     empresa = db.Column(db.String(150))
     data_inscricao = db.Column(db.DateTime, default=datetime.utcnow)
 
-    usuario = db.relationship("User", backref="inscricoes_treinamento")
-    turma = db.relationship("TurmaTreinamento", backref="inscricoes")
-
     def to_dict(self):
         return {
             "id": self.id,
@@ -108,13 +105,9 @@ class InscricaoTreinamento(db.Model):
             "nome": self.nome,
             "email": self.email,
             "cpf": self.cpf,
-            "data_nascimento": (
-                self.data_nascimento.isoformat() if self.data_nascimento else None
-            ),
+            "data_nascimento": self.data_nascimento.strftime("%Y-%m-%d") if self.data_nascimento else None,
             "empresa": self.empresa,
-            "data_inscricao": (
-                self.data_inscricao.isoformat() if self.data_inscricao else None
-            ),
+            "data_inscricao": self.data_inscricao.isoformat(),
         }
 
     def __repr__(self):

@@ -1,0 +1,37 @@
+name: Auto Migrations
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "src/models/**"
+      - "alembic.ini"
+      - "migrations/env.py"
+  pull_request:
+    paths:
+      - "src/models/**"
+      - "alembic.ini"
+      - "migrations/env.py"
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+      - name: Run automated migrations
+        run: |
+          ./scripts/auto_migrate.sh "CI auto migration"
+      - name: Check for uncommitted migrations
+        run: |
+          git status --porcelain
+          if [ -n "$(git status --porcelain migrations/versions)" ]; then
+            echo "New migrations detected. Commit them to the repository." && exit 1
+          fi

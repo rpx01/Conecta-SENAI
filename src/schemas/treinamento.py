@@ -1,5 +1,7 @@
+"""Esquemas Pydantic para o módulo de treinamentos."""
+
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import date
 
 
@@ -9,3 +11,43 @@ class InscricaoTreinamentoCreateSchema(BaseModel):
     cpf: Optional[str] = None
     data_nascimento: Optional[date] = None
     empresa: Optional[str] = None
+
+
+class TreinamentoCreateSchema(BaseModel):
+    """Schema para cadastro de treinamentos."""
+
+    nome: str
+    codigo: str
+    capacidade_maxima: Optional[int] = None
+    carga_horaria: Optional[int] = None
+    tem_pratica: Optional[bool] = False
+    links_materiais: Optional[List[str]] = None
+
+
+class TreinamentoUpdateSchema(BaseModel):
+    """Schema para atualização parcial de treinamentos."""
+
+    nome: Optional[str] = None
+    codigo: Optional[str] = None
+    capacidade_maxima: Optional[int] = None
+    carga_horaria: Optional[int] = None
+    tem_pratica: Optional[bool] = None
+    links_materiais: Optional[List[str]] = None
+
+
+class TurmaTreinamentoCreateSchema(BaseModel):
+    """Schema para criação de turmas de treinamento."""
+
+    treinamento_id: int
+    data_inicio: date
+    data_termino: date
+    data_treinamento_pratico: Optional[date] = None
+
+
+class TurmaTreinamentoUpdateSchema(BaseModel):
+    """Schema para atualização de turmas de treinamento."""
+
+    treinamento_id: Optional[int] = None
+    data_inicio: Optional[date] = None
+    data_termino: Optional[date] = None
+    data_treinamento_pratico: Optional[date] = None

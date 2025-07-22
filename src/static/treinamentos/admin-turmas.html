@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerenciar Turmas de Treinamento</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/selecao-sistema.html">
+            <img src="/img/senai-logo.png" alt="SENAI" height="28" class="me-2"> Gerenciar Turmas
+        </a>
+        <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="#" id="btnLogout">Sair</a></li>
+        </ul>
+    </div>
+</nav>
+<div class="container my-4">
+    <div class="d-flex justify-content-between mb-3">
+        <h3>Turmas</h3>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#turmaModal">Nova</button>
+    </div>
+    <table class="table table-striped">
+        <thead>
+            <tr><th>ID</th><th>Treinamento</th><th>Início</th><th>Término</th><th></th></tr>
+        </thead>
+        <tbody id="turmasTableBody"></tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="turmaModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Turma</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="turmaForm">
+                    <input type="hidden" id="turmaId">
+                    <div class="mb-3">
+                        <label class="form-label">Treinamento (ID)</label>
+                        <input type="number" class="form-control" id="turmaTreinamentoId" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Data de Início</label>
+                        <input type="date" class="form-control" id="dataInicio" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Data de Término</label>
+                        <input type="date" class="form-control" id="dataFim" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Data do treinamento prático</label>
+                        <input type="date" class="form-control" id="dataPratica">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarTurma()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/treinamentos-admin.js"></script>
+</body>
+</html>
+

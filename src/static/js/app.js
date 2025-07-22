@@ -535,7 +535,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Adiciona o link para Laboratórios e Turmas somente no módulo de Agenda
     if (isAdmin()) {
-        const paginasOcupacao = [
+        const paginasDeExclusao = [
             '/ocupacao/ocupacao-dashboard.html',
             '/ocupacao/ocupacao-calendario.html',
             '/ocupacao/ocupacao-salas.html',
@@ -550,10 +550,16 @@ document.addEventListener('DOMContentLoaded', function() {
             '/laboratorios/laboratorios-perfil.html',
             '/admin/admin-perfil.html',
             '/ocupacao/ocupacao-turmas.html',
-            '/rateio/rateio-logs.html'
+            '/rateio/rateio-logs.html',
+            // Adicionando páginas de treinamento à lista de exclusão
+            '/treinamentos/index.html',
+            '/treinamentos/meus-cursos.html',
+            '/treinamentos/admin-catalogo.html',
+            '/treinamentos/admin-turmas.html',
+            '/treinamentos/admin-inscricoes.html'
         ];
 
-        if (!paginasOcupacao.includes(paginaAtual)) {
+        if (!paginasDeExclusao.includes(paginaAtual)) {
             adicionarLinkLabTurmas('.navbar-nav.ms-auto', true);
             adicionarLinkLabTurmas('.sidebar .nav.flex-column', false);
 

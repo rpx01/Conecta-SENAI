@@ -108,3 +108,21 @@ Actions. O workflow `.github/workflows/ci.yml` instala as dependências do
 projeto e executa o `flake8`, o `bandit` e a suíte de testes com `pytest` a
 cada push ou pull request para a branch `main`.
 
+
+## Migrações automáticas
+
+Para evitar divergências entre os modelos do SQLAlchemy e o esquema do banco de dados, o repositório disponibiliza o script `scripts/auto_migrate.sh`. Ele gera e aplica migrations de forma automática.
+
+Execute o script sempre que alterar arquivos em `src/models/`:
+
+```bash
+./scripts/auto_migrate.sh "Mensagem da migration"
+```
+
+Ele realiza três etapas:
+
+1. Garante que o banco esteja atualizado com `flask db upgrade`.
+2. Roda `flask db migrate` com autogeração para criar uma nova migration se mudanças forem detectadas.
+3. Aplica a nova migration com `flask db upgrade`.
+
+Um workflow opcional (`.github/workflows/migrations.yml`) executa o mesmo processo em PRs e falha caso existam migrations não versionadas. Assim, ao abrir um PR, verifique se novas migrations foram geradas e commitadas.

@@ -68,7 +68,9 @@ docker build -t agenda-senai .
 ```
 
 As migrações não são mais distribuídas no repositório. O diretório será criado
-automaticamente quando a aplicação rodar o comando de upgrade.
+automaticamente quando a aplicação rodar o comando de upgrade. O Dockerfile já
+executa `flask db upgrade` antes de iniciar o Gunicorn, garantindo que o banco
+esteja sempre na versão correta.
 
 Em seguida, inicie o container usando as variáveis definidas em um arquivo `.env`:
 

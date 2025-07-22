@@ -208,7 +208,8 @@ async function carregarInscricoes(turmaId) {
         const tbody = document.getElementById('inscricoesTableBody');
         tbody.innerHTML = '';
         if (insc.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhuma inscrição.</td></tr>';
+            // Mensagem quando não existem inscrições na turma
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhuma inscrição.</td></tr>';
             return;
         }
         for (const i of insc) {
@@ -218,6 +219,7 @@ async function carregarInscricoes(turmaId) {
                 <td>${escapeHTML(i.nome)}</td>
                 <td>${escapeHTML(i.email)}</td>
                 <td>${i.cpf || ''}</td>
+                <td>${escapeHTML(i.empresa || '')}</td>
             `;
             tbody.appendChild(tr);
         }
@@ -236,6 +238,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('turmaTreinamentoId')) {
         carregarTreinamentosSelect().then(atualizarCampoPratica);
         document.getElementById('turmaTreinamentoId').addEventListener('change', atualizarCampoPratica);
+    }
+
+    // Botão de exportação da lista de inscrições
+    const btnExportar = document.getElementById('btnExportarInscricoes');
+    if (btnExportar) {
+        const params = new URLSearchParams(window.location.search);
+        const turmaId = params.get('turma');
+        btnExportar.addEventListener('click', () => {
+            if (turmaId) {
+                exportarDados(`/treinamentos/turmas/${turmaId}/inscricoes/export`, 'xlsx', 'inscricoes');
+            }
+        });
     }
 });
 

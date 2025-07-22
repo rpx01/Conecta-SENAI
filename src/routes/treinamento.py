@@ -345,9 +345,11 @@ def exportar_inscricoes(turma_id):
     if formato == "xlsx":
         wb = Workbook()
         ws = wb.active
-        ws.append(["ID", "Nome", "Email", "CPF"])
+        # Cabeçalho da planilha
+        ws.append(["ID", "Nome", "Email", "CPF", "Empresa"])
+        # Adiciona as inscrições
         for i in inscricoes:
-            ws.append([i.id, i.nome, i.email, i.cpf])
+            ws.append([i.id, i.nome, i.email, i.cpf, i.empresa])
         buf = BytesIO()
         wb.save(buf)
         buf.seek(0)
@@ -360,9 +362,9 @@ def exportar_inscricoes(turma_id):
 
     si = StringIO()
     writer = csv.writer(si)
-    writer.writerow(["ID", "Nome", "Email", "CPF"])
+    writer.writerow(["ID", "Nome", "Email", "CPF", "Empresa"])
     for i in inscricoes:
-        writer.writerow([i.id, i.nome, i.email, i.cpf])
+        writer.writerow([i.id, i.nome, i.email, i.cpf, i.empresa])
     output = make_response(si.getvalue())
     output.headers["Content-Disposition"] = "attachment; filename=inscricoes.csv"
     output.headers["Content-Type"] = "text/csv"

@@ -55,7 +55,7 @@ class TurmaTreinamento(db.Model):
         db.Integer, db.ForeignKey("treinamentos.id"), nullable=False
     )
     data_inicio = db.Column(db.Date, nullable=False)
-    data_termino = db.Column(db.Date, nullable=False)
+    data_termino = db.Column("data_fim", db.Date, nullable=False)
     data_treinamento_pratico = db.Column(db.Date)
 
     treinamento = db.relationship(

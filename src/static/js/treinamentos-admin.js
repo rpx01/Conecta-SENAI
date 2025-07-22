@@ -208,7 +208,7 @@ async function carregarInscricoes(turmaId) {
         const tbody = document.getElementById('inscricoesTableBody');
         tbody.innerHTML = '';
         if (insc.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhuma inscrição.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhuma inscrição.</td></tr>';
             return;
         }
         for (const i of insc) {
@@ -218,12 +218,36 @@ async function carregarInscricoes(turmaId) {
                 <td>${escapeHTML(i.nome)}</td>
                 <td>${escapeHTML(i.email)}</td>
                 <td>${i.cpf || ''}</td>
+                <td>${escapeHTML(i.empresa || '')}</td>
             `;
             tbody.appendChild(tr);
         }
     } catch (e) {
         exibirAlerta(e.message, 'danger');
     }
+}
+
+// Exporta a lista de inscrições da tabela para um arquivo XLSX
+function exportarInscricoesXLSX() {
+    const linhas = [
+        ['ID', 'Nome', 'Email', 'CPF', 'Empresa'],
+        ...Array.from(document.querySelectorAll('#inscricoesTableBody tr')).map(tr =>
+            Array.from(tr.children).map(td => td.textContent.trim())
+        )
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(linhas);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Inscricoes');
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'inscricoes.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -236,6 +260,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('turmaTreinamentoId')) {
         carregarTreinamentosSelect().then(atualizarCampoPratica);
         document.getElementById('turmaTreinamentoId').addEventListener('change', atualizarCampoPratica);
+    }
+
+    const btnExportar = document.getElementById('btnExportarInscricoes');
+    if (btnExportar) {
+        btnExportar.addEventListener('click', exportarInscricoesXLSX);
     }
 });
 

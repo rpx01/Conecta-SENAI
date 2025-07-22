@@ -97,8 +97,9 @@
                     <form id="turmaForm" onsubmit="event.preventDefault(); salvarTurma();">
                         <input type="hidden" id="turmaId">
                         <div class="mb-3">
-                            <label class="form-label">Treinamento (ID)</label>
-                            <input type="number" class="form-control" id="turmaTreinamentoId" required>
+                            <label class="form-label">Treinamento</label>
+                            <!-- Select será preenchido via JavaScript com os treinamentos do catálogo -->
+                            <select class="form-select" id="turmaTreinamentoId" required></select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Data de Início</label>
@@ -108,7 +109,8 @@
                             <label class="form-label">Data de Término</label>
                             <input type="date" class="form-control" id="dataFim" required>
                         </div>
-                        <div class="mb-3">
+                        <!-- Grupo da data prática, inicialmente oculto até verificar o treinamento -->
+                        <div class="mb-3 d-none" id="dataPraticaGroup">
                             <label class="form-label">Data do treinamento prático</label>
                             <input type="date" class="form-control" id="dataPratica">
                         </div>

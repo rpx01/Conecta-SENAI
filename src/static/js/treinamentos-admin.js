@@ -1,5 +1,49 @@
 // Funções para administração de treinamentos e turmas
 
+// Armazena os treinamentos do catálogo para uso no select do formulário
+let treinamentosCatalogo = [];
+
+/**
+ * Carrega os treinamentos do catálogo e preenche o select de cadastro de turmas
+ */
+async function carregarTreinamentosSelect() {
+    const select = document.getElementById('turmaTreinamentoId');
+    if (!select) return; // Página não possui o select
+    try {
+        treinamentosCatalogo = await chamarAPI('/treinamentos/catalogo');
+        // Limpa opções existentes
+        select.innerHTML = '<option value="">Selecione...</option>';
+        treinamentosCatalogo.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.id;
+            opt.textContent = t.nome;
+            // Guarda se possui prática na opção para acesso rápido
+            opt.dataset.temPratica = t.tem_pratica;
+            select.appendChild(opt);
+        });
+    } catch (e) {
+        console.error('Erro ao carregar treinamentos:', e);
+    }
+}
+
+/**
+ * Mostra ou oculta o campo de data prática conforme o treinamento selecionado
+ */
+function atualizarCampoPratica() {
+    const select = document.getElementById('turmaTreinamentoId');
+    const grupo = document.getElementById('dataPraticaGroup');
+    const input = document.getElementById('dataPratica');
+    if (!select || !grupo || !input) return;
+    const opt = select.options[select.selectedIndex];
+    const temPratica = opt && opt.dataset.temPratica === 'true';
+    if (temPratica) {
+        grupo.classList.remove('d-none');
+    } else {
+        input.value = '';
+        grupo.classList.add('d-none');
+    }
+}
+
 async function carregarCatalogo() {
     try {
         const lista = await chamarAPI('/treinamentos/catalogo');
@@ -124,15 +168,16 @@ async function salvarTurma() {
     }
 }
 
-function editarTurma(id) {
-    chamarAPI(`/treinamentos/turmas/${id}`).then(t => {
-        document.getElementById('turmaId').value = t.id;
-        document.getElementById('turmaTreinamentoId').value = t.treinamento_id;
-        document.getElementById('dataInicio').value = t.data_inicio || '';
-        document.getElementById('dataFim').value = t.data_termino || '';
-        document.getElementById('dataPratica').value = t.data_treinamento_pratico || '';
-        new bootstrap.Modal(document.getElementById('turmaModal')).show();
-    });
+async function editarTurma(id) {
+    const t = await chamarAPI(`/treinamentos/turmas/${id}`);
+    await carregarTreinamentosSelect();
+    document.getElementById('turmaId').value = t.id;
+    document.getElementById('turmaTreinamentoId').value = t.treinamento_id;
+    document.getElementById('dataInicio').value = t.data_inicio || '';
+    document.getElementById('dataFim').value = t.data_termino || '';
+    document.getElementById('dataPratica').value = t.data_treinamento_pratico || '';
+    atualizarCampoPratica();
+    new bootstrap.Modal(document.getElementById('turmaModal')).show();
 }
 
 async function carregarInscricoes(turmaId) {
@@ -164,5 +209,11 @@ document.addEventListener('DOMContentLoaded', () => {
     verificarPermissaoAdmin();
     if (document.getElementById('catalogoTableBody')) carregarCatalogo();
     if (document.getElementById('turmasTableBody')) carregarTurmas();
+
+    // Se existir o select de treinamentos, carrega opções e ajusta campo de prática
+    if (document.getElementById('turmaTreinamentoId')) {
+        carregarTreinamentosSelect().then(atualizarCampoPratica);
+        document.getElementById('turmaTreinamentoId').addEventListener('change', atualizarCampoPratica);
+    }
 });
 

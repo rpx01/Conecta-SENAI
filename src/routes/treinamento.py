@@ -136,9 +136,10 @@ def criar_treinamento():
     except ValidationError as e:
         return jsonify({"erro": e.errors()}), 400
 
-    # Verifica se o nome ou código já estão em uso
-    if Treinamento.query.filter_by(nome=payload.nome).first():
-        return jsonify({"erro": "Já existe um treinamento com este nome"}), 400
+    # Verifica se já existe um treinamento com o mesmo nome e código
+    if Treinamento.query.filter_by(nome=payload.nome, codigo=payload.codigo).first():
+        return jsonify({"erro": "Já existe um treinamento com este nome e código"}), 400
+    # Código continua único para evitar duplicidade
     if Treinamento.query.filter_by(codigo=payload.codigo).first():
         return jsonify({"erro": "Já existe um treinamento com este código"}), 400
     try:
@@ -183,14 +184,18 @@ def atualizar_treinamento(treinamento_id):
     except ValidationError as e:
         return jsonify({"erro": e.errors()}), 400
 
+    novo_nome = payload.nome if payload.nome is not None else treino.nome
+    novo_codigo = payload.codigo if payload.codigo is not None else treino.codigo
+
+    existente = Treinamento.query.filter_by(nome=novo_nome, codigo=novo_codigo).first()
+    if existente and existente.id != treinamento_id:
+        return jsonify({"erro": "Já existe um treinamento com este nome e código"}), 400
+
     if payload.nome is not None:
-        existente = Treinamento.query.filter_by(nome=payload.nome).first()
-        if existente and existente.id != treinamento_id:
-            return jsonify({"erro": "Já existe um treinamento com este nome"}), 400
         treino.nome = payload.nome
     if payload.codigo is not None:
-        existente = Treinamento.query.filter_by(codigo=payload.codigo).first()
-        if existente and existente.id != treinamento_id:
+        existente_codigo = Treinamento.query.filter_by(codigo=payload.codigo).first()
+        if existente_codigo and existente_codigo.id != treinamento_id:
             return jsonify({"erro": "Já existe um treinamento com este código"}), 400
         treino.codigo = payload.codigo
     if payload.capacidade_maxima is not None:

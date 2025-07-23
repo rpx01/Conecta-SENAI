@@ -65,7 +65,7 @@
             <main class="col-lg-9 col-md-12">
                 <div class="page-header">
                     <h2 class="mb-0">Gerenciar Catálogo de Treinamentos</h2>
-                    <button class="btn btn-primary" onclick="novoTreinamento()"><i class="bi bi-plus-circle me-2"></i>NOVO TREINAMENTO</button>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#treinamentoModal"><i class="bi bi-plus-circle me-2"></i>NOVO TREINAMENTO</button>
                 </div>
                 
                 <div id="alertContainer" class="mt-3"></div>
@@ -96,6 +96,7 @@
                 <div class="modal-body">
                     <form id="treinamentoForm" onsubmit="event.preventDefault(); salvarTreinamento();">
                         <input type="hidden" id="treinamentoId">
+                        
                         <div class="mb-3">
                             <label class="form-label">Nome</label>
                             <input type="text" class="form-control" id="nomeTrein" required>
@@ -105,25 +106,33 @@
                             <input type="text" class="form-control" id="codigoTrein" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Capacidade Máxima</label>
-                            <input type="number" class="form-control" id="capacidadeTrein">
+                            <label for="tipoTrein" class="form-label">Tipo</label>
+                            <select class="form-select" id="tipoTrein">
+                                <option value="Inicial">Inicial</option>
+                                <option value="Periódico">Periódico</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Conteúdo Programático</label>
+                            <textarea class="form-control" id="conteudoTrein" rows="4"></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Carga Horária</label>
                             <input type="number" class="form-control" id="cargaTrein">
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">Capacidade Máxima</label>
+                            <input type="number" class="form-control" id="capacidadeTrein">
+                        </div>
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" id="temPratica">
-                            <label class="form-check-label" for="temPratica">Possui parte prática</label>
+                            <label class="form-check-label ms-2" for="temPratica">Possui parte prática</label>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Links para materiais (um por linha)</label>
                             <textarea class="form-control" id="linksTrein" rows="3"></textarea>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Conteúdo Programático</label>
-                            <textarea class="form-control" id="conteudoProgramatico" rows="5"></textarea>
-                        </div>
+
                     </form>
                 </div>
                 <div class="modal-footer">

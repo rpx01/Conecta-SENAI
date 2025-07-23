@@ -37,8 +37,8 @@ def listar_treinamentos():
                 "data_inicio": (
                     turma.data_inicio.isoformat() if turma.data_inicio else None
                 ),
-                "data_termino": (
-                    turma.data_termino.isoformat() if turma.data_termino else None
+                "data_fim": (
+                    turma.data_fim.isoformat() if turma.data_fim else None
                 ),
                 "data_treinamento_pratico": (
                     turma.data_treinamento_pratico.isoformat()
@@ -67,7 +67,7 @@ def inscrever_usuario(turma_id):
     data = request.json or {}
     try:
         payload = InscricaoTreinamentoCreateSchema(**data)
-    except Exception as e:  # pylint: disable=broad-except
+    except Exception as e:
         return jsonify({"erro": str(e)}), 400
 
     try:
@@ -108,9 +108,9 @@ def listar_meus_cursos():
                 "data_inicio": (
                     inc.turma.data_inicio.isoformat() if inc.turma.data_inicio else None
                 ),
-                "data_termino": (
-                    inc.turma.data_termino.isoformat()
-                    if inc.turma.data_termino
+                "data_fim": (
+                    inc.turma.data_fim.isoformat()
+                    if inc.turma.data_fim
                     else None
                 ),
             }
@@ -143,7 +143,8 @@ def criar_treinamento():
             carga_horaria=payload.carga_horaria,
             tem_pratica=payload.tem_pratica,
             links_materiais=payload.links_materiais,
-            conteudo_programatico=payload.conteudo_programatico,
+            tipo=payload.tipo,
+            conteudo_programatico=payload.conteudo_programatico
         )
         db.session.add(novo)
         db.session.commit()
@@ -188,8 +189,11 @@ def atualizar_treinamento(treinamento_id):
         treino.tem_pratica = payload.tem_pratica
     if payload.links_materiais is not None:
         treino.links_materiais = payload.links_materiais
+    if payload.tipo is not None:
+        treino.tipo = payload.tipo
     if payload.conteudo_programatico is not None:
         treino.conteudo_programatico = payload.conteudo_programatico
+        
     try:
         db.session.commit()
         return jsonify(treino.to_dict())
@@ -229,9 +233,8 @@ def criar_turma_treinamento():
     turma = TurmaTreinamento(
         treinamento_id=payload.treinamento_id,
         data_inicio=payload.data_inicio,
-        data_termino=payload.data_termino,
+        data_fim=payload.data_fim,
         data_treinamento_pratico=payload.data_treinamento_pratico,
-        status=payload.status or "aberta",
     )
     try:
         db.session.add(turma)
@@ -261,12 +264,10 @@ def atualizar_turma_treinamento(turma_id):
         turma.treinamento_id = payload.treinamento_id
     if payload.data_inicio is not None:
         turma.data_inicio = payload.data_inicio
-    if payload.data_termino is not None:
-        turma.data_termino = payload.data_termino
+    if payload.data_fim is not None:
+        turma.data_fim = payload.data_fim
     if payload.data_treinamento_pratico is not None:
         turma.data_treinamento_pratico = payload.data_treinamento_pratico
-    if payload.status is not None:
-        turma.status = payload.status
     try:
         db.session.commit()
         return jsonify(turma.to_dict())

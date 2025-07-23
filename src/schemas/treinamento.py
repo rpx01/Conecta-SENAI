@@ -22,6 +22,7 @@ class TreinamentoCreateSchema(BaseModel):
     carga_horaria: Optional[int] = None
     tem_pratica: Optional[bool] = False
     links_materiais: Optional[List[str]] = None
+    conteudo_programatico: Optional[str] = None
 
 
 class TreinamentoUpdateSchema(BaseModel):
@@ -33,6 +34,7 @@ class TreinamentoUpdateSchema(BaseModel):
     carga_horaria: Optional[int] = None
     tem_pratica: Optional[bool] = None
     links_materiais: Optional[List[str]] = None
+    conteudo_programatico: Optional[str] = None
 
 
 class TurmaTreinamentoCreateSchema(BaseModel):

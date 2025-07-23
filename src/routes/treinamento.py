@@ -136,10 +136,9 @@ def criar_treinamento():
     except ValidationError as e:
         return jsonify({"erro": e.errors()}), 400
 
-    # Verifica se já existe um treinamento com o mesmo nome e código
-    if Treinamento.query.filter_by(nome=payload.nome, codigo=payload.codigo).first():
-        return jsonify({"erro": "Já existe um treinamento com este nome e código"}), 400
-    # Código continua único para evitar duplicidade
+    # Verificações de duplicidade
+    if Treinamento.query.filter_by(nome=payload.nome).first():
+        return jsonify({"erro": "Já existe um treinamento com este nome"}), 400
     if Treinamento.query.filter_by(codigo=payload.codigo).first():
         return jsonify({"erro": "Já existe um treinamento com este código"}), 400
     try:
@@ -187,6 +186,9 @@ def atualizar_treinamento(treinamento_id):
     novo_nome = payload.nome if payload.nome is not None else treino.nome
     novo_codigo = payload.codigo if payload.codigo is not None else treino.codigo
 
+    existente_nome = Treinamento.query.filter_by(nome=novo_nome).first()
+    if existente_nome and existente_nome.id != treinamento_id:
+        return jsonify({"erro": "Já existe um treinamento com este nome"}), 400
     existente = Treinamento.query.filter_by(nome=novo_nome, codigo=novo_codigo).first()
     if existente and existente.id != treinamento_id:
         return jsonify({"erro": "Já existe um treinamento com este nome e código"}), 400

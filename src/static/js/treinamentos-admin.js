@@ -4,6 +4,8 @@
 function novoTreinamento() {
     document.getElementById('treinamentoForm').reset();
     document.getElementById('treinamentoId').value = '';
+    // Define um valor padrão para o select
+    document.getElementById('tipoTrein').value = 'Inicial';
     const modal = new bootstrap.Modal(document.getElementById('treinamentoModal'));
     modal.show();
 }
@@ -15,15 +17,18 @@ async function carregarCatalogo() {
         if (!tbody) return;
         tbody.innerHTML = '';
         if (lista.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum treinamento cadastrado.</td></tr>';
+            // Ajusta o colspan para o novo número de colunas (7)
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum treinamento cadastrado.</td></tr>';
             return;
         }
         for (const t of lista) {
             const tr = document.createElement('tr');
+            // Adiciona a célula (td) para o tipo de treinamento
             tr.innerHTML = `
                 <td>${t.id}</td>
                 <td>${escapeHTML(t.nome)}</td>
                 <td>${escapeHTML(t.codigo)}</td>
+                <td>${escapeHTML(t.tipo || '')}</td>
                 <td>${t.carga_horaria || ''}</td>
                 <td>${t.capacidade_maxima || ''}</td>
                 <td>

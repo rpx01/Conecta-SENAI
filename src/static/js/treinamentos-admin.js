@@ -81,7 +81,9 @@ async function salvarTreinamento() {
         capacidade_maxima: parseInt(document.getElementById('capacidadeTrein').value) || null,
         carga_horaria: parseInt(document.getElementById('cargaTrein').value) || null,
         tem_pratica: document.getElementById('temPratica').checked,
-        links_materiais: document.getElementById('linksTrein').value ? document.getElementById('linksTrein').value.split('\n') : null
+        links_materiais: document.getElementById('linksTrein').value ? document.getElementById('linksTrein').value.split('\n') : null,
+        // Novo campo de conteudo programatico
+        conteudo_programatico: document.getElementById('conteudoTrein').value || null
     };
     try {
         if (id) {
@@ -105,6 +107,8 @@ function editarTreinamento(id) {
         document.getElementById('cargaTrein').value = t.carga_horaria || '';
         document.getElementById('temPratica').checked = t.tem_pratica;
         document.getElementById('linksTrein').value = (t.links_materiais || []).join('\n');
+        // Preenche conteudo programatico
+        document.getElementById('conteudoTrein').value = t.conteudo_programatico || '';
         new bootstrap.Modal(document.getElementById('treinamentoModal')).show();
     });
 }

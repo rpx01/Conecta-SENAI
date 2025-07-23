@@ -20,6 +20,7 @@ class Treinamento(db.Model):
     carga_horaria = db.Column(db.Integer)
     tem_pratica = db.Column(db.Boolean, default=False)
     links_materiais = db.Column(db.JSON)
+    conteudo_programatico = db.Column(db.Text, nullable=True)
 
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_atualizacao = db.Column(
@@ -39,6 +40,7 @@ class Treinamento(db.Model):
             "carga_horaria": self.carga_horaria,
             "tem_pratica": self.tem_pratica,
             "links_materiais": self.links_materiais or [],
+            "conteudo_programatico": self.conteudo_programatico,
         }
 
     def __repr__(self):

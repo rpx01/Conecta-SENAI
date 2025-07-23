@@ -378,3 +378,19 @@ def exportar_inscricoes(turma_id):
     output.headers["Content-Disposition"] = "attachment; filename=inscricoes.csv"
     output.headers["Content-Type"] = "text/csv"
     return output
+
+
+@treinamento_bp.route("/treinamentos/turmas/<int:turma_id>", methods=["GET"])
+@admin_required
+def obter_turma_treinamento(turma_id):
+    """Obtém detalhes de uma turma de treinamento."""
+    turma = db.session.get(TurmaTreinamento, turma_id)
+    if not turma:
+        return jsonify({"erro": "Turma não encontrada"}), 404
+
+    dados_turma = turma.to_dict()
+    dados_turma["treinamento"] = (
+        turma.treinamento.to_dict() if turma.treinamento else None
+    )
+
+    return jsonify(dados_turma)

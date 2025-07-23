@@ -188,6 +188,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('catalogoTableBody')) carregarCatalogo();
     if (document.getElementById('turmasTableBody')) carregarTurmas();
 
+    const formTreinamento = document.getElementById('treinamentoForm');
+    if (formTreinamento) {
+        formTreinamento.addEventListener('submit', (e) => {
+            e.preventDefault();
+            salvarTreinamento();
+        });
+    }
+
     // Adiciona o listener para limpar o formulário sempre que o modal for fechado
     const treinamentoModalEl = document.getElementById('treinamentoModal');
     if (treinamentoModalEl) {

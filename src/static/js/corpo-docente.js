@@ -10,7 +10,8 @@ class GerenciadorInstrutores {
         this.btnLimparFiltros = document.getElementById('btnLimparFiltros');
         this.filtroNome = document.getElementById('filtroNome');
         this.filtroStatus = document.getElementById('filtroStatus');
-        this.modalInstrutor = new bootstrap.Modal(document.getElementById('modalInstrutor'));
+        this.modalEl = document.getElementById('modalInstrutor');
+        this.modalInstrutor = new bootstrap.Modal(this.modalEl);
         this.modalExcluir = new bootstrap.Modal(document.getElementById('modalExcluirInstrutor'));
         this.form = document.getElementById('formInstrutor');
         this.btnSalvar = document.getElementById('btnSalvarInstrutor');
@@ -48,6 +49,13 @@ class GerenciadorInstrutores {
         });
         document.getElementById('confirmarExcluirInstrutor')
             .addEventListener('click', () => this.confirmarExclusao());
+
+        // Adiciona o listener para limpar o formulário sempre que o modal for fechado
+        this.modalEl.addEventListener('hidden.bs.modal', () => {
+            this.form.reset();
+            document.getElementById('instrutorId').value = '';
+            this.instrutorAtual = null;
+        });
     }
 
     async carregarAreas() {

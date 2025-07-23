@@ -1,4 +1,15 @@
-// Conteudo atualizado para rateio-config.js
+// Função para limpar e abrir o modal para uma nova configuração
+let configEmEdicaoId = null;
+// Função para limpar e abrir o modal para uma nova configuração
+function novaConfig() {
+    document.getElementById('configForm').reset();
+    configEmEdicaoId = null; // Garante que é modo de criação
+    document.getElementById('modalConfigLabel').textContent = 'Nova Configuração';
+    // Acessa o modal pela variável global definida no escopo do DOMContentLoaded
+    if (window.configModal) {
+        window.configModal.show();
+    }
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     // Validação de autenticação e permissões
@@ -7,12 +18,20 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    const configModal = new bootstrap.Modal(document.getElementById('configModal'));
+    const configModalEl = document.getElementById('configModal');
+    window.configModal = new bootstrap.Modal(configModalEl); // Torna o modal acessível globalmente
     const confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
     const form = document.getElementById('configForm');
     const tableBody = document.getElementById('configsTableBody');
-    let configEmEdicaoId = null;
     let configParaExcluirId = null;
+
+    // Listener para limpar o form sempre que o modal for fechado
+    if (configModalEl) {
+        configModalEl.addEventListener('hidden.bs.modal', () => {
+            form.reset();
+            configEmEdicaoId = null;
+        });
+    }
 
     // Função para carregar e renderizar as configurações
     async function carregarConfiguracoes() {
@@ -63,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
             configEmEdicaoId = null;
             document.getElementById('modalConfigLabel').textContent = 'Nova Configuração';
         }
-        configModal.show();
+        window.configModal.show();
     }
 
     // Salvar (Criar ou Editar)
@@ -84,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 await chamarAPI('/rateio-configs', 'POST', dados);
                 exibirAlerta('Configuração criada com sucesso!', 'success');
             }
-            configModal.hide();
+            window.configModal.hide();
             carregarConfiguracoes();
         } catch (error) {
             exibirAlerta(`Erro ao salvar: ${error.message}`, 'danger');

@@ -102,7 +102,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="treinamentoForm" onsubmit="event.preventDefault(); salvarTreinamento();">
+                    <form id="treinamentoForm">
                         <input type="hidden" id="treinamentoId">
                         
                         <div class="mb-3">
@@ -145,7 +145,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" form="treinamentoForm" class="btn btn-primary">Salvar</button>
+                    <button id="btnSalvarTreinamento" type="submit" form="treinamentoForm" class="btn btn-primary">Salvar</button>
                 </div>
             </div>
         </div>

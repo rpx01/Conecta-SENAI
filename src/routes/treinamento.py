@@ -143,6 +143,7 @@ def criar_treinamento():
             carga_horaria=payload.carga_horaria,
             tem_pratica=payload.tem_pratica,
             links_materiais=payload.links_materiais,
+            conteudo_programatico=payload.conteudo_programatico,
         )
         db.session.add(novo)
         db.session.commit()
@@ -187,6 +188,8 @@ def atualizar_treinamento(treinamento_id):
         treino.tem_pratica = payload.tem_pratica
     if payload.links_materiais is not None:
         treino.links_materiais = payload.links_materiais
+    if payload.conteudo_programatico is not None:
+        treino.conteudo_programatico = payload.conteudo_programatico
     try:
         db.session.commit()
         return jsonify(treino.to_dict())

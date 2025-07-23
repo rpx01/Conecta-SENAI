@@ -365,6 +365,39 @@ function getClasseTurno(turno) {
 }
 
 /**
+ * Executa uma ação assíncrona desabilitando o botão durante a operação para
+ * evitar cliques duplicados. Caso o botão contenha um elemento com a classe
+ * `.spinner-border`, ele será exibido enquanto a Promise estiver pendente. Se
+ * houver um span com classe `.btn-text`, o texto é temporariamente alterado
+ * para "Processando...".
+ *
+ * @param {HTMLButtonElement|HTMLInputElement} btn - Botão que dispara a ação
+ * @param {() => Promise<any>} acao - Função assíncrona a ser executada
+ * @returns {Promise<any>} - Resultado da Promise da ação
+ */
+async function executarAcaoComFeedback(btn, acao) {
+    if (!btn || typeof acao !== 'function') {
+        throw new Error('Parâmetros inválidos em executarAcaoComFeedback');
+    }
+
+    const spinner = btn.querySelector('.spinner-border');
+    const textoSpan = btn.querySelector('.btn-text');
+    const textoOriginal = textoSpan ? textoSpan.textContent : '';
+
+    btn.disabled = true;
+    if (spinner) spinner.classList.remove('d-none');
+    if (textoSpan) textoSpan.textContent = 'Processando...';
+
+    try {
+        return await acao();
+    } finally {
+        if (spinner) spinner.classList.add('d-none');
+        if (textoSpan) textoSpan.textContent = textoOriginal;
+        btn.disabled = false;
+    }
+}
+
+/**
  * Adiciona o link para a página de Laboratórios e Turmas no menu
  * @param {string} containerSelector - Seletor CSS do container do menu
  * @param {boolean} isNavbar - Indica se é o menu da navbar ou sidebar

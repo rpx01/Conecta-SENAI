@@ -157,3 +157,37 @@ Você também pode usar o script que já realiza essas etapas de uma vez:
 - [ ] Rode `./scripts/auto_migrate.sh "Descrição"` para gerar e aplicar a migration.
 - [ ] Inclua os arquivos de migration em `migrations/versions/` no commit.
 - [ ] Execute `pytest` para garantir que todos os testes continuam passando.
+
+### Evitando cliques múltiplos em botões
+
+Use a função `executarAcaoComFeedback` definida em `src/static/js/app.js` para
+desabilitar botões enquanto uma ação assíncrona é executada, evitando que o
+usuário clique várias vezes.
+
+```html
+<button id="btnSalvar" class="btn btn-primary">
+  <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+  <span class="btn-text">Salvar</span>
+</button>
+
+<input id="btnExcluir" type="submit" class="btn btn-danger"
+       value="Excluir">
+```
+
+```javascript
+// Exemplo genérico de uso com <button>
+document.getElementById('btnSalvar').addEventListener('click', () => {
+  executarAcaoComFeedback(document.getElementById('btnSalvar'), async () => {
+    await chamarAPI('/exemplo', 'POST');
+  });
+});
+
+// Exemplo usando <input type="submit">
+document.getElementById('btnExcluir').addEventListener('click', (e) => {
+  e.preventDefault();
+  executarAcaoComFeedback(e.currentTarget, async () => {
+    await chamarAPI('/exemplo', 'DELETE');
+  });
+});
+```
+

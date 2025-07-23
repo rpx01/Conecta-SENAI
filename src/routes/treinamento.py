@@ -135,6 +135,12 @@ def criar_treinamento():
         payload = TreinamentoCreateSchema(**data)
     except ValidationError as e:
         return jsonify({"erro": e.errors()}), 400
+
+    # Verifica se o nome ou código já estão em uso
+    if Treinamento.query.filter_by(nome=payload.nome).first():
+        return jsonify({"erro": "Já existe um treinamento com este nome"}), 400
+    if Treinamento.query.filter_by(codigo=payload.codigo).first():
+        return jsonify({"erro": "Já existe um treinamento com este código"}), 400
     try:
         novo = Treinamento(
             nome=payload.nome,
@@ -178,8 +184,14 @@ def atualizar_treinamento(treinamento_id):
         return jsonify({"erro": e.errors()}), 400
 
     if payload.nome is not None:
+        existente = Treinamento.query.filter_by(nome=payload.nome).first()
+        if existente and existente.id != treinamento_id:
+            return jsonify({"erro": "Já existe um treinamento com este nome"}), 400
         treino.nome = payload.nome
     if payload.codigo is not None:
+        existente = Treinamento.query.filter_by(codigo=payload.codigo).first()
+        if existente and existente.id != treinamento_id:
+            return jsonify({"erro": "Já existe um treinamento com este código"}), 400
         treino.codigo = payload.codigo
     if payload.capacidade_maxima is not None:
         treino.capacidade_maxima = payload.capacidade_maxima

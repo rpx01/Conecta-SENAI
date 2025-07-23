@@ -15,12 +15,12 @@ def admin_headers(app):
         return {'Authorization': f'Bearer {token}'}
 
 
-def test_criar_treinamento_nome_repetido_falha(client, app):
+def test_criar_treinamento_nome_repetido_permitido(client, app):
     headers = admin_headers(app)
     resp1 = client.post('/api/treinamentos/catalogo', json={'nome': 'Treino', 'codigo': 'T1'}, headers=headers)
     assert resp1.status_code == 201
     resp2 = client.post('/api/treinamentos/catalogo', json={'nome': 'Treino', 'codigo': 'T2'}, headers=headers)
-    assert resp2.status_code == 400
+    assert resp2.status_code == 201
 
 
 def test_criar_treinamento_nome_codigo_iguais_falha(client, app):
@@ -30,10 +30,10 @@ def test_criar_treinamento_nome_codigo_iguais_falha(client, app):
     assert resp.status_code == 400
 
 
-def test_atualizar_treinamento_nome_duplicado_falha(client, app):
+def test_atualizar_treinamento_nome_duplicado_permitido(client, app):
     headers = admin_headers(app)
     client.post('/api/treinamentos/catalogo', json={'nome': 'A', 'codigo': 'C1'}, headers=headers)
     r2 = client.post('/api/treinamentos/catalogo', json={'nome': 'B', 'codigo': 'C2'}, headers=headers)
     tid2 = r2.get_json()['id']
     resp = client.put(f'/api/treinamentos/catalogo/{tid2}', json={'nome': 'A'}, headers=headers)
-    assert resp.status_code == 400
+    assert resp.status_code == 200

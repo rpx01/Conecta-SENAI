@@ -1,5 +1,13 @@
 // Funções para administração de treinamentos e turmas
 
+// Função nova para limpar e abrir o modal
+function novoTreinamento() {
+    document.getElementById('treinamentoForm').reset();
+    document.getElementById('treinamentoId').value = '';
+    const modal = new bootstrap.Modal(document.getElementById('treinamentoModal'));
+    modal.show();
+}
+
 async function carregarCatalogo() {
     try {
         const lista = await chamarAPI('/treinamentos/catalogo');
@@ -174,4 +182,13 @@ document.addEventListener('DOMContentLoaded', () => {
     verificarPermissaoAdmin();
     if (document.getElementById('catalogoTableBody')) carregarCatalogo();
     if (document.getElementById('turmasTableBody')) carregarTurmas();
+
+    // Adiciona o listener para limpar o formulário sempre que o modal for fechado
+    const treinamentoModalEl = document.getElementById('treinamentoModal');
+    if (treinamentoModalEl) {
+        treinamentoModalEl.addEventListener('hidden.bs.modal', () => {
+            document.getElementById('treinamentoForm').reset();
+            document.getElementById('treinamentoId').value = '';
+        });
+    }
 });

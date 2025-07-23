@@ -273,9 +273,24 @@
             
             // Variáveis para controle dos modais
             const confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
-            const laboratorioModal = new bootstrap.Modal(document.getElementById('laboratorioModal'));
-            const turmaModal = new bootstrap.Modal(document.getElementById('turmaModal'));
+            const laboratorioModalEl = document.getElementById('laboratorioModal');
+            const turmaModalEl = document.getElementById('turmaModal');
+            const laboratorioModal = new bootstrap.Modal(laboratorioModalEl);
+            const turmaModal = new bootstrap.Modal(turmaModalEl);
             let itemParaExcluir = { tipo: null, id: null };
+
+            // ADICIONADO: Listeners para limpar os modais quando fechados
+            laboratorioModalEl.addEventListener('hidden.bs.modal', () => {
+                document.getElementById('laboratorioForm').reset();
+                document.getElementById('laboratorioId').value = '';
+                document.getElementById('btnSalvarLaboratorio').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
+            });
+
+            turmaModalEl.addEventListener('hidden.bs.modal', () => {
+                document.getElementById('turmaForm').reset();
+                document.getElementById('turmaId').value = '';
+                document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
+            });
             
             // Carrega os dados iniciais
             carregarLaboratorios();
@@ -501,16 +516,12 @@
             }
 
             window.novoLaboratorio = function() {
-                document.getElementById('laboratorioForm').reset();
-                document.getElementById('laboratorioId').value = '';
-                document.getElementById('btnSalvarLaboratorio').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
+                // A limpeza agora é feita pelo listener 'hidden.bs.modal'
                 laboratorioModal.show();
             };
 
             window.novaTurma = function() {
-                document.getElementById('turmaForm').reset();
-                document.getElementById('turmaId').value = '';
-                document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
+                // A limpeza agora é feita pelo listener 'hidden.bs.modal'
                 turmaModal.show();
             };
         });

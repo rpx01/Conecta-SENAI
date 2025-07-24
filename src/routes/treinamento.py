@@ -38,8 +38,12 @@ from reportlab.lib import colors
 from datetime import datetime
 import locale
 
-# Configura o locale para o formato de data em português
-locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
+# Configura o locale para o formato de data em português. Em ambientes onde
+# esse locale não estiver disponível, mantemos o padrão sem gerar erro.
+try:
+    locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
+except locale.Error:
+    pass
 
 
 treinamento_bp = Blueprint("treinamento", __name__)

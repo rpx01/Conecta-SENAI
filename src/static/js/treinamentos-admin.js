@@ -351,33 +351,39 @@ async function carregarInscricoes(turmaId) {
 
 // Salva notas, status e presença de todas as inscrições
 async function salvarAlteracoesInscricoes() {
-    const linhas = document.querySelectorAll('#inscricoesTableBody tr');
-    const promessas = [];
+    const btn = document.getElementById('btnSalvarAlteracoes');
+    if (!btn) return;
 
-    linhas.forEach(linha => {
-        const id = linha.dataset.id;
-        if (!id) return;
+    await executarAcaoComFeedback(btn, async () => {
+        const linhas = document.querySelectorAll('#inscricoesTableBody tr');
+        const promessas = [];
 
-        const checkTeoria = linha.querySelector('.presenca-teoria-check');
-        const checkPratica = linha.querySelector('.presenca-pratica-check');
+        linhas.forEach(linha => {
+            const id = linha.dataset.id;
+            if (!id) return;
 
-        const body = {
-            nota_teoria: linha.querySelector('.nota-teoria-input').value,
-            nota_pratica: linha.querySelector('.nota-pratica-input').value,
-            status_aprovacao: linha.querySelector('.status-aprovacao-select').value,
-            presenca_teoria: checkTeoria ? checkTeoria.checked : false,
-            presenca_pratica: checkPratica ? checkPratica.checked : false
-        };
+            const checkTeoria = linha.querySelector('.presenca-teoria-check');
+            const checkPratica = linha.querySelector('.presenca-pratica-check');
 
-        promessas.push(chamarAPI(`/treinamentos/inscricoes/${id}/avaliar`, 'PUT', body));
+            const body = {
+                nota_teoria: linha.querySelector('.nota-teoria-input').value,
+                nota_pratica: linha.querySelector('.nota-pratica-input').value,
+                status_aprovacao: linha.querySelector('.status-aprovacao-select').value,
+                presenca_teoria: checkTeoria ? checkTeoria.checked : false,
+                presenca_pratica: checkPratica ? checkPratica.checked : false
+            };
+
+            promessas.push(chamarAPI(`/treinamentos/inscricoes/${id}/avaliar`, 'PUT', body));
+        });
+
+        try {
+            await Promise.all(promessas);
+            exibirAlerta('Todas as alterações foram salvas com sucesso!', 'success');
+        } catch (e) {
+            console.error("Erro ao salvar alterações:", e);
+            throw e;
+        }
     });
-
-    try {
-        await Promise.all(promessas);
-        exibirAlerta('Todas as alterações foram salvas com sucesso!', 'success');
-    } catch (e) {
-        exibirAlerta(`Ocorreu um erro ao salvar: ${e.message}`, 'danger');
-    }
 }
 
 
@@ -402,6 +408,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnSalvar = document.getElementById('btnSalvarAlteracoes');
     if (btnSalvar) {
         btnSalvar.addEventListener('click', salvarAlteracoesInscricoes);
+    }
+
+    // Lógica para o novo modal de exportação
+    const exportarModalEl = document.getElementById('exportarModal');
+    if (exportarModalEl) {
+        const exportarModal = new bootstrap.Modal(exportarModalEl);
+        const btnAbrirModal = document.getElementById('btnExportarInscricoes');
+        const btnPDF = document.getElementById('btnExportarPDF');
+        const btnXLSX = document.getElementById('btnExportarXLSX');
+        const params = new URLSearchParams(window.location.search);
+        const turmaId = params.get('turma');
+
+        if (btnAbrirModal) {
+            btnAbrirModal.addEventListener('click', () => {
+                exportarModal.show();
+            });
+        }
+
+        const handleExport = async (formato, btn) => {
+            if (!turmaId) {
+                exibirAlerta('ID da turma não encontrado.', 'danger');
+                return;
+            }
+            const endpoint = `/treinamentos/turmas/${turmaId}/inscricoes/export`;
+            const nomeArquivo = `inscricoes_turma_${turmaId}`;
+
+            await executarAcaoComFeedback(btn, async () => {
+                await exportarDados(endpoint, formato, nomeArquivo);
+            });
+            exportarModal.hide();
+        };
+
+        if (btnPDF) {
+            btnPDF.addEventListener('click', () => handleExport('pdf', btnPDF));
+        }
+
+        if (btnXLSX) {
+            btnXLSX.addEventListener('click', () => handleExport('xlsx', btnXLSX));
+        }
     }
 
     // Listener para o select de treinamento no modal de turma

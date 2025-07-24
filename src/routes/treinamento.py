@@ -445,6 +445,10 @@ def avaliar_inscricao(inscricao_id):
         inscricao.nota_pratica = float(nota_pratica) if nota_pratica not in [None, ''] else None
         inscricao.status_aprovacao = data.get('status_aprovacao')
 
+        # Campos de presença
+        inscricao.presenca_teoria = data.get('presenca_teoria', False)
+        inscricao.presenca_pratica = data.get('presenca_pratica', False)
+
         db.session.commit()
         return jsonify(inscricao.to_dict())
 

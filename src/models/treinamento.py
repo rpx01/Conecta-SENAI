@@ -113,6 +113,9 @@ class InscricaoTreinamento(db.Model):
     nota_teoria = db.Column(db.Float, nullable=True)
     nota_pratica = db.Column(db.Float, nullable=True)
     status_aprovacao = db.Column(db.String(20), nullable=True)
+    # --- NOVOS CAMPOS DE PRESENCA ---
+    presenca_teoria = db.Column(db.Boolean, default=False, nullable=False)
+    presenca_pratica = db.Column(db.Boolean, default=False, nullable=False)
     # ------------------------------------
 
     usuario = db.relationship("User", backref="inscricoes_treinamento")
@@ -136,6 +139,8 @@ class InscricaoTreinamento(db.Model):
             "nota_teoria": self.nota_teoria,
             "nota_pratica": self.nota_pratica,
             "status_aprovacao": self.status_aprovacao,
+            "presenca_teoria": self.presenca_teoria,
+            "presenca_pratica": self.presenca_pratica,
             # ---------------------------------------------
         }
 

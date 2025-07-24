@@ -266,16 +266,48 @@ function atualizarDataMinimaTermino() {
     }
 }
 
+/**
+ * Carrega os dados da turma selecionada e preenche o cabeçalho da página.
+ * Retorna true se o treinamento possuir parte prática.
+ */
+async function carregarDetalhesDaTurma(turmaId) {
+    try {
+        const dados = await chamarAPI(`/treinamentos/turmas/${turmaId}`);
+        const treinamento = dados.treinamento || {};
+        const instrutor = dados.instrutor || {};
+
+        document.getElementById('infoNomeTreinamento').textContent = treinamento.nome || 'Não informado';
+        document.getElementById('infoInstrutor').textContent = instrutor.nome || 'Não informado';
+        document.getElementById('infoPeriodo').textContent = `${formatarData(dados.data_inicio)} a ${formatarData(dados.data_fim)}`;
+        document.getElementById('infoDuracao').textContent = treinamento.carga_horaria ? `${treinamento.carga_horaria} horas` : '-';
+        document.getElementById('infoHorario').textContent = dados.horario || '-';
+        document.getElementById('infoLocal').textContent = dados.local_realizacao || '-';
+        document.getElementById('infoConteudo').textContent = treinamento.conteudo_programatico || 'Nenhum conteúdo programático informado.';
+
+        const temPratica = treinamento.tem_pratica === true;
+        const thPratica = document.getElementById('thPresencaPratica');
+        if (thPratica) {
+            thPratica.style.display = temPratica ? '' : 'none';
+        }
+        return temPratica;
+    } catch (e) {
+        exibirAlerta(`Erro ao carregar detalhes da turma: ${e.message}`, 'danger');
+        return false;
+    }
+}
+
 // Carrega as inscrições de uma turma específica
 async function carregarInscricoes(turmaId) {
+    const temPratica = await carregarDetalhesDaTurma(turmaId);
     try {
         const inscricoes = await chamarAPI(`/treinamentos/turmas/${turmaId}/inscricoes`);
         const tbody = document.getElementById('inscricoesTableBody');
         tbody.innerHTML = '';
         if (inscricoes.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhuma inscrição.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center">Nenhuma inscrição.</td></tr>';
             return;
         }
+
         for (const i of inscricoes) {
             const tr = document.createElement('tr');
             tr.dataset.id = i.id;
@@ -283,20 +315,24 @@ async function carregarInscricoes(turmaId) {
             const statusAprovado = i.status_aprovacao === 'Aprovado' ? 'selected' : '';
             const statusReprovado = i.status_aprovacao === 'Reprovado' ? 'selected' : '';
 
+            const tdPraticaHtml = temPratica ? `
+                <td class="text-center">
+                    <input class="form-check-input presenca-pratica-check" type="checkbox" ${i.presenca_pratica ? 'checked' : ''}>
+                </td>` : '';
+
             tr.innerHTML = `
-                <td>${i.id}</td>
                 <td>${escapeHTML(i.nome)}</td>
                 <td>${i.cpf || ''}</td>
                 <td>${i.empresa || ''}</td>
+                <td class="text-center">
+                    <input class="form-check-input presenca-teoria-check" type="checkbox" ${i.presenca_teoria ? 'checked' : ''}>
+                </td>
+                ${tdPraticaHtml}
                 <td>
-                    <input type="number" class="form-control form-control-sm nota-teoria-input" 
-                           value="${i.nota_teoria !== null ? i.nota_teoria : ''}" 
-                           min="0" max="100" step="0.1">
+                    <input type="number" class="form-control form-control-sm nota-teoria-input" value="${i.nota_teoria !== null ? i.nota_teoria : ''}" min="0" max="100" step="0.1">
                 </td>
                 <td>
-                    <input type="number" class="form-control form-control-sm nota-pratica-input" 
-                           value="${i.nota_pratica !== null ? i.nota_pratica : ''}" 
-                           min="0" max="100" step="0.1">
+                    <input type="number" class="form-control form-control-sm nota-pratica-input" value="${i.nota_pratica !== null ? i.nota_pratica : ''}" min="0" max="100" step="0.1">
                 </td>
                 <td>
                     <select class="form-select form-select-sm status-aprovacao-select">
@@ -313,8 +349,8 @@ async function carregarInscricoes(turmaId) {
     }
 }
 
-// NOVA FUNÇÃO PARA SALVAR AS NOTAS
-async function salvarTodasAsNotas() {
+// Salva notas, status e presença de todas as inscrições
+async function salvarAlteracoesInscricoes() {
     const linhas = document.querySelectorAll('#inscricoesTableBody tr');
     const promessas = [];
 
@@ -322,14 +358,15 @@ async function salvarTodasAsNotas() {
         const id = linha.dataset.id;
         if (!id) return;
 
-        const notaTeoria = linha.querySelector('.nota-teoria-input').value;
-        const notaPratica = linha.querySelector('.nota-pratica-input').value;
-        const statusAprovacao = linha.querySelector('.status-aprovacao-select').value;
+        const checkTeoria = linha.querySelector('.presenca-teoria-check');
+        const checkPratica = linha.querySelector('.presenca-pratica-check');
 
         const body = {
-            nota_teoria: notaTeoria,
-            nota_pratica: notaPratica,
-            status_aprovacao: statusAprovacao
+            nota_teoria: linha.querySelector('.nota-teoria-input').value,
+            nota_pratica: linha.querySelector('.nota-pratica-input').value,
+            status_aprovacao: linha.querySelector('.status-aprovacao-select').value,
+            presenca_teoria: checkTeoria ? checkTeoria.checked : false,
+            presenca_pratica: checkPratica ? checkPratica.checked : false
         };
 
         promessas.push(chamarAPI(`/treinamentos/inscricoes/${id}/avaliar`, 'PUT', body));
@@ -362,9 +399,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const btnSalvar = document.getElementById('btnSalvarNotas');
+    const btnSalvar = document.getElementById('btnSalvarAlteracoes');
     if (btnSalvar) {
-        btnSalvar.addEventListener('click', salvarTodasAsNotas);
+        btnSalvar.addEventListener('click', salvarAlteracoesInscricoes);
     }
 
     // Listener para o select de treinamento no modal de turma

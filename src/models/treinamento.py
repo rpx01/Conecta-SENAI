@@ -109,6 +109,12 @@ class InscricaoTreinamento(db.Model):
     empresa = db.Column(db.String(150))
     data_inscricao = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # --- NOVOS CAMPOS ADICIONADOS AQUI ---
+    nota_teoria = db.Column(db.Float, nullable=True)
+    nota_pratica = db.Column(db.Float, nullable=True)
+    status_aprovacao = db.Column(db.String(20), nullable=True)
+    # ------------------------------------
+
     usuario = db.relationship("User", backref="inscricoes_treinamento")
 
     def to_dict(self):
@@ -126,6 +132,11 @@ class InscricaoTreinamento(db.Model):
             "data_inscricao": (
                 self.data_inscricao.isoformat() if self.data_inscricao else None
             ),
+            # --- NOVOS CAMPOS ADICIONADOS AO DICIONÁRIO ---
+            "nota_teoria": self.nota_teoria,
+            "nota_pratica": self.nota_pratica,
+            "status_aprovacao": self.status_aprovacao,
+            # ---------------------------------------------
         }
 
     def __repr__(self):

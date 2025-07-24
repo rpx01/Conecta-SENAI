@@ -423,3 +423,34 @@ def obter_turma_treinamento(turma_id):
     )
 
     return jsonify(dados_turma)
+
+
+@treinamento_bp.route("/treinamentos/inscricoes/<int:inscricao_id>/avaliar", methods=["PUT"])
+@admin_required
+def avaliar_inscricao(inscricao_id):
+    """Atualiza as notas e o status de aprovação de uma inscrição."""
+    inscricao = db.session.get(InscricaoTreinamento, inscricao_id)
+    if not inscricao:
+        return jsonify({"erro": "Inscrição não encontrada"}), 404
+
+    data = request.json
+    if not data:
+        return jsonify({"erro": "Dados não fornecidos"}), 400
+
+    try:
+        nota_teoria = data.get('nota_teoria')
+        nota_pratica = data.get('nota_pratica')
+
+        inscricao.nota_teoria = float(nota_teoria) if nota_teoria not in [None, ''] else None
+        inscricao.nota_pratica = float(nota_pratica) if nota_pratica not in [None, ''] else None
+        inscricao.status_aprovacao = data.get('status_aprovacao')
+
+        db.session.commit()
+        return jsonify(inscricao.to_dict())
+
+    except (ValueError, TypeError):
+        db.session.rollback()
+        return jsonify({"erro": "Valores de nota inválidos. Devem ser números."}), 400
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return handle_internal_error(e)

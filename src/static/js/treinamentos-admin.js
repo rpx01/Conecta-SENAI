@@ -172,13 +172,14 @@ async function abrirModalTurma(id = null) {
             const t = await chamarAPI(`/treinamentos/turmas/${id}`);
             selectTrein.value = t.treinamento_id;
             document.getElementById('dataInicio').value = t.data_inicio ? t.data_inicio.split('T')[0] : '';
+
+            // Dispara o evento de change para atualizar a carga horária e data mínima
+            selectTrein.dispatchEvent(new Event('change'));
+
             document.getElementById('dataFim').value = t.data_fim ? t.data_fim.split('T')[0] : '';
             document.getElementById('localRealizacao').value = t.local_realizacao || '';
             document.getElementById('instrutorId').value = t.instrutor_id || '';
             document.getElementById('horario').value = t.horario || '';
-
-            // Dispara o evento de change para atualizar a carga horária
-            selectTrein.dispatchEvent(new Event('change'));
 
         } catch(e) {
             exibirAlerta(`Erro ao carregar dados da turma: ${e.message}`, 'danger');
@@ -187,6 +188,7 @@ async function abrirModalTurma(id = null) {
     } else {
         // Se for novo
         document.getElementById('cargaHoraria').value = '';
+        document.getElementById('dataFim').min = ''; // Limpa a restrição
     }
 
     new bootstrap.Modal(document.getElementById('turmaModal')).show();
@@ -227,6 +229,40 @@ async function salvarTurma() {
         carregarTurmas();
     } catch (e) {
         exibirAlerta(e.message, 'danger');
+    }
+}
+
+// NOVA FUNÇÃO: Atualiza a data de término mínima
+function atualizarDataMinimaTermino() {
+    const selectTreinamento = document.getElementById('turmaTreinamentoId');
+    const dataInicioInput = document.getElementById('dataInicio');
+    const dataFimInput = document.getElementById('dataFim');
+
+    const selectedId = parseInt(selectTreinamento.value);
+    const dataInicio = dataInicioInput.value;
+
+    if (!selectedId || !dataInicio) {
+        dataFimInput.min = '';
+        return;
+    }
+
+    const treinamento = catalogoDeTreinamentos.find(t => t.id === selectedId);
+    if (treinamento && treinamento.carga_horaria > 0) {
+        const diasMinimos = Math.ceil(treinamento.carga_horaria / 8);
+
+        const dataInicioObj = new Date(dataInicio + 'T00:00:00-03:00');
+        const dataFimMinimaObj = new Date(dataInicioObj);
+        dataFimMinimaObj.setDate(dataInicioObj.getDate() + diasMinimos - 1);
+
+        const dataFimMinimaStr = dataFimMinimaObj.toISOString().split('T')[0];
+
+        dataFimInput.min = dataFimMinimaStr;
+
+        if (dataFimInput.value && dataFimInput.value < dataFimMinimaStr) {
+            dataFimInput.value = dataFimMinimaStr;
+        }
+    } else {
+        dataFimInput.min = dataInicio;
     }
 }
 
@@ -277,17 +313,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listener para o select de treinamento no modal de turma
     const selectTreinamento = document.getElementById('turmaTreinamentoId');
+    const dataInicioInput = document.getElementById('dataInicio');
+
     if (selectTreinamento) {
         selectTreinamento.addEventListener('change', () => {
             const cargaHorariaInput = document.getElementById('cargaHoraria');
             const selectedId = parseInt(selectTreinamento.value);
             const treinamento = catalogoDeTreinamentos.find(t => t.id === selectedId);
 
-            if (treinamento && treinamento.carga_horaria) {
-                cargaHorariaInput.value = treinamento.carga_horaria;
-            } else {
-                cargaHorariaInput.value = '';
-            }
+            cargaHorariaInput.value = (treinamento && treinamento.carga_horaria) ? treinamento.carga_horaria : '';
+            atualizarDataMinimaTermino();
         });
+    }
+
+    if (dataInicioInput) {
+        dataInicioInput.addEventListener('change', atualizarDataMinimaTermino);
     }
 });

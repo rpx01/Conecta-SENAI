@@ -2,6 +2,8 @@
 
 from flask import Blueprint, request, jsonify, g
 from sqlalchemy.exc import SQLAlchemyError
+import math
+from datetime import timedelta
 
 from src.models import db, Treinamento, TurmaTreinamento, InscricaoTreinamento
 from src.models.instrutor import Instrutor
@@ -234,8 +236,15 @@ def criar_turma_treinamento():
     except ValidationError as e:
         return jsonify({"erro": e.errors()}), 400
 
-    if not db.session.get(Treinamento, payload.treinamento_id):
+    treinamento = db.session.get(Treinamento, payload.treinamento_id)
+    if not treinamento:
         return jsonify({"erro": "Treinamento não encontrado"}), 404
+
+    if treinamento.carga_horaria and treinamento.carga_horaria > 0:
+        dias_minimos = math.ceil(treinamento.carga_horaria / 8)
+        data_fim_minima = payload.data_inicio + timedelta(days=dias_minimos - 1)
+        if payload.data_fim < data_fim_minima:
+            return jsonify({"erro": f"Data de término inválida. Com base na carga horária, a data mínima é {data_fim_minima.strftime('%d/%m/%Y')}."}), 400
     turma = TurmaTreinamento(
         treinamento_id=payload.treinamento_id,
         data_inicio=payload.data_inicio,
@@ -266,14 +275,23 @@ def atualizar_turma_treinamento(turma_id):
     except ValidationError as e:
         return jsonify({"erro": e.errors()}), 400
 
-    if payload.treinamento_id is not None:
-        if not db.session.get(Treinamento, payload.treinamento_id):
-            return jsonify({"erro": "Treinamento não encontrado"}), 404
-        turma.treinamento_id = payload.treinamento_id
-    if payload.data_inicio is not None:
-        turma.data_inicio = payload.data_inicio
-    if payload.data_fim is not None:
-        turma.data_fim = payload.data_fim
+    treinamento_id = payload.treinamento_id if payload.treinamento_id is not None else turma.treinamento_id
+    treinamento = db.session.get(Treinamento, treinamento_id)
+    if not treinamento:
+        return jsonify({"erro": "Treinamento não encontrado"}), 404
+
+    data_inicio = payload.data_inicio if payload.data_inicio is not None else turma.data_inicio
+    data_fim = payload.data_fim if payload.data_fim is not None else turma.data_fim
+
+    if treinamento.carga_horaria and treinamento.carga_horaria > 0:
+        dias_minimos = math.ceil(treinamento.carga_horaria / 8)
+        data_fim_minima = data_inicio + timedelta(days=dias_minimos - 1)
+        if data_fim < data_fim_minima:
+            return jsonify({"erro": f"Data de término inválida. Com base na carga horária, a data mínima é {data_fim_minima.strftime('%d/%m/%Y')}."}), 400
+
+    turma.treinamento_id = treinamento_id
+    turma.data_inicio = data_inicio
+    turma.data_fim = data_fim
     if payload.local_realizacao is not None:
         turma.local_realizacao = payload.local_realizacao
     if payload.horario is not None:

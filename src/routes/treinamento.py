@@ -22,11 +22,11 @@ import csv
 from flask import send_file, make_response
 from openpyxl import Workbook
 from reportlab.lib.pagesizes import letter, landscape
-from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
+from datetime import datetime
 
 
 treinamento_bp = Blueprint("treinamento", __name__)
@@ -384,89 +384,217 @@ def exportar_inscricoes(turma_id):
         return jsonify({"erro": "Turma não encontrada"}), 404
 
     formato = request.args.get("formato", "csv").lower()
-    inscricoes = InscricaoTreinamento.query.filter_by(turma_id=turma_id).all()
-    tem_pratica = turma.treinamento.tem_pratica
+    inscricoes = (
+        InscricaoTreinamento.query.filter_by(turma_id=turma_id)
+        .order_by(InscricaoTreinamento.nome)
+        .all()
+    )
+    treinamento = turma.treinamento
+    tem_pratica = treinamento.tem_pratica
 
-    headers = ["Nome", "CPF", "Empresa", "Presença Teoria"]
-    if tem_pratica:
-        headers.append("Presença Prática")
-    headers.extend(["Nota Teoria", "Nota Prática", "Status"])
+    # Lógica para CSV e XLSX
+    if formato in ["csv", "xlsx"]:
+        headers = ["Nome", "CPF", "Empresa", "Presença Teoria"]
+        if tem_pratica:
+            headers.append("Presença Prática")
+        headers.extend(["Nota Teoria", "Nota Prática", "Status"])
 
-    if formato == "xlsx":
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Inscrições"
-        ws.append(headers)
+        if formato == "xlsx":
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Inscrições"
+            ws.append(headers)
+            for i in inscricoes:
+                row = [i.nome, i.cpf, i.empresa, "Sim" if i.presenca_teoria else "Não"]
+                if tem_pratica:
+                    row.append("Sim" if i.presenca_pratica else "Não")
+                row.extend([i.nota_teoria, i.nota_pratica, i.status_aprovacao])
+                ws.append(row)
+
+            buf = BytesIO()
+            wb.save(buf)
+            buf.seek(0)
+            return send_file(
+                buf,
+                mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                as_attachment=True,
+                download_name=f"inscricoes_turma_{turma_id}.xlsx",
+            )
+
+        si = StringIO()
+        writer = csv.writer(si)
+        writer.writerow(headers)
         for i in inscricoes:
             row = [i.nome, i.cpf, i.empresa, "Sim" if i.presenca_teoria else "Não"]
             if tem_pratica:
                 row.append("Sim" if i.presenca_pratica else "Não")
             row.extend([i.nota_teoria, i.nota_pratica, i.status_aprovacao])
-            ws.append(row)
+            writer.writerow(row)
 
-        buf = BytesIO()
-        wb.save(buf)
-        buf.seek(0)
-        return send_file(
-            buf,
-            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            as_attachment=True,
-            download_name=f"inscricoes_turma_{turma_id}.xlsx",
+        output = make_response(si.getvalue())
+        output.headers["Content-Disposition"] = (
+            f"attachment; filename=inscricoes_turma_{turma_id}.csv"
         )
+        output.headers["Content-Type"] = "text/csv"
+        return output
 
+    # --- NOVA LÓGICA PARA PDF ---
     if formato == "pdf":
         buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=landscape(letter),
+            rightMargin=30,
+            leftMargin=30,
+            topMargin=30,
+            bottomMargin=30,
+        )
         elements = []
         styles = getSampleStyleSheet()
 
-        elements.append(Paragraph(f"Lista de Presença e Avaliação - Turma {turma_id}", styles['h1']))
-        elements.append(Paragraph(f"Treinamento: {turma.treinamento.nome}", styles['h2']))
-        elements.append(Spacer(1, 0.2*inch))
+        style_normal = styles["Normal"]
+        style_bold = ParagraphStyle(name="Bold", parent=style_normal, fontName="Helvetica-Bold")
 
-        table_data = [headers]
-        for i in inscricoes:
-            row = [i.nome, i.cpf or '', i.empresa or '', "Sim" if i.presenca_teoria else "Não"]
-            if tem_pratica:
-                row.append("Sim" if i.presenca_pratica else "Não")
-            row.extend([i.nota_teoria or '', i.nota_pratica or '', i.status_aprovacao or ''])
-            table_data.append(row)
+        # Cabeçalho com logo e título
+        try:
+            logo = Image("src/static/img/senai-logo.png", width=1 * inch, height=0.5 * inch)
+            logo.hAlign = "LEFT"
+        except Exception:
+            logo = Paragraph("SENAI", style_bold)
 
-        t = Table(table_data)
-        t.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.grey),
-            ('TEXTCOLOR',(0,0),(-1,0),colors.whitesmoke),
-            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-            ('BOTTOMPADDING', (0,0), (-1,0), 12),
-            ('BACKGROUND', (0,1), (-1,-1), colors.beige),
-            ('GRID', (0,0), (-1,-1), 1, colors.black)
-        ]))
+        titulo = Paragraph("Lista de Presença", styles["h1"])
 
-        elements.append(t)
+        header_table = Table([[logo, titulo]], colWidths=[1.2 * inch, 8.8 * inch])
+        header_table.setStyle(
+            TableStyle([
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("ALIGN", (1, 0), (1, 0), "CENTER"),
+            ])
+        )
+        elements.append(header_table)
+        elements.append(Spacer(1, 0.2 * inch))
+
+        def format_date(dt):
+            return dt.strftime("%d/%m/%Y") if dt else ""
+
+        dados_treinamento = [
+            [Paragraph("<b>Unidade:</b>", style_normal), Paragraph("SENAI - Conceição do Mato Dentro", style_normal)],
+            [Paragraph("<b>Nome Treinamento:</b>", style_normal), Paragraph(treinamento.nome, style_normal)],
+            [
+                Paragraph("<b>Instituição:</b>", style_normal),
+                Paragraph("SENAI", style_normal),
+                Paragraph("<b>Período:</b>", style_normal),
+                Paragraph(f"{format_date(turma.data_inicio)} a {format_date(turma.data_fim)}", style_normal),
+            ],
+            [
+                Paragraph("<b>Local de Realização:</b>", style_normal),
+                Paragraph(turma.local_realizacao or "N/D", style_normal),
+                Paragraph("<b>Duração:</b>", style_normal),
+                Paragraph(f"{treinamento.carga_horaria or 'N/D'} horas", style_normal),
+            ],
+            [
+                Paragraph("<b>Instrutor(es):</b>", style_normal),
+                Paragraph(turma.instrutor.nome if turma.instrutor else "N/D", style_normal),
+                Paragraph("<b>Horário:</b>", style_normal),
+                Paragraph(turma.horario or "N/D", style_normal),
+            ],
+            [
+                Paragraph("<b>CONTEÚDO PROGRAMÁTICO:</b>", style_normal),
+                Paragraph((treinamento.conteudo_programatico or "").replace("\n", "<br/>"), style_normal),
+            ],
+        ]
+
+        tabela_dados = Table(dados_treinamento, colWidths=[1.5 * inch, 4.5 * inch, 0.8 * inch, 2.7 * inch])
+        tabela_dados.setStyle(
+            TableStyle(
+                [
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("BOX", (0, 0), (-1, -1), 1, colors.black),
+                    ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
+                    ("SPAN", (1, 5), (-1, 5)),
+                ]
+            )
+        )
+        elements.append(tabela_dados)
+        elements.append(Spacer(1, 0.3 * inch))
+
+        tabela_header = [
+            [
+                Paragraph("<b>Informações dos participantes</b>", style_normal),
+                "",
+                "",
+                "",
+                Paragraph("<b>Rubrica do participante conforme data de participação</b>", style_normal),
+                "",
+                "",
+                "",
+                "",
+                "",
+            ],
+            [
+                "Nº",
+                "CPF",
+                "Nome do Participante",
+                "Empresa",
+                "TEORIA",
+                "NOTA DA TEORIA",
+                "PRÁTICA",
+                "NOTA DA PRÁTICA",
+                "APROVADO / REPROVADO",
+            ],
+        ]
+
+        style_th = ParagraphStyle(name="tableHeader", parent=style_normal, alignment=1, fontName="Helvetica-Bold")
+
+        tabela_header_styled = []
+        for row in tabela_header:
+            tabela_header_styled.append([Paragraph(str(cell), style_th) for cell in row])
+
+        dados_alunos = []
+        for idx, i in enumerate(inscricoes):
+            dados_alunos.append(
+                [
+                    str(idx + 1),
+                    i.cpf or "",
+                    Paragraph(i.nome, style_normal),
+                    i.empresa or "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                ]
+            )
+
+        col_widths = [0.4 * inch, 1.2 * inch, 2.5 * inch, 1.2 * inch, 0.8 * inch, 0.8 * inch, 0.8 * inch, 0.8 * inch, 1.2 * inch]
+
+        tabela_alunos = Table(tabela_header_styled + dados_alunos, colWidths=col_widths)
+        tabela_alunos.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 1), colors.lightblue),
+                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("BOX", (0, 0), (-1, -1), 1, colors.black),
+                    ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
+                    ("SPAN", (0, 0), (3, 0)),
+                    ("SPAN", (4, 0), (-1, 0)),
+                    ("FONTNAME", (0, 0), (-1, 1), "Helvetica-Bold"),
+                ]
+            )
+        )
+
+        elements.append(tabela_alunos)
         doc.build(elements)
+
         buffer.seek(0)
         return send_file(
             buffer,
-            mimetype='application/pdf',
+            mimetype="application/pdf",
             as_attachment=True,
-            download_name=f'inscricoes_turma_{turma_id}.pdf'
+            download_name=f"lista_presenca_{turma_id}.pdf",
         )
 
-    si = StringIO()
-    writer = csv.writer(si)
-    writer.writerow(headers)
-    for i in inscricoes:
-        row = [i.nome, i.cpf, i.empresa, "Sim" if i.presenca_teoria else "Não"]
-        if tem_pratica:
-            row.append("Sim" if i.presenca_pratica else "Não")
-        row.extend([i.nota_teoria, i.nota_pratica, i.status_aprovacao])
-        writer.writerow(row)
-
-    output = make_response(si.getvalue())
-    output.headers["Content-Disposition"] = f"attachment; filename=inscricoes_turma_{turma_id}.csv"
-    output.headers["Content-Type"] = "text/csv"
-    return output
 
 
 @treinamento_bp.route("/treinamentos/turmas/<int:turma_id>", methods=["GET"])

@@ -4,6 +4,7 @@ from flask import Blueprint, request, jsonify, g
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.models import db, Treinamento, TurmaTreinamento, InscricaoTreinamento
+from src.models.instrutor import Instrutor
 from src.utils.error_handler import handle_internal_error
 from src.schemas.treinamento import (
     InscricaoTreinamentoCreateSchema,
@@ -40,11 +41,9 @@ def listar_treinamentos():
                 "data_fim": (
                     turma.data_fim.isoformat() if turma.data_fim else None
                 ),
-                "data_treinamento_pratico": (
-                    turma.data_treinamento_pratico.isoformat()
-                    if turma.data_treinamento_pratico
-                    else None
-                ),
+                "local_realizacao": turma.local_realizacao,
+                "horario": turma.horario,
+                "instrutor": turma.instrutor.to_dict() if turma.instrutor else None,
             }
         )
     return jsonify(dados)
@@ -241,7 +240,9 @@ def criar_turma_treinamento():
         treinamento_id=payload.treinamento_id,
         data_inicio=payload.data_inicio,
         data_fim=payload.data_fim,
-        data_treinamento_pratico=payload.data_treinamento_pratico,
+        local_realizacao=payload.local_realizacao,
+        horario=payload.horario,
+        instrutor_id=payload.instrutor_id,
     )
     try:
         db.session.add(turma)
@@ -273,8 +274,15 @@ def atualizar_turma_treinamento(turma_id):
         turma.data_inicio = payload.data_inicio
     if payload.data_fim is not None:
         turma.data_fim = payload.data_fim
-    if payload.data_treinamento_pratico is not None:
-        turma.data_treinamento_pratico = payload.data_treinamento_pratico
+    if payload.local_realizacao is not None:
+        turma.local_realizacao = payload.local_realizacao
+    if payload.horario is not None:
+        turma.horario = payload.horario
+    if payload.instrutor_id is not None:
+        if payload.instrutor_id:
+            if not db.session.get(Instrutor, payload.instrutor_id):
+                return jsonify({"erro": "Instrutor não encontrado"}), 404
+        turma.instrutor_id = payload.instrutor_id
     try:
         db.session.commit()
         return jsonify(turma.to_dict())
@@ -391,6 +399,9 @@ def obter_turma_treinamento(turma_id):
     dados_turma = turma.to_dict()
     dados_turma["treinamento"] = (
         turma.treinamento.to_dict() if turma.treinamento else None
+    )
+    dados_turma["instrutor"] = (
+        turma.instrutor.to_dict() if turma.instrutor else None
     )
 
     return jsonify(dados_turma)

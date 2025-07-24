@@ -45,7 +45,9 @@ class TurmaTreinamentoCreateSchema(BaseModel):
     treinamento_id: int
     data_inicio: date
     data_fim: date
-    data_treinamento_pratico: Optional[date] = None
+    local_realizacao: Optional[str] = None
+    horario: Optional[str] = None
+    instrutor_id: Optional[int] = None
 
 
 class TurmaTreinamentoUpdateSchema(BaseModel):
@@ -54,4 +56,6 @@ class TurmaTreinamentoUpdateSchema(BaseModel):
     treinamento_id: Optional[int] = None
     data_inicio: Optional[date] = None
     data_fim: Optional[date] = None
-    data_treinamento_pratico: Optional[date] = None
+    local_realizacao: Optional[str] = None
+    horario: Optional[str] = None
+    instrutor_id: Optional[int] = None

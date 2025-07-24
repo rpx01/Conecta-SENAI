@@ -1,7 +1,8 @@
 // Funções para administração de treinamentos e turmas
 
-// Armazena a lista de treinamentos para não ter que recarregar toda vez
+// Armazena a lista de treinamentos e instrutores para não ter que recarregar
 let catalogoDeTreinamentos = [];
+let listaDeInstrutores = [];
 
 // Função para limpar e abrir o modal de Treinamento (Catálogo)
 function novoTreinamento() {
@@ -126,6 +127,16 @@ async function carregarTurmas() {
     }
 }
 
+// Carrega instrutores para o select
+async function carregarInstrutores() {
+    if (listaDeInstrutores.length > 0) return; // Evita recarregar
+    try {
+        listaDeInstrutores = await chamarAPI('/instrutores');
+    } catch(e) {
+        console.error("Falha ao carregar instrutores", e);
+    }
+}
+
 /**
  * Função centralizada para abrir o modal de turma, seja para criar ou editar.
  * @param {number|null} id - O ID da turma para editar, ou null para criar uma nova.
@@ -136,35 +147,46 @@ async function abrirModalTurma(id = null) {
     document.getElementById('turmaId').value = id || '';
 
     // Popula o select de treinamentos
-    const select = document.getElementById('turmaTreinamentoId');
-    select.innerHTML = '<option value="">Selecione um treinamento...</option>';
+    const selectTrein = document.getElementById('turmaTreinamentoId');
+    selectTrein.innerHTML = '<option value="">Selecione um treinamento...</option>';
     if (catalogoDeTreinamentos.length === 0) {
-        await carregarCatalogo(); // Garante que o catálogo está carregado
+        await carregarCatalogo();
     }
     catalogoDeTreinamentos.forEach(t => {
-        select.innerHTML += `<option value="${t.id}">${escapeHTML(t.nome)}</option>`;
+        selectTrein.innerHTML += `<option value="${t.id}">${escapeHTML(t.nome)}</option>`;
+    });
+
+    // Popula o select de instrutores
+    const selectInstrutor = document.getElementById('instrutorId');
+    selectInstrutor.innerHTML = '<option value="">Selecione um instrutor...</option>';
+    if (listaDeInstrutores.length === 0) {
+        await carregarInstrutores();
+    }
+    listaDeInstrutores.forEach(i => {
+        selectInstrutor.innerHTML += `<option value="${i.id}">${escapeHTML(i.nome)}</option>`;
     });
 
     // Se for edição, busca os dados da turma
     if (id) {
         try {
             const t = await chamarAPI(`/treinamentos/turmas/${id}`);
-            select.value = t.treinamento_id;
+            selectTrein.value = t.treinamento_id;
             document.getElementById('dataInicio').value = t.data_inicio ? t.data_inicio.split('T')[0] : '';
             document.getElementById('dataFim').value = t.data_fim ? t.data_fim.split('T')[0] : '';
-            
-            // Dispara o evento de change para atualizar a visibilidade do campo de data prática
-            select.dispatchEvent(new Event('change'));
-            
-            document.getElementById('dataPratica').value = t.data_treinamento_pratico ? t.data_treinamento_pratico.split('T')[0] : '';
+            document.getElementById('localRealizacao').value = t.local_realizacao || '';
+            document.getElementById('instrutorId').value = t.instrutor_id || '';
+            document.getElementById('horario').value = t.horario || '';
+
+            // Dispara o evento de change para atualizar a carga horária
+            selectTrein.dispatchEvent(new Event('change'));
+
         } catch(e) {
             exibirAlerta(`Erro ao carregar dados da turma: ${e.message}`, 'danger');
             return; // Não abre o modal se houver erro
         }
     } else {
-        // Se for novo, apenas limpa o campo de data prática e garante que está oculto
-        document.getElementById('dataPraticaGroup').classList.add('d-none');
-        document.getElementById('dataPratica').value = '';
+        // Se for novo
+        document.getElementById('cargaHoraria').value = '';
     }
 
     new bootstrap.Modal(document.getElementById('turmaModal')).show();
@@ -187,7 +209,9 @@ async function salvarTurma() {
         treinamento_id: parseInt(document.getElementById('turmaTreinamentoId').value),
         data_inicio: document.getElementById('dataInicio').value,
         data_fim: document.getElementById('dataFim').value,
-        data_treinamento_pratico: document.getElementById('dataPratica').value || null
+        local_realizacao: document.getElementById('localRealizacao').value,
+        horario: document.getElementById('horario').value,
+        instrutor_id: parseInt(document.getElementById('instrutorId').value) || null
     };
 
     if (!body.treinamento_id || !body.data_inicio || !body.data_fim) {
@@ -255,15 +279,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectTreinamento = document.getElementById('turmaTreinamentoId');
     if (selectTreinamento) {
         selectTreinamento.addEventListener('change', () => {
-            const dataPraticaGroup = document.getElementById('dataPraticaGroup');
+            const cargaHorariaInput = document.getElementById('cargaHoraria');
             const selectedId = parseInt(selectTreinamento.value);
             const treinamento = catalogoDeTreinamentos.find(t => t.id === selectedId);
 
-            if (treinamento && treinamento.tem_pratica) {
-                dataPraticaGroup.classList.remove('d-none');
+            if (treinamento && treinamento.carga_horaria) {
+                cargaHorariaInput.value = treinamento.carga_horaria;
             } else {
-                dataPraticaGroup.classList.add('d-none');
-                document.getElementById('dataPratica').value = ''; // Limpa o campo se não tiver prática
+                cargaHorariaInput.value = '';
             }
         });
     }

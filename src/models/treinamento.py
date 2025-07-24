@@ -61,11 +61,17 @@ class TurmaTreinamento(db.Model):
     )
     data_inicio = db.Column(db.Date, nullable=False)
     data_fim = db.Column(db.Date, nullable=False)
-    data_treinamento_pratico = db.Column(db.Date)
 
+    # Novos campos
+    local_realizacao = db.Column(db.String(100))
+    horario = db.Column(db.String(50))
+    instrutor_id = db.Column(db.Integer, db.ForeignKey('instrutores.id'), nullable=True)
+
+    # Relacionamentos
     treinamento = db.relationship(
         "Treinamento", back_populates='turmas'
     )
+    instrutor = db.relationship('Instrutor')
     inscricoes = db.relationship('InscricaoTreinamento', backref='turma', lazy='dynamic')
 
     def to_dict(self):
@@ -76,11 +82,10 @@ class TurmaTreinamento(db.Model):
             "data_fim": (
                 self.data_fim.isoformat() if self.data_fim else None
             ),
-            "data_treinamento_pratico": (
-                self.data_treinamento_pratico.isoformat()
-                if self.data_treinamento_pratico
-                else None
-            ),
+            "local_realizacao": self.local_realizacao,
+            "horario": self.horario,
+            "instrutor_id": self.instrutor_id,
+            "instrutor_nome": self.instrutor.nome if self.instrutor else None,
         }
 
     def __repr__(self):

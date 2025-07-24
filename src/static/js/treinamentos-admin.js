@@ -269,26 +269,77 @@ function atualizarDataMinimaTermino() {
 // Carrega as inscrições de uma turma específica
 async function carregarInscricoes(turmaId) {
     try {
-        const insc = await chamarAPI(`/treinamentos/turmas/${turmaId}/inscricoes`);
+        const inscricoes = await chamarAPI(`/treinamentos/turmas/${turmaId}/inscricoes`);
         const tbody = document.getElementById('inscricoesTableBody');
         tbody.innerHTML = '';
-        if (insc.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhuma inscrição.</td></tr>';
+        if (inscricoes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhuma inscrição.</td></tr>';
             return;
         }
-        for (const i of insc) {
+        for (const i of inscricoes) {
             const tr = document.createElement('tr');
+            tr.dataset.id = i.id;
+
+            const statusAprovado = i.status_aprovacao === 'Aprovado' ? 'selected' : '';
+            const statusReprovado = i.status_aprovacao === 'Reprovado' ? 'selected' : '';
+
             tr.innerHTML = `
                 <td>${i.id}</td>
                 <td>${escapeHTML(i.nome)}</td>
-                <td>${escapeHTML(i.email)}</td>
                 <td>${i.cpf || ''}</td>
                 <td>${i.empresa || ''}</td>
+                <td>
+                    <input type="number" class="form-control form-control-sm nota-teoria-input" 
+                           value="${i.nota_teoria !== null ? i.nota_teoria : ''}" 
+                           min="0" max="100" step="0.1">
+                </td>
+                <td>
+                    <input type="number" class="form-control form-control-sm nota-pratica-input" 
+                           value="${i.nota_pratica !== null ? i.nota_pratica : ''}" 
+                           min="0" max="100" step="0.1">
+                </td>
+                <td>
+                    <select class="form-select form-select-sm status-aprovacao-select">
+                        <option value="">Selecione...</option>
+                        <option value="Aprovado" ${statusAprovado}>Aprovado</option>
+                        <option value="Reprovado" ${statusReprovado}>Reprovado</option>
+                    </select>
+                </td>
             `;
             tbody.appendChild(tr);
         }
     } catch (e) {
         exibirAlerta(e.message, 'danger');
+    }
+}
+
+// NOVA FUNÇÃO PARA SALVAR AS NOTAS
+async function salvarTodasAsNotas() {
+    const linhas = document.querySelectorAll('#inscricoesTableBody tr');
+    const promessas = [];
+
+    linhas.forEach(linha => {
+        const id = linha.dataset.id;
+        if (!id) return;
+
+        const notaTeoria = linha.querySelector('.nota-teoria-input').value;
+        const notaPratica = linha.querySelector('.nota-pratica-input').value;
+        const statusAprovacao = linha.querySelector('.status-aprovacao-select').value;
+
+        const body = {
+            nota_teoria: notaTeoria,
+            nota_pratica: notaPratica,
+            status_aprovacao: statusAprovacao
+        };
+
+        promessas.push(chamarAPI(`/treinamentos/inscricoes/${id}/avaliar`, 'PUT', body));
+    });
+
+    try {
+        await Promise.all(promessas);
+        exibirAlerta('Todas as alterações foram salvas com sucesso!', 'success');
+    } catch (e) {
+        exibirAlerta(`Ocorreu um erro ao salvar: ${e.message}`, 'danger');
     }
 }
 
@@ -309,6 +360,11 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             salvarTreinamento();
         });
+    }
+
+    const btnSalvar = document.getElementById('btnSalvarNotas');
+    if (btnSalvar) {
+        btnSalvar.addEventListener('click', salvarTodasAsNotas);
     }
 
     // Listener para o select de treinamento no modal de turma

@@ -87,7 +87,7 @@
     </div>
 
     <div class="modal fade" id="turmaModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Turma</h5>
@@ -96,23 +96,48 @@
                 <div class="modal-body">
                     <form id="turmaForm" onsubmit="event.preventDefault(); salvarTurma();">
                         <input type="hidden" id="turmaId">
-                        <div class="mb-3">
-                            <label class="form-label">Treinamento</label>
-                            <!-- Select será preenchido via JavaScript com os treinamentos do catálogo -->
-                            <select class="form-select" id="turmaTreinamentoId" required></select>
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label">Treinamento</label>
+                                <select class="form-select" id="turmaTreinamentoId" required></select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Carga Horária (h)</label>
+                                <input type="text" class="form-control" id="cargaHoraria" readonly>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Data de Início</label>
+                                <input type="date" class="form-control" id="dataInicio" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Data de Término</label>
+                                <input type="date" class="form-control" id="dataFim" required>
+                            </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Data de Início</label>
-                            <input type="date" class="form-control" id="dataInicio" required>
+                            <label class="form-label">Local de Realização</label>
+                            <select class="form-select" id="localRealizacao">
+                                <option value="">Selecione...</option>
+                                <option value="Centro de Treinamento Anglo American">Centro de Treinamento Anglo American</option>
+                                <option value="SENAI Conceição do Mato Dentro">SENAI Conceição do Mato Dentro</option>
+                            </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Data de Término</label>
-                            <input type="date" class="form-control" id="dataFim" required>
+                            <label class="form-label">Instrutor</label>
+                            <select class="form-select" id="instrutorId">
+                                <option value="">Selecione um instrutor...</option>
+                            </select>
                         </div>
-                        <!-- Grupo da data prática, inicialmente oculto até verificar o treinamento -->
-                        <div class="mb-3 d-none" id="dataPraticaGroup">
-                            <label class="form-label">Data do treinamento prático</label>
-                            <input type="date" class="form-control" id="dataPratica">
+                        <div class="mb-3">
+                            <label class="form-label">Horário</label>
+                            <select class="form-select" id="horario">
+                                <option value="">Selecione...</option>
+                                <option value="07H30 ÀS 16H30">07H30 ÀS 16H30</option>
+                                <option value="07H30 ÀS 11H30">07H30 ÀS 11H30</option>
+                                <option value="13H30 ÀS 16H30">13H30 ÀS 16H30</option>
+                            </select>
                         </div>
                     </form>
                 </div>

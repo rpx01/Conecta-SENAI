@@ -21,6 +21,12 @@ from io import StringIO, BytesIO
 import csv
 from flask import send_file, make_response
 from openpyxl import Workbook
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
 
 
 treinamento_bp = Blueprint("treinamento", __name__)
@@ -372,19 +378,32 @@ def criar_inscricao_admin(turma_id):
 )
 @admin_required
 def exportar_inscricoes(turma_id):
-    """Exporta inscrições de uma turma em CSV ou XLSX."""
+    """Exporta inscrições de uma turma em CSV, XLSX ou PDF."""
     turma = db.session.get(TurmaTreinamento, turma_id)
     if not turma:
         return jsonify({"erro": "Turma não encontrada"}), 404
+
     formato = request.args.get("formato", "csv").lower()
     inscricoes = InscricaoTreinamento.query.filter_by(turma_id=turma_id).all()
+    tem_pratica = turma.treinamento.tem_pratica
+
+    headers = ["Nome", "CPF", "Empresa", "Presença Teoria"]
+    if tem_pratica:
+        headers.append("Presença Prática")
+    headers.extend(["Nota Teoria", "Nota Prática", "Status"])
 
     if formato == "xlsx":
         wb = Workbook()
         ws = wb.active
-        ws.append(["ID", "Nome", "Email", "CPF"])
+        ws.title = "Inscrições"
+        ws.append(headers)
         for i in inscricoes:
-            ws.append([i.id, i.nome, i.email, i.cpf])
+            row = [i.nome, i.cpf, i.empresa, "Sim" if i.presenca_teoria else "Não"]
+            if tem_pratica:
+                row.append("Sim" if i.presenca_pratica else "Não")
+            row.extend([i.nota_teoria, i.nota_pratica, i.status_aprovacao])
+            ws.append(row)
+
         buf = BytesIO()
         wb.save(buf)
         buf.seek(0)
@@ -392,16 +411,60 @@ def exportar_inscricoes(turma_id):
             buf,
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             as_attachment=True,
-            download_name="inscricoes.xlsx",
+            download_name=f"inscricoes_turma_{turma_id}.xlsx",
+        )
+
+    if formato == "pdf":
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
+        elements = []
+        styles = getSampleStyleSheet()
+
+        elements.append(Paragraph(f"Lista de Presença e Avaliação - Turma {turma_id}", styles['h1']))
+        elements.append(Paragraph(f"Treinamento: {turma.treinamento.nome}", styles['h2']))
+        elements.append(Spacer(1, 0.2*inch))
+
+        table_data = [headers]
+        for i in inscricoes:
+            row = [i.nome, i.cpf or '', i.empresa or '', "Sim" if i.presenca_teoria else "Não"]
+            if tem_pratica:
+                row.append("Sim" if i.presenca_pratica else "Não")
+            row.extend([i.nota_teoria or '', i.nota_pratica or '', i.status_aprovacao or ''])
+            table_data.append(row)
+
+        t = Table(table_data)
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.grey),
+            ('TEXTCOLOR',(0,0),(-1,0),colors.whitesmoke),
+            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0,0), (-1,0), 12),
+            ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+            ('GRID', (0,0), (-1,-1), 1, colors.black)
+        ]))
+
+        elements.append(t)
+        doc.build(elements)
+        buffer.seek(0)
+        return send_file(
+            buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'inscricoes_turma_{turma_id}.pdf'
         )
 
     si = StringIO()
     writer = csv.writer(si)
-    writer.writerow(["ID", "Nome", "Email", "CPF"])
+    writer.writerow(headers)
     for i in inscricoes:
-        writer.writerow([i.id, i.nome, i.email, i.cpf])
+        row = [i.nome, i.cpf, i.empresa, "Sim" if i.presenca_teoria else "Não"]
+        if tem_pratica:
+            row.append("Sim" if i.presenca_pratica else "Não")
+        row.extend([i.nota_teoria, i.nota_pratica, i.status_aprovacao])
+        writer.writerow(row)
+
     output = make_response(si.getvalue())
-    output.headers["Content-Disposition"] = "attachment; filename=inscricoes.csv"
+    output.headers["Content-Disposition"] = f"attachment; filename=inscricoes_turma_{turma_id}.csv"
     output.headers["Content-Type"] = "text/csv"
     return output
 

@@ -23,10 +23,23 @@ from flask import send_file, make_response
 from openpyxl import Workbook
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Table,
+    TableStyle,
+    Paragraph,
+    Spacer,
+    Image,
+    PageBreak,
+    KeepTogether,
+)
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from datetime import datetime
+import locale
+
+# Configura o locale para o formato de data em português
+locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
 
 
 treinamento_bp = Blueprint("treinamento", __name__)
@@ -46,9 +59,7 @@ def listar_treinamentos():
                 "data_inicio": (
                     turma.data_inicio.isoformat() if turma.data_inicio else None
                 ),
-                "data_fim": (
-                    turma.data_fim.isoformat() if turma.data_fim else None
-                ),
+                "data_fim": (turma.data_fim.isoformat() if turma.data_fim else None),
                 "local_realizacao": turma.local_realizacao,
                 "horario": turma.horario,
                 "instrutor": turma.instrutor.to_dict() if turma.instrutor else None,
@@ -116,9 +127,7 @@ def listar_meus_cursos():
                     inc.turma.data_inicio.isoformat() if inc.turma.data_inicio else None
                 ),
                 "data_fim": (
-                    inc.turma.data_fim.isoformat()
-                    if inc.turma.data_fim
-                    else None
+                    inc.turma.data_fim.isoformat() if inc.turma.data_fim else None
                 ),
             }
         )
@@ -155,7 +164,7 @@ def criar_treinamento():
             tem_pratica=payload.tem_pratica,
             links_materiais=payload.links_materiais,
             tipo=payload.tipo,
-            conteudo_programatico=payload.conteudo_programatico
+            conteudo_programatico=payload.conteudo_programatico,
         )
         db.session.add(novo)
         db.session.commit()
@@ -207,7 +216,7 @@ def atualizar_treinamento(treinamento_id):
         treino.tipo = payload.tipo
     if payload.conteudo_programatico is not None:
         treino.conteudo_programatico = payload.conteudo_programatico
-        
+
     try:
         db.session.commit()
         return jsonify(treino.to_dict())
@@ -250,7 +259,14 @@ def criar_turma_treinamento():
         dias_minimos = math.ceil(treinamento.carga_horaria / 8)
         data_fim_minima = payload.data_inicio + timedelta(days=dias_minimos - 1)
         if payload.data_fim < data_fim_minima:
-            return jsonify({"erro": f"Data de término inválida. Com base na carga horária, a data mínima é {data_fim_minima.strftime('%d/%m/%Y')}."}), 400
+            return (
+                jsonify(
+                    {
+                        "erro": f"Data de término inválida. Com base na carga horária, a data mínima é {data_fim_minima.strftime('%d/%m/%Y')}."
+                    }
+                ),
+                400,
+            )
     turma = TurmaTreinamento(
         treinamento_id=payload.treinamento_id,
         data_inicio=payload.data_inicio,
@@ -281,19 +297,32 @@ def atualizar_turma_treinamento(turma_id):
     except ValidationError as e:
         return jsonify({"erro": e.errors()}), 400
 
-    treinamento_id = payload.treinamento_id if payload.treinamento_id is not None else turma.treinamento_id
+    treinamento_id = (
+        payload.treinamento_id
+        if payload.treinamento_id is not None
+        else turma.treinamento_id
+    )
     treinamento = db.session.get(Treinamento, treinamento_id)
     if not treinamento:
         return jsonify({"erro": "Treinamento não encontrado"}), 404
 
-    data_inicio = payload.data_inicio if payload.data_inicio is not None else turma.data_inicio
+    data_inicio = (
+        payload.data_inicio if payload.data_inicio is not None else turma.data_inicio
+    )
     data_fim = payload.data_fim if payload.data_fim is not None else turma.data_fim
 
     if treinamento.carga_horaria and treinamento.carga_horaria > 0:
         dias_minimos = math.ceil(treinamento.carga_horaria / 8)
         data_fim_minima = data_inicio + timedelta(days=dias_minimos - 1)
         if data_fim < data_fim_minima:
-            return jsonify({"erro": f"Data de término inválida. Com base na carga horária, a data mínima é {data_fim_minima.strftime('%d/%m/%Y')}."}), 400
+            return (
+                jsonify(
+                    {
+                        "erro": f"Data de término inválida. Com base na carga horária, a data mínima é {data_fim_minima.strftime('%d/%m/%Y')}."
+                    }
+                ),
+                400,
+            )
 
     turma.treinamento_id = treinamento_id
     turma.data_inicio = data_inicio
@@ -392,6 +421,11 @@ def exportar_inscricoes(turma_id):
     treinamento = turma.treinamento
     tem_pratica = treinamento.tem_pratica
 
+    # Define o nome do arquivo com base no nome do treinamento e data atual
+    nome_arquivo_base = treinamento.nome.replace(" ", "_").lower()
+    data_hoje = datetime.now().strftime("%Y-%m-%d")
+    nome_arquivo_final = f"{nome_arquivo_base}_{data_hoje}"
+
     # Lógica para CSV e XLSX
     if formato in ["csv", "xlsx"]:
         headers = ["Nome", "CPF", "Empresa", "Presença Teoria"]
@@ -418,7 +452,7 @@ def exportar_inscricoes(turma_id):
                 buf,
                 mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 as_attachment=True,
-                download_name=f"inscricoes_turma_{turma_id}.xlsx",
+                download_name=f"{nome_arquivo_final}.xlsx",
             )
 
         si = StringIO()
@@ -433,12 +467,12 @@ def exportar_inscricoes(turma_id):
 
         output = make_response(si.getvalue())
         output.headers["Content-Disposition"] = (
-            f"attachment; filename=inscricoes_turma_{turma_id}.csv"
+            f"attachment; filename={nome_arquivo_final}.csv"
         )
         output.headers["Content-Type"] = "text/csv"
         return output
 
-    # --- NOVA LÓGICA PARA PDF ---
+    # --- LÓGICA ATUALIZADA PARA PDF ---
     if formato == "pdf":
         buffer = BytesIO()
         doc = SimpleDocTemplate(
@@ -452,24 +486,36 @@ def exportar_inscricoes(turma_id):
         elements = []
         styles = getSampleStyleSheet()
 
+        # Cor azul SENAI
+        cor_azul_senai = colors.Color(red=(0 / 255), green=(83 / 255), blue=(159 / 255))
+
+        # Estilos de parágrafo
         style_normal = styles["Normal"]
-        style_bold = ParagraphStyle(name="Bold", parent=style_normal, fontName="Helvetica-Bold")
+        style_bold = ParagraphStyle(
+            name="Bold", parent=style_normal, fontName="Helvetica-Bold"
+        )
+        style_h1_centralizado = ParagraphStyle(
+            name="h1_centralizado", parent=styles["h1"], alignment=1
+        )
 
         # Cabeçalho com logo e título
         try:
-            logo = Image("src/static/img/senai-logo.png", width=1 * inch, height=0.5 * inch)
+            logo = Image(
+                "src/static/img/senai-logo.png", width=1.5 * inch, height=0.5 * inch
+            )
             logo.hAlign = "LEFT"
         except Exception:
-            logo = Paragraph("SENAI", style_bold)
+            logo = Paragraph("<b>SENAI</b>", style_normal)
 
-        titulo = Paragraph("Lista de Presença", styles["h1"])
+        titulo = Paragraph("Lista de Presença", style_h1_centralizado)
 
-        header_table = Table([[logo, titulo]], colWidths=[1.2 * inch, 8.8 * inch])
+        header_table = Table([[logo, titulo]], colWidths=[1.8 * inch, 7.2 * inch])
         header_table.setStyle(
-            TableStyle([
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("ALIGN", (1, 0), (1, 0), "CENTER"),
-            ])
+            TableStyle(
+                [
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ]
+            )
         )
         elements.append(header_table)
         elements.append(Spacer(1, 0.2 * inch))
@@ -478,13 +524,22 @@ def exportar_inscricoes(turma_id):
             return dt.strftime("%d/%m/%Y") if dt else ""
 
         dados_treinamento = [
-            [Paragraph("<b>Unidade:</b>", style_normal), Paragraph("SENAI - Conceição do Mato Dentro", style_normal)],
-            [Paragraph("<b>Nome Treinamento:</b>", style_normal), Paragraph(treinamento.nome, style_normal)],
+            [
+                Paragraph("<b>Unidade:</b>", style_normal),
+                Paragraph("SENAI - Conceição do Mato Dentro", style_normal),
+            ],
+            [
+                Paragraph("<b>Nome Treinamento:</b>", style_normal),
+                Paragraph(treinamento.nome, style_normal),
+            ],
             [
                 Paragraph("<b>Instituição:</b>", style_normal),
                 Paragraph("SENAI", style_normal),
                 Paragraph("<b>Período:</b>", style_normal),
-                Paragraph(f"{format_date(turma.data_inicio)} a {format_date(turma.data_fim)}", style_normal),
+                Paragraph(
+                    f"{format_date(turma.data_inicio)} a {format_date(turma.data_fim)}",
+                    style_normal,
+                ),
             ],
             [
                 Paragraph("<b>Local de Realização:</b>", style_normal),
@@ -494,17 +549,25 @@ def exportar_inscricoes(turma_id):
             ],
             [
                 Paragraph("<b>Instrutor(es):</b>", style_normal),
-                Paragraph(turma.instrutor.nome if turma.instrutor else "N/D", style_normal),
+                Paragraph(
+                    turma.instrutor.nome if turma.instrutor else "N/D", style_normal
+                ),
                 Paragraph("<b>Horário:</b>", style_normal),
                 Paragraph(turma.horario or "N/D", style_normal),
             ],
             [
                 Paragraph("<b>CONTEÚDO PROGRAMÁTICO:</b>", style_normal),
-                Paragraph((treinamento.conteudo_programatico or "").replace("\n", "<br/>"), style_normal),
+                Paragraph(
+                    (treinamento.conteudo_programatico or "").replace("\n", "<br/>"),
+                    style_normal,
+                ),
             ],
         ]
 
-        tabela_dados = Table(dados_treinamento, colWidths=[1.5 * inch, 4.5 * inch, 0.8 * inch, 2.7 * inch])
+        tabela_dados = Table(
+            dados_treinamento,
+            colWidths=[1.5 * inch, 4.5 * inch, 0.8 * inch, 2.7 * inch],
+        )
         tabela_dados.setStyle(
             TableStyle(
                 [
@@ -512,6 +575,10 @@ def exportar_inscricoes(turma_id):
                     ("BOX", (0, 0), (-1, -1), 1, colors.black),
                     ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
                     ("SPAN", (1, 5), (-1, 5)),
+                    ("BACKGROUND", (0, 0), (0, -1), cor_azul_senai),
+                    ("BACKGROUND", (2, 2), (2, 4), cor_azul_senai),
+                    ("TEXTCOLOR", (0, 0), (0, -1), colors.white),
+                    ("TEXTCOLOR", (2, 2), (2, 4), colors.white),
                 ]
             )
         )
@@ -519,36 +586,35 @@ def exportar_inscricoes(turma_id):
         elements.append(Spacer(1, 0.3 * inch))
 
         tabela_header = [
-            [
-                Paragraph("<b>Informações dos participantes</b>", style_normal),
-                "",
-                "",
-                "",
-                Paragraph("<b>Rubrica do participante conforme data de participação</b>", style_normal),
-                "",
-                "",
-                "",
-                "",
-                "",
-            ],
-            [
-                "Nº",
-                "CPF",
-                "Nome do Participante",
-                "Empresa",
-                "TEORIA",
-                "NOTA DA TEORIA",
-                "PRÁTICA",
-                "NOTA DA PRÁTICA",
-                "APROVADO / REPROVADO",
-            ],
+            "Nº",
+            "CPF",
+            "Nome do Participante",
+            "Empresa",
+            "TEORIA",
+            "NOTA DA TEORIA",
+            "PRÁTICA",
+            "NOTA DA PRÁTICA",
+            "APROVADO / REPROVADO",
         ]
 
-        style_th = ParagraphStyle(name="tableHeader", parent=style_normal, alignment=1, fontName="Helvetica-Bold")
-
-        tabela_header_styled = []
-        for row in tabela_header:
-            tabela_header_styled.append([Paragraph(str(cell), style_th) for cell in row])
+        # Cabeçalhos agrupados
+        cabecalhos_agrupados = [
+            [
+                Paragraph("<b>Informações dos participantes</b>", style_normal),
+                None,
+                None,
+                None,
+                Paragraph(
+                    "<b>Rubrica do participante conforme data de participação</b>",
+                    style_normal,
+                ),
+                None,
+                None,
+                None,
+                None,
+            ],
+            tabela_header,
+        ]
 
         dados_alunos = []
         for idx, i in enumerate(inscricoes):
@@ -566,13 +632,23 @@ def exportar_inscricoes(turma_id):
                 ]
             )
 
-        col_widths = [0.4 * inch, 1.2 * inch, 2.5 * inch, 1.2 * inch, 0.8 * inch, 0.8 * inch, 0.8 * inch, 0.8 * inch, 1.2 * inch]
-
-        tabela_alunos = Table(tabela_header_styled + dados_alunos, colWidths=col_widths)
+        col_widths = [
+            0.4 * inch,
+            1.2 * inch,
+            2.5 * inch,
+            1.2 * inch,
+            0.8 * inch,
+            0.8 * inch,
+            0.8 * inch,
+            0.8 * inch,
+            1.2 * inch,
+        ]
+        tabela_alunos = Table(cabecalhos_agrupados + dados_alunos, colWidths=col_widths)
         tabela_alunos.setStyle(
             TableStyle(
                 [
-                    ("BACKGROUND", (0, 0), (-1, 1), colors.lightblue),
+                    ("BACKGROUND", (0, 0), (-1, 1), cor_azul_senai),
+                    ("TEXTCOLOR", (0, 0), (-1, 1), colors.white),
                     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
                     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                     ("BOX", (0, 0), (-1, -1), 1, colors.black),
@@ -585,6 +661,47 @@ def exportar_inscricoes(turma_id):
         )
 
         elements.append(tabela_alunos)
+
+        # Observações e Assinatura
+        obs_table = Table(
+            [[Paragraph("<b>Observações:</b>", style_normal)], [""]],
+            colWidths=[10.5 * inch],
+            rowHeights=[0.2 * inch, 1.0 * inch],
+        )
+        obs_table.setStyle(
+            TableStyle(
+                [
+                    ("BOX", (0, 0), (-1, -1), 1, colors.black),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ]
+            )
+        )
+
+        ass_table = Table(
+            [
+                [
+                    Paragraph(
+                        "<b>Assinatura do(s) instrutor(es) / Responsável (eis):</b>",
+                        style_normal,
+                    )
+                ],
+                [""],
+            ],
+            colWidths=[10.5 * inch],
+            rowHeights=[0.2 * inch, 0.5 * inch],
+        )
+        ass_table.setStyle(
+            TableStyle(
+                [
+                    ("BOX", (0, 0), (-1, -1), 1, colors.black),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("LINEBELOW", (0, 1), (0, 1), 1, colors.black),
+                ]
+            )
+        )
+
+        elements.append(KeepTogether([obs_table, Spacer(1, 0.2 * inch), ass_table]))
+
         doc.build(elements)
 
         buffer.seek(0)
@@ -592,9 +709,8 @@ def exportar_inscricoes(turma_id):
             buffer,
             mimetype="application/pdf",
             as_attachment=True,
-            download_name=f"lista_presenca_{turma_id}.pdf",
+            download_name=f"{nome_arquivo_final}.pdf",
         )
-
 
 
 @treinamento_bp.route("/treinamentos/turmas/<int:turma_id>", methods=["GET"])
@@ -609,14 +725,14 @@ def obter_turma_treinamento(turma_id):
     dados_turma["treinamento"] = (
         turma.treinamento.to_dict() if turma.treinamento else None
     )
-    dados_turma["instrutor"] = (
-        turma.instrutor.to_dict() if turma.instrutor else None
-    )
+    dados_turma["instrutor"] = turma.instrutor.to_dict() if turma.instrutor else None
 
     return jsonify(dados_turma)
 
 
-@treinamento_bp.route("/treinamentos/inscricoes/<int:inscricao_id>/avaliar", methods=["PUT"])
+@treinamento_bp.route(
+    "/treinamentos/inscricoes/<int:inscricao_id>/avaliar", methods=["PUT"]
+)
 @admin_required
 def avaliar_inscricao(inscricao_id):
     """Atualiza as notas e o status de aprovação de uma inscrição."""
@@ -629,16 +745,20 @@ def avaliar_inscricao(inscricao_id):
         return jsonify({"erro": "Dados não fornecidos"}), 400
 
     try:
-        nota_teoria = data.get('nota_teoria')
-        nota_pratica = data.get('nota_pratica')
+        nota_teoria = data.get("nota_teoria")
+        nota_pratica = data.get("nota_pratica")
 
-        inscricao.nota_teoria = float(nota_teoria) if nota_teoria not in [None, ''] else None
-        inscricao.nota_pratica = float(nota_pratica) if nota_pratica not in [None, ''] else None
-        inscricao.status_aprovacao = data.get('status_aprovacao')
+        inscricao.nota_teoria = (
+            float(nota_teoria) if nota_teoria not in [None, ""] else None
+        )
+        inscricao.nota_pratica = (
+            float(nota_pratica) if nota_pratica not in [None, ""] else None
+        )
+        inscricao.status_aprovacao = data.get("status_aprovacao")
 
         # Campos de presença
-        inscricao.presenca_teoria = data.get('presenca_teoria', False)
-        inscricao.presenca_pratica = data.get('presenca_pratica', False)
+        inscricao.presenca_teoria = data.get("presenca_teoria", False)
+        inscricao.presenca_pratica = data.get("presenca_pratica", False)
 
         db.session.commit()
         return jsonify(inscricao.to_dict())

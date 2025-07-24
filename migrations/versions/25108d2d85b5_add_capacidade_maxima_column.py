@@ -18,9 +18,17 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    op.add_column('treinamentos', sa.Column('capacidade_maxima', sa.Integer(), nullable=True))
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = [c['name'] for c in inspector.get_columns('treinamentos')]
+    if 'capacidade_maxima' not in columns:
+        op.add_column('treinamentos', sa.Column('capacidade_maxima', sa.Integer(), nullable=True))
 
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.drop_column('treinamentos', 'capacidade_maxima')
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = [c['name'] for c in inspector.get_columns('treinamentos')]
+    if 'capacidade_maxima' in columns:
+        op.drop_column('treinamentos', 'capacidade_maxima')

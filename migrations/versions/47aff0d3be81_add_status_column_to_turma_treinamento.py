@@ -15,8 +15,16 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute("ALTER TABLE turmas_treinamento ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'aberta'")
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = [c['name'] for c in inspector.get_columns('turmas_treinamento')]
+    if 'status' not in columns:
+        op.add_column('turmas_treinamento', sa.Column('status', sa.String(length=20), nullable=False, server_default='aberta'))
 
 
 def downgrade() -> None:
-    op.execute("ALTER TABLE turmas_treinamento DROP COLUMN IF EXISTS status")
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = [c['name'] for c in inspector.get_columns('turmas_treinamento')]
+    if 'status' in columns:
+        op.drop_column('turmas_treinamento', 'status')

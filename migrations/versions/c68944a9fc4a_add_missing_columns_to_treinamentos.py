@@ -16,15 +16,29 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute("ALTER TABLE treinamentos ADD COLUMN IF NOT EXISTS tem_pratica BOOLEAN")
-    op.execute("ALTER TABLE treinamentos ADD COLUMN IF NOT EXISTS links_materiais JSONB")
-    op.execute("ALTER TABLE treinamentos ADD COLUMN IF NOT EXISTS data_criacao TIMESTAMP")
-    op.execute("ALTER TABLE treinamentos ADD COLUMN IF NOT EXISTS data_atualizacao TIMESTAMP")
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = [c['name'] for c in inspector.get_columns('treinamentos')]
+    if 'tem_pratica' not in columns:
+        op.add_column('treinamentos', sa.Column('tem_pratica', sa.Boolean(), nullable=True))
+    if 'links_materiais' not in columns:
+        op.add_column('treinamentos', sa.Column('links_materiais', sa.JSON(), nullable=True))
+    if 'data_criacao' not in columns:
+        op.add_column('treinamentos', sa.Column('data_criacao', sa.DateTime(), nullable=True))
+    if 'data_atualizacao' not in columns:
+        op.add_column('treinamentos', sa.Column('data_atualizacao', sa.DateTime(), nullable=True))
 
 
 def downgrade() -> None:
-    op.execute("ALTER TABLE treinamentos DROP COLUMN IF EXISTS data_atualizacao")
-    op.execute("ALTER TABLE treinamentos DROP COLUMN IF EXISTS data_criacao")
-    op.execute("ALTER TABLE treinamentos DROP COLUMN IF EXISTS links_materiais")
-    op.execute("ALTER TABLE treinamentos DROP COLUMN IF EXISTS tem_pratica")
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = [c['name'] for c in inspector.get_columns('treinamentos')]
+    if 'data_atualizacao' in columns:
+        op.drop_column('treinamentos', 'data_atualizacao')
+    if 'data_criacao' in columns:
+        op.drop_column('treinamentos', 'data_criacao')
+    if 'links_materiais' in columns:
+        op.drop_column('treinamentos', 'links_materiais')
+    if 'tem_pratica' in columns:
+        op.drop_column('treinamentos', 'tem_pratica')
 

@@ -16,9 +16,17 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute("ALTER TABLE treinamentos DROP COLUMN IF EXISTS max_alunos")
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = [c['name'] for c in inspector.get_columns('treinamentos')]
+    if 'max_alunos' in columns:
+        op.drop_column('treinamentos', 'max_alunos')
 
 
 def downgrade() -> None:
-    op.execute("ALTER TABLE treinamentos ADD COLUMN IF NOT EXISTS max_alunos INTEGER NOT NULL DEFAULT 20")
-    op.execute("ALTER TABLE treinamentos ALTER COLUMN max_alunos DROP DEFAULT")
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = [c['name'] for c in inspector.get_columns('treinamentos')]
+    if 'max_alunos' not in columns:
+        op.add_column('treinamentos', sa.Column('max_alunos', sa.Integer(), nullable=False, server_default='20'))
+        op.alter_column('treinamentos', 'max_alunos', server_default=None)

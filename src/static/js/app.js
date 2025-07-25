@@ -589,7 +589,8 @@ document.addEventListener('DOMContentLoaded', function() {
             '/treinamentos/meus-cursos.html',
             '/treinamentos/admin-catalogo.html',
             '/treinamentos/admin-turmas.html',
-            '/treinamentos/admin-inscricoes.html'
+            '/treinamentos/admin-inscricoes.html',
+            '/treinamentos/admin-historico-turmas.html'
         ];
 
         if (!paginasDeExclusao.includes(paginaAtual)) {

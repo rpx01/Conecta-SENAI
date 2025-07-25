@@ -3,8 +3,7 @@
 from flask import Blueprint, request, jsonify, g
 from sqlalchemy.exc import SQLAlchemyError
 import math
-from datetime import timedelta
-from datetime import date
+from datetime import date, datetime, timedelta
 
 from src.models import db, Treinamento, TurmaTreinamento, InscricaoTreinamento
 from src.models.instrutor import Instrutor
@@ -29,7 +28,6 @@ from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image as ReportlabImage, KeepTogether
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
-from datetime import datetime
 import locale
 
 # Configura o locale para o formato de data em português
@@ -286,7 +284,10 @@ def atualizar_turma_treinamento(turma_id):
     if not turma:
         return jsonify({"erro": "Turma não encontrada"}), 404
 
-    if turma.data_inicio <= date.today():
+    data_inicio_turma = (
+        turma.data_inicio.date() if isinstance(turma.data_inicio, datetime) else turma.data_inicio
+    )
+    if data_inicio_turma <= date.today():
         return jsonify({"erro": "Não é possível modificar uma turma que já iniciou ou foi concluída."}), 403
     data = request.json or {}
     try:
@@ -336,7 +337,10 @@ def remover_turma_treinamento(turma_id):
     if not turma:
         return jsonify({"erro": "Turma não encontrada"}), 404
 
-    if turma.data_inicio <= date.today():
+    data_inicio_turma = (
+        turma.data_inicio.date() if isinstance(turma.data_inicio, datetime) else turma.data_inicio
+    )
+    if data_inicio_turma <= date.today():
         return jsonify({"erro": "Não é possível excluir uma turma que já iniciou ou foi concluída."}), 403
     try:
         InscricaoTreinamento.query.filter_by(turma_id=turma_id).delete()

@@ -1,4 +1,4 @@
-// Conteúdo completo e corrigido para o ficheiro: src/static/js/treinamentos.js
+// src/static/js/treinamentos.js
 
 // Armazena os dados do usuário logado para reutilização
 let dadosUsuarioLogado = null;
@@ -35,16 +35,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // NOVOS LISTENERS PARA O MODAL DE SELEÇÃO
+    // Listener para o botão de inscrição própria
     const btnParaMim = document.getElementById('btnInscreverParaMim');
     if (btnParaMim) {
         btnParaMim.addEventListener('click', () => {
             const turmaId = document.getElementById('selecaoInscricaoModal').dataset.turmaId;
+            // Fecha o modal de seleção antes de enviar
             bootstrap.Modal.getInstance(document.getElementById('selecaoInscricaoModal')).hide();
+            // Envia a inscrição
             enviarInscricao(turmaId);
         });
     }
 
+    // Listener para o botão de inscrição de terceiros
     const btnParaOutro = document.getElementById('btnInscreverParaOutro');
     if (btnParaOutro) {
         btnParaOutro.addEventListener('click', async () => {
@@ -59,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const modalFormEl = document.getElementById('inscricaoModal');
             document.getElementById('turmaId').value = turmaId;
 
+            // Força a visualização para inscrição de terceiros
             document.getElementById('inscreverOutroCheck').checked = true;
             toggleFormularioExterno(true);
 
@@ -84,7 +88,6 @@ async function carregarTreinamentos() {
         }
 
         turmas.forEach(t => {
-            // CORREÇÃO: Usar t.data_fim em vez de t.data_termino
             const card = `
                 <div class="col-md-6 mb-4">
                     <div class="card h-100">
@@ -112,7 +115,7 @@ async function carregarTreinamentos() {
 }
 
 /**
- * (FUNÇÃO RESTAURADA) Carrega os cursos em que o usuário está inscrito.
+ * Carrega os cursos em que o usuário está inscrito.
  */
 async function carregarMeusCursos() {
     try {
@@ -136,10 +139,13 @@ async function carregarMeusCursos() {
     }
 }
 
+/**
+ * Abre o modal inicial de seleção de tipo de inscrição.
+ * @param {number} turmaId - O ID da turma para a qual a inscrição será feita.
+ */
 async function abrirModalInscricao(turmaId) {
-    // Guarda o ID da turma em um atributo do modal para ser acessível depois
     const selecaoModalEl = document.getElementById('selecaoInscricaoModal');
-    selecaoModalEl.dataset.turmaId = turmaId;
+    selecaoModalEl.dataset.turmaId = turmaId; // Armazena o ID da turma no modal
 
     const modal = new bootstrap.Modal(selecaoModalEl);
     modal.show();
@@ -171,6 +177,10 @@ function toggleFormularioExterno(isExterno) {
     }
 }
 
+/**
+ * Envia a requisição para inscrever o próprio usuário logado.
+ * @param {number} turmaId - O ID da turma.
+ */
 async function enviarInscricao(turmaId) {
     if (!turmaId) {
         exibirAlerta('ID da turma não encontrado.', 'danger');
@@ -182,7 +192,9 @@ async function enviarInscricao(turmaId) {
         if (document.getElementById('listaMeusCursos')) {
             carregarMeusCursos();
         }
-        bootstrap.Modal.getInstance(document.getElementById('inscricaoModal'))?.hide();
+        
+        // CORREÇÃO: A linha que tentava fechar o modal errado foi removida.
+        // O modal de seleção já é fechado pelo evento de clique no botão.
     } catch (e) {
         exibirAlerta(e.message, 'danger');
     }

@@ -23,27 +23,17 @@ from flask import send_file, make_response
 from openpyxl import Workbook
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib.units import inch
-from reportlab.platypus import (
-    SimpleDocTemplate,
-    Table,
-    TableStyle,
-    Paragraph,
-    Spacer,
-    Image,
-    PageBreak,
-    KeepTogether,
-)
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, KeepTogether
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from datetime import datetime
 import locale
 
-# Configura o locale para o formato de data em português. Em ambientes onde
-# esse locale não estiver disponível, mantemos o padrão sem gerar erro.
+# Configura o locale para o formato de data em português
 try:
-    locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
+    locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
 except locale.Error:
-    pass
+    locale.setlocale(locale.LC_TIME, '') # Fallback para o locale padrão do sistema
 
 
 treinamento_bp = Blueprint("treinamento", __name__)
@@ -63,7 +53,9 @@ def listar_treinamentos():
                 "data_inicio": (
                     turma.data_inicio.isoformat() if turma.data_inicio else None
                 ),
-                "data_fim": (turma.data_fim.isoformat() if turma.data_fim else None),
+                "data_fim": (
+                    turma.data_fim.isoformat() if turma.data_fim else None
+                ),
                 "local_realizacao": turma.local_realizacao,
                 "horario": turma.horario,
                 "instrutor": turma.instrutor.to_dict() if turma.instrutor else None,
@@ -131,7 +123,9 @@ def listar_meus_cursos():
                     inc.turma.data_inicio.isoformat() if inc.turma.data_inicio else None
                 ),
                 "data_fim": (
-                    inc.turma.data_fim.isoformat() if inc.turma.data_fim else None
+                    inc.turma.data_fim.isoformat()
+                    if inc.turma.data_fim
+                    else None
                 ),
             }
         )
@@ -168,7 +162,7 @@ def criar_treinamento():
             tem_pratica=payload.tem_pratica,
             links_materiais=payload.links_materiais,
             tipo=payload.tipo,
-            conteudo_programatico=payload.conteudo_programatico,
+            conteudo_programatico=payload.conteudo_programatico
         )
         db.session.add(novo)
         db.session.commit()
@@ -220,7 +214,7 @@ def atualizar_treinamento(treinamento_id):
         treino.tipo = payload.tipo
     if payload.conteudo_programatico is not None:
         treino.conteudo_programatico = payload.conteudo_programatico
-
+        
     try:
         db.session.commit()
         return jsonify(treino.to_dict())
@@ -263,14 +257,7 @@ def criar_turma_treinamento():
         dias_minimos = math.ceil(treinamento.carga_horaria / 8)
         data_fim_minima = payload.data_inicio + timedelta(days=dias_minimos - 1)
         if payload.data_fim < data_fim_minima:
-            return (
-                jsonify(
-                    {
-                        "erro": f"Data de término inválida. Com base na carga horária, a data mínima é {data_fim_minima.strftime('%d/%m/%Y')}."
-                    }
-                ),
-                400,
-            )
+            return jsonify({"erro": f"Data de término inválida. Com base na carga horária, a data mínima é {data_fim_minima.strftime('%d/%m/%Y')}."}), 400
     turma = TurmaTreinamento(
         treinamento_id=payload.treinamento_id,
         data_inicio=payload.data_inicio,
@@ -301,32 +288,19 @@ def atualizar_turma_treinamento(turma_id):
     except ValidationError as e:
         return jsonify({"erro": e.errors()}), 400
 
-    treinamento_id = (
-        payload.treinamento_id
-        if payload.treinamento_id is not None
-        else turma.treinamento_id
-    )
+    treinamento_id = payload.treinamento_id if payload.treinamento_id is not None else turma.treinamento_id
     treinamento = db.session.get(Treinamento, treinamento_id)
     if not treinamento:
         return jsonify({"erro": "Treinamento não encontrado"}), 404
 
-    data_inicio = (
-        payload.data_inicio if payload.data_inicio is not None else turma.data_inicio
-    )
+    data_inicio = payload.data_inicio if payload.data_inicio is not None else turma.data_inicio
     data_fim = payload.data_fim if payload.data_fim is not None else turma.data_fim
 
     if treinamento.carga_horaria and treinamento.carga_horaria > 0:
         dias_minimos = math.ceil(treinamento.carga_horaria / 8)
         data_fim_minima = data_inicio + timedelta(days=dias_minimos - 1)
         if data_fim < data_fim_minima:
-            return (
-                jsonify(
-                    {
-                        "erro": f"Data de término inválida. Com base na carga horária, a data mínima é {data_fim_minima.strftime('%d/%m/%Y')}."
-                    }
-                ),
-                400,
-            )
+            return jsonify({"erro": f"Data de término inválida. Com base na carga horária, a data mínima é {data_fim_minima.strftime('%d/%m/%Y')}."}), 400
 
     turma.treinamento_id = treinamento_id
     turma.data_inicio = data_inicio
@@ -484,142 +458,111 @@ def exportar_inscricoes(turma_id):
             pagesize=landscape(letter),
             rightMargin=30,
             leftMargin=30,
-            topMargin=30,
-            bottomMargin=30,
+            topMargin=20, # Reduzido
+            bottomMargin=20 # Reduzido
         )
         elements = []
         styles = getSampleStyleSheet()
-
+        
         # Cor azul SENAI
-        cor_azul_senai = colors.Color(red=(0 / 255), green=(83 / 255), blue=(159 / 255))
+        cor_azul_senai = colors.Color(red=(0/255), green=(83/255), blue=(159/255))
 
         # Estilos de parágrafo
-        style_normal = styles["Normal"]
-        style_bold = ParagraphStyle(
-            name="Bold", parent=style_normal, fontName="Helvetica-Bold"
-        )
-        style_h1_centralizado = ParagraphStyle(
-            name="h1_centralizado", parent=styles["h1"], alignment=1
-        )
+        style_normal = ParagraphStyle(name="Normal", fontSize=8)
+        style_bold_white = ParagraphStyle(name="BoldWhite", parent=style_normal, fontName="Helvetica-Bold", textColor=colors.white)
+        style_h1_centralizado = ParagraphStyle(name='h1_centralizado', parent=styles['h1'], alignment=1, textColor=colors.white)
 
         # Cabeçalho com logo e título
         try:
-            logo = Image(
-                "src/static/img/senai-logo.png", width=1.5 * inch, height=0.5 * inch
-            )
+            logo = Image("src/static/img/senai-logo.png", width=1.5 * inch, height=0.5 * inch)
             logo.hAlign = "LEFT"
         except Exception:
             logo = Paragraph("<b>SENAI</b>", style_normal)
 
         titulo = Paragraph("Lista de Presença", style_h1_centralizado)
 
-        header_table = Table([[logo, titulo]], colWidths=[1.8 * inch, 7.2 * inch])
+        header_table = Table([[logo, titulo]], colWidths=[1.8*inch, 7.2*inch])
         header_table.setStyle(
-            TableStyle(
-                [
-                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ]
-            )
+            TableStyle([
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("BACKGROUND", (1, 0), (1, 0), cor_azul_senai),
+            ])
         )
         elements.append(header_table)
-        elements.append(Spacer(1, 0.2 * inch))
-
+        elements.append(Spacer(1, 0.1 * inch))
+        
         def format_date(dt):
             return dt.strftime("%d/%m/%Y") if dt else ""
 
+        # Tabela de dados do treinamento
         dados_treinamento = [
+            [Paragraph("<b>Unidade:</b>", style_bold_white), Paragraph("SENAI - Conceição do Mato Dentro", style_normal), None, None],
+            [Paragraph("<b>Nome Treinamento:</b>", style_bold_white), Paragraph(treinamento.nome, style_normal), None, None],
             [
-                Paragraph("<b>Unidade:</b>", style_normal),
-                Paragraph("SENAI - Conceição do Mato Dentro", style_normal),
-            ],
-            [
-                Paragraph("<b>Nome Treinamento:</b>", style_normal),
-                Paragraph(treinamento.nome, style_normal),
-            ],
-            [
-                Paragraph("<b>Instituição:</b>", style_normal),
+                Paragraph("<b>Instituição:</b>", style_bold_white),
                 Paragraph("SENAI", style_normal),
-                Paragraph("<b>Período:</b>", style_normal),
-                Paragraph(
-                    f"{format_date(turma.data_inicio)} a {format_date(turma.data_fim)}",
-                    style_normal,
-                ),
+                Paragraph("<b>Período:</b>", style_bold_white),
+                Paragraph(f"{format_date(turma.data_inicio)} a {format_date(turma.data_fim)}", style_normal),
             ],
             [
-                Paragraph("<b>Local de Realização:</b>", style_normal),
+                Paragraph("<b>Local de Realização:</b>", style_bold_white),
                 Paragraph(turma.local_realizacao or "N/D", style_normal),
-                Paragraph("<b>Duração:</b>", style_normal),
+                Paragraph("<b>Duração:</b>", style_bold_white),
                 Paragraph(f"{treinamento.carga_horaria or 'N/D'} horas", style_normal),
             ],
             [
-                Paragraph("<b>Instrutor(es):</b>", style_normal),
-                Paragraph(
-                    turma.instrutor.nome if turma.instrutor else "N/D", style_normal
-                ),
-                Paragraph("<b>Horário:</b>", style_normal),
+                Paragraph("<b>Instrutor(es):</b>", style_bold_white),
+                Paragraph(turma.instrutor.nome if turma.instrutor else "N/D", style_normal),
+                Paragraph("<b>Horário:</b>", style_bold_white),
                 Paragraph(turma.horario or "N/D", style_normal),
             ],
             [
-                Paragraph("<b>CONTEÚDO PROGRAMÁTICO:</b>", style_normal),
-                Paragraph(
-                    (treinamento.conteudo_programatico or "").replace("\n", "<br/>"),
-                    style_normal,
-                ),
+                Paragraph("<b>CONTEÚDO PROGRAMÁTICO:</b>", style_bold_white),
+                Paragraph((treinamento.conteudo_programatico or "").replace("\n", "<br/>"), style_normal),
+                None, None
             ],
         ]
 
-        tabela_dados = Table(
-            dados_treinamento,
-            colWidths=[1.5 * inch, 4.5 * inch, 0.8 * inch, 2.7 * inch],
-        )
+        tabela_dados = Table(dados_treinamento, colWidths=[1.5 * inch, 4.5 * inch, 0.8 * inch, 2.7 * inch])
         tabela_dados.setStyle(
             TableStyle(
                 [
                     ("VALIGN", (0, 0), (-1, -1), "TOP"),
                     ("BOX", (0, 0), (-1, -1), 1, colors.black),
                     ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
+                    ("SPAN", (1, 0), (-1, 0)),
+                    ("SPAN", (1, 1), (-1, 1)),
                     ("SPAN", (1, 5), (-1, 5)),
-                    ("BACKGROUND", (0, 0), (0, -1), cor_azul_senai),
-                    ("BACKGROUND", (2, 2), (2, 4), cor_azul_senai),
-                    ("TEXTCOLOR", (0, 0), (0, -1), colors.white),
-                    ("TEXTCOLOR", (2, 2), (2, 4), colors.white),
+                    ("BACKGROUND", (0,0), (0, -1), cor_azul_senai),
+                    ("BACKGROUND", (2,2), (2,4), cor_azul_senai),
+                    ("TEXTCOLOR", (0,0), (0,-1), colors.white),
+                    ("TEXTCOLOR", (2,2), (2,4), colors.white),
                 ]
             )
         )
         elements.append(tabela_dados)
-        elements.append(Spacer(1, 0.3 * inch))
+        elements.append(Spacer(1, 0.15 * inch))
 
+        # Estilo para cabeçalhos da tabela de participantes
+        style_header_participantes = ParagraphStyle(name="HeaderParticipantes", fontSize=7, alignment=1, fontName="Helvetica-Bold", textColor=colors.white)
+        
+        # Cabeçalhos com quebra de linha
         tabela_header = [
-            "Nº",
-            "CPF",
-            "Nome do Participante",
-            "Empresa",
-            "TEORIA",
-            "NOTA DA TEORIA",
-            "PRÁTICA",
-            "NOTA DA PRÁTICA",
-            "APROVADO / REPROVADO",
+            "Nº", "CPF", "Nome do Participante", "Empresa",
+            "TEORIA", Paragraph("NOTA DA<br/>TEORIA", style_header_participantes), "PRÁTICA", Paragraph("NOTA DA<br/>PRÁTICA", style_header_participantes),
+            Paragraph("APROVADO /<br/>REPROVADO", style_header_participantes)
         ]
-
-        # Cabeçalhos agrupados
+        
         cabecalhos_agrupados = [
             [
-                Paragraph("<b>Informações dos participantes</b>", style_normal),
-                None,
-                None,
-                None,
-                Paragraph(
-                    "<b>Rubrica do participante conforme data de participação</b>",
-                    style_normal,
-                ),
-                None,
-                None,
-                None,
-                None,
+                Paragraph("<b>Informações dos participantes</b>", style_bold_white),
+                None, None, None,
+                Paragraph("<b>Rubrica do participante conforme data de participação</b>", style_bold_white),
+                None, None, None, None
             ],
-            tabela_header,
+            [Paragraph(f"<b>{h}</b>", style_header_participantes) if isinstance(h, str) else h for h in tabela_header]
         ]
-
+        
         dados_alunos = []
         for idx, i in enumerate(inscricoes):
             dados_alunos.append(
@@ -627,85 +570,57 @@ def exportar_inscricoes(turma_id):
                     str(idx + 1),
                     i.cpf or "",
                     Paragraph(i.nome, style_normal),
-                    i.empresa or "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
+                    i.empresa or "", "", "", "", "", ""
                 ]
             )
 
-        col_widths = [
-            0.4 * inch,
-            1.2 * inch,
-            2.5 * inch,
-            1.2 * inch,
-            0.8 * inch,
-            0.8 * inch,
-            0.8 * inch,
-            0.8 * inch,
-            1.2 * inch,
-        ]
-        tabela_alunos = Table(cabecalhos_agrupados + dados_alunos, colWidths=col_widths)
+        col_widths = [0.3 * inch, 1.1 * inch, 2.7 * inch, 1.2 * inch, 0.7 * inch, 0.7 * inch, 0.7 * inch, 0.7 * inch, 1.0 * inch]
+        
+        # Define a altura das linhas para economizar espaço
+        num_participantes = len(dados_alunos)
+        alturas_linhas = [0.4*inch, 0.4*inch] + [0.25*inch] * num_participantes
+        
+        tabela_alunos = Table(cabecalhos_agrupados + dados_alunos, colWidths=col_widths, rowHeights=alturas_linhas)
+
         tabela_alunos.setStyle(
             TableStyle(
                 [
                     ("BACKGROUND", (0, 0), (-1, 1), cor_azul_senai),
-                    ("TEXTCOLOR", (0, 0), (-1, 1), colors.white),
+                    ("TEXTCOLOR", (0,0), (-1,1), colors.white),
                     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
                     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                     ("BOX", (0, 0), (-1, -1), 1, colors.black),
                     ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
                     ("SPAN", (0, 0), (3, 0)),
                     ("SPAN", (4, 0), (-1, 0)),
-                    ("FONTNAME", (0, 0), (-1, 1), "Helvetica-Bold"),
                 ]
             )
         )
-
-        elements.append(tabela_alunos)
-
+        
         # Observações e Assinatura
-        obs_table = Table(
-            [[Paragraph("<b>Observações:</b>", style_normal)], [""]],
-            colWidths=[10.5 * inch],
-            rowHeights=[0.2 * inch, 1.0 * inch],
-        )
-        obs_table.setStyle(
-            TableStyle(
-                [
-                    ("BOX", (0, 0), (-1, -1), 1, colors.black),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ]
-            )
-        )
+        obs_table = Table([
+            [Paragraph("<b>Observações:</b>", style_normal)],
+            ['']
+        ], colWidths=[10.5*inch], rowHeights=[0.2*inch, 0.5*inch])
+        obs_table.setStyle(TableStyle([
+            ('BOX', (0,0), (-1,-1), 1, colors.black),
+            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ]))
+        
+        ass_table = Table([
+            [Paragraph("<b>Assinatura do(s) instrutor(es) / Responsável (eis):</b>", style_normal)],
+            ['']
+        ], colWidths=[10.5*inch], rowHeights=[0.2*inch, 0.3*inch])
+        ass_table.setStyle(TableStyle([
+            ('BOX', (0,0), (-1,-1), 1, colors.black),
+            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+            ('LINEBELOW', (0, 1), (0, 1), 1, colors.black)
+        ]))
 
-        ass_table = Table(
-            [
-                [
-                    Paragraph(
-                        "<b>Assinatura do(s) instrutor(es) / Responsável (eis):</b>",
-                        style_normal,
-                    )
-                ],
-                [""],
-            ],
-            colWidths=[10.5 * inch],
-            rowHeights=[0.2 * inch, 0.5 * inch],
-        )
-        ass_table.setStyle(
-            TableStyle(
-                [
-                    ("BOX", (0, 0), (-1, -1), 1, colors.black),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                    ("LINEBELOW", (0, 1), (0, 1), 1, colors.black),
-                ]
-            )
-        )
-
-        elements.append(KeepTogether([obs_table, Spacer(1, 0.2 * inch), ass_table]))
-
+        # Agrupa os últimos elementos para evitar quebra de página
+        conteudo_final = KeepTogether([tabela_alunos, Spacer(1, 0.15*inch), obs_table, Spacer(1, 0.15*inch), ass_table])
+        elements.append(conteudo_final)
+        
         doc.build(elements)
 
         buffer.seek(0)
@@ -729,14 +644,14 @@ def obter_turma_treinamento(turma_id):
     dados_turma["treinamento"] = (
         turma.treinamento.to_dict() if turma.treinamento else None
     )
-    dados_turma["instrutor"] = turma.instrutor.to_dict() if turma.instrutor else None
+    dados_turma["instrutor"] = (
+        turma.instrutor.to_dict() if turma.instrutor else None
+    )
 
     return jsonify(dados_turma)
 
 
-@treinamento_bp.route(
-    "/treinamentos/inscricoes/<int:inscricao_id>/avaliar", methods=["PUT"]
-)
+@treinamento_bp.route("/treinamentos/inscricoes/<int:inscricao_id>/avaliar", methods=["PUT"])
 @admin_required
 def avaliar_inscricao(inscricao_id):
     """Atualiza as notas e o status de aprovação de uma inscrição."""
@@ -749,20 +664,16 @@ def avaliar_inscricao(inscricao_id):
         return jsonify({"erro": "Dados não fornecidos"}), 400
 
     try:
-        nota_teoria = data.get("nota_teoria")
-        nota_pratica = data.get("nota_pratica")
+        nota_teoria = data.get('nota_teoria')
+        nota_pratica = data.get('nota_pratica')
 
-        inscricao.nota_teoria = (
-            float(nota_teoria) if nota_teoria not in [None, ""] else None
-        )
-        inscricao.nota_pratica = (
-            float(nota_pratica) if nota_pratica not in [None, ""] else None
-        )
-        inscricao.status_aprovacao = data.get("status_aprovacao")
+        inscricao.nota_teoria = float(nota_teoria) if nota_teoria not in [None, ''] else None
+        inscricao.nota_pratica = float(nota_pratica) if nota_pratica not in [None, ''] else None
+        inscricao.status_aprovacao = data.get('status_aprovacao')
 
         # Campos de presença
-        inscricao.presenca_teoria = data.get("presenca_teoria", False)
-        inscricao.presenca_pratica = data.get("presenca_pratica", False)
+        inscricao.presenca_teoria = data.get('presenca_teoria', False)
+        inscricao.presenca_pratica = data.get('presenca_pratica', False)
 
         db.session.commit()
         return jsonify(inscricao.to_dict())

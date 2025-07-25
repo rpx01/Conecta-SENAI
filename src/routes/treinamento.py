@@ -485,7 +485,7 @@ def exportar_inscricoes(turma_id):
         header_table.setStyle(
             TableStyle([
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("BACKGROUND", (1, 0), (1, 0), cor_azul_senai),
+                ("BACKGROUND", (0, 0), (-1, -1), cor_azul_senai),  # Cor azul em toda a linha
             ])
         )
         elements.append(header_table)

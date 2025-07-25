@@ -21,9 +21,11 @@ from io import StringIO, BytesIO
 import csv
 from flask import send_file, make_response
 from openpyxl import Workbook
+from openpyxl.styles import PatternFill, Font, Border, Side, Alignment
+from openpyxl.drawing.image import Image as OpenpyxlImage
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, KeepTogether
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image as ReportlabImage, KeepTogether
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from datetime import datetime
@@ -397,60 +399,212 @@ def exportar_inscricoes(turma_id):
         .all()
     )
     treinamento = turma.treinamento
-    tem_pratica = treinamento.tem_pratica
 
-    # Define o nome do arquivo com base no nome do treinamento e data atual
     nome_arquivo_base = treinamento.nome.replace(" ", "_").lower()
     data_hoje = datetime.now().strftime("%Y-%m-%d")
     nome_arquivo_final = f"{nome_arquivo_base}_{data_hoje}"
 
-    # Lógica para CSV e XLSX
-    if formato in ["csv", "xlsx"]:
-        headers = ["Nome", "CPF", "Empresa", "Presença Teoria"]
-        if tem_pratica:
-            headers.append("Presença Prática")
-        headers.extend(["Nota Teoria", "Nota Prática", "Status"])
+    def format_date(dt):
+        return dt.strftime("%d/%m/%Y") if dt else ""
 
-        if formato == "xlsx":
-            wb = Workbook()
-            ws = wb.active
-            ws.title = "Inscrições"
-            ws.append(headers)
-            for i in inscricoes:
-                row = [i.nome, i.cpf, i.empresa, "Sim" if i.presenca_teoria else "Não"]
-                if tem_pratica:
-                    row.append("Sim" if i.presenca_pratica else "Não")
-                row.extend([i.nota_teoria, i.nota_pratica, i.status_aprovacao])
-                ws.append(row)
-
-            buf = BytesIO()
-            wb.save(buf)
-            buf.seek(0)
-            return send_file(
-                buf,
-                mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                as_attachment=True,
-                download_name=f"{nome_arquivo_final}.xlsx",
-            )
-
+    # --- LÓGICA PARA CSV ---
+    if formato == "csv":
         si = StringIO()
         writer = csv.writer(si)
+        headers = ["Nome", "CPF", "Empresa", "Presença Teoria", "Presença Prática", "Nota Teoria", "Nota Prática", "Status"]
         writer.writerow(headers)
         for i in inscricoes:
-            row = [i.nome, i.cpf, i.empresa, "Sim" if i.presenca_teoria else "Não"]
-            if tem_pratica:
-                row.append("Sim" if i.presenca_pratica else "Não")
-            row.extend([i.nota_teoria, i.nota_pratica, i.status_aprovacao])
+            row = [
+                i.nome, i.cpf, i.empresa,
+                "Sim" if i.presenca_teoria else "Não",
+                "Sim" if i.presenca_pratica else "Não",
+                i.nota_teoria, i.nota_pratica, i.status_aprovacao
+            ]
             writer.writerow(row)
-
         output = make_response(si.getvalue())
-        output.headers["Content-Disposition"] = (
-            f"attachment; filename={nome_arquivo_final}.csv"
-        )
+        output.headers["Content-Disposition"] = f"attachment; filename={nome_arquivo_final}.csv"
         output.headers["Content-Type"] = "text/csv"
         return output
 
-    # --- LÓGICA ATUALIZADA PARA PDF ---
+    # --- LÓGICA PARA XLSX ---
+    if formato == "xlsx":
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Lista de Presença"
+
+        # --- Estilos ---
+        cor_azul_senai_hex = "00539F"
+        fill_azul = PatternFill(start_color=cor_azul_senai_hex, end_color=cor_azul_senai_hex, fill_type="solid")
+        font_white_bold = Font(color="FFFFFF", bold=True)
+        font_bold = Font(bold=True)
+        thin_border_side = Side(style='thin')
+        thin_border = Border(left=thin_border_side, right=thin_border_side, top=thin_border_side, bottom=thin_border_side)
+
+        # --- Cabeçalho ---
+        ws.merge_cells('A1:B2')
+        ws.merge_cells('C1:I2')
+
+        # Logo
+        try:
+            img = OpenpyxlImage("src/static/img/senai-logo.png")
+            img.anchor = 'A1'
+            img.height = 40
+            ws.add_image(img)
+        except FileNotFoundError:
+            logo_cell = ws['A1']
+            logo_cell.value = "SENAI"
+            logo_cell.font = font_white_bold
+            logo_cell.alignment = Alignment(horizontal='center', vertical='center')
+
+        # Título
+        title_cell = ws['C1']
+        title_cell.value = "Lista de Presença"
+        title_cell.font = Font(color="FFFFFF", bold=True, size=20)
+        title_cell.fill = fill_azul
+        title_cell.alignment = Alignment(horizontal='center', vertical='center')
+
+        # Cor de fundo na célula da logo
+        for row in ws['A1:B2']:
+            for cell in row:
+                cell.fill = fill_azul
+
+        # --- Tabela de Dados do Treinamento ---
+        row_idx = 4
+        dados_treinamento = {
+            "Unidade:": "SENAI - Conceição do Mato Dentro",
+            "Nome Treinamento:": treinamento.nome,
+            "Instituição:": "SENAI",
+            "Local de Realização:": turma.local_realizacao or "N/D",
+            "Instrutor(es):": turma.instrutor.nome if turma.instrutor else "N/D",
+            "CONTEÚDO PROGRAMÁTICO:": (treinamento.conteudo_programatico or "").replace("\n", "\n")
+        }
+
+        dados_treinamento_lado_direito = {
+            "Período:": f"{format_date(turma.data_inicio)} a {format_date(turma.data_fim)}",
+            "Duração:": f"{treinamento.carga_horaria or 'N/D'} horas",
+            "Horário:": turma.horario or "N/D"
+        }
+
+        # Aplicar borda em toda a área da tabela de dados
+        for col in "ABCDEFGHI":
+            for row in range(row_idx, row_idx + 6):
+                ws[f"{col}{row}"].border = thin_border
+
+        # Preencher dados
+        for i, (label, value) in enumerate(dados_treinamento.items()):
+            current_row = row_idx + i
+            label_cell = ws[f'A{current_row}']
+            label_cell.value = label
+            label_cell.fill = fill_azul
+            label_cell.font = font_white_bold
+            label_cell.alignment = Alignment(vertical='top')
+
+            value_cell = ws[f'B{current_row}']
+            value_cell.value = value
+            value_cell.alignment = Alignment(vertical='top', wrap_text=True)
+
+            ws.merge_cells(f'B{current_row}:I{current_row}')
+
+        # Lado direito
+        ws.merge_cells('B6:F6'); ws.merge_cells('G6:I6')
+        ws.merge_cells('B7:F7'); ws.merge_cells('G7:I7')
+        ws.merge_cells('B8:F8'); ws.merge_cells('G8:I8')
+
+        ws['G6'].value = "Período:"; ws['H6'].value = dados_treinamento_lado_direito["Período:"]
+        ws['G7'].value = "Duração:"; ws['H7'].value = dados_treinamento_lado_direito["Duração:"]
+        ws['G8'].value = "Horário:"; ws['H8'].value = dados_treinamento_lado_direito["Horário:"]
+
+        ws.unmerge_cells('B6:I6'); ws.merge_cells('B6:F6')
+        ws.unmerge_cells('B7:I7'); ws.merge_cells('B7:F7')
+        ws.unmerge_cells('B8:I8'); ws.merge_cells('B8:F8')
+        ws.merge_cells('H6:I6'); ws.merge_cells('H7:I7'); ws.merge_cells('H8:I8')
+
+        for cell_label, cell_value in [('G6','H6'), ('G7','H7'), ('G8','H8')]:
+            ws[cell_label].fill = fill_azul
+            ws[cell_label].font = font_white_bold
+            ws[cell_label].alignment = Alignment(vertical='top')
+            ws[cell_value].alignment = Alignment(vertical='top')
+
+        row_idx += 7
+
+        # --- Tabela de Participantes ---
+        ws.merge_cells(f'A{row_idx}:D{row_idx}')
+        info_cell = ws[f'A{row_idx}']
+        info_cell.value = "Informações dos participantes"
+        info_cell.fill = fill_azul
+        info_cell.font = font_white_bold
+        info_cell.alignment = Alignment(horizontal='center', vertical='center')
+
+        ws.merge_cells(f'E{row_idx}:I{row_idx}')
+        rubrica_cell = ws[f'E{row_idx}']
+        rubrica_cell.value = "Rubrica do participante conforme data de participação"
+        rubrica_cell.fill = fill_azul
+        rubrica_cell.font = font_white_bold
+        rubrica_cell.alignment = Alignment(horizontal='center', vertical='center')
+
+        row_idx += 1
+        headers = ["Nº", "CPF", "Nome do Participante", "Empresa", "TEORIA", "NOTA DA\nTEORIA", "PRÁTICA", "NOTA DA\nPRÁTICA", "APROVADO /\nREPROVADO"]
+        for col_idx, header in enumerate(headers, 1):
+            cell = ws.cell(row=row_idx, column=col_idx, value=header)
+            cell.fill = fill_azul
+            cell.font = font_white_bold
+            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+        row_idx += 1
+        for i, inscricao in enumerate(inscricoes, 1):
+            ws.cell(row=row_idx, column=1, value=i)
+            ws.cell(row=row_idx, column=2, value=inscricao.cpf)
+            ws.cell(row=row_idx, column=3, value=inscricao.nome)
+            ws.cell(row=row_idx, column=4, value=inscricao.empresa)
+            row_idx += 1
+
+        # Borda na tabela de participantes
+        for col in "ABCDEFGHI":
+            for row in range(row_idx - len(inscricoes) - 2, row_idx):
+                 ws[f"{col}{row}"].border = thin_border
+                 ws[f"{col}{row}"].alignment = Alignment(horizontal='center', vertical='center')
+
+        # --- Observações e Assinatura ---
+        row_idx += 1
+        ws.merge_cells(f'A{row_idx}:I{row_idx+2}')
+        obs_cell = ws[f'A{row_idx}']
+        obs_cell.value = "Observações:"
+        obs_cell.font = font_bold
+        obs_cell.alignment = Alignment(horizontal='left', vertical='top')
+        obs_cell.border = thin_border
+
+        row_idx += 4
+        ws.merge_cells(f'A{row_idx}:I{row_idx+1}')
+        ass_cell = ws[f'A{row_idx}']
+        ass_cell.value = "Assinatura do(s) instrutor(es) / Responsável (eis):"
+        ass_cell.font = font_bold
+        ass_cell.alignment = Alignment(horizontal='left', vertical='top')
+        ass_cell.border = Border(bottom=thin_border_side)
+
+        # --- Ajustar tamanho das colunas e linhas ---
+        ws.column_dimensions['A'].width = 5
+        ws.column_dimensions['B'].width = 18
+        ws.column_dimensions['C'].width = 35
+        ws.column_dimensions['D'].width = 20
+        ws.column_dimensions['E'].width = 10
+        ws.column_dimensions['F'].width = 10
+        ws.column_dimensions['G'].width = 10
+        ws.column_dimensions['H'].width = 10
+        ws.column_dimensions['I'].width = 15
+        ws.row_dimensions[9].height = 40
+
+        # --- Salvar em buffer ---
+        buf = BytesIO()
+        wb.save(buf)
+        buf.seek(0)
+        return send_file(
+            buf,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            as_attachment=True,
+            download_name=f"{nome_arquivo_final}.xlsx",
+        )
+
+    # --- LÓGICA PARA PDF ---
     if formato == "pdf":
         buffer = BytesIO()
         doc = SimpleDocTemplate(
@@ -458,41 +612,35 @@ def exportar_inscricoes(turma_id):
             pagesize=landscape(letter),
             rightMargin=30,
             leftMargin=30,
-            topMargin=20, # Reduzido
-            bottomMargin=20 # Reduzido
+            topMargin=20,
+            bottomMargin=20
         )
         elements = []
         styles = getSampleStyleSheet()
-        
-        # Cor azul SENAI
-        cor_azul_senai = colors.Color(red=(0/255), green=(83/255), blue=(159/255))
 
-        # Estilos de parágrafo
+        cor_azul_senai_rgb = colors.Color(red=(0/255), green=(83/255), blue=(159/255))
+
         style_normal = ParagraphStyle(name="Normal", fontSize=8)
         style_bold_white = ParagraphStyle(name="BoldWhite", parent=style_normal, fontName="Helvetica-Bold", textColor=colors.white)
-        style_h1_centralizado = ParagraphStyle(name='h1_centralizado', parent=styles['h1'], alignment=1, textColor=colors.white)
+        style_h1_centralizado = ParagraphStyle(name='h1_centralizado', parent=styles['h1'], alignment=1, textColor=colors.white, fontSize=16)
 
-        # Cabeçalho com logo e título
         try:
-            logo = Image("src/static/img/senai-logo.png", width=1.5 * inch, height=0.5 * inch)
-            logo.hAlign = "LEFT"
+            logo = ReportlabImage("src/static/img/senai-logo.png", width=1.5 * inch, height=0.5 * inch)
+            logo.hAlign = "CENTER"
         except Exception:
             logo = Paragraph("<b>SENAI</b>", style_normal)
 
-        titulo = Paragraph("Lista de Presença", style_h1_centralizado)
+        titulo = Paragraph("<b>Lista de Presença</b>", style_h1_centralizado)
 
         header_table = Table([[logo, titulo]], colWidths=[1.8*inch, 7.2*inch])
         header_table.setStyle(
             TableStyle([
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("BACKGROUND", (0, 0), (-1, -1), cor_azul_senai),  # Cor azul em toda a linha
+                ("BACKGROUND", (0, 0), (-1, -1), cor_azul_senai_rgb),
             ])
         )
         elements.append(header_table)
         elements.append(Spacer(1, 0.1 * inch))
-        
-        def format_date(dt):
-            return dt.strftime("%d/%m/%Y") if dt else ""
 
         # Tabela de dados do treinamento
         dados_treinamento = [
@@ -533,8 +681,8 @@ def exportar_inscricoes(turma_id):
                     ("SPAN", (1, 0), (-1, 0)),
                     ("SPAN", (1, 1), (-1, 1)),
                     ("SPAN", (1, 5), (-1, 5)),
-                    ("BACKGROUND", (0,0), (0, -1), cor_azul_senai),
-                    ("BACKGROUND", (2,2), (2,4), cor_azul_senai),
+                    ("BACKGROUND", (0,0), (0, -1), cor_azul_senai_rgb),
+                    ("BACKGROUND", (2,2), (2,4), cor_azul_senai_rgb),
                     ("TEXTCOLOR", (0,0), (0,-1), colors.white),
                     ("TEXTCOLOR", (2,2), (2,4), colors.white),
                 ]
@@ -585,7 +733,7 @@ def exportar_inscricoes(turma_id):
         tabela_alunos.setStyle(
             TableStyle(
                 [
-                    ("BACKGROUND", (0, 0), (-1, 1), cor_azul_senai),
+                    ("BACKGROUND", (0, 0), (-1, 1), cor_azul_senai_rgb),
                     ("TEXTCOLOR", (0,0), (-1,1), colors.white),
                     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
                     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),

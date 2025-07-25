@@ -156,11 +156,14 @@ async function carregarTurmas() {
             return;
         }
 
-        const hoje = new Date().toISOString().split('T')[0];
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
 
         for (const t of turmas) {
             const tr = document.createElement('tr');
-            const turmaIniciada = t.data_inicio <= hoje;
+            const dataInicio = new Date(t.data_inicio);
+            dataInicio.setHours(0, 0, 0, 0);
+            const turmaIniciada = dataInicio <= hoje;
             const disabledAttr = turmaIniciada ? 'disabled title="Não é possível modificar uma turma em andamento ou encerrada."' : '';
 
             tr.innerHTML = `

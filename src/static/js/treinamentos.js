@@ -22,12 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnEnviar = document.getElementById('btnEnviarInscricao');
     if (btnEnviar) {
         btnEnviar.addEventListener('click', () => {
-            const isInscreverOutro = document.getElementById('inscreverOutroCheck').checked;
-            if (isInscreverOutro) {
-                enviarInscricaoExterna();
-            } else {
-                enviarInscricao();
-            }
+            // O formulário é utilizado apenas para inscrição de terceiros
+            enviarInscricaoExterna();
         });
     }
 
@@ -36,6 +32,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (checkInscreverOutro) {
         checkInscreverOutro.addEventListener('change', (e) => {
             toggleFormularioExterno(e.target.checked);
+        });
+    }
+
+    // NOVOS LISTENERS PARA O MODAL DE SELEÇÃO
+    const btnParaMim = document.getElementById('btnInscreverParaMim');
+    if (btnParaMim) {
+        btnParaMim.addEventListener('click', () => {
+            const turmaId = document.getElementById('selecaoInscricaoModal').dataset.turmaId;
+            bootstrap.Modal.getInstance(document.getElementById('selecaoInscricaoModal')).hide();
+            enviarInscricao(turmaId);
+        });
+    }
+
+    const btnParaOutro = document.getElementById('btnInscreverParaOutro');
+    if (btnParaOutro) {
+        btnParaOutro.addEventListener('click', async () => {
+            const turmaId = document.getElementById('selecaoInscricaoModal').dataset.turmaId;
+
+            // Esconde o modal de seleção e abre o de formulário
+            bootstrap.Modal.getInstance(document.getElementById('selecaoInscricaoModal')).hide();
+
+            if (!dadosUsuarioLogado) {
+                dadosUsuarioLogado = await getUsuarioLogado();
+            }
+            const modalFormEl = document.getElementById('inscricaoModal');
+            document.getElementById('turmaId').value = turmaId;
+
+            document.getElementById('inscreverOutroCheck').checked = true;
+            toggleFormularioExterno(true);
+
+            const modalForm = new bootstrap.Modal(modalFormEl);
+            modalForm.show();
         });
     }
 });
@@ -109,22 +137,12 @@ async function carregarMeusCursos() {
 }
 
 async function abrirModalInscricao(turmaId) {
-    try {
-        if (!dadosUsuarioLogado) {
-            dadosUsuarioLogado = await getUsuarioLogado();
-        }
+    // Guarda o ID da turma em um atributo do modal para ser acessível depois
+    const selecaoModalEl = document.getElementById('selecaoInscricaoModal');
+    selecaoModalEl.dataset.turmaId = turmaId;
 
-        const modalEl = document.getElementById('inscricaoModal');
-        const modal = new bootstrap.Modal(modalEl);
-
-        document.getElementById('turmaId').value = turmaId;
-        document.getElementById('inscreverOutroCheck').checked = false;
-        toggleFormularioExterno(false);
-
-        modal.show();
-    } catch (e) {
-        exibirAlerta(e.message, 'danger');
-    }
+    const modal = new bootstrap.Modal(selecaoModalEl);
+    modal.show();
 }
 
 function toggleFormularioExterno(isExterno) {
@@ -153,12 +171,18 @@ function toggleFormularioExterno(isExterno) {
     }
 }
 
-async function enviarInscricao() {
-    const turmaId = document.getElementById('turmaId').value;
+async function enviarInscricao(turmaId) {
+    if (!turmaId) {
+        exibirAlerta('ID da turma não encontrado.', 'danger');
+        return;
+    }
     try {
         await chamarAPI(`/treinamentos/${turmaId}/inscricoes`, 'POST', {});
         exibirAlerta('Inscrição realizada com sucesso!', 'success');
-        bootstrap.Modal.getInstance(document.getElementById('inscricaoModal')).hide();
+        if (document.getElementById('listaMeusCursos')) {
+            carregarMeusCursos();
+        }
+        bootstrap.Modal.getInstance(document.getElementById('inscricaoModal'))?.hide();
     } catch (e) {
         exibirAlerta(e.message, 'danger');
     }

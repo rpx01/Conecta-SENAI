@@ -68,10 +68,16 @@
             <main class="col-lg-9 col-md-12">
                 <div class="page-header">
                     <h2 class="mb-0">Lista de Presença e Avaliação</h2>
-                    <a href="/treinamentos/admin-turmas.html" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-1"></i>
-                        Voltar para Turmas
-                    </a>
+                    <div class="d-flex">
+                        <button id="btnExportarInscricoes" class="btn btn-sm btn-outline-secondary me-2">
+                            <i class="bi bi-download me-1"></i>
+                            Exportar Inscrições
+                        </button>
+                        <a href="/treinamentos/admin-turmas.html" class="btn btn-outline-secondary me-2">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Voltar para Turmas
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card mt-4">
@@ -121,7 +127,6 @@
                             <button class="btn btn-sm btn-primary me-2" onclick="abrirModalInscricaoAdmin(new URLSearchParams(window.location.search).get('turma'))">
                                 <i class="bi bi-person-plus-fill me-1"></i> Adicionar Participante
                             </button>
-                            <button id="btnExportarInscricoes" class="btn btn-sm btn-outline-secondary me-2">Exportar Inscrições</button>
                             <button id="btnSalvarAlteracoes" class="btn btn-sm btn-success">
                                 <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                                 <span class="btn-text"><i class="bi bi-check-lg me-1"></i> Salvar Alterações</span>

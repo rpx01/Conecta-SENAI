@@ -149,6 +149,49 @@
         </div>
     </div>
 
+    <div class="modal fade" id="adminInscricaoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Inscrever Novo Participante</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="adminInscricaoForm">
+                        <input type="hidden" id="adminTurmaId">
+                        <div class="mb-3">
+                            <label class="form-label" for="adminNome">Nome Completo *</label>
+                            <input type="text" class="form-control" id="adminNome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="adminEmail">Email *</label>
+                            <input type="email" class="form-control" id="adminEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="adminCpf">CPF *</label>
+                            <input type="text" class="form-control" id="adminCpf" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="adminDataNascimento">Data de Nascimento</label>
+                            <input type="date" class="form-control" id="adminDataNascimento">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="adminEmpresa">Empresa</label>
+                            <input type="text" class="form-control" id="adminEmpresa">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnEnviarAdminInscricao">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        <span class="btn-text">Inscrever Participante</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/app.js"></script>
     <script src="/js/treinamentos-admin.js"></script>

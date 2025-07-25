@@ -98,6 +98,45 @@ async function excluirTreinamento(id) {
     }
 }
 
+/**
+ * Abre o modal de inscrição para administradores.
+ * @param {number} turmaId - O ID da turma onde o participante será inscrito.
+ */
+function abrirModalInscricaoAdmin(turmaId) {
+    document.getElementById('adminInscricaoForm').reset();
+    document.getElementById('adminTurmaId').value = turmaId;
+    const modal = new bootstrap.Modal(document.getElementById('adminInscricaoModal'));
+    modal.show();
+}
+
+/**
+ * Envia os dados do formulário de inscrição do administrador para o servidor.
+ */
+async function enviarInscricaoAdmin() {
+    const btn = document.getElementById('btnEnviarAdminInscricao');
+
+    await executarAcaoComFeedback(btn, async () => {
+        const turmaId = document.getElementById('adminTurmaId').value;
+        const body = {
+            nome: document.getElementById('adminNome').value,
+            email: document.getElementById('adminEmail').value,
+            cpf: document.getElementById('adminCpf').value,
+            data_nascimento: document.getElementById('adminDataNascimento').value || null,
+            empresa: document.getElementById('adminEmpresa').value || null
+        };
+
+        try {
+            await chamarAPI(`/treinamentos/turmas/${turmaId}/inscricoes/admin`, 'POST', body);
+            exibirAlerta('Participante inscrito com sucesso!', 'success');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('adminInscricaoModal'));
+            modal.hide();
+        } catch (e) {
+            exibirAlerta(e.message, 'danger');
+            throw e;
+        }
+    });
+}
+
 // Carrega a lista de turmas na tabela
 async function carregarTurmas() {
     try {
@@ -117,6 +156,9 @@ async function carregarTurmas() {
                 <td>${formatarData(t.data_inicio)}</td>
                 <td>${formatarData(t.data_fim)}</td>
                 <td>
+                    <button class="btn btn-sm btn-outline-success me-1" onclick="abrirModalInscricaoAdmin(${t.turma_id})" title="Adicionar Participante">
+                        <i class="bi bi-person-plus"></i>
+                    </button>
                     <a class="btn btn-sm btn-outline-info me-1" href="/treinamentos/admin-inscricoes.html?turma=${t.turma_id}" title="Ver Inscrições"><i class="bi bi-people"></i></a>
                     <button class="btn btn-sm btn-outline-primary" onclick="editarTurma(${t.turma_id})" title="Editar Turma"><i class="bi bi-pencil"></i></button>
                 </td>`;
@@ -395,6 +437,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (document.getElementById('turmasTableBody')) {
         carregarTurmas();
+    }
+
+    const btnEnviarAdmin = document.getElementById('btnEnviarAdminInscricao');
+    if (btnEnviarAdmin) {
+        btnEnviarAdmin.addEventListener('click', enviarInscricaoAdmin);
     }
 
     const formTreinamento = document.getElementById('treinamentoForm');

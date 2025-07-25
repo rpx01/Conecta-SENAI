@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function carregarHistorico() {
     try {
-        const turmas = await chamarAPI('/treinamentos/historico');
+        const turmas = await chamarAPI('/treinamentos/turmas-ativas');
         const tbody = document.getElementById('turmasTableBody');
         if (!tbody) return;
 

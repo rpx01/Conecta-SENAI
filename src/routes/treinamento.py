@@ -69,14 +69,48 @@ def listar_turmas_agendadas():
     return jsonify(dados)
 
 
-# NOVO: Endpoint para o histórico de turmas (em andamento e concluídas)
+# NOVO: Endpoint para as turmas ativas (em andamento)
+@treinamento_bp.route("/treinamentos/turmas-ativas", methods=["GET"])
+@login_required
+def listar_turmas_ativas():
+    """Lista as turmas de treinamento que estão atualmente em andamento."""
+    hoje = date.today()
+    turmas = (
+        TurmaTreinamento.query.filter(
+            db.and_(
+                TurmaTreinamento.data_inicio <= hoje,
+                TurmaTreinamento.data_fim >= hoje
+            )
+        )
+        .join(Treinamento)
+        .order_by(TurmaTreinamento.data_inicio.desc())
+        .all()
+    )
+
+    dados = []
+    for turma in turmas:
+        dados.append(
+            {
+                "turma_id": turma.id,
+                "treinamento": turma.treinamento.to_dict(),
+                "data_inicio": turma.data_inicio.isoformat() if turma.data_inicio else None,
+                "data_fim": turma.data_fim.isoformat() if turma.data_fim else None,
+                "local_realizacao": turma.local_realizacao,
+                "horario": turma.horario,
+                "instrutor": turma.instrutor.to_dict() if turma.instrutor else None,
+            }
+        )
+    return jsonify(dados)
+
+
+# MODIFICADO: Endpoint para o histórico de turmas (concluídas)
 @treinamento_bp.route("/treinamentos/historico", methods=["GET"])
 @login_required
 def listar_historico_turmas():
-    """Lista as turmas de treinamento que estão em andamento ou já foram concluídas."""
+    """Lista as turmas de treinamento que já foram concluídas."""
     hoje = date.today()
     turmas = (
-        TurmaTreinamento.query.filter(TurmaTreinamento.data_inicio <= hoje)
+        TurmaTreinamento.query.filter(TurmaTreinamento.data_fim < hoje)
         .join(Treinamento)
         .order_by(TurmaTreinamento.data_inicio.desc())
         .all()

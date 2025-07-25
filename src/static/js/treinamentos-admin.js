@@ -164,6 +164,9 @@ async function carregarTurmas() {
                 <td>${formatarData(t.data_inicio)}</td>
                 <td>${formatarData(t.data_fim)}</td>
                 <td>
+                    <button class="btn btn-sm btn-outline-success me-1" onclick="abrirModalInscricaoAdmin(${t.turma_id})" title="Adicionar Participante">
+                        <i class="bi bi-person-plus"></i>
+                    </button>
                     <a class="btn btn-sm btn-outline-info me-1" href="/treinamentos/admin-inscricoes.html?turma=${t.turma_id}" title="Ver Inscrições"><i class="bi bi-people"></i></a>
                     <button class="btn btn-sm btn-outline-primary me-1" onclick="editarTurma(${t.turma_id})" ${disabledAttr} title="Editar Turma"><i class="bi bi-pencil"></i></button>
                     <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusaoTurma(${t.turma_id})" ${disabledAttr} title="Excluir Turma"><i class="bi bi-trash"></i></button>

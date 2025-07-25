@@ -832,3 +832,29 @@ def avaliar_inscricao(inscricao_id):
     except SQLAlchemyError as e:
         db.session.rollback()
         return handle_internal_error(e)
+
+
+@treinamento_bp.route("/treinamentos/<int:turma_id>/inscricoes/externo", methods=["POST"])
+@login_required
+def create_inscricao_treinamento_externo(turma_id):
+    """Cria uma nova inscrição para participante externo."""
+    data = request.get_json()
+
+    payload = InscricaoTreinamentoCreateSchema(**data)
+
+    turma = TurmaTreinamento.query.get_or_404(turma_id)
+
+    nova_inscricao = InscricaoTreinamento(
+        turma_id=turma.id,
+        usuario_id=None,
+        nome=payload.nome,
+        email=payload.email,
+        cpf=payload.cpf,
+        data_nascimento=payload.data_nascimento,
+        empresa=payload.empresa,
+    )
+
+    db.session.add(nova_inscricao)
+    db.session.commit()
+
+    return jsonify(nova_inscricao.to_dict()), 201

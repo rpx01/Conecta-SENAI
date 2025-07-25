@@ -89,26 +89,32 @@
                 </div>
                 <div class="modal-body">
                     <form id="inscricaoForm">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="inscreverOutroCheck">
+                            <label class="form-check-label" for="inscreverOutroCheck">
+                                Inscrever outra pessoa
+                            </label>
+                        </div>
                         <input type="hidden" id="turmaId">
                         <div class="mb-3">
                             <label class="form-label" for="nome">Nome</label>
-                            <input type="text" class="form-control" id="nome">
+                            <input type="text" class="form-control" id="nome" name="nome" readonly>
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="email">Email</label>
-                            <input type="email" class="form-control" id="email">
+                            <input type="email" class="form-control" id="email" name="email" readonly>
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="cpf">CPF</label>
-                            <input type="text" class="form-control" id="cpf">
+                            <input type="text" class="form-control" id="cpf" name="cpf" readonly>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label" for="data_nascimento">Data de Nascimento</label>
-                            <input type="date" class="form-control" id="data_nascimento">
+                            <label class="form-label" for="dataNascimento">Data de Nascimento</label>
+                            <input type="text" class="form-control" id="dataNascimento" name="dataNascimento" readonly>
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="empresa">Empresa</label>
-                            <input type="text" class="form-control" id="empresa">
+                            <input type="text" class="form-control" id="empresa" name="empresa" readonly>
                         </div>
                     </form>
                 </div>
@@ -125,8 +131,6 @@
     <script src="/js/treinamentos.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('btnEnviarInscricao').addEventListener('click', enviarInscricao);
-            // Atualiza o nome do usuário no menu
             const usuario = getUsuarioLogado();
             if (usuario) {
                 document.getElementById('userName').textContent = usuario.nome;

@@ -40,10 +40,69 @@ except locale.Error:
 treinamento_bp = Blueprint("treinamento", __name__)
 
 
-@treinamento_bp.route("/treinamentos", methods=["GET"])
+# NOVO: Endpoint para listar turmas futuras (agendadas)
+@treinamento_bp.route("/treinamentos/agendadas", methods=["GET"])
 @login_required
-def listar_treinamentos():
-    """Lista todas as turmas de treinamento."""
+def listar_turmas_agendadas():
+    """Lista as turmas de treinamento que ainda não começaram."""
+    hoje = date.today()
+    turmas = (
+        TurmaTreinamento.query.filter(TurmaTreinamento.data_inicio > hoje)
+        .join(Treinamento)
+        .order_by(TurmaTreinamento.data_inicio)
+        .all()
+    )
+
+    dados = []
+    for turma in turmas:
+        dados.append(
+            {
+                "turma_id": turma.id,
+                "treinamento": turma.treinamento.to_dict(),
+                "data_inicio": turma.data_inicio.isoformat() if turma.data_inicio else None,
+                "data_fim": turma.data_fim.isoformat() if turma.data_fim else None,
+                "local_realizacao": turma.local_realizacao,
+                "horario": turma.horario,
+                "instrutor": turma.instrutor.to_dict() if turma.instrutor else None,
+            }
+        )
+    return jsonify(dados)
+
+
+# NOVO: Endpoint para o histórico de turmas (em andamento e concluídas)
+@treinamento_bp.route("/treinamentos/historico", methods=["GET"])
+@login_required
+def listar_historico_turmas():
+    """Lista as turmas de treinamento que estão em andamento ou já foram concluídas."""
+    hoje = date.today()
+    turmas = (
+        TurmaTreinamento.query.filter(TurmaTreinamento.data_inicio <= hoje)
+        .join(Treinamento)
+        .order_by(TurmaTreinamento.data_inicio.desc())
+        .all()
+    )
+
+    dados = []
+    for turma in turmas:
+        dados.append(
+            {
+                "turma_id": turma.id,
+                "treinamento": turma.treinamento.to_dict(),
+                "data_inicio": turma.data_inicio.isoformat() if turma.data_inicio else None,
+                "data_fim": turma.data_fim.isoformat() if turma.data_fim else None,
+                "local_realizacao": turma.local_realizacao,
+                "horario": turma.horario,
+                "instrutor": turma.instrutor.to_dict() if turma.instrutor else None,
+            }
+        )
+    return jsonify(dados)
+
+
+# Se precisar retornar todas as turmas, mantém a rota original com novo nome
+@treinamento_bp.route("/treinamentos/todas", methods=["GET"])
+@login_required
+def listar_todas_as_turmas():
+    """Lista TODAS as turmas de treinamento (futuras, presentes e passadas)."""
     turmas = TurmaTreinamento.query.join(Treinamento).order_by(Treinamento.nome).all()
     dados = []
     for turma in turmas:
@@ -51,12 +110,8 @@ def listar_treinamentos():
             {
                 "turma_id": turma.id,
                 "treinamento": turma.treinamento.to_dict(),
-                "data_inicio": (
-                    turma.data_inicio.isoformat() if turma.data_inicio else None
-                ),
-                "data_fim": (
-                    turma.data_fim.isoformat() if turma.data_fim else None
-                ),
+                "data_inicio": turma.data_inicio.isoformat() if turma.data_inicio else None,
+                "data_fim": turma.data_fim.isoformat() if turma.data_fim else None,
                 "local_realizacao": turma.local_realizacao,
                 "horario": turma.horario,
                 "instrutor": turma.instrutor.to_dict() if turma.instrutor else None,

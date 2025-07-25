@@ -147,7 +147,7 @@ async function enviarInscricaoAdmin() {
 // Carrega a lista de turmas na tabela, agora com lógica para desativar botões.
 async function carregarTurmas() {
     try {
-        const turmas = await chamarAPI('/treinamentos');
+        const turmas = await chamarAPI('/treinamentos/agendadas');
         const tbody = document.getElementById('turmasTableBody');
         if (!tbody) return;
         tbody.innerHTML = '';
@@ -156,15 +156,8 @@ async function carregarTurmas() {
             return;
         }
 
-        const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0);
-
         for (const t of turmas) {
             const tr = document.createElement('tr');
-            const dataInicio = new Date(t.data_inicio);
-            dataInicio.setHours(0, 0, 0, 0);
-            const turmaIniciada = dataInicio <= hoje;
-            const disabledAttr = turmaIniciada ? 'disabled title="Não é possível modificar uma turma em andamento ou encerrada."' : '';
 
             tr.innerHTML = `
                 <td>${t.turma_id}</td>
@@ -176,8 +169,8 @@ async function carregarTurmas() {
                         <i class="bi bi-person-plus"></i>
                     </button>
                     <a class="btn btn-sm btn-outline-info me-1" href="/treinamentos/admin-inscricoes.html?turma=${t.turma_id}" title="Ver Inscrições"><i class="bi bi-people"></i></a>
-                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editarTurma(${t.turma_id})" ${disabledAttr} title="Editar Turma"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusaoTurma(${t.turma_id})" ${disabledAttr} title="Excluir Turma"><i class="bi bi-trash"></i></button>
+                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editarTurma(${t.turma_id})" title="Editar Turma"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusaoTurma(${t.turma_id})" title="Excluir Turma"><i class="bi bi-trash"></i></button>
                 </td>`;
             tbody.appendChild(tr);
         }

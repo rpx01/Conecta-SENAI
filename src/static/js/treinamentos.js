@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 async function carregarTreinamentos() {
     try {
-        const turmas = await chamarAPI('/treinamentos');
+        const turmas = await chamarAPI('/treinamentos/agendadas');
         const container = document.getElementById('listaTreinamentos');
         if (!container) return;
 

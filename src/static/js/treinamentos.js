@@ -1,24 +1,21 @@
 // src/static/js/treinamentos.js
 
-// Armazena os dados do usuário logado para reutilização
+// Armazena os dados do usuário logado e suas inscrições
 let dadosUsuarioLogado = null;
+let minhasInscricoesIds = new Set();
 
 /**
  * Listener que é executado quando o conteúdo da página termina de carregar.
- * Ele verifica qual página está ativa e chama a função de carregamento correspondente.
  */
 document.addEventListener('DOMContentLoaded', () => {
-    // Verifica se estamos na página de Cursos Disponíveis
     if (document.getElementById('listaTreinamentos')) {
         carregarTreinamentos();
     }
-
-    // Verifica se estamos na página Meus Cursos
     if (document.getElementById('listaMeusCursos')) {
         carregarMeusCursos();
     }
 
-    // Adiciona o listener para o botão de submissão do modal de inscrição
+    // Listener para o botão de submissão do formulário de inscrição
     const btnEnviar = document.getElementById('btnEnviarInscricao');
     if (btnEnviar) {
         btnEnviar.addEventListener('click', () => {
@@ -31,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Adiciona o listener para o checkbox de "inscrever outro"
+    // Listener para o checkbox de "inscrever outro"
     const checkInscreverOutro = document.getElementById('inscreverOutroCheck');
     if (checkInscreverOutro) {
         checkInscreverOutro.addEventListener('change', (e) => {
@@ -39,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Listener para o botão de inscrição própria
+    // Listener para o botão de inscrição própria no modal de seleção
     const btnParaMim = document.getElementById('btnInscreverParaMim');
     if (btnParaMim) {
         btnParaMim.addEventListener('click', async () => {
@@ -52,8 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const modalFormEl = document.getElementById('inscricaoModal');
             document.getElementById('turmaId').value = turmaId;
-
-            // Configura o formulário para inscrição própria
             document.getElementById('inscreverOutroCheck').checked = false;
             toggleFormularioExterno(false);
 
@@ -62,17 +57,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Listener para o botão de inscrição de terceiros
+    // Listener para o botão de inscrição de terceiros no modal de seleção
     const btnParaOutro = document.getElementById('btnInscreverParaOutro');
     if (btnParaOutro) {
         btnParaOutro.addEventListener('click', async () => {
             const turmaId = document.getElementById('selecaoInscricaoModal').dataset.turmaId;
             bootstrap.Modal.getInstance(document.getElementById('selecaoInscricaoModal')).hide();
-
+            
             const modalFormEl = document.getElementById('inscricaoModal');
             document.getElementById('turmaId').value = turmaId;
-
-            // Força a visualização para inscrição de terceiros
             document.getElementById('inscreverOutroCheck').checked = true;
             toggleFormularioExterno(true);
 
@@ -83,43 +76,50 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Carrega a lista de turmas disponíveis e as exibe na página.
+ * Carrega a lista de turmas disponíveis, verificando se o usuário já está inscrito.
  */
 async function carregarTreinamentos() {
+    const container = document.getElementById('listaTreinamentos');
     try {
-        const turmas = await chamarAPI('/treinamentos/agendadas');
-        const container = document.getElementById('listaTreinamentos');
-        if (!container) return;
+        // Passo 1: Carrega as inscrições do usuário primeiro
+        const minhasInscricoes = await chamarAPI('/treinamentos/minhas');
+        minhasInscricoesIds = new Set(minhasInscricoes.map(i => i.turma_id));
 
+        // Passo 2: Carrega todas as turmas agendadas
+        const turmas = await chamarAPI('/treinamentos/agendadas');
+        
         container.innerHTML = ''; // Limpa o spinner de carregamento
         if (turmas.length === 0) {
             container.innerHTML = '<p class="text-center">Nenhum curso disponível no momento.</p>';
             return;
         }
 
+        // Passo 3: Renderiza os cards, ajustando os botões
         turmas.forEach(t => {
+            const isInscrito = minhasInscricoesIds.has(t.turma_id);
+            const botaoHtml = isInscrito
+                ? `<button class="btn btn-success" disabled>INSCRITO</button>`
+                : `<button class="btn btn-primary" onclick="abrirModalInscricao(${t.turma_id})">INSCREVER-SE</button>`;
+
             const card = `
                 <div class="col-md-6 mb-4">
                     <div class="card h-100">
-                        <div class="card-body">
+                        <div class="card-body d-flex flex-column">
                             <h5 class="card-title">${escapeHTML(t.treinamento.nome)}</h5>
-                            <p class="card-text">${escapeHTML(t.treinamento.descricao || '')}</p>
+                            <p class="card-text flex-grow-1">${escapeHTML(t.treinamento.descricao || '')}</p>
                             <p class="card-text">
                                 <small class="text-muted">
                                     Início: ${formatarData(t.data_inicio)} - Fim: ${formatarData(t.data_fim)}
                                 </small>
                             </p>
-                            <button class="btn btn-primary" onclick="abrirModalInscricao(${t.turma_id})">
-                                INSCREVER-SE
-                            </button>
+                            ${botaoHtml}
                         </div>
                     </div>
                 </div>`;
-            container.innerHTML += card;
+            container.insertAdjacentHTML('beforeend', card);
         });
     } catch (e) {
         exibirAlerta(e.message, 'danger');
-        const container = document.getElementById('listaTreinamentos');
         if (container) container.innerHTML = '<p class="text-center text-danger">Falha ao carregar os cursos.</p>';
     }
 }
@@ -130,6 +130,9 @@ async function carregarTreinamentos() {
 async function carregarMeusCursos() {
     try {
         const cursos = await chamarAPI('/treinamentos/minhas');
+        // Atualiza o Set global para garantir consistência
+        minhasInscricoesIds = new Set(cursos.map(c => c.turma_id));
+        
         const ul = document.getElementById('listaMeusCursos');
         ul.innerHTML = ''; // Limpa o spinner
         if (cursos.length === 0) {
@@ -150,12 +153,17 @@ async function carregarMeusCursos() {
 }
 
 /**
- * Abre o modal inicial de seleção de tipo de inscrição.
- * @param {number} turmaId - O ID da turma para a qual a inscrição será feita.
+ * Abre o modal de seleção de tipo de inscrição, desabilitando o botão se já inscrito.
+ * @param {number} turmaId - O ID da turma.
  */
 async function abrirModalInscricao(turmaId) {
     const selecaoModalEl = document.getElementById('selecaoInscricaoModal');
-    selecaoModalEl.dataset.turmaId = turmaId; // Armazena o ID da turma no modal
+    selecaoModalEl.dataset.turmaId = turmaId;
+
+    // Verifica se o usuário já está inscrito nesta turma
+    const isInscrito = minhasInscricoesIds.has(turmaId);
+    const btnParaMim = document.getElementById('btnInscreverParaMim');
+    btnParaMim.disabled = isInscrito;
 
     const modal = new bootstrap.Modal(selecaoModalEl);
     modal.show();
@@ -174,14 +182,12 @@ function toggleFormularioExterno(isExterno) {
     const dataNascimentoInput = document.getElementById('dataNascimento');
 
     if (isExterno) {
-        // Limpa e habilita todos os campos para inscrição de terceiros
         form.reset();
         const inputs = form.querySelectorAll('input:not([type=hidden]):not([type=checkbox])');
         inputs.forEach(input => input.readOnly = false);
         dataNascimentoInput.type = 'date';
         nomeInput.focus();
     } else {
-        // Preenche os campos para inscrição própria e bloqueia apenas os que já têm dados
         if (dadosUsuarioLogado) {
             nomeInput.value = dadosUsuarioLogado.nome || '';
             nomeInput.readOnly = !!dadosUsuarioLogado.nome;
@@ -195,7 +201,6 @@ function toggleFormularioExterno(isExterno) {
             empresaInput.value = dadosUsuarioLogado.empresa || '';
             empresaInput.readOnly = !!dadosUsuarioLogado.empresa;
 
-            // Trata o campo de data de nascimento de forma especial
             if (dadosUsuarioLogado.data_nascimento) {
                 dataNascimentoInput.type = 'text';
                 dataNascimentoInput.value = formatarData(dadosUsuarioLogado.data_nascimento);
@@ -232,6 +237,8 @@ async function enviarInscricaoPropria() {
         exibirAlerta('Inscrição realizada com sucesso!', 'success');
         bootstrap.Modal.getInstance(document.getElementById('inscricaoModal')).hide();
 
+        // Atualiza a visualização para refletir a nova inscrição
+        await carregarTreinamentos();
         if (document.getElementById('listaMeusCursos')) {
             carregarMeusCursos();
         }
@@ -239,7 +246,6 @@ async function enviarInscricaoPropria() {
         exibirAlerta(e.message, 'danger');
     }
 }
-
 
 /**
  * Envia a requisição para inscrever um participante externo.

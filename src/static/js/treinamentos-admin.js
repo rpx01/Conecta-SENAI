@@ -3,6 +3,8 @@
 // Armazena a lista de treinamentos e instrutores para não ter que recarregar
 let catalogoDeTreinamentos = [];
 let listaDeInstrutores = [];
+let turmaParaExcluirId = null;
+let confirmacaoModal;
 
 // Função para limpar e abrir o modal de Treinamento (Catálogo)
 function novoTreinamento() {
@@ -137,7 +139,7 @@ async function enviarInscricaoAdmin() {
     });
 }
 
-// Carrega a lista de turmas na tabela
+// Carrega a lista de turmas na tabela, agora com lógica para desativar botões.
 async function carregarTurmas() {
     try {
         const turmas = await chamarAPI('/treinamentos');
@@ -145,27 +147,54 @@ async function carregarTurmas() {
         if (!tbody) return;
         tbody.innerHTML = '';
         if (turmas.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhuma turma cadastrada.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhuma turma cadastrada.</td></tr>';
             return;
         }
+
+        const hoje = new Date().toISOString().split('T')[0];
+
         for (const t of turmas) {
             const tr = document.createElement('tr');
+            const turmaIniciada = t.data_inicio <= hoje;
+            const disabledAttr = turmaIniciada ? 'disabled title="Não é possível modificar uma turma em andamento ou encerrada."' : '';
+
             tr.innerHTML = `
                 <td>${t.turma_id}</td>
                 <td>${escapeHTML(t.treinamento.nome)}</td>
                 <td>${formatarData(t.data_inicio)}</td>
                 <td>${formatarData(t.data_fim)}</td>
                 <td>
-                    <button class="btn btn-sm btn-outline-success me-1" onclick="abrirModalInscricaoAdmin(${t.turma_id})" title="Adicionar Participante">
-                        <i class="bi bi-person-plus"></i>
-                    </button>
                     <a class="btn btn-sm btn-outline-info me-1" href="/treinamentos/admin-inscricoes.html?turma=${t.turma_id}" title="Ver Inscrições"><i class="bi bi-people"></i></a>
-                    <button class="btn btn-sm btn-outline-primary" onclick="editarTurma(${t.turma_id})" title="Editar Turma"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editarTurma(${t.turma_id})" ${disabledAttr} title="Editar Turma"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusaoTurma(${t.turma_id})" ${disabledAttr} title="Excluir Turma"><i class="bi bi-trash"></i></button>
                 </td>`;
             tbody.appendChild(tr);
         }
     } catch (e) {
         exibirAlerta(e.message, 'danger');
+    }
+}
+
+function confirmarExclusaoTurma(id) {
+    turmaParaExcluirId = id;
+    if (confirmacaoModal) {
+        confirmacaoModal.show();
+    }
+}
+
+async function executarExclusao() {
+    if (!turmaParaExcluirId) return;
+    try {
+        await chamarAPI(`/treinamentos/turmas/${turmaParaExcluirId}`, 'DELETE');
+        exibirAlerta('Turma excluída com sucesso!', 'success');
+        carregarTurmas();
+    } catch (e) {
+        exibirAlerta(`Erro ao excluir: ${e.message}`, 'danger');
+    } finally {
+        if (confirmacaoModal) {
+            confirmacaoModal.hide();
+        }
+        turmaParaExcluirId = null;
     }
 }
 
@@ -432,6 +461,12 @@ async function salvarAlteracoesInscricoes() {
 document.addEventListener('DOMContentLoaded', () => {
     verificarAutenticacao();
     verificarPermissaoAdmin();
+
+    const modalEl = document.getElementById('confirmacaoExcluirModal');
+    if (modalEl) {
+        confirmacaoModal = new bootstrap.Modal(modalEl);
+        document.getElementById('btnConfirmarExclusao').addEventListener('click', executarExclusao);
+    }
     if (document.getElementById('catalogoTableBody')) {
         carregarCatalogo();
     }

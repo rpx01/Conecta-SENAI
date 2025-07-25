@@ -4,6 +4,7 @@ from flask import Blueprint, request, jsonify, g
 from sqlalchemy.exc import SQLAlchemyError
 import math
 from datetime import timedelta
+from datetime import date
 
 from src.models import db, Treinamento, TurmaTreinamento, InscricaoTreinamento
 from src.models.instrutor import Instrutor
@@ -284,6 +285,9 @@ def atualizar_turma_treinamento(turma_id):
     turma = db.session.get(TurmaTreinamento, turma_id)
     if not turma:
         return jsonify({"erro": "Turma não encontrada"}), 404
+
+    if turma.data_inicio <= date.today():
+        return jsonify({"erro": "Não é possível modificar uma turma que já iniciou ou foi concluída."}), 403
     data = request.json or {}
     try:
         payload = TurmaTreinamentoUpdateSchema(**data)
@@ -331,7 +335,11 @@ def remover_turma_treinamento(turma_id):
     turma = db.session.get(TurmaTreinamento, turma_id)
     if not turma:
         return jsonify({"erro": "Turma não encontrada"}), 404
+
+    if turma.data_inicio <= date.today():
+        return jsonify({"erro": "Não é possível excluir uma turma que já iniciou ou foi concluída."}), 403
     try:
+        InscricaoTreinamento.query.filter_by(turma_id=turma_id).delete()
         db.session.delete(turma)
         db.session.commit()
         return jsonify({"mensagem": "Turma removida com sucesso"})

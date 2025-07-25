@@ -56,6 +56,7 @@ async function carregarTreinamentos() {
         }
 
         turmas.forEach(t => {
+            // CORREÇÃO: Usar t.data_fim em vez de t.data_termino
             const card = `
                 <div class="col-md-6 mb-4">
                     <div class="card h-100">
@@ -107,10 +108,6 @@ async function carregarMeusCursos() {
     }
 }
 
-/**
- * Abre o modal de inscrição, pré-preenchendo com dados do usuário logado.
- * @param {number} turmaId - O ID da turma para a qual a inscrição será feita.
- */
 async function abrirModalInscricao(turmaId) {
     try {
         if (!dadosUsuarioLogado) {
@@ -130,10 +127,6 @@ async function abrirModalInscricao(turmaId) {
     }
 }
 
-/**
- * Alterna o estado do formulário de inscrição entre "para mim" e "para outro".
- * @param {boolean} isExterno - True se a inscrição for para outra pessoa.
- */
 function toggleFormularioExterno(isExterno) {
     const form = document.getElementById('inscricaoForm');
     const inputs = form.querySelectorAll('input:not([type=hidden]):not([type=checkbox])');
@@ -160,13 +153,9 @@ function toggleFormularioExterno(isExterno) {
     }
 }
 
-/**
- * Envia a inscrição para o próprio usuário logado.
- */
 async function enviarInscricao() {
     const turmaId = document.getElementById('turmaId').value;
     try {
-        // Para auto-inscrição, o corpo pode ser vazio, pois o backend usa o usuário da sessão.
         await chamarAPI(`/treinamentos/${turmaId}/inscricoes`, 'POST', {});
         exibirAlerta('Inscrição realizada com sucesso!', 'success');
         bootstrap.Modal.getInstance(document.getElementById('inscricaoModal')).hide();
@@ -175,9 +164,6 @@ async function enviarInscricao() {
     }
 }
 
-/**
- * Envia a inscrição para um participante externo.
- */
 async function enviarInscricaoExterna() {
     const turmaId = document.getElementById('turmaId').value;
     const body = {

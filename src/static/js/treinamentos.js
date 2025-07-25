@@ -9,7 +9,7 @@ let dadosUsuarioLogado = null;
  */
 document.addEventListener('DOMContentLoaded', () => {
     // Verifica se estamos na página de Cursos Disponíveis
-    if (document.getElementById('cursosContainer')) {
+    if (document.getElementById('listaTreinamentos')) {
         carregarTreinamentos();
     }
 
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function carregarTreinamentos() {
     try {
         const turmas = await chamarAPI('/treinamentos');
-        const container = document.getElementById('cursosContainer');
+        const container = document.getElementById('listaTreinamentos');
         if (!container) return;
 
         container.innerHTML = ''; // Limpa o spinner de carregamento
@@ -78,7 +78,7 @@ async function carregarTreinamentos() {
         });
     } catch (e) {
         exibirAlerta(e.message, 'danger');
-        const container = document.getElementById('cursosContainer');
+        const container = document.getElementById('listaTreinamentos');
         if (container) container.innerHTML = '<p class="text-center text-danger">Falha ao carregar os cursos.</p>';
     }
 }

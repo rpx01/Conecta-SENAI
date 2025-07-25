@@ -198,6 +198,7 @@ async function executarExclusao() {
     const modal = modalEl ? bootstrap.Modal.getOrCreateInstance(modalEl) : null;
 
     try {
+        // CORREÇÃO APLICADA AQUI
         await chamarAPI(`/treinamentos/turmas/${turmaParaExcluirId}`, 'DELETE');
         exibirAlerta('Turma excluída com sucesso!', 'success');
         carregarTurmas();
@@ -210,6 +211,7 @@ async function executarExclusao() {
         turmaParaExcluirId = null;
     }
 }
+
 
 // Carrega instrutores para o select
 async function carregarInstrutores() {

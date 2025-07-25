@@ -105,9 +105,14 @@ async function excluirTreinamento(id) {
  * @param {number} turmaId - O ID da turma onde o participante será inscrito.
  */
 function abrirModalInscricaoAdmin(turmaId) {
+    const modalEl = document.getElementById('adminInscricaoModal');
+    if (!modalEl) {
+        console.error('O modal de inscrição não foi encontrado na página.');
+        return;
+    }
     document.getElementById('adminInscricaoForm').reset();
     document.getElementById('adminTurmaId').value = turmaId;
-    const modal = new bootstrap.Modal(document.getElementById('adminInscricaoModal'));
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
     modal.show();
 }
 
@@ -182,7 +187,6 @@ function confirmarExclusaoTurma(id) {
     turmaParaExcluirId = id;
     const modalEl = document.getElementById('confirmacaoExcluirModal');
     if (modalEl) {
-        // Usa getOrCreateInstance para garantir que o modal seja sempre acessível
         const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
         modal.show();
     }
@@ -190,21 +194,20 @@ function confirmarExclusaoTurma(id) {
 
 async function executarExclusao() {
     if (!turmaParaExcluirId) return;
-
     const modalEl = document.getElementById('confirmacaoExcluirModal');
     const modal = modalEl ? bootstrap.Modal.getOrCreateInstance(modalEl) : null;
 
     try {
         await chamarAPI(`/treinamentos/turmas/${turmaParaExcluirId}`, 'DELETE');
         exibirAlerta('Turma excluída com sucesso!', 'success');
-        carregarTurmas(); // Recarrega a lista de turmas
+        carregarTurmas();
     } catch (e) {
         exibirAlerta(`Erro ao excluir: ${e.message}`, 'danger');
     } finally {
         if (modal) {
             modal.hide();
         }
-        turmaParaExcluirId = null; // Limpa o ID após a operação
+        turmaParaExcluirId = null;
     }
 }
 

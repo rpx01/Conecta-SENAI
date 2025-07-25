@@ -182,6 +182,7 @@ function confirmarExclusaoTurma(id) {
     turmaParaExcluirId = id;
     const modalEl = document.getElementById('confirmacaoExcluirModal');
     if (modalEl) {
+        // Usa getOrCreateInstance para garantir que o modal seja sempre acessível
         const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
         modal.show();
     }
@@ -189,20 +190,21 @@ function confirmarExclusaoTurma(id) {
 
 async function executarExclusao() {
     if (!turmaParaExcluirId) return;
+
     const modalEl = document.getElementById('confirmacaoExcluirModal');
     const modal = modalEl ? bootstrap.Modal.getOrCreateInstance(modalEl) : null;
 
     try {
         await chamarAPI(`/treinamentos/turmas/${turmaParaExcluirId}`, 'DELETE');
         exibirAlerta('Turma excluída com sucesso!', 'success');
-        carregarTurmas();
+        carregarTurmas(); // Recarrega a lista de turmas
     } catch (e) {
         exibirAlerta(`Erro ao excluir: ${e.message}`, 'danger');
     } finally {
         if (modal) {
             modal.hide();
         }
-        turmaParaExcluirId = null;
+        turmaParaExcluirId = null; // Limpa o ID após a operação
     }
 }
 

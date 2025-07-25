@@ -22,8 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnEnviar = document.getElementById('btnEnviarInscricao');
     if (btnEnviar) {
         btnEnviar.addEventListener('click', () => {
-            // O formulário é utilizado apenas para inscrição de terceiros
-            enviarInscricaoExterna();
+            const isExterno = document.getElementById('inscreverOutroCheck').checked;
+            if (isExterno) {
+                enviarInscricaoExterna();
+            } else {
+                enviarInscricaoPropria();
+            }
         });
     }
 
@@ -38,12 +42,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listener para o botão de inscrição própria
     const btnParaMim = document.getElementById('btnInscreverParaMim');
     if (btnParaMim) {
-        btnParaMim.addEventListener('click', () => {
+        btnParaMim.addEventListener('click', async () => {
             const turmaId = document.getElementById('selecaoInscricaoModal').dataset.turmaId;
-            // Fecha o modal de seleção antes de enviar
             bootstrap.Modal.getInstance(document.getElementById('selecaoInscricaoModal')).hide();
-            // Envia a inscrição
-            enviarInscricao(turmaId);
+
+            if (!dadosUsuarioLogado) {
+                dadosUsuarioLogado = await getUsuarioLogado();
+            }
+
+            const modalFormEl = document.getElementById('inscricaoModal');
+            document.getElementById('turmaId').value = turmaId;
+
+            // Configura o formulário para inscrição própria
+            document.getElementById('inscreverOutroCheck').checked = false;
+            toggleFormularioExterno(false);
+
+            const modalForm = new bootstrap.Modal(modalFormEl);
+            modalForm.show();
         });
     }
 
@@ -52,13 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnParaOutro) {
         btnParaOutro.addEventListener('click', async () => {
             const turmaId = document.getElementById('selecaoInscricaoModal').dataset.turmaId;
-
-            // Esconde o modal de seleção e abre o de formulário
             bootstrap.Modal.getInstance(document.getElementById('selecaoInscricaoModal')).hide();
 
-            if (!dadosUsuarioLogado) {
-                dadosUsuarioLogado = await getUsuarioLogado();
-            }
             const modalFormEl = document.getElementById('inscricaoModal');
             document.getElementById('turmaId').value = turmaId;
 
@@ -151,55 +161,89 @@ async function abrirModalInscricao(turmaId) {
     modal.show();
 }
 
+/**
+ * Alterna a visibilidade e o estado do formulário de inscrição.
+ * @param {boolean} isExterno - True se a inscrição for para outra pessoa.
+ */
 function toggleFormularioExterno(isExterno) {
     const form = document.getElementById('inscricaoForm');
-    const inputs = form.querySelectorAll('input:not([type=hidden]):not([type=checkbox])');
+    const nomeInput = document.getElementById('nome');
+    const emailInput = document.getElementById('email');
+    const cpfInput = document.getElementById('cpf');
+    const empresaInput = document.getElementById('empresa');
+    const dataNascimentoInput = document.getElementById('dataNascimento');
 
     if (isExterno) {
-        inputs.forEach(input => {
-            input.readOnly = false;
-            input.value = '';
-        });
-        document.getElementById('dataNascimento').type = 'date';
-        document.getElementById('nome').focus();
+        // Limpa e habilita todos os campos para inscrição de terceiros
+        form.reset();
+        const inputs = form.querySelectorAll('input:not([type=hidden]):not([type=checkbox])');
+        inputs.forEach(input => input.readOnly = false);
+        dataNascimentoInput.type = 'date';
+        nomeInput.focus();
     } else {
+        // Preenche os campos para inscrição própria e bloqueia apenas os que já têm dados
         if (dadosUsuarioLogado) {
-            document.getElementById('nome').value = dadosUsuarioLogado.nome;
-            document.getElementById('email').value = dadosUsuarioLogado.email;
-            document.getElementById('cpf').value = dadosUsuarioLogado.cpf || '';
-            document.getElementById('dataNascimento').type = 'text';
-            document.getElementById('dataNascimento').value = formatarData(dadosUsuarioLogado.data_nascimento);
-            document.getElementById('empresa').value = dadosUsuarioLogado.empresa || '';
+            nomeInput.value = dadosUsuarioLogado.nome || '';
+            nomeInput.readOnly = !!dadosUsuarioLogado.nome;
+
+            emailInput.value = dadosUsuarioLogado.email || '';
+            emailInput.readOnly = !!dadosUsuarioLogado.email;
+
+            cpfInput.value = dadosUsuarioLogado.cpf || '';
+            cpfInput.readOnly = !!dadosUsuarioLogado.cpf;
+
+            empresaInput.value = dadosUsuarioLogado.empresa || '';
+            empresaInput.readOnly = !!dadosUsuarioLogado.empresa;
+
+            // Trata o campo de data de nascimento de forma especial
+            if (dadosUsuarioLogado.data_nascimento) {
+                dataNascimentoInput.type = 'text';
+                dataNascimentoInput.value = formatarData(dadosUsuarioLogado.data_nascimento);
+                dataNascimentoInput.readOnly = true;
+            } else {
+                dataNascimentoInput.type = 'date';
+                dataNascimentoInput.value = '';
+                dataNascimentoInput.readOnly = false;
+            }
         }
-        inputs.forEach(input => {
-            input.readOnly = true;
-        });
     }
 }
 
 /**
- * Envia a requisição para inscrever o próprio usuário logado.
- * @param {number} turmaId - O ID da turma.
+ * Envia a requisição para inscrever o próprio usuário, usando os dados do formulário.
  */
-async function enviarInscricao(turmaId) {
-    if (!turmaId) {
-        exibirAlerta('ID da turma não encontrado.', 'danger');
+async function enviarInscricaoPropria() {
+    const turmaId = document.getElementById('turmaId').value;
+    const body = {
+        nome: document.getElementById('nome').value,
+        email: document.getElementById('email').value,
+        cpf: document.getElementById('cpf').value,
+        data_nascimento: document.getElementById('dataNascimento').value,
+        empresa: document.getElementById('empresa').value,
+    };
+
+    if (!body.nome || !body.email || !body.cpf || !body.data_nascimento) {
+        exibirAlerta('Nome, Email, CPF e Data de Nascimento são obrigatórios.', 'warning');
         return;
     }
+
     try {
-        await chamarAPI(`/treinamentos/${turmaId}/inscricoes`, 'POST', {});
+        await chamarAPI(`/treinamentos/${turmaId}/inscricoes`, 'POST', body);
         exibirAlerta('Inscrição realizada com sucesso!', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('inscricaoModal')).hide();
+
         if (document.getElementById('listaMeusCursos')) {
             carregarMeusCursos();
         }
-        
-        // CORREÇÃO: A linha que tentava fechar o modal errado foi removida.
-        // O modal de seleção já é fechado pelo evento de clique no botão.
     } catch (e) {
         exibirAlerta(e.message, 'danger');
     }
 }
 
+
+/**
+ * Envia a requisição para inscrever um participante externo.
+ */
 async function enviarInscricaoExterna() {
     const turmaId = document.getElementById('turmaId').value;
     const body = {

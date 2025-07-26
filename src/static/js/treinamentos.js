@@ -128,28 +128,94 @@ async function carregarTreinamentos() {
  * Carrega os cursos em que o usuário está inscrito.
  */
 async function carregarMeusCursos() {
+    const container = document.getElementById('listaMeusCursos');
+    if (!container) return;
+
     try {
         const cursos = await chamarAPI('/treinamentos/minhas');
-        // Atualiza o Set global para garantir consistência
         minhasInscricoesIds = new Set(cursos.map(c => c.turma_id));
-        
-        const ul = document.getElementById('listaMeusCursos');
-        ul.innerHTML = ''; // Limpa o spinner
+
+        container.innerHTML = '';
         if (cursos.length === 0) {
-            ul.innerHTML = '<li class="list-group-item text-center">Você não está inscrito em nenhum curso.</li>';
+            container.innerHTML = '<div class="col-12"><p class="text-center">Você não está inscrito em nenhum curso.</p></div>';
             return;
         }
+
         cursos.forEach(c => {
-            const li = document.createElement('li');
-            li.className = 'list-group-item';
-            li.textContent = `${c.treinamento.nome} - Início em ${formatarData(c.data_inicio)}`;
-            ul.appendChild(li);
+            const hoje = new Date();
+            const dataInicio = new Date(c.data_inicio);
+            const dataFim = new Date(c.data_fim);
+
+            let status = '';
+            let statusText = '';
+            let progresso = 0;
+
+            if (hoje > dataFim) {
+                status = 'concluido';
+                statusText = 'Concluído';
+                progresso = 100;
+            } else if (hoje >= dataInicio && hoje <= dataFim) {
+                status = 'em-andamento';
+                statusText = 'Em Andamento';
+                const totalDias = (dataFim - dataInicio) / (1000 * 60 * 60 * 24);
+                const diasPassados = (hoje - dataInicio) / (1000 * 60 * 60 * 24);
+                progresso = Math.round((diasPassados / totalDias) * 100);
+            } else {
+                status = 'futuro';
+                statusText = 'Em Breve';
+                progresso = 0;
+            }
+
+            const cardHtml = `
+                <div class="col-md-6 mb-4">
+                    <div class="card curso-card status-${status}" onclick="toggleDetalhes(this)">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">${escapeHTML(c.treinamento.nome)}</h5>
+                                <span class="selo-status status-${status}">${statusText}</span>
+                            </div>
+                            <p class="card-text mt-2"><small class="text-muted">De ${formatarData(c.data_inicio)} a ${formatarData(c.data_fim)}</small></p>
+                            
+                            <div class="progress mt-3" style="height: 10px;">
+                                <div class="progress-bar" role="progressbar" style="width: ${progresso}%;" aria-valuenow="${progresso}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+
+                            <div class="text-center mt-3">
+                                <i class="bi bi-chevron-down"></i>
+                            </div>
+
+                            <div class="curso-detalhes">
+                                <hr>
+                                <h6>Descrição Completa</h6>
+                                <p>${escapeHTML(c.treinamento.descricao || 'Nenhuma descrição disponível.')}</p>
+                                
+                                <h6>Instrutor</h6>
+                                <p>${escapeHTML(c.instrutor ? c.instrutor.nome : 'A definir')}</p>
+                                
+                                <h6>Conteúdo Programático</h6>
+                                <p>${escapeHTML(c.treinamento.conteudo_programatico || 'Nenhum conteúdo disponível.')}</p>
+                                
+                                <h6>Materiais e Links</h6>
+                                <ul class="lista-materiais">
+                                    ${(c.treinamento.links_materiais || []).map(link => `
+                                        <li><a href="${link}" target="_blank"><i class="bi bi-link-45deg"></i> Material de Apoio</a></li>
+                                    `).join('') || '<li>Nenhum material disponível.</li>'}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', cardHtml);
         });
     } catch(e) {
         exibirAlerta(e.message, 'danger');
-        const ul = document.getElementById('listaMeusCursos');
-        if (ul) ul.innerHTML = '<li class="list-group-item text-center text-danger">Falha ao carregar seus cursos.</li>';
+        if (container) container.innerHTML = '<div class="col-12"><p class="text-center text-danger">Falha ao carregar seus cursos.</p></div>';
     }
+}
+
+function toggleDetalhes(cardElement) {
+    cardElement.classList.toggle('expandido');
 }
 
 /**

@@ -1101,3 +1101,68 @@ input, select, textarea {
     display: none !important;
 }
 
+/* Estilos para a nova página "Meus Cursos" */
+.curso-card {
+    border-left-width: 5px;
+    border-left-style: solid;
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+}
+
+.curso-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.curso-card.status-concluido { border-color: var(--success-color); }
+.curso-card.status-em-andamento { border-color: var(--primary-color); }
+.curso-card.status-futuro { border-color: var(--warning-color); }
+
+.selo-status {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.3em 0.6em;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.selo-status.status-concluido { background-color: var(--success-color); color: white; }
+.selo-status.status-em-andamento { background-color: var(--primary-color); color: white; }
+.selo-status.status-futuro { background-color: var(--warning-color); color: #333; }
+
+.curso-detalhes {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.curso-card.expandido .curso-detalhes {
+    max-height: 1000px;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.curso-card.expandido .bi-chevron-down {
+    transform: rotate(180deg);
+}
+
+.curso-detalhes h6 {
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-top: 1rem;
+}
+
+.lista-materiais {
+    list-style: none;
+    padding-left: 0;
+}
+
+.lista-materiais li a {
+    text-decoration: none;
+}
+
+.lista-materiais i {
+    margin-right: 8px;
+}

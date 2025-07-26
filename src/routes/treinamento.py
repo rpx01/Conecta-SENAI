@@ -493,7 +493,7 @@ def exportar_inscricoes(turma_id):
     if not turma:
         return jsonify({"erro": "Turma não encontrada"}), 404
 
-    formato = request.args.get("formato", "csv").lower()
+    formato = request.args.get("formato", "xlsx").lower()
     inscricoes = (
         InscricaoTreinamento.query.filter_by(turma_id=turma_id)
         .order_by(InscricaoTreinamento.nome)
@@ -607,18 +607,19 @@ def exportar_inscricoes(turma_id):
             ws.merge_cells(f'B{current_row}:I{current_row}')
 
         # Lado direito
-        ws.merge_cells('B6:F6'); ws.merge_cells('G6:I6')
-        ws.merge_cells('B7:F7'); ws.merge_cells('G7:I7')
-        ws.merge_cells('B8:F8'); ws.merge_cells('G8:I8')
+        ws['G6'].value = "Período:"
+        ws['H6'].value = dados_treinamento_lado_direito["Período:"]
+        ws['G7'].value = "Duração:"
+        ws['H7'].value = dados_treinamento_lado_direito["Duração:"]
+        ws['G8'].value = "Horário:"
+        ws['H8'].value = dados_treinamento_lado_direito["Horário:"]
 
-        ws['G6'].value = "Período:"; ws['H6'].value = dados_treinamento_lado_direito["Período:"]
-        ws['G7'].value = "Duração:"; ws['H7'].value = dados_treinamento_lado_direito["Duração:"]
-        ws['G8'].value = "Horário:"; ws['H8'].value = dados_treinamento_lado_direito["Horário:"]
-
-        ws.unmerge_cells('B6:I6'); ws.merge_cells('B6:F6')
-        ws.unmerge_cells('B7:I7'); ws.merge_cells('B7:F7')
-        ws.unmerge_cells('B8:I8'); ws.merge_cells('B8:F8')
-        ws.merge_cells('H6:I6'); ws.merge_cells('H7:I7'); ws.merge_cells('H8:I8')
+        ws.merge_cells('B6:F6')
+        ws.merge_cells('B7:F7')
+        ws.merge_cells('B8:F8')
+        ws.merge_cells('H6:I6')
+        ws.merge_cells('H7:I7')
+        ws.merge_cells('H8:I8')
 
         for cell_label, cell_value in [('G6','H6'), ('G7','H7'), ('G8','H8')]:
             ws[cell_label].fill = fill_azul
@@ -879,6 +880,8 @@ def exportar_inscricoes(turma_id):
             as_attachment=True,
             download_name=f"{nome_arquivo_final}.pdf",
         )
+
+    return jsonify({"erro": "Formato inválido"}), 400
 
 
 @treinamento_bp.route("/treinamentos/turmas/<int:turma_id>", methods=["GET"])

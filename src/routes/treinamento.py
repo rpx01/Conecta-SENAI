@@ -594,17 +594,20 @@ def exportar_inscricoes(turma_id):
         # Preencher dados
         for i, (label, value) in enumerate(dados_treinamento.items()):
             current_row = row_idx + i
-            label_cell = ws[f'A{current_row}']
+            label_cell = ws[f"A{current_row}"]
             label_cell.value = label
             label_cell.fill = fill_azul
             label_cell.font = font_white_bold
-            label_cell.alignment = Alignment(vertical='top')
+            label_cell.alignment = Alignment(vertical="top")
 
-            value_cell = ws[f'B{current_row}']
+            value_cell = ws[f"B{current_row}"]
             value_cell.value = value
-            value_cell.alignment = Alignment(vertical='top', wrap_text=True)
+            value_cell.alignment = Alignment(vertical="top", wrap_text=True)
 
-            ws.merge_cells(f'B{current_row}:I{current_row}')
+            if label in ["Instituição:", "Local de Realização:", "Instrutor(es):"]:
+                ws.merge_cells(f"B{current_row}:F{current_row}")
+            else:
+                ws.merge_cells(f"B{current_row}:I{current_row}")
 
         # Lado direito
         ws['G6'].value = "Período:"

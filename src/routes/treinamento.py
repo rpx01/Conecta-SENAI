@@ -543,7 +543,7 @@ def exportar_inscricoes(turma_id):
 
         # --- Cabeçalho ---
         ws.merge_cells('A1:B2')
-        ws.merge_cells('C1:I2')
+        ws.merge_cells('C1:J2')
 
         # Logo
         try:
@@ -587,7 +587,7 @@ def exportar_inscricoes(turma_id):
         }
 
         # Aplicar borda em toda a área da tabela de dados
-        for col in "ABCDEFGHI":
+        for col in "ABCDEFGHIJ":
             for row in range(row_idx, row_idx + 6):
                 ws[f"{col}{row}"].border = thin_border
 
@@ -633,22 +633,33 @@ def exportar_inscricoes(turma_id):
         row_idx += 7
 
         # --- Tabela de Participantes ---
-        ws.merge_cells(f'A{row_idx}:D{row_idx}')
+        ws.merge_cells(f'A{row_idx}:E{row_idx}')
         info_cell = ws[f'A{row_idx}']
         info_cell.value = "Informações dos participantes"
         info_cell.fill = fill_azul
         info_cell.font = font_white_bold
         info_cell.alignment = Alignment(horizontal='center', vertical='center')
 
-        ws.merge_cells(f'E{row_idx}:I{row_idx}')
-        rubrica_cell = ws[f'E{row_idx}']
+        ws.merge_cells(f'F{row_idx}:J{row_idx}')
+        rubrica_cell = ws[f'F{row_idx}']
         rubrica_cell.value = "Rubrica do participante conforme data de participação"
         rubrica_cell.fill = fill_azul
         rubrica_cell.font = font_white_bold
         rubrica_cell.alignment = Alignment(horizontal='center', vertical='center')
 
         row_idx += 1
-        headers = ["Nº", "CPF", "Nome do Participante", "Empresa", "TEORIA", "NOTA DA\nTEORIA", "PRÁTICA", "NOTA DA\nPRÁTICA", "APROVADO /\nREPROVADO"]
+        headers = [
+            "Nº",
+            "CPF",
+            "Data de Nascimento",
+            "Nome do Participante",
+            "Empresa",
+            "TEORIA",
+            "NOTA DA\nTEORIA",
+            "PRÁTICA",
+            "NOTA DA\nPRÁTICA",
+            "APROVADO /\nREPROVADO",
+        ]
         for col_idx, header in enumerate(headers, 1):
             cell = ws.cell(row=row_idx, column=col_idx, value=header)
             cell.fill = fill_azul
@@ -659,19 +670,24 @@ def exportar_inscricoes(turma_id):
         for i, inscricao in enumerate(inscricoes, 1):
             ws.cell(row=row_idx, column=1, value=i)
             ws.cell(row=row_idx, column=2, value=inscricao.cpf)
-            ws.cell(row=row_idx, column=3, value=inscricao.nome)
-            ws.cell(row=row_idx, column=4, value=inscricao.empresa)
+            ws.cell(
+                row=row_idx,
+                column=3,
+                value=inscricao.data_nascimento.strftime("%d/%m/%Y") if inscricao.data_nascimento else "",
+            )
+            ws.cell(row=row_idx, column=4, value=inscricao.nome)
+            ws.cell(row=row_idx, column=5, value=inscricao.empresa)
             row_idx += 1
 
         # Borda na tabela de participantes
-        for col in "ABCDEFGHI":
+        for col in "ABCDEFGHIJ":
             for row in range(row_idx - len(inscricoes) - 2, row_idx):
                  ws[f"{col}{row}"].border = thin_border
                  ws[f"{col}{row}"].alignment = Alignment(horizontal='center', vertical='center')
 
         # --- Observações e Assinatura ---
         row_idx += 1
-        ws.merge_cells(f'A{row_idx}:I{row_idx+2}')
+        ws.merge_cells(f'A{row_idx}:J{row_idx+2}')
         obs_cell = ws[f'A{row_idx}']
         obs_cell.value = "Observações:"
         obs_cell.font = font_bold
@@ -679,7 +695,7 @@ def exportar_inscricoes(turma_id):
         obs_cell.border = thin_border
 
         row_idx += 4
-        ws.merge_cells(f'A{row_idx}:I{row_idx+1}')
+        ws.merge_cells(f'A{row_idx}:J{row_idx+1}')
         ass_cell = ws[f'A{row_idx}']
         ass_cell.value = "Assinatura do(s) instrutor(es) / Responsável (eis):"
         ass_cell.font = font_bold
@@ -689,13 +705,14 @@ def exportar_inscricoes(turma_id):
         # --- Ajustar tamanho das colunas e linhas ---
         ws.column_dimensions['A'].width = 5
         ws.column_dimensions['B'].width = 18
-        ws.column_dimensions['C'].width = 35
-        ws.column_dimensions['D'].width = 20
-        ws.column_dimensions['E'].width = 10
+        ws.column_dimensions['C'].width = 15
+        ws.column_dimensions['D'].width = 35
+        ws.column_dimensions['E'].width = 20
         ws.column_dimensions['F'].width = 10
         ws.column_dimensions['G'].width = 10
         ws.column_dimensions['H'].width = 10
-        ws.column_dimensions['I'].width = 15
+        ws.column_dimensions['I'].width = 10
+        ws.column_dimensions['J'].width = 15
         ws.row_dimensions[9].height = 40
 
         # --- Salvar em buffer ---

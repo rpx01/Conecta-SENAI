@@ -46,6 +46,7 @@ async function carregarCatalogo() {
     }
 }
 
+
 // Salva um treinamento (novo ou existente)
 async function salvarTreinamento() {
     const id = document.getElementById('treinamentoId').value;
@@ -386,7 +387,7 @@ async function carregarInscricoes(turmaId) {
         const tbody = document.getElementById('inscricoesTableBody');
         tbody.innerHTML = '';
         if (inscricoes.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center">Nenhuma inscrição.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center">Nenhuma inscrição.</td></tr>';
             return;
         }
 
@@ -401,6 +402,14 @@ async function carregarInscricoes(turmaId) {
                 <td class="text-center">
                     <input class="form-check-input presenca-pratica-check" type="checkbox" ${i.presenca_pratica ? 'checked' : ''}>
                 </td>` : '';
+
+            const acoesHtml = `
+                <td>
+                    <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusaoParticipante(${i.id}, '${escapeHTML(i.nome)}')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
 
             tr.innerHTML = `
                 <td>${escapeHTML(i.nome)}</td>
@@ -423,11 +432,34 @@ async function carregarInscricoes(turmaId) {
                         <option value="Reprovado" ${statusReprovado}>Reprovado</option>
                     </select>
                 </td>
+                ${acoesHtml}
             `;
             tbody.appendChild(tr);
         }
     } catch (e) {
         exibirAlerta(e.message, 'danger');
+    }
+}
+
+// Função para confirmar e executar a exclusão do participante
+function confirmarExclusaoParticipante(inscricaoId, nome) {
+    if (confirm(`Tem a certeza de que deseja remover o participante "${nome}" da turma?`)) {
+        executarExclusaoParticipante(inscricaoId);
+    }
+}
+
+// Função que chama a API para excluir
+async function executarExclusaoParticipante(inscricaoId) {
+    try {
+        await chamarAPI(`/treinamentos/inscricoes/${inscricaoId}`, 'DELETE');
+        exibirAlerta('Participante removido com sucesso!', 'success');
+
+        const linhaParaRemover = document.querySelector(`#inscricoesTableBody tr[data-id='${inscricaoId}']`);
+        if (linhaParaRemover) {
+            linhaParaRemover.remove();
+        }
+    } catch (e) {
+        exibirAlerta(`Erro ao remover participante: ${e.message}`, 'danger');
     }
 }
 

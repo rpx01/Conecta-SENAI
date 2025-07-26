@@ -935,6 +935,23 @@ def avaliar_inscricao(inscricao_id):
         return handle_internal_error(e)
 
 
+@treinamento_bp.route("/treinamentos/inscricoes/<int:inscricao_id>", methods=["DELETE"])
+@admin_required
+def remover_inscricao(inscricao_id):
+    """Remove uma inscrição de uma turma."""
+    inscricao = db.session.get(InscricaoTreinamento, inscricao_id)
+    if not inscricao:
+        return jsonify({"erro": "Inscrição não encontrada"}), 404
+
+    try:
+        db.session.delete(inscricao)
+        db.session.commit()
+        return jsonify({"mensagem": "Inscrição removida com sucesso"}), 200
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return handle_internal_error(e)
+
+
 @treinamento_bp.route("/treinamentos/<int:turma_id>/inscricoes/externo", methods=["POST"])
 @login_required
 def create_inscricao_treinamento_externo(turma_id):

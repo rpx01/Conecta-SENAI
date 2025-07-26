@@ -813,10 +813,10 @@ def exportar_inscricoes(turma_id):
         ]
         
         dados_alunos = []
-        for idx, i in enumerate(inscricoes):
+        for idx, i in enumerate(inscricoes, 1):
             dados_alunos.append(
                 [
-                    str(idx + 1),
+                    str(idx),
                     i.cpf or "",
                     Paragraph(i.nome, style_normal),
                     i.empresa or "", "", "", "", "", ""

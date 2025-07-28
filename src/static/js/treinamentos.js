@@ -43,17 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const turmaId = document.getElementById('selecaoInscricaoModal').dataset.turmaId;
             bootstrap.Modal.getInstance(document.getElementById('selecaoInscricaoModal')).hide();
 
-            if (!dadosUsuarioLogado) {
-                dadosUsuarioLogado = await getUsuarioLogado();
-            }
-
-            const modalFormEl = document.getElementById('inscricaoModal');
-            document.getElementById('turmaId').value = turmaId;
-            document.getElementById('inscreverOutroCheck').checked = false;
-            toggleFormularioExterno(false);
-
-            const modalForm = new bootstrap.Modal(modalFormEl);
-            modalForm.show();
+            // Ação de inscrição direta para o usuário logado
+            enviarInscricaoPropria(turmaId);
         });
     }
 
@@ -98,7 +89,7 @@ async function carregarTreinamentos() {
         turmas.forEach(t => {
             const isInscrito = minhasInscricoesIds.has(t.turma_id);
             const botaoHtml = isInscrito
-                ? `<button class="btn btn-success" onclick="abrirModalInscricao(${t.turma_id})">INSCRITO</button>`
+                ? `<button class="btn btn-success" disabled>INSCRITO</button>`
                 : `<button class="btn btn-primary" onclick="abrirModalInscricao(${t.turma_id})">INSCREVER-SE</button>`;
 
             const card = `
@@ -106,7 +97,7 @@ async function carregarTreinamentos() {
                     <div class="card h-100">
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title">${escapeHTML(t.treinamento.nome)}</h5>
-                            <p class="card-text flex-grow-1">${escapeHTML(t.treinamento.descricao || '')}</p>
+                            <p class="card-text flex-grow-1">${escapeHTML(t.treinamento.conteudo_programatico || '')}</p>
                             <p class="card-text">
                                 <small class="text-muted">
                                     Início: ${formatarData(t.data_inicio)} - Fim: ${formatarData(t.data_fim)}
@@ -187,13 +178,10 @@ async function carregarMeusCursos() {
                             <div class="curso-detalhes">
                                 <hr>
                                 <h6>Descrição Completa</h6>
-                                <p>${escapeHTML(c.treinamento.descricao || 'Nenhuma descrição disponível.')}</p>
+                                <p>${escapeHTML(c.treinamento.conteudo_programatico || 'Nenhuma descrição disponível.')}</p>
                                 
                                 <h6>Instrutor</h6>
                                 <p>${escapeHTML(c.instrutor ? c.instrutor.nome : 'A definir')}</p>
-                                
-                                <h6>Conteúdo Programático</h6>
-                                <p>${escapeHTML(c.treinamento.conteudo_programatico || 'Nenhum conteúdo disponível.')}</p>
                                 
                                 <h6>Materiais e Links</h6>
                                 <ul class="lista-materiais">
@@ -219,18 +207,12 @@ function toggleDetalhes(cardElement) {
 }
 
 /**
- * Abre o modal de seleção de tipo de inscrição, desabilitando o botão se já inscrito.
+ * Abre o modal de seleção de tipo de inscrição.
  * @param {number} turmaId - O ID da turma.
  */
 async function abrirModalInscricao(turmaId) {
     const selecaoModalEl = document.getElementById('selecaoInscricaoModal');
     selecaoModalEl.dataset.turmaId = turmaId;
-
-    // Verifica se o usuário já está inscrito nesta turma
-    const isInscrito = minhasInscricoesIds.has(turmaId);
-    const btnParaMim = document.getElementById('btnInscreverParaMim');
-    btnParaMim.disabled = isInscrito;
-
     const modal = new bootstrap.Modal(selecaoModalEl);
     modal.show();
 }
@@ -241,69 +223,36 @@ async function abrirModalInscricao(turmaId) {
  */
 function toggleFormularioExterno(isExterno) {
     const form = document.getElementById('inscricaoForm');
-    const nomeInput = document.getElementById('nome');
-    const emailInput = document.getElementById('email');
-    const cpfInput = document.getElementById('cpf');
-    const empresaInput = document.getElementById('empresa');
-    const dataNascimentoInput = document.getElementById('dataNascimento');
-
+    const inputs = form.querySelectorAll('input:not([type=hidden]):not([type=checkbox])');
+    
     if (isExterno) {
         form.reset();
-        const inputs = form.querySelectorAll('input:not([type=hidden]):not([type=checkbox])');
         inputs.forEach(input => input.readOnly = false);
-        dataNascimentoInput.type = 'date';
-        nomeInput.focus();
-    } else {
-        if (dadosUsuarioLogado) {
-            nomeInput.value = dadosUsuarioLogado.nome || '';
-            nomeInput.readOnly = !!dadosUsuarioLogado.nome;
-
-            emailInput.value = dadosUsuarioLogado.email || '';
-            emailInput.readOnly = !!dadosUsuarioLogado.email;
-
-            cpfInput.value = dadosUsuarioLogado.cpf || '';
-            cpfInput.readOnly = !!dadosUsuarioLogado.cpf;
-
-            empresaInput.value = dadosUsuarioLogado.empresa || '';
-            empresaInput.readOnly = !!dadosUsuarioLogado.empresa;
-
-            if (dadosUsuarioLogado.data_nascimento) {
-                dataNascimentoInput.type = 'text';
-                dataNascimentoInput.value = formatarData(dadosUsuarioLogado.data_nascimento);
-                dataNascimentoInput.readOnly = true;
-            } else {
-                dataNascimentoInput.type = 'date';
-                dataNascimentoInput.value = '';
-                dataNascimentoInput.readOnly = false;
-            }
-        }
+        document.getElementById('dataNascimento').type = 'date';
+        document.getElementById('nome').focus();
     }
 }
 
 /**
- * Envia a requisição para inscrever o próprio usuário, usando os dados do formulário.
+ * Envia a requisição para inscrever o próprio usuário.
  */
-async function enviarInscricaoPropria() {
-    const turmaId = document.getElementById('turmaId').value;
-    const body = {
-        nome: document.getElementById('nome').value,
-        email: document.getElementById('email').value,
-        cpf: document.getElementById('cpf').value,
-        data_nascimento: document.getElementById('dataNascimento').value,
-        empresa: document.getElementById('empresa').value,
-    };
-
-    if (!body.nome || !body.email || !body.cpf || !body.data_nascimento) {
-        exibirAlerta('Nome, Email, CPF e Data de Nascimento são obrigatórios.', 'warning');
-        return;
+async function enviarInscricaoPropria(turmaId) {
+    if (!dadosUsuarioLogado) {
+        dadosUsuarioLogado = await getUsuarioLogado();
     }
+
+    const body = {
+        nome: dadosUsuarioLogado.nome,
+        email: dadosUsuarioLogado.email,
+        cpf: dadosUsuarioLogado.cpf,
+        data_nascimento: dadosUsuarioLogado.data_nascimento,
+        empresa: dadosUsuarioLogado.empresa,
+    };
 
     try {
         await chamarAPI(`/treinamentos/${turmaId}/inscricoes`, 'POST', body);
         exibirAlerta('Inscrição realizada com sucesso!', 'success');
-        bootstrap.Modal.getInstance(document.getElementById('inscricaoModal')).hide();
-
-        // Atualiza a visualização para refletir a nova inscrição
+        
         await carregarTreinamentos();
         if (document.getElementById('listaMeusCursos')) {
             carregarMeusCursos();

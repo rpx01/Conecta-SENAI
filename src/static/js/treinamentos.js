@@ -194,6 +194,15 @@ function toggleDetalhes(cardElement) {
  * @param {number} turmaId - O ID da turma.
  */
 async function abrirModalInscricao(turmaId) {
+    const btnParaMim = document.getElementById('btnInscreverParaMim');
+    if (btnParaMim) {
+        if (minhasInscricoesIds.has(turmaId)) {
+            btnParaMim.disabled = true;
+        } else {
+            btnParaMim.disabled = false;
+        }
+    }
+
     const selecaoModalEl = document.getElementById('selecaoInscricaoModal');
     selecaoModalEl.dataset.turmaId = turmaId;
     const modal = new bootstrap.Modal(selecaoModalEl);

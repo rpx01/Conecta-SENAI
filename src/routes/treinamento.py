@@ -75,7 +75,7 @@ def listar_turmas_agendadas():
                 "data_fim": turma.data_fim.isoformat() if turma.data_fim else None,
                 "local_realizacao": turma.local_realizacao,
                 "horario": turma.horario,
-                "instrutor": turma.instrutor.to_dict() if turma.instrutor else None,
+                "instrutor_nome": turma.instrutor.nome if turma.instrutor else "A definir",
             }
         )
     return jsonify(dados)

@@ -98,14 +98,13 @@ async function carregarTreinamentos() {
 
         turmas.forEach(t => {
             const isInscrito = minhasInscricoesIds.has(t.turma_id);
-            const botaoHtml = `<button class="btn ${isInscrito ? 'btn-success' : 'btn-primary'}" onclick="abrirModalInscricao(${t.turma_id})" ${isInscrito ? 'disabled' : ''}>${isInscrito ? '<i class="bi bi-check-circle-fill"></i> INSCRITO' : 'INSCREVER-SE'}</button>`;
+            const botaoHtml = `<button class="btn ${isInscrito ? 'btn-success' : 'btn-primary'}" onclick="abrirModalInscricao(${t.turma_id})">${isInscrito ? '<i class="bi bi-check-circle-fill"></i> INSCRITO' : 'INSCREVER-SE'}</button>`;
 
             const cardHtml = `
             <div class="col">
                 <div class="card h-100 curso-card-disponivel">
                     <div class="card-body">
                         <h5 class="card-title">${escapeHTML(t.treinamento.nome)}</h5>
-                        <p class="card-text text-muted small">${escapeHTML((t.treinamento.conteudo_programatico || '').substring(0, 150))}...</p>
                         <hr>
                         <div class="curso-info-item">
                             <i class="bi bi-calendar-range"></i>

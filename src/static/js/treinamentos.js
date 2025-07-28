@@ -146,7 +146,7 @@ function iniciarContadores() {
     contadoresIntervals = [];
 
     document.querySelectorAll('.countdown-timer').forEach(timerEl => {
-        const dataFim = new Date(timerEl.dataset.fim + 'T23:59:59');
+        const dataFim = new Date(timerEl.dataset.fim.replace(/-/g, '/') + ' 23:59:59');
 
         const intervalId = setInterval(() => {
             const agora = new Date();
@@ -160,10 +160,8 @@ function iniciarContadores() {
 
             const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
             const horas = Math.floor((diferenca % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutos = Math.floor((diferenca % (1000 * 60 * 60)) / (1000 * 60));
-            const segundos = Math.floor((diferenca % (1000 * 60)) / 1000);
 
-            timerEl.textContent = `${dias}d ${horas}h ${minutos}m ${segundos}s`;
+            timerEl.textContent = `${dias}d e ${horas}h`;
         }, 1000);
         contadoresIntervals.push(intervalId);
     });

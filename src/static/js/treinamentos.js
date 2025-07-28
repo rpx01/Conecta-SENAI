@@ -91,9 +91,7 @@ async function carregarTreinamentos() {
 
         turmas.forEach(t => {
             const isInscrito = minhasInscricoesIds.has(t.turma_id);
-            const botaoHtml = isInscrito
-                ? `<button class="btn btn-success" disabled>INSCRITO</button>`
-                : `<button class="btn btn-primary" onclick="abrirModalInscricao(${t.turma_id})">INSCREVER-SE</button>`;
+            const botaoHtml = `<button class="btn ${isInscrito ? 'btn-success' : 'btn-primary'}" onclick="abrirModalInscricao(${t.turma_id})">${isInscrito ? 'INSCRITO' : 'INSCREVER-SE'}</button>`;
 
             const card = `
                 <div class="col-md-6 mb-4">
@@ -209,27 +207,30 @@ async function abrirModalInscricao(turmaId) {
 function toggleFormularioExterno(isExterno) {
     const form = document.getElementById('inscricaoForm');
     const inputs = form.querySelectorAll('input:not([type=hidden]):not([type=checkbox])');
-    
-    form.reset(); // Limpa o formulário em qualquer caso
-    
+
+    // Limpa os campos editáveis sem alterar valores ocultos ou o estado do checkbox
+    inputs.forEach(input => {
+        input.value = '';
+        input.readOnly = false;
+    });
+
+    document.getElementById('inscreverOutroCheck').checked = isExterno;
+
     if (isExterno) {
-        inputs.forEach(input => input.readOnly = false);
         document.getElementById('dataNascimento').type = 'date';
         document.getElementById('nome').focus();
     } else {
-        // Preenche com dados do usuário logado, mas deixa campos editáveis
+        // Preenche com dados do usuário logado, mantendo os campos editáveis
         if (!dadosUsuarioLogado) {
             dadosUsuarioLogado = getUsuarioLogado();
         }
-
-        inputs.forEach(input => input.readOnly = false); // Todos os campos são editáveis
 
         if (dadosUsuarioLogado) {
             document.getElementById('nome').value = dadosUsuarioLogado.nome || '';
             document.getElementById('email').value = dadosUsuarioLogado.email || '';
         }
         document.getElementById('dataNascimento').type = 'date';
-        document.getElementById('cpf').focus(); // Foca no CPF para o usuário preencher
+        document.getElementById('cpf').focus();
     }
 }
 

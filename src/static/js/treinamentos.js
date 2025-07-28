@@ -189,7 +189,6 @@ function toggleDetalhes(cardElement) {
     cardElement.classList.toggle('expandido');
 }
 
-
 /**
  * Abre o modal de seleção de tipo de inscrição.
  * @param {number} turmaId - O ID da turma.
@@ -197,18 +196,9 @@ function toggleDetalhes(cardElement) {
 async function abrirModalInscricao(turmaId) {
     const selecaoModalEl = document.getElementById('selecaoInscricaoModal');
     selecaoModalEl.dataset.turmaId = turmaId;
-
-    // Adicionado: Lógica para desabilitar o botão
-    const btnParaMim = document.getElementById('btnInscreverParaMim');
-    const isInscrito = minhasInscricoesIds.has(turmaId);
-
-    if (isInscrito) {
-        btnParaMim.disabled = true;
-        btnParaMim.title = "Você já está inscrito neste curso.";
-    } else {
-        btnParaMim.disabled = false;
-        btnParaMim.title = "";
-    }
+    const modal = new bootstrap.Modal(selecaoModalEl);
+    modal.show();
+}
 
 /**
  * CORRIGIDO: Alterna a visibilidade e o estado do formulário de inscrição.

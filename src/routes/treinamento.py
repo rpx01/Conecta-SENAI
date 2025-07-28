@@ -1,3 +1,5 @@
+# src/routes/treinamento.py
+
 """Rotas para gerenciamento de treinamentos e inscricoes."""
 
 from flask import Blueprint, request, jsonify, g

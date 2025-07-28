@@ -146,6 +146,7 @@ function iniciarContadores() {
     contadoresIntervals = [];
 
     document.querySelectorAll('.countdown-timer').forEach(timerEl => {
+        // CORREÇÃO: Formato da data alterado para maior compatibilidade.
         const dataFim = new Date(timerEl.dataset.fim.replace(/-/g, '/') + ' 23:59:59');
 
         const intervalId = setInterval(() => {
@@ -155,12 +156,25 @@ function iniciarContadores() {
             if (diferenca <= 0) {
                 clearInterval(intervalId);
                 timerEl.textContent = 'Inscrições encerradas';
+                // Lógica adicional para desabilitar o botão quando o tempo esgota
+                const cardFooter = timerEl.closest('.card-footer');
+                if (cardFooter) {
+                    const btn = cardFooter.querySelector('.btn');
+                    if (btn) {
+                        btn.disabled = true;
+                        // Opcional: alterar o texto do botão se ele não for "INSCRITO"
+                        if (!btn.textContent.includes('INSCRITO')) {
+                            btn.innerHTML = 'ENCERRADO';
+                        }
+                    }
+                }
                 return;
             }
 
             const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
             const horas = Math.floor((diferenca % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 
+            // Exibe apenas dias e horas
             timerEl.textContent = `${dias}d e ${horas}h`;
         }, 1000);
         contadoresIntervals.push(intervalId);

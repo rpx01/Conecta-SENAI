@@ -5,7 +5,7 @@ import os
 
 from src.limiter import limiter
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import jwt
 import uuid
 from src.models import db
@@ -270,6 +270,17 @@ def atualizar_usuario(id):
         if email_existente and email_existente.id != id:
             return jsonify({"erro": "Email já cadastrado para outro usuário"}), 400
         usuario.email = data["email"]
+
+    # Novos campos opcionais
+    if "cpf" in data:
+        usuario.cpf = data["cpf"]
+    if "empresa" in data:
+        usuario.empresa = data["empresa"]
+    if "data_nascimento" in data and data["data_nascimento"]:
+        try:
+            usuario.data_nascimento = date.fromisoformat(data["data_nascimento"])
+        except (ValueError, TypeError):
+            return jsonify({"erro": "Formato de data de nascimento inválido. Use YYYY-MM-DD"}), 400
 
     # Apenas administradores podem alterar o tipo de usuário
     if "tipo" in data and verificar_admin(user):

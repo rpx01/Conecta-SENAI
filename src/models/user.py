@@ -1,5 +1,5 @@
 """Modelo de usuario do sistema."""
-from datetime import datetime
+from datetime import datetime, date
 from werkzeug.security import generate_password_hash, check_password_hash
 from src.models import db
 
@@ -13,6 +13,9 @@ class User(db.Model):
         email (str): Email do usuário (único)
         senha_hash (str): Hash da senha do usuário
         tipo (str): Tipo de usuário ('comum' ou 'admin')
+        cpf (str, opcional): CPF do usuário
+        data_nascimento (date, opcional): Data de nascimento do usuário
+        empresa (str, opcional): Empresa do usuário
         data_criacao (datetime): Data de criação do registro
         data_atualizacao (datetime): Data da última atualização do registro
     """
@@ -23,7 +26,13 @@ class User(db.Model):
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     senha_hash = db.Column(db.String(256), nullable=False)
+
     tipo = db.Column(db.String(20), nullable=False, default='comum')
+
+    # Novos campos opcionais
+    cpf = db.Column(db.String(20), nullable=True)
+    data_nascimento = db.Column(db.Date, nullable=True)
+    empresa = db.Column(db.String(150), nullable=True)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -92,6 +101,9 @@ class User(db.Model):
             'username': self.username,
             'email': self.email,
             'tipo': self.tipo,
+            'cpf': self.cpf,
+            'data_nascimento': self.data_nascimento.isoformat() if self.data_nascimento else None,
+            'empresa': self.empresa,
             'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,
             'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None
         }

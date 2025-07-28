@@ -43,8 +43,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const turmaId = document.getElementById('selecaoInscricaoModal').dataset.turmaId;
             bootstrap.Modal.getInstance(document.getElementById('selecaoInscricaoModal')).hide();
 
-            // Ação de inscrição direta para o usuário logado
-            enviarInscricaoPropria(turmaId);
+            // Volta a exibir o formulário, mas com a lógica de preenchimento corrigida
+            const modalFormEl = document.getElementById('inscricaoModal');
+            document.getElementById('turmaId').value = turmaId;
+            document.getElementById('inscreverOutroCheck').checked = false;
+            toggleFormularioExterno(false); // Esta função foi corrigida
+
+            const modalForm = new bootstrap.Modal(modalFormEl);
+            modalForm.show();
         });
     }
 
@@ -72,20 +78,17 @@ document.addEventListener('DOMContentLoaded', () => {
 async function carregarTreinamentos() {
     const container = document.getElementById('listaTreinamentos');
     try {
-        // Passo 1: Carrega as inscrições do usuário primeiro
         const minhasInscricoes = await chamarAPI('/treinamentos/minhas');
         minhasInscricoesIds = new Set(minhasInscricoes.map(i => i.turma_id));
 
-        // Passo 2: Carrega todas as turmas agendadas
         const turmas = await chamarAPI('/treinamentos/agendadas');
         
-        container.innerHTML = ''; // Limpa o spinner de carregamento
+        container.innerHTML = '';
         if (turmas.length === 0) {
             container.innerHTML = '<p class="text-center">Nenhum curso disponível no momento.</p>';
             return;
         }
 
-        // Passo 3: Renderiza os cards, ajustando os botões
         turmas.forEach(t => {
             const isInscrito = minhasInscricoesIds.has(t.turma_id);
             const botaoHtml = isInscrito
@@ -137,24 +140,17 @@ async function carregarMeusCursos() {
             const dataInicio = new Date(c.data_inicio);
             const dataFim = new Date(c.data_fim);
 
-            let status = '';
-            let statusText = '';
-            let progresso = 0;
+            let status = '', statusText = '', progresso = 0;
 
             if (hoje > dataFim) {
-                status = 'concluido';
-                statusText = 'Concluído';
-                progresso = 100;
-            } else if (hoje >= dataInicio && hoje <= dataFim) {
-                status = 'em-andamento';
-                statusText = 'Em Andamento';
-                const totalDias = (dataFim - dataInicio) / (1000 * 60 * 60 * 24);
-                const diasPassados = (hoje - dataInicio) / (1000 * 60 * 60 * 24);
-                progresso = Math.round((diasPassados / totalDias) * 100);
+                status = 'concluido'; statusText = 'Concluído'; progresso = 100;
+            } else if (hoje >= dataInicio) {
+                status = 'em-andamento'; statusText = 'Em Andamento';
+                const totalDias = (dataFim - dataInicio) / (1000 * 3600 * 24) || 1;
+                const diasPassados = (hoje - dataInicio) / (1000 * 3600 * 24);
+                progresso = Math.min(100, Math.round((diasPassados / totalDias) * 100));
             } else {
-                status = 'futuro';
-                statusText = 'Em Breve';
-                progresso = 0;
+                status = 'futuro'; statusText = 'Em Breve'; progresso = 0;
             }
 
             const cardHtml = `
@@ -166,28 +162,17 @@ async function carregarMeusCursos() {
                                 <span class="selo-status status-${status}">${statusText}</span>
                             </div>
                             <p class="card-text mt-2"><small class="text-muted">De ${formatarData(c.data_inicio)} a ${formatarData(c.data_fim)}</small></p>
-                            
-                            <div class="progress mt-3" style="height: 10px;">
-                                <div class="progress-bar" role="progressbar" style="width: ${progresso}%;" aria-valuenow="${progresso}" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-
-                            <div class="text-center mt-3">
-                                <i class="bi bi-chevron-down"></i>
-                            </div>
-
+                            <div class="progress mt-3" style="height: 10px;"><div class="progress-bar" role="progressbar" style="width: ${progresso}%;"></div></div>
+                            <div class="text-center mt-3"><i class="bi bi-chevron-down"></i></div>
                             <div class="curso-detalhes">
                                 <hr>
                                 <h6>Descrição Completa</h6>
                                 <p>${escapeHTML(c.treinamento.conteudo_programatico || 'Nenhuma descrição disponível.')}</p>
-                                
                                 <h6>Instrutor</h6>
                                 <p>${escapeHTML(c.instrutor ? c.instrutor.nome : 'A definir')}</p>
-                                
                                 <h6>Materiais e Links</h6>
                                 <ul class="lista-materiais">
-                                    ${(c.treinamento.links_materiais || []).map(link => `
-                                        <li><a href="${link}" target="_blank"><i class="bi bi-link-45deg"></i> Material de Apoio</a></li>
-                                    `).join('') || '<li>Nenhum material disponível.</li>'}
+                                    ${(c.treinamento.links_materiais || []).map(link => `<li><a href="${link}" target="_blank"><i class="bi bi-link-45deg"></i> Material de Apoio</a></li>`).join('') || '<li>Nenhum material disponível.</li>'}
                                 </ul>
                             </div>
                         </div>
@@ -218,40 +203,58 @@ async function abrirModalInscricao(turmaId) {
 }
 
 /**
- * Alterna a visibilidade e o estado do formulário de inscrição.
+ * CORRIGIDO: Alterna a visibilidade e o estado do formulário de inscrição.
  * @param {boolean} isExterno - True se a inscrição for para outra pessoa.
  */
 function toggleFormularioExterno(isExterno) {
     const form = document.getElementById('inscricaoForm');
     const inputs = form.querySelectorAll('input:not([type=hidden]):not([type=checkbox])');
     
+    form.reset(); // Limpa o formulário em qualquer caso
+    
     if (isExterno) {
-        form.reset();
         inputs.forEach(input => input.readOnly = false);
         document.getElementById('dataNascimento').type = 'date';
         document.getElementById('nome').focus();
+    } else {
+        // Preenche com dados do usuário logado, mas deixa campos editáveis
+        if (!dadosUsuarioLogado) {
+            dadosUsuarioLogado = getUsuarioLogado();
+        }
+
+        inputs.forEach(input => input.readOnly = false); // Todos os campos são editáveis
+
+        if (dadosUsuarioLogado) {
+            document.getElementById('nome').value = dadosUsuarioLogado.nome || '';
+            document.getElementById('email').value = dadosUsuarioLogado.email || '';
+        }
+        document.getElementById('dataNascimento').type = 'date';
+        document.getElementById('cpf').focus(); // Foca no CPF para o usuário preencher
     }
 }
 
 /**
  * Envia a requisição para inscrever o próprio usuário.
  */
-async function enviarInscricaoPropria(turmaId) {
-    if (!dadosUsuarioLogado) {
-        dadosUsuarioLogado = await getUsuarioLogado();
-    }
-
+async function enviarInscricaoPropria() {
+    const turmaId = document.getElementById('turmaId').value;
     const body = {
-        nome: dadosUsuarioLogado.nome,
-        email: dadosUsuarioLogado.email,
-        cpf: dadosUsuarioLogado.cpf,
-        data_nascimento: dadosUsuarioLogado.data_nascimento,
-        empresa: dadosUsuarioLogado.empresa,
+        nome: document.getElementById('nome').value,
+        email: document.getElementById('email').value,
+        cpf: document.getElementById('cpf').value,
+        data_nascimento: document.getElementById('dataNascimento').value,
+        empresa: document.getElementById('empresa').value,
     };
+
+    if (!body.nome || !body.email || !body.cpf) {
+        exibirAlerta('Nome, Email e CPF são obrigatórios.', 'warning');
+        return;
+    }
 
     try {
         await chamarAPI(`/treinamentos/${turmaId}/inscricoes`, 'POST', body);
         exibirAlerta('Inscrição realizada com sucesso!', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('inscricaoModal')).hide();
         
         await carregarTreinamentos();
         if (document.getElementById('listaMeusCursos')) {

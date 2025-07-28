@@ -3,12 +3,13 @@
 // Armazena os dados do usuário logado e suas inscrições
 let dadosUsuarioLogado = null;
 let minhasInscricoesIds = new Set();
+let contadoresIntervals = [];
 
 /**
  * Listener que é executado quando o conteúdo da página termina de carregar.
  */
 document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('listaTreinamentos')) {
+    if (document.getElementById('cursos-disponiveis-cards-container')) {
         carregarTreinamentos();
     }
     if (document.getElementById('listaMeusCursos')) {
@@ -76,44 +77,97 @@ document.addEventListener('DOMContentLoaded', () => {
  * Carrega a lista de turmas disponíveis, verificando se o usuário já está inscrito.
  */
 async function carregarTreinamentos() {
-    const container = document.getElementById('listaTreinamentos');
-    try {
-        const minhasInscricoes = await chamarAPI('/treinamentos/minhas');
-        minhasInscricoesIds = new Set(minhasInscricoes.map(i => i.turma_id));
+    const container = document.getElementById('cursos-disponiveis-cards-container');
+    if (!container) return;
 
-        const turmas = await chamarAPI('/treinamentos/agendadas');
-        
+    container.innerHTML = `<div class="text-center w-100"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>`;
+
+    try {
+        const [minhasInscricoes, turmas] = await Promise.all([
+            chamarAPI('/treinamentos/minhas'),
+            chamarAPI('/treinamentos/agendadas')
+        ]);
+
+        minhasInscricoesIds = new Set(minhasInscricoes.map(i => i.turma_id));
         container.innerHTML = '';
+
         if (turmas.length === 0) {
-            container.innerHTML = '<p class="text-center">Nenhum curso disponível no momento.</p>';
+            container.innerHTML = '<p class="text-center w-100">Nenhum curso disponível no momento.</p>';
             return;
         }
 
         turmas.forEach(t => {
             const isInscrito = minhasInscricoesIds.has(t.turma_id);
-            const botaoHtml = `<button class="btn ${isInscrito ? 'btn-success' : 'btn-primary'}" onclick="abrirModalInscricao(${t.turma_id})">${isInscrito ? 'INSCRITO' : 'INSCREVER-SE'}</button>`;
+            const botaoHtml = `<button class="btn ${isInscrito ? 'btn-success' : 'btn-primary'}" onclick="abrirModalInscricao(${t.turma_id})" ${isInscrito ? 'disabled' : ''}>${isInscrito ? '<i class="bi bi-check-circle-fill"></i> INSCRITO' : 'INSCREVER-SE'}</button>`;
 
-            const card = `
-                <div class="col-md-6 mb-4">
-                    <div class="card h-100">
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">${escapeHTML(t.treinamento.nome)}</h5>
-                            <p class="card-text flex-grow-1">${escapeHTML(t.treinamento.conteudo_programatico || '')}</p>
-                            <p class="card-text">
-                                <small class="text-muted">
-                                    Início: ${formatarData(t.data_inicio)} - Fim: ${formatarData(t.data_fim)}
-                                </small>
-                            </p>
-                            ${botaoHtml}
+            const cardHtml = `
+            <div class="col">
+                <div class="card h-100 curso-card-disponivel">
+                    <div class="card-body">
+                        <h5 class="card-title">${escapeHTML(t.treinamento.nome)}</h5>
+                        <p class="card-text text-muted small">${escapeHTML((t.treinamento.conteudo_programatico || '').substring(0, 150))}...</p>
+                        <hr>
+                        <div class="curso-info-item">
+                            <i class="bi bi-calendar-range"></i>
+                            <span><b>Período:</b> ${formatarData(t.data_inicio)} a ${formatarData(t.data_fim)}</span>
+                        </div>
+                        <div class="curso-info-item">
+                            <i class="bi bi-person-workspace"></i>
+                            <span><b>Instrutor:</b> ${escapeHTML(t.instrutor_nome)}</span>
+                        </div>
+                        <div class="curso-info-item">
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span><b>Local:</b> ${escapeHTML(t.local_realizacao)}</span>
                         </div>
                     </div>
-                </div>`;
-            container.insertAdjacentHTML('beforeend', card);
+                    <div class="card-footer bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            ${botaoHtml}
+                            <div class="text-end">
+                                <small class="text-muted d-block">Inscrições encerram em:</small>
+                                <span class="countdown-timer" id="countdown-${t.turma_id}" data-fim="${t.data_inicio}"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', cardHtml);
         });
+
+        iniciarContadores();
+
     } catch (e) {
         exibirAlerta(e.message, 'danger');
-        if (container) container.innerHTML = '<p class="text-center text-danger">Falha ao carregar os cursos.</p>';
+        container.innerHTML = '<p class="text-center text-danger w-100">Falha ao carregar os cursos.</p>';
     }
+}
+
+function iniciarContadores() {
+    contadoresIntervals.forEach(clearInterval);
+    contadoresIntervals = [];
+
+    document.querySelectorAll('.countdown-timer').forEach(timerEl => {
+        const dataFim = new Date(timerEl.dataset.fim + 'T23:59:59');
+
+        const intervalId = setInterval(() => {
+            const agora = new Date();
+            const diferenca = dataFim - agora;
+
+            if (diferenca <= 0) {
+                clearInterval(intervalId);
+                timerEl.textContent = 'Inscrições encerradas';
+                return;
+            }
+
+            const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
+            const horas = Math.floor((diferenca % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutos = Math.floor((diferenca % (1000 * 60 * 60)) / (1000 * 60));
+            const segundos = Math.floor((diferenca % (1000 * 60)) / 1000);
+
+            timerEl.textContent = `${dias}d ${horas}h ${minutos}m ${segundos}s`;
+        }, 1000);
+        contadoresIntervals.push(intervalId);
+    });
 }
 
 /**

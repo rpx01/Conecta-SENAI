@@ -1166,3 +1166,26 @@ input, select, textarea {
 .lista-materiais i {
     margin-right: 8px;
 }
+
+.curso-card-disponivel {
+    border-left: 5px solid var(--primary-color);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.curso-card-disponivel:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+.curso-info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0.5rem;
+    color: #555;
+}
+.curso-info-item i {
+    color: var(--primary-color);
+}
+.countdown-timer {
+    font-weight: bold;
+    color: var(--danger-color);
+}

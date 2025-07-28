@@ -98,7 +98,7 @@ async function carregarTreinamentos() {
         turmas.forEach(t => {
             const isInscrito = minhasInscricoesIds.has(t.turma_id);
             const botaoHtml = isInscrito
-                ? `<button class="btn btn-success" onclick="abrirModalInscricao(${t.turma_id})">INSCRITO (INSCREVER OUTRO)</button>`
+                ? `<button class="btn btn-success" onclick="abrirModalInscricao(${t.turma_id})">INSCRITO</button>`
                 : `<button class="btn btn-primary" onclick="abrirModalInscricao(${t.turma_id})">INSCREVER-SE</button>`;
 
             const card = `

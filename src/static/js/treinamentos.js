@@ -146,7 +146,9 @@ function iniciarContadores() {
     contadoresIntervals = [];
 
     document.querySelectorAll('.countdown-timer').forEach(timerEl => {
-        // CORREÇÃO: Formato da data alterado para maior compatibilidade.
+        // CORREÇÃO APLICADA AQUI:
+        // O formato 'AAAA/MM/DD' é mais compatível entre navegadores que 'AAAA-MM-DD'.
+        // Substituímos os hífens para evitar erros de interpretação que resultam em 'NaN'.
         const dataFim = new Date(timerEl.dataset.fim.replace(/-/g, '/') + ' 23:59:59');
 
         const intervalId = setInterval(() => {
@@ -156,16 +158,13 @@ function iniciarContadores() {
             if (diferenca <= 0) {
                 clearInterval(intervalId);
                 timerEl.textContent = 'Inscrições encerradas';
-                // Lógica adicional para desabilitar o botão quando o tempo esgota
+                // Encontra o botão de inscrição no mesmo card e o desabilita
                 const cardFooter = timerEl.closest('.card-footer');
                 if (cardFooter) {
                     const btn = cardFooter.querySelector('.btn');
-                    if (btn) {
+                    if (btn && !btn.textContent.includes('INSCRITO')) {
                         btn.disabled = true;
-                        // Opcional: alterar o texto do botão se ele não for "INSCRITO"
-                        if (!btn.textContent.includes('INSCRITO')) {
-                            btn.innerHTML = 'ENCERRADO';
-                        }
+                        btn.innerHTML = 'ENCERRADO';
                     }
                 }
                 return;

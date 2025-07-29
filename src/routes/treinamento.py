@@ -18,6 +18,7 @@ from src.schemas.treinamento import (
     TurmaTreinamentoUpdateSchema,
 )
 from src.auth import login_required, admin_required
+from src.utils.audit import log_action
 from pydantic import ValidationError
 from io import StringIO, BytesIO
 import csv
@@ -209,6 +210,7 @@ def inscrever_usuario(turma_id):
         )
         db.session.add(insc)
         db.session.commit()
+        log_action(g.current_user.id, 'create', 'InscricaoTreinamento', insc.id, insc.to_dict())
         return jsonify(insc.to_dict()), 201
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -288,6 +290,7 @@ def criar_treinamento():
         )
         db.session.add(novo)
         db.session.commit()
+        log_action(g.current_user.id, 'create', 'Treinamento', novo.id, novo.to_dict())
         return jsonify(novo.to_dict()), 201
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -339,6 +342,7 @@ def atualizar_treinamento(treinamento_id):
 
     try:
         db.session.commit()
+        log_action(g.current_user.id, 'update', 'Treinamento', treino.id, payload.model_dump(exclude_unset=True))
         return jsonify(treino.to_dict())
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -545,6 +549,7 @@ def criar_inscricao_admin(turma_id):
     try:
         db.session.add(insc)
         db.session.commit()
+        log_action(g.current_user.id, 'create', 'InscricaoTreinamento', insc.id, insc.to_dict())
         return jsonify(insc.to_dict()), 201
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -1180,8 +1185,10 @@ def remover_inscricao(inscricao_id):
         return jsonify({"erro": "Inscrição não encontrada"}), 404
 
     try:
+        dados_log = inscricao.to_dict()
         db.session.delete(inscricao)
         db.session.commit()
+        log_action(g.current_user.id, 'delete', 'InscricaoTreinamento', inscricao.id, dados_log)
         return jsonify({"mensagem": "Inscrição removida com sucesso"}), 200
     except SQLAlchemyError as e:
         db.session.rollback()

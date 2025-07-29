@@ -115,6 +115,10 @@ async function carregarTreinamentos() {
                             <span><b>Instrutor:</b> ${escapeHTML(t.instrutor_nome || 'A definir')}</span>
                         </div>
                         <div class="curso-info-item">
+                            <i class="bi bi-hourglass-split"></i>
+                            <span><b>Carga Horária:</b> ${t.treinamento.carga_horaria ? `${t.treinamento.carga_horaria} horas` : 'N/D'}</span>
+                        </div>
+                        <div class="curso-info-item">
                             <i class="bi bi-geo-alt-fill"></i>
                             <span><b>Local:</b> ${escapeHTML(t.local_realizacao || 'A definir')}</span>
                         </div>

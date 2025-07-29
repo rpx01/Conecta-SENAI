@@ -12,7 +12,7 @@ class User(db.Model):
         nome (str): Nome completo do usuário
         email (str): Email do usuário (único)
         senha_hash (str): Hash da senha do usuário
-        tipo (str): Tipo de usuário ('comum' ou 'admin')
+        tipo (str): Tipo de usuário ('comum', 'admin' ou 'secretaria')
         cpf (str, opcional): CPF do usuário
         data_nascimento (date, opcional): Data de nascimento do usuário
         empresa (str, opcional): Empresa do usuário
@@ -47,7 +47,7 @@ class User(db.Model):
             nome (str): Nome completo do usuário
             email (str): Email do usuário
             senha (str): Senha do usuário (será armazenada como hash)
-            tipo (str, opcional): Tipo de usuário ('comum' ou 'admin'). Padrão é 'comum'.
+            tipo (str, opcional): Tipo de usuário ('comum', 'admin' ou 'secretaria'). Padrão é 'comum'.
         """
         self.nome = nome
         self.email = email
@@ -81,12 +81,12 @@ class User(db.Model):
     
     def is_admin(self):
         """
-        Verifica se o usuário é um administrador.
-        
+        Verifica se o usuário é um administrador ou secretaria.
+
         Retorna:
-            bool: True se o usuário for administrador, False caso contrário
+            bool: True se o usuário for administrador ou secretaria, False caso contrário
         """
-        return self.tipo == 'admin'
+        return self.tipo in ['admin', 'secretaria']
     
     def to_dict(self):
         """

@@ -106,7 +106,13 @@ function getUsuarioLogado() {
  */
 function isAdmin() {
     const usuario = getUsuarioLogado();
-    return usuario && usuario.tipo === 'admin';
+    // Acesso total para admin, acesso a treinamentos para secretaria
+    if (!usuario) return false;
+    if (usuario.tipo === 'admin') return true;
+    if (usuario.tipo === 'secretaria' && window.location.pathname.includes('/treinamentos/')) {
+        return true;
+    }
+    return false;
 }
 
 function isUserAdmin() {
@@ -115,14 +121,17 @@ function isUserAdmin() {
 
 // Função para ajustar a visibilidade dos elementos com base no papel do usuário
 function ajustarVisibilidadePorPapel() {
-    // A função isAdmin() já deve existir no seu app.js e ler do localStorage
-    if (!isAdmin()) {
-        // Encontra todos os elementos que são apenas para administradores
-        const adminElements = document.querySelectorAll('.admin-only');
+    const usuario = getUsuarioLogado();
+    if (!usuario) return;
 
-        // Oculta cada um deles
-        adminElements.forEach(el => {
-            el.style.display = 'none';
+    if (usuario.tipo !== 'admin') {
+        document.querySelectorAll('.admin-only').forEach(el => {
+            // Se for secretaria e estiver na área de treinamentos, mostra o elemento
+            if (usuario.tipo === 'secretaria' && window.location.pathname.includes('/treinamentos/')) {
+                // Deixamos o elemento visível para a secretaria
+            } else {
+                el.style.display = 'none';
+            }
         });
     }
 }

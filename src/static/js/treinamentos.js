@@ -4,6 +4,7 @@
 let dadosUsuarioLogado = null;
 let minhasInscricoesIds = new Set();
 let contadoresIntervals = [];
+let cacheMeusCursos = []; // Cache para os dados dos cursos do usuário
 
 /**
  * Listener que é executado quando o conteúdo da página termina de carregar.
@@ -12,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('cursos-disponiveis-cards-container')) {
         carregarTreinamentos();
     }
-    if (document.getElementById('listaMeusCursos')) {
+    if (document.getElementById('cursos-em-andamento')) {
         carregarMeusCursos();
     }
 
@@ -44,11 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const turmaId = document.getElementById('selecaoInscricaoModal').dataset.turmaId;
             bootstrap.Modal.getInstance(document.getElementById('selecaoInscricaoModal')).hide();
 
-            // Volta a exibir o formulário, mas com a lógica de preenchimento corrigida
             const modalFormEl = document.getElementById('inscricaoModal');
             document.getElementById('turmaId').value = turmaId;
             document.getElementById('inscreverOutroCheck').checked = false;
-            toggleFormularioExterno(false); // Esta função foi corrigida
+            toggleFormularioExterno(false); 
 
             const modalForm = new bootstrap.Modal(modalFormEl);
             modalForm.show();
@@ -112,11 +112,11 @@ async function carregarTreinamentos() {
                         </div>
                         <div class="curso-info-item">
                             <i class="bi bi-person-workspace"></i>
-                            <span><b>Instrutor:</b> ${escapeHTML(t.instrutor_nome)}</span>
+                            <span><b>Instrutor:</b> ${escapeHTML(t.instrutor_nome || 'A definir')}</span>
                         </div>
                         <div class="curso-info-item">
                             <i class="bi bi-geo-alt-fill"></i>
-                            <span><b>Local:</b> ${escapeHTML(t.local_realizacao)}</span>
+                            <span><b>Local:</b> ${escapeHTML(t.local_realizacao || 'A definir')}</span>
                         </div>
                     </div>
                     <div class="card-footer bg-light">
@@ -146,7 +146,6 @@ function iniciarContadores() {
     contadoresIntervals = [];
 
     document.querySelectorAll('.countdown-timer').forEach(timerEl => {
-        // Usa um formato de data consistente para evitar valores "NaN" em alguns navegadores
         const fim = timerEl.dataset.fim;
         if (!fim) {
             timerEl.textContent = 'Data inválida';
@@ -166,7 +165,6 @@ function iniciarContadores() {
             if (diferenca <= 0) {
                 clearInterval(intervalId);
                 timerEl.textContent = 'Inscrições encerradas';
-                // Encontra o botão de inscrição no mesmo card e o desabilita
                 const cardFooter = timerEl.closest('.card-footer');
                 if (cardFooter) {
                     const btn = cardFooter.querySelector('.btn');
@@ -181,7 +179,6 @@ function iniciarContadores() {
             const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
             const horas = Math.floor((diferenca % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 
-            // Exibe apenas dias e horas
             timerEl.textContent = `${dias}d e ${horas}h`;
         }, 1000);
         contadoresIntervals.push(intervalId);
@@ -189,90 +186,136 @@ function iniciarContadores() {
 }
 
 /**
- * Carrega os cursos em que o usuário está inscrito.
+ * Carrega e distribui os cursos do usuário por status.
  */
 async function carregarMeusCursos() {
-    const container = document.getElementById('listaMeusCursos');
-    if (!container) return;
+    const containers = {
+        andamento: document.getElementById('cursos-em-andamento'),
+        breve: document.getElementById('cursos-em-breve'),
+        concluidos: document.getElementById('cursos-concluidos')
+    };
+
+    if (!containers.andamento) return;
+
+    Object.values(containers).forEach(c => c.innerHTML = `<div class="text-center w-100"><div class="spinner-border text-primary" role="status"></div></div>`);
 
     try {
         const cursos = await chamarAPI('/treinamentos/minhas');
-        minhasInscricoesIds = new Set(cursos.map(c => c.turma_id));
+        cacheMeusCursos = cursos; 
 
-        container.innerHTML = '';
-        if (cursos.length === 0) {
-            container.innerHTML = '<div class="col-12"><p class="text-center">Você não está inscrito em nenhum curso.</p></div>';
-            return;
-        }
+        Object.values(containers).forEach(c => c.innerHTML = '');
+
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+
+        const grupos = {
+            andamento: [],
+            breve: [],
+            concluidos: []
+        };
 
         cursos.forEach(c => {
-            const hoje = new Date();
             const dataInicio = new Date(c.data_inicio);
             const dataFim = new Date(c.data_fim);
-
-            let status = '', statusText = '', progresso = 0;
+            dataFim.setHours(23, 59, 59, 999);
 
             if (hoje > dataFim) {
-                status = 'concluido'; statusText = 'Concluído'; progresso = 100;
+                grupos.concluidos.push(c);
             } else if (hoje >= dataInicio) {
-                status = 'em-andamento'; statusText = 'Em Andamento';
-                const totalDias = (dataFim - dataInicio) / (1000 * 3600 * 24) || 1;
-                const diasPassados = (hoje - dataInicio) / (1000 * 3600 * 24);
-                progresso = Math.min(100, Math.round((diasPassados / totalDias) * 100));
+                grupos.andamento.push(c);
             } else {
-                status = 'futuro'; statusText = 'Em Breve'; progresso = 0;
+                grupos.breve.push(c);
             }
-
-            const cardHtml = `
-                <div class="col-md-6 mb-4">
-                    <div class="card curso-card status-${status}" onclick="toggleDetalhes(this)">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0">${escapeHTML(c.treinamento.nome)}</h5>
-                                <span class="selo-status status-${status}">${statusText}</span>
-                            </div>
-                            <p class="card-text mt-2"><small class="text-muted">De ${formatarData(c.data_inicio)} a ${formatarData(c.data_fim)}</small></p>
-                            <div class="progress mt-3" style="height: 10px;"><div class="progress-bar" role="progressbar" style="width: ${progresso}%;"></div></div>
-                            <div class="text-center mt-3"><i class="bi bi-chevron-down"></i></div>
-                            <div class="curso-detalhes">
-                                <hr>
-                                <h6>Descrição Completa</h6>
-                                <p>${escapeHTML(c.treinamento.conteudo_programatico || 'Nenhuma descrição disponível.')}</p>
-                                <h6>Instrutor</h6>
-                                <p>${escapeHTML(c.instrutor ? c.instrutor.nome : 'A definir')}</p>
-                                <h6>Materiais e Links</h6>
-                                <ul class="lista-materiais">
-                                    ${(c.treinamento.links_materiais || []).map(link => `<li><a href="${link}" target="_blank"><i class="bi bi-link-45deg"></i> Material de Apoio</a></li>`).join('') || '<li>Nenhum material disponível.</li>'}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', cardHtml);
         });
-    } catch(e) {
+
+        renderizarGrupoCursos(grupos.andamento, containers.andamento, 'em-andamento', 'Em Andamento');
+        renderizarGrupoCursos(grupos.breve, containers.breve, 'futuro', 'Em Breve');
+        renderizarGrupoCursos(grupos.concluidos, containers.concluidos, 'concluido', 'Concluído');
+
+    } catch (e) {
         exibirAlerta(e.message, 'danger');
-        if (container) container.innerHTML = '<div class="col-12"><p class="text-center text-danger">Falha ao carregar seus cursos.</p></div>';
+        Object.values(containers).forEach(c => c.innerHTML = '<p class="text-center text-danger">Falha ao carregar seus cursos.</p>');
     }
 }
 
-function toggleDetalhes(cardElement) {
-    cardElement.classList.toggle('expandido');
+/**
+ * Renderiza um grupo de cursos em seu respectivo container.
+ */
+function renderizarGrupoCursos(cursos, container, statusClass, statusText) {
+    if (cursos.length === 0) {
+        container.innerHTML = `<div class="col-12"><p class="text-center text-muted">Nenhum curso nesta categoria.</p></div>`;
+        return;
+    }
+    
+    cursos.forEach(c => {
+        const hoje = new Date();
+        const dataInicio = new Date(c.data_inicio);
+        const dataFim = new Date(c.data_fim);
+        let progresso = 0;
+
+        if (statusClass === 'concluido') {
+            progresso = 100;
+        } else if (statusClass === 'em-andamento') {
+            const totalDias = (dataFim - dataInicio) / (1000 * 3600 * 24) || 1;
+            const diasPassados = (hoje - dataInicio) / (1000 * 3600 * 24);
+            progresso = Math.min(100, Math.round((diasPassados / totalDias) * 100));
+        }
+
+        const cardHtml = `
+            <div class="col-md-6 mb-4">
+                <div class="card curso-card status-${statusClass}" onclick="abrirModalDetalhes(${c.turma_id})">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">${escapeHTML(c.treinamento.nome)}</h5>
+                            <span class="selo-status status-${statusClass}">${statusText}</span>
+                        </div>
+                        <p class="card-text mt-2"><small class="text-muted">De ${formatarData(c.data_inicio)} a ${formatarData(c.data_fim)}</small></p>
+                        <div class="progress mt-3" style="height: 10px;"><div class="progress-bar" role="progressbar" style="width: ${progresso}%;"></div></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', cardHtml);
+    });
 }
 
 /**
+ * Abre o modal com os detalhes completos do curso.
+ */
+function abrirModalDetalhes(turmaId) {
+    const curso = cacheMeusCursos.find(c => c.turma_id === turmaId);
+    if (!curso) return;
+
+    document.getElementById('modalNomeTreinamento').textContent = curso.treinamento.nome;
+    document.getElementById('modalPeriodo').textContent = `${formatarData(curso.data_inicio)} a ${formatarData(curso.data_fim)}`;
+    document.getElementById('modalHorario').textContent = curso.horario || 'Não definido';
+    document.getElementById('modalInstrutor').textContent = curso.instrutor_nome || 'A definir';
+    document.getElementById('modalLocal').textContent = curso.local_realizacao || 'A definir';
+    document.getElementById('modalConteudo').textContent = curso.treinamento.conteudo_programatico || 'Nenhum conteúdo programático informado.';
+
+    const linksContainer = document.getElementById('modalLinks');
+    linksContainer.innerHTML = '';
+    if (curso.treinamento.links_materiais && curso.treinamento.links_materiais.length > 0) {
+        curso.treinamento.links_materiais.forEach(link => {
+            const li = `<li class="list-group-item"><a href="${escapeHTML(link)}" target="_blank"><i class="bi bi-link-45deg"></i> Material de Apoio</a></li>`;
+            linksContainer.insertAdjacentHTML('beforeend', li);
+        });
+    } else {
+        linksContainer.innerHTML = '<li class="list-group-item">Nenhum material disponível.</li>';
+    }
+
+    const modal = new bootstrap.Modal(document.getElementById('cursoDetalhesModal'));
+    modal.show();
+}
+
+
+/**
  * Abre o modal de seleção de tipo de inscrição.
- * @param {number} turmaId - O ID da turma.
  */
 async function abrirModalInscricao(turmaId) {
     const btnParaMim = document.getElementById('btnInscreverParaMim');
     if (btnParaMim) {
-        if (minhasInscricoesIds.has(turmaId)) {
-            btnParaMim.disabled = true;
-        } else {
-            btnParaMim.disabled = false;
-        }
+        btnParaMim.disabled = minhasInscricoesIds.has(turmaId);
     }
 
     const selecaoModalEl = document.getElementById('selecaoInscricaoModal');
@@ -282,17 +325,15 @@ async function abrirModalInscricao(turmaId) {
 }
 
 /**
- * CORRIGIDO: Alterna a visibilidade e o estado do formulário de inscrição.
- * @param {boolean} isExterno - True se a inscrição for para outra pessoa.
+ * Alterna a visibilidade e o estado do formulário de inscrição.
  */
 function toggleFormularioExterno(isExterno) {
     const form = document.getElementById('inscricaoForm');
     const inputs = form.querySelectorAll('input:not([type=hidden]):not([type=checkbox])');
 
-    // Limpa os campos editáveis sem alterar valores ocultos ou o estado do checkbox
     inputs.forEach(input => {
         input.value = '';
-        input.readOnly = false;
+        input.readOnly = isExterno ? false : true;
     });
 
     document.getElementById('inscreverOutroCheck').checked = isExterno;
@@ -301,7 +342,6 @@ function toggleFormularioExterno(isExterno) {
         document.getElementById('dataNascimento').type = 'date';
         document.getElementById('nome').focus();
     } else {
-        // Preenche com dados do usuário logado, mantendo os campos editáveis
         if (!dadosUsuarioLogado) {
             dadosUsuarioLogado = getUsuarioLogado();
         }
@@ -309,6 +349,10 @@ function toggleFormularioExterno(isExterno) {
         if (dadosUsuarioLogado) {
             document.getElementById('nome').value = dadosUsuarioLogado.nome || '';
             document.getElementById('email').value = dadosUsuarioLogado.email || '';
+            // Campos que o usuário deve preencher
+            document.getElementById('cpf').readOnly = false;
+            document.getElementById('dataNascimento').readOnly = false;
+            document.getElementById('empresa').readOnly = false;
         }
         document.getElementById('dataNascimento').type = 'date';
         document.getElementById('cpf').focus();
@@ -324,8 +368,8 @@ async function enviarInscricaoPropria() {
         nome: document.getElementById('nome').value,
         email: document.getElementById('email').value,
         cpf: document.getElementById('cpf').value,
-        data_nascimento: document.getElementById('dataNascimento').value,
-        empresa: document.getElementById('empresa').value,
+        data_nascimento: document.getElementById('dataNascimento').value || null,
+        empresa: document.getElementById('empresa').value || null,
     };
 
     if (!body.nome || !body.email || !body.cpf) {
@@ -356,8 +400,8 @@ async function enviarInscricaoExterna() {
         nome: document.getElementById('nome').value,
         email: document.getElementById('email').value,
         cpf: document.getElementById('cpf').value,
-        data_nascimento: document.getElementById('dataNascimento').value,
-        empresa: document.getElementById('empresa').value,
+        data_nascimento: document.getElementById('dataNascimento').value || null,
+        empresa: document.getElementById('empresa').value || null,
     };
 
     if (!body.nome || !body.email || !body.cpf) {

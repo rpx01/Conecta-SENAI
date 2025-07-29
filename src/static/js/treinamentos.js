@@ -146,10 +146,13 @@ function iniciarContadores() {
     contadoresIntervals = [];
 
     document.querySelectorAll('.countdown-timer').forEach(timerEl => {
-        // CORREÇÃO APLICADA AQUI:
-        // O formato 'AAAA/MM/DD' é mais compatível entre navegadores que 'AAAA-MM-DD'.
-        // Substituímos os hífens para evitar erros de interpretação que resultam em 'NaN'.
-        const dataFim = new Date(timerEl.dataset.fim.replace(/-/g, '/') + ' 23:59:59');
+        // Usa um formato de data consistente para evitar valores "NaN" em alguns navegadores
+        const fim = timerEl.dataset.fim;
+        if (!fim) {
+            timerEl.textContent = 'Data inválida';
+            return;
+        }
+        const dataFim = new Date(`${fim}T23:59:59`);
 
         const intervalId = setInterval(() => {
             const agora = new Date();

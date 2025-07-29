@@ -7,7 +7,15 @@ from sqlalchemy.exc import SQLAlchemyError
 import math
 from datetime import date, datetime, timedelta
 
-from src.models import db, Treinamento, TurmaTreinamento, InscricaoTreinamento
+from src.models import (
+    db,
+    Treinamento,
+    TurmaTreinamento,
+    InscricaoTreinamento,
+    AuditLog,
+    user,
+)
+from src.models.user import User
 from src.models.instrutor import Instrutor
 from src.utils.error_handler import handle_internal_error
 from src.schemas.treinamento import (
@@ -1221,3 +1229,35 @@ def create_inscricao_treinamento_externo(turma_id):
     db.session.commit()
 
     return jsonify(nova_inscricao.to_dict()), 201
+
+
+@treinamento_bp.route("/treinamentos/logs", methods=["GET"])
+@admin_required
+def listar_logs_treinamentos():
+    """Lista os logs de auditoria relacionados a treinamentos e inscrições."""
+    try:
+        logs = (
+            db.session.query(AuditLog, User.nome)
+            .join(User, User.id == AuditLog.user_id)
+            .filter(AuditLog.entity.in_(['Treinamento', 'InscricaoTreinamento']))
+            .order_by(AuditLog.timestamp.desc())
+            .all()
+        )
+
+        resultado = []
+        for log, nome_usuario in logs:
+            detalhes = log.details or {}
+            info = f"{log.entity.replace('Treinamento', '')} '{detalhes.get('nome', '')}' (ID: {log.entity_id})"
+
+            resultado.append({
+                "id": log.id,
+                "timestamp": log.timestamp.isoformat(),
+                "usuario": nome_usuario,
+                "acao": log.action,
+                "info": info,
+            })
+
+        return jsonify(resultado)
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return handle_internal_error(e)

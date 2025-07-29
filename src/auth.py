@@ -42,7 +42,7 @@ def verificar_autenticacao(req):
 
 def verificar_admin(user: User) -> bool:
     """Verifica se o usuário fornecido tem privilégios de administrador."""
-    return user is not None and user.tipo == 'admin'
+    return user is not None and user.tipo in ['admin', 'secretaria']
 
 
 def login_required(func):

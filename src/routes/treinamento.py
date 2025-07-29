@@ -412,17 +412,15 @@ def atualizar_turma_treinamento(turma_id):
     if not turma:
         return jsonify({"erro": "Turma não encontrada"}), 404
 
-    data_inicio_turma = (
-        turma.data_inicio.date()
-        if isinstance(turma.data_inicio, datetime)
-        else turma.data_inicio
+    data_fim_turma = (
+        turma.data_fim.date()
+        if isinstance(turma.data_fim, datetime)
+        else turma.data_fim
     )
-    if data_inicio_turma <= date.today():
+    if data_fim_turma < date.today():
         return (
             jsonify(
-                {
-                    "erro": "Não é possível modificar uma turma que já iniciou ou foi concluída."
-                }
+                {"erro": "Não é possível modificar uma turma que já foi concluída."}
             ),
             403,
         )

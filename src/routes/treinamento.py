@@ -219,25 +219,36 @@ def inscrever_usuario(turma_id):
 @login_required
 def listar_meus_cursos():
     """Lista cursos em que o usuario esta inscrito."""
+    # Usando joinedload para otimizar a busca e evitar múltiplas queries (problema N+1)
     inscricoes = (
         InscricaoTreinamento.query.filter_by(usuario_id=g.current_user.id)
         .join(TurmaTreinamento)
-        .join(Treinamento)
+        .options(
+            db.joinedload(InscricaoTreinamento.turma).joinedload(
+                TurmaTreinamento.treinamento
+            )
+        )
+        .options(
+            db.joinedload(InscricaoTreinamento.turma).joinedload(TurmaTreinamento.instrutor)
+        )
         .all()
     )
+
     result = []
     for inc in inscricoes:
+        turma = inc.turma
         result.append(
             {
                 "id": inc.id,
-                "turma_id": inc.turma_id,
-                "treinamento": inc.turma.treinamento.to_dict(),
-                "data_inicio": (
-                    inc.turma.data_inicio.isoformat() if inc.turma.data_inicio else None
-                ),
-                "data_fim": (
-                    inc.turma.data_fim.isoformat() if inc.turma.data_fim else None
-                ),
+                "turma_id": turma.id,
+                "treinamento": turma.treinamento.to_dict(),
+                "data_inicio": turma.data_inicio.isoformat() if turma.data_inicio else None,
+                "data_fim": turma.data_fim.isoformat() if turma.data_fim else None,
+                # --- CORREÇÃO APLICADA AQUI ---
+                # Campos que estavam faltando e foram adicionados:
+                "horario": turma.horario,
+                "local_realizacao": turma.local_realizacao,
+                "instrutor_nome": turma.instrutor.nome if turma.instrutor else None,
             }
         )
     return jsonify(result)

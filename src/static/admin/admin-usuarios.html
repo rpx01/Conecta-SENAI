@@ -164,6 +164,7 @@
                             <select class="form-select" id="tipo" name="tipo" required>
                                 <option value="comum">Comum</option>
                                 <option value="admin">Administrador</option>
+                                <option value="secretaria">Secretaria</option>
                             </select>
                         </div>
                     </form>
@@ -247,8 +248,8 @@
                                 <td>${usuario.nome}</td>
                                 <td>${usuario.email}</td>
                                 <td>
-                                    <span class="badge ${usuario.tipo === 'admin' ? 'bg-danger' : 'bg-primary'}">
-                                        ${usuario.tipo === 'admin' ? 'Administrador' : 'Comum'}
+                                    <span class="badge ${usuario.tipo === 'admin' ? 'bg-danger' : (usuario.tipo === 'secretaria' ? 'bg-secondary' : 'bg-primary')}">
+                                        ${usuario.tipo === 'admin' ? 'Administrador' : (usuario.tipo === 'secretaria' ? 'Secretaria' : 'Comum')}
                                     </span>
                                 </td>
                                 <td>

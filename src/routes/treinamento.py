@@ -191,15 +191,21 @@ def inscrever_usuario(turma_id):
     except Exception as e:
         return jsonify({"erro": str(e)}), 400
 
+    # Preenche dados a partir do perfil do usuário, se disponíveis
+    usuario = g.current_user
+    cpf = usuario.cpf or payload.cpf
+    data_nascimento = usuario.data_nascimento or payload.data_nascimento
+    empresa = usuario.empresa or payload.empresa
+
     try:
         insc = InscricaoTreinamento(
-            usuario_id=g.current_user.id,
+            usuario_id=usuario.id,
             turma_id=turma_id,
             nome=payload.nome,
             email=payload.email,
-            cpf=payload.cpf,
-            data_nascimento=payload.data_nascimento,
-            empresa=payload.empresa,
+            cpf=cpf,
+            data_nascimento=data_nascimento,
+            empresa=empresa,
         )
         db.session.add(insc)
         db.session.commit()

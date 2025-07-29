@@ -152,7 +152,12 @@ function iniciarContadores() {
             timerEl.textContent = 'Data inválida';
             return;
         }
-        const dataFim = new Date(`${fim}T23:59:59`);
+        let dataFim = new Date(fim);
+        if (isNaN(dataFim.getTime())) {
+            timerEl.textContent = 'Data inválida';
+            return;
+        }
+        dataFim.setHours(23, 59, 59, 999);
 
         const intervalId = setInterval(() => {
             const agora = new Date();

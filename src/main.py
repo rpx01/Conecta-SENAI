@@ -125,7 +125,7 @@ def create_app():
 
     @app.route('/')
     def index():
-        return redirect('/admin-login.html')
+        return redirect('/admin/login.html')
 
     @app.route('/<path:path>')
     def static_file(path):

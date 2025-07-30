@@ -23,19 +23,19 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
     <li class="nav-item">
-        <a class="nav-link" href="/laboratorios/laboratorios-dashboard.html"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+        <a class="nav-link" href="/laboratorios/dashboard.html"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="/laboratorios/laboratorios-calendario.html"><i class="bi bi-calendar3 me-1"></i> Calendário</a>
+        <a class="nav-link" href="/laboratorios/calendario.html"><i class="bi bi-calendar3 me-1"></i> Calendário</a>
     </li>
     <li class="nav-item admin-only">
-        <a class="nav-link" href="/laboratorios/laboratorios-turmas.html"><i class="bi bi-building me-1"></i> Laboratórios e Turmas</a>
+        <a class="nav-link" href="/laboratorios/turmas.html"><i class="bi bi-building me-1"></i> Laboratórios e Turmas</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link active" href="/laboratorios/laboratorios-agendamento.html"><i class="bi bi-plus-circle me-1"></i> Novo Agendamento</a>
+        <a class="nav-link active" href="/laboratorios/agendamento.html"><i class="bi bi-plus-circle me-1"></i> Novo Agendamento</a>
     </li>
     <li class="nav-item admin-only">
-        <a class="nav-link" href="/laboratorios/laboratorios-logs.html"><i class="bi bi-journal-text me-1"></i> Logs</a>
+        <a class="nav-link" href="/laboratorios/logs.html"><i class="bi bi-journal-text me-1"></i> Logs</a>
     </li>
 </ul>
 
@@ -47,7 +47,7 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li>
-                                <a class="dropdown-item" href="/laboratorios/laboratorios-perfil.html">
+                                <a class="dropdown-item" href="/laboratorios/perfil.html">
                                     <i class="bi bi-person me-2"></i> Meu Perfil
                                 </a>
                             </li>
@@ -70,22 +70,22 @@
                 <div class="sidebar rounded shadow-sm">
                     <h5 class="mb-3">Menu Principal</h5>
                     <div class="nav flex-column">
-                        <a class="nav-link" href="/laboratorios/laboratorios-dashboard.html">
+                        <a class="nav-link" href="/laboratorios/dashboard.html">
                             <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
-                        <a class="nav-link" href="/laboratorios/laboratorios-calendario.html">
+                        <a class="nav-link" href="/laboratorios/calendario.html">
                             <i class="bi bi-calendar3"></i> Calendário
                         </a>
-                        <a class="nav-link admin-only" href="/laboratorios/laboratorios-turmas.html">
+                        <a class="nav-link admin-only" href="/laboratorios/turmas.html">
                             <i class="bi bi-building"></i> Laboratórios e Turmas
                         </a>
-                        <a class="nav-link active" href="/laboratorios/laboratorios-agendamento.html">
+                        <a class="nav-link active" href="/laboratorios/agendamento.html">
                             <i class="bi bi-plus-circle"></i> Novo Agendamento
                         </a>
-                        <a class="nav-link admin-only" href="/laboratorios/laboratorios-logs.html">
+                        <a class="nav-link admin-only" href="/laboratorios/logs.html">
                             <i class="bi bi-journal-text"></i> Logs
                         </a>
-                        <a class="nav-link" href="/laboratorios/laboratorios-perfil.html">
+                        <a class="nav-link" href="/laboratorios/perfil.html">
                             <i class="bi bi-person"></i> Meu Perfil
                         </a>
                     </div>
@@ -149,7 +149,7 @@
                             </div>
                             
                             <div class="d-flex justify-content-between">
-                                <a href="/laboratorios/laboratorios-calendario.html" class="btn btn-secondary">
+                                <a href="/laboratorios/calendario.html" class="btn btn-secondary">
                                     <i class="bi bi-arrow-left me-2"></i>Voltar
                                 </a>
                                 <button type="submit" class="btn btn-primary" id="btnSalvar">
@@ -302,7 +302,7 @@
                     
                     // Redireciona após 2 segundos
                     setTimeout(() => {
-                        window.location.href = '/laboratorios/laboratorios-calendario.html';
+                        window.location.href = '/laboratorios/calendario.html';
                     }, 2000);
                 } catch (error) {
                     if (error.message.includes('Conflito de horários')) {

@@ -84,7 +84,7 @@ function realizarLogout() {
         headers: { 'Content-Type': 'application/json' }
     }).catch(() => {});
     localStorage.removeItem('usuario');
-    window.location.href = '/admin-login.html';
+    window.location.href = '/admin/login.html';
 }
 
 /**
@@ -142,7 +142,7 @@ function ajustarVisibilidadePorPapel() {
 function verificarAutenticacao() {
     const usuario = getUsuarioLogado();
     if (!usuario) {
-        window.location.href = '/admin-login.html';
+        window.location.href = '/admin/login.html';
         return false;
     }
     return true;
@@ -178,7 +178,7 @@ function verificarPermissaoAdmin() {
 // evitando loops na página de login ou registro.
 (function() {
     const currentPage = window.location.pathname;
-    const loginPage = '/admin-login.html';
+    const loginPage = '/admin/login.html';
     const registerPage = '/register.html';
     const usuario = getUsuarioLogado();
 
@@ -244,7 +244,7 @@ async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = tru
         // Verifica se a resposta indica falta de autorização e redireciona imediatamente
         if (response.status === 401) {
             localStorage.removeItem('usuario');
-            window.location.href = '/admin-login.html';
+            window.location.href = '/admin/login.html';
             throw new Error('Sessão expirada');
         }
 
@@ -416,7 +416,7 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
     if (!container) return;
     
     // Verifica se o link já existe para evitar duplicação
-    const linkExistente = container.querySelector('a[href="/laboratorios/laboratorios-turmas.html"]');
+    const linkExistente = container.querySelector('a[href="/laboratorios/turmas.html"]');
     if (linkExistente) return;
     
     // Cria o elemento do link baseado no tipo de menu
@@ -427,7 +427,7 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
         
         const link = document.createElement('a');
         link.className = 'nav-link';
-        link.href = '/laboratorios/laboratorios-turmas.html';
+        link.href = '/laboratorios/turmas.html';
         link.innerHTML = '<i class="bi bi-building me-1"></i> Laboratórios e Turmas';
         
         navItem.appendChild(link);
@@ -443,11 +443,11 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
         // Para sidebar (menu lateral)
         const link = document.createElement('a');
         link.className = 'nav-link admin-only';
-        link.href = '/laboratorios/laboratorios-turmas.html';
+        link.href = '/laboratorios/turmas.html';
         link.innerHTML = '<i class="bi bi-building"></i> Laboratórios e Turmas';
         
         // Insere antes do último item (Meu Perfil)
-        const lastItem = container.querySelector('a[href="/laboratorios/laboratorios-perfil.html"], a[href="/ocupacao/ocupacao-perfil.html"], a[href="/admin/admin-perfil.html"]');
+        const lastItem = container.querySelector('a[href="/laboratorios/perfil.html"], a[href="/ocupacao/perfil.html"], a[href="/admin/perfil.html"]');
         if (lastItem) {
             container.insertBefore(link, lastItem);
         } else {
@@ -461,7 +461,7 @@ function adicionarLinkLogs(containerSelector, isNavbar = false) {
     const container = document.querySelector(containerSelector);
     if (!container) return;
 
-    const linkExistente = container.querySelector('a[href="/laboratorios/laboratorios-logs.html"]');
+    const linkExistente = container.querySelector('a[href="/laboratorios/logs.html"]');
     if (linkExistente) return;
 
     if (isNavbar) {
@@ -470,7 +470,7 @@ function adicionarLinkLogs(containerSelector, isNavbar = false) {
 
         const link = document.createElement('a');
         link.className = 'nav-link';
-        link.href = '/laboratorios/laboratorios-logs.html';
+        link.href = '/laboratorios/logs.html';
         link.innerHTML = '<i class="bi bi-journal-text me-1"></i> Logs';
 
         navItem.appendChild(link);
@@ -484,10 +484,10 @@ function adicionarLinkLogs(containerSelector, isNavbar = false) {
     } else {
         const link = document.createElement('a');
         link.className = 'nav-link admin-only';
-        link.href = '/laboratorios/laboratorios-logs.html';
+        link.href = '/laboratorios/logs.html';
         link.innerHTML = '<i class="bi bi-journal-text"></i> Logs';
 
-        const lastItem = container.querySelector('a[href="/laboratorios/laboratorios-perfil.html"], a[href="/ocupacao/ocupacao-perfil.html"], a[href="/admin/admin-perfil.html"]');
+        const lastItem = container.querySelector('a[href="/laboratorios/perfil.html"], a[href="/ocupacao/perfil.html"], a[href="/admin/perfil.html"]');
         if (lastItem) {
             container.insertBefore(link, lastItem);
         } else {
@@ -540,7 +540,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    if (paginaAtual === '/admin-login.html' || paginaAtual === '/register.html') {
+    if (paginaAtual === '/admin/login.html' || paginaAtual === '/register.html') {
         return;
     }
     
@@ -560,7 +560,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Páginas que requerem permissão de administrador
-    if (paginaAtual === '/admin/admin-usuarios.html' || paginaAtual === '/laboratorios/laboratorios-turmas.html') {
+    if (paginaAtual === '/admin/usuarios.html' || paginaAtual === '/laboratorios/turmas.html') {
         if (!verificarPermissaoAdmin()) {
             return;
         }
@@ -578,21 +578,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Adiciona o link para Laboratórios e Turmas somente no módulo de Agenda
     if (isAdmin()) {
         const paginasDeExclusao = [
-            '/ocupacao/ocupacao-dashboard.html',
-            '/ocupacao/ocupacao-calendario.html',
-            '/ocupacao/ocupacao-salas.html',
-            '/ocupacao/ocupacao-instrutores.html',
-            '/ocupacao/ocupacao-agendamento.html',
-            '/rateio/rateio-perfil.html',
-            '/rateio/rateio-dashboard.html',
-            '/rateio/rateio-config.html',
-            '/rateio/rateio-instrutores.html',
-            '/ocupacao/ocupacao-perfil.html',
-            '/admin/admin-usuarios.html',
-            '/laboratorios/laboratorios-perfil.html',
-            '/admin/admin-perfil.html',
-            '/ocupacao/ocupacao-turmas.html',
-            '/rateio/rateio-logs.html',
+            '/ocupacao/dashboard.html',
+            '/ocupacao/calendario.html',
+            '/ocupacao/salas.html',
+            '/ocupacao/instrutores.html',
+            '/ocupacao/agendamento.html',
+            '/rateio/perfil.html',
+            '/rateio/dashboard.html',
+            '/rateio/config.html',
+            '/rateio/instrutores.html',
+            '/ocupacao/perfil.html',
+            '/admin/usuarios.html',
+            '/laboratorios/perfil.html',
+            '/admin/perfil.html',
+            '/ocupacao/turmas.html',
+            '/rateio/logs.html',
             // Adicionando páginas de treinamento à lista de exclusão
             '/treinamentos/index.html',
             '/treinamentos/meus-cursos.html',
@@ -664,7 +664,7 @@ function atualizarInterfaceUsuario() {
     });
     
     // Carrega notificações no dashboard
-    if (window.location.pathname === '/laboratorios/laboratorios-dashboard.html') {
+    if (window.location.pathname === '/laboratorios/dashboard.html') {
         carregarNotificacoes();
     }
 }

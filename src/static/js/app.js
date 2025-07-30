@@ -151,8 +151,8 @@ async function verificarAutenticacao() {
     }
 
     try {
-        // Valida o token acessando uma rota protegida
-        await chamarAPI('/usuarios', 'GET');
+        // Valida o token acessando os dados do próprio usuário
+        await chamarAPI(`/usuarios/${usuario.id}`);
         return true;
     } catch (error) {
         console.warn('Sessão inválida. Redirecionando para login.');

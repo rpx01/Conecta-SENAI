@@ -348,6 +348,8 @@ function toggleFormularioExterno(isExterno) {
 
     if (isExterno) {
         document.getElementById('dataNascimento').type = 'date';
+        // Habilita a edição de todos os campos para inscrição de terceiros
+        inputs.forEach(input => input.readOnly = false);
         document.getElementById('nome').focus();
     } else {
         if (!dadosUsuarioLogado) {
@@ -355,15 +357,29 @@ function toggleFormularioExterno(isExterno) {
         }
 
         if (dadosUsuarioLogado) {
+            // Preenche todos os campos com os dados do usuário logado
             document.getElementById('nome').value = dadosUsuarioLogado.nome || '';
             document.getElementById('email').value = dadosUsuarioLogado.email || '';
-            // Campos que o usuário deve preencher
-            document.getElementById('cpf').readOnly = false;
-            document.getElementById('dataNascimento').readOnly = false;
-            document.getElementById('empresa').readOnly = false;
+            document.getElementById('cpf').value = dadosUsuarioLogado.cpf || '';
+            document.getElementById('dataNascimento').value = dadosUsuarioLogado.data_nascimento || '';
+            document.getElementById('empresa').value = dadosUsuarioLogado.empresa || '';
+
+            // Mantém os campos principais como somente leitura
+            document.getElementById('nome').readOnly = true;
+            document.getElementById('email').readOnly = true;
+
+            // Permite a edição dos campos complementares caso não estejam preenchidos
+            document.getElementById('cpf').readOnly = !!dadosUsuarioLogado.cpf;
+            document.getElementById('dataNascimento').readOnly = !!dadosUsuarioLogado.data_nascimento;
+            document.getElementById('empresa').readOnly = !!dadosUsuarioLogado.empresa;
         }
         document.getElementById('dataNascimento').type = 'date';
-        document.getElementById('cpf').focus();
+        // Foco no primeiro campo editável, se houver
+        if (!dadosUsuarioLogado.cpf) {
+             document.getElementById('cpf').focus();
+        } else if (!dadosUsuarioLogado.data_nascimento) {
+             document.getElementById('dataNascimento').focus();
+        }
     }
 }
 

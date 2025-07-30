@@ -1200,10 +1200,21 @@ def remover_inscricao(inscricao_id):
         return jsonify({"erro": "Inscrição não encontrada"}), 404
 
     try:
-        dados_log = inscricao.to_dict()
+        dados_log = {
+            "id": inscricao.id,
+            "nome_inscrito": inscricao.nome,
+            "turma_id": inscricao.turma_id,
+            "nome_treinamento": inscricao.turma.treinamento.nome if inscricao.turma and inscricao.turma.treinamento else "N/A",
+        }
         db.session.delete(inscricao)
         db.session.commit()
-        log_action(g.current_user.id, 'delete', 'InscricaoTreinamento', inscricao.id, dados_log)
+        log_action(
+            g.current_user.id,
+            'delete',
+            'InscricaoTreinamento',
+            inscricao.id,
+            dados_log,
+        )
         return jsonify({"mensagem": "Inscrição removida com sucesso"}), 200
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -1260,7 +1271,25 @@ def listar_logs_treinamentos():
         resultado = []
         for log, nome_usuario in logs:
             detalhes = log.details or {}
-            info = f"{log.entity.replace('Treinamento', '')} '{detalhes.get('nome', '')}' (ID: {log.entity_id})"
+            info = ""
+
+            if log.entity == 'InscricaoTreinamento' and log.action == 'delete':
+                nome_treinamento = detalhes.get('nome_treinamento', 'N/A')
+                nome_inscrito = detalhes.get('nome_inscrito', 'N/A')
+                turma_id = detalhes.get('turma_id', 'N/A')
+                info = (
+                    f"Inscrito '{nome_inscrito}' removido do treinamento "
+                    f"'{nome_treinamento}' (Turma ID: {turma_id})"
+                )
+            elif log.entity == 'InscricaoTreinamento':
+                info = f"Inscrição '{detalhes.get('nome', '')}' (ID: {log.entity_id})"
+            elif log.entity == 'TurmaTreinamento':
+                info = (
+                    f"Turma do treinamento '{detalhes.get('treinamento_nome', 'N/A')}' "
+                    f"(ID: {log.entity_id})"
+                )
+            else:
+                info = f"Treinamento '{detalhes.get('nome', '')}' (ID: {log.entity_id})"
 
             resultado.append({
                 "id": log.id,

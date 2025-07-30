@@ -483,6 +483,13 @@ def atualizar_turma_treinamento(turma_id):
         turma.instrutor_id = payload.instrutor_id
     try:
         db.session.commit()
+        log_action(
+            g.current_user.id,
+            'update',
+            'TurmaTreinamento',
+            turma.id,
+            payload.model_dump(exclude_unset=True)
+        )
         return jsonify(turma.to_dict())
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -1239,7 +1246,13 @@ def listar_logs_treinamentos():
         logs = (
             db.session.query(AuditLog, User.nome)
             .join(User, User.id == AuditLog.user_id)
-            .filter(AuditLog.entity.in_(['Treinamento', 'InscricaoTreinamento']))
+            .filter(
+                AuditLog.entity.in_([
+                    'Treinamento',
+                    'TurmaTreinamento',
+                    'InscricaoTreinamento',
+                ])
+            )
             .order_by(AuditLog.timestamp.desc())
             .all()
         )

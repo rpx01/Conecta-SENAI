@@ -7,6 +7,51 @@ let contadoresIntervals = [];
 let cacheMeusCursos = []; // Cache para os dados dos cursos do usuário
 
 /**
+ * Aplica a máscara de CPF (nnn.nnn.nnn-nn) a um campo de input.
+ * @param {HTMLInputElement} input - O elemento do campo de CPF.
+ */
+function mascaraCpf(input) {
+    let value = input.value.replace(/\D/g, '');
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    input.value = value;
+}
+
+/**
+ * Valida um CPF e atualiza a classe do input para feedback visual.
+ * @param {HTMLInputElement} input - O elemento do campo de CPF.
+ */
+function validarCPF(input) {
+    let cpf = input.value.replace(/\D/g, '');
+    if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) {
+        input.classList.remove('is-valid');
+        input.classList.add('is-invalid');
+        return;
+    }
+    let soma = 0, resto;
+    for (let i = 1; i <= 9; i++) soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+    resto = (soma * 10) % 11;
+    if (resto == 10 || resto == 11) resto = 0;
+    if (resto != parseInt(cpf.substring(9, 10))) {
+        input.classList.remove('is-valid');
+        input.classList.add('is-invalid');
+        return;
+    }
+    soma = 0;
+    for (let i = 1; i <= 10; i++) soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+    resto = (soma * 10) % 11;
+    if (resto == 10 || resto == 11) resto = 0;
+    if (resto != parseInt(cpf.substring(10, 11))) {
+        input.classList.remove('is-valid');
+        input.classList.add('is-invalid');
+        return;
+    }
+    input.classList.remove('is-invalid');
+    input.classList.add('is-valid');
+}
+
+/**
  * Listener que é executado quando o conteúdo da página termina de carregar.
  */
 document.addEventListener('DOMContentLoaded', () => {
@@ -69,6 +114,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const modalForm = new bootstrap.Modal(modalFormEl);
             modalForm.show();
+        });
+    }
+
+    // Listener para campo de CPF
+    const cpfInput = document.getElementById('cpf');
+    if (cpfInput) {
+        cpfInput.addEventListener('input', () => {
+            mascaraCpf(cpfInput);
+            if (cpfInput.value.length === 14) {
+                validarCPF(cpfInput);
+            } else {
+                cpfInput.classList.remove('is-valid', 'is-invalid');
+            }
         });
     }
 });

@@ -24,6 +24,25 @@ from src.auth import (
     admin_required,
 )
 
+
+def is_cpf_valid(cpf: str) -> bool:
+    """Valida um CPF brasileiro."""
+    cpf = ''.join(re.findall(r'\d', str(cpf)))
+    if not cpf or len(cpf) != 11 or cpf == cpf[0] * 11:
+        return False
+
+    soma = sum(int(cpf[i]) * (10 - i) for i in range(9))
+    d1 = (soma * 10 % 11) % 10
+    if d1 != int(cpf[9]):
+        return False
+
+    soma = sum(int(cpf[i]) * (11 - i) for i in range(10))
+    d2 = (soma * 10 % 11) % 10
+    if d2 != int(cpf[10]):
+        return False
+
+    return True
+
 user_bp = Blueprint("user", __name__)
 
 # chaves do Google reCAPTCHA
@@ -272,8 +291,10 @@ def atualizar_usuario(id):
         usuario.email = data["email"]
 
     # Novos campos opcionais
-    if "cpf" in data:
-        usuario.cpf = data["cpf"]
+    if "cpf" in data and data["cpf"]:
+        if not is_cpf_valid(data["cpf"]):
+            return jsonify({"erro": "CPF inválido"}), 400
+        usuario.cpf = ''.join(re.findall(r'\d', str(data["cpf"])))
     if "empresa" in data:
         usuario.empresa = data["empresa"]
     if "data_nascimento" in data and data["data_nascimento"]:

@@ -139,22 +139,35 @@ function ajustarVisibilidadePorPapel() {
 /**
  * Redireciona para a página de login se o usuário não estiver autenticado
  */
-function verificarAutenticacao() {
+/**
+ * Verifica se o usuário está autenticado, validando o token com o servidor.
+ * @returns {Promise<boolean>} - True se autenticado, false caso contrário
+ */
+async function verificarAutenticacao() {
     const usuario = getUsuarioLogado();
     if (!usuario) {
         window.location.href = '/admin/login.html';
         return false;
     }
-    return true;
+
+    try {
+        // Valida o token acessando uma rota protegida
+        await chamarAPI('/usuarios', 'GET');
+        return true;
+    } catch (error) {
+        console.warn('Sessão inválida. Redirecionando para login.');
+        realizarLogout();
+        return false;
+    }
 }
 
 /**
  * Verifica se o usuário tem permissão de administrador
  * Redireciona para o dashboard se não tiver
  */
-function verificarPermissaoAdmin() {
+async function verificarPermissaoAdmin() {
     // Passo 1: Verifica se o usuário está autenticado. Se não, a função já redireciona.
-    if (!verificarAutenticacao()) return false;
+    if (!(await verificarAutenticacao())) return false;
 
     // Passo 2: Verifica se a página atual é a de seleção de sistema.
     const paginaAtual = window.location.pathname;
@@ -176,38 +189,23 @@ function verificarPermissaoAdmin() {
 // ---------- Proteção de Rotas Global ----------
 // Esta IIFE garante que o redirecionamento ocorra apenas quando necessário,
 // evitando loops na página de login ou registro.
-(function() {
+(async function() {
     const currentPage = window.location.pathname;
-    const loginPage = '/admin/login.html';
-    const registerPage = '/register.html';
+    const paginasPublicas = ['/admin/login.html', '/register.html'];
+
+    // Se a página não for pública, valida a sessão no servidor
+    if (!paginasPublicas.includes(currentPage)) {
+        await verificarAutenticacao();
+    }
+
+    // Usuário logado tentando acessar página pública
     const usuario = getUsuarioLogado();
-
-    const paginasProtegidas = ![loginPage, registerPage].includes(currentPage);
-    const naoEstaNaRaiz = !['/', '/selecao-sistema.html'].includes(currentPage);
-
-    if (!usuario && paginasProtegidas) {
-        window.location.href = loginPage;
-        return;
+    if (usuario && paginasPublicas.includes(currentPage)) {
+        window.location.href = '/selecao-sistema.html';
     }
 
-    if (usuario) {
-        if (currentPage === loginPage || currentPage === registerPage) {
-            window.location.href = '/selecao-sistema.html';
-            return;
-        }
-
-        if (
-            naoEstaNaRaiz &&
-            paginasProtegidas &&
-            !currentPage.startsWith('/laboratorios/') &&
-            !currentPage.startsWith('/ocupacao/') &&
-            !currentPage.startsWith('/rateio/') &&
-            !currentPage.startsWith('/admin/') &&
-            !currentPage.startsWith('/treinamentos/')
-        ) {
-            window.location.href = '/selecao-sistema.html';
-        }
-    }
+    // Ajusta interface conforme o papel do usuário
+    ajustarVisibilidadePorPapel();
 })();
 
 // Funções para chamadas à API
@@ -526,7 +524,7 @@ function adicionarBotaoSelecaoSistema() {
 }
 
 // Inicialização da página
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     
     // Verifica autenticação em todas as páginas exceto login e registro
     const paginaAtual = window.location.pathname;
@@ -545,7 +543,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Verifica se o usuário está autenticado
-    if (!verificarAutenticacao()) {
+    if (!(await verificarAutenticacao())) {
         return;
     }
 
@@ -553,7 +551,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Verifica se é a página de seleção de sistema
     if (paginaAtual === '/selecao-sistema.html') {
-        if (!verificarPermissaoAdmin()) {
+        if (!(await verificarPermissaoAdmin())) {
             return;
         }
         return;
@@ -561,7 +559,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Páginas que requerem permissão de administrador
     if (paginaAtual === '/admin/usuarios.html' || paginaAtual === '/laboratorios/turmas.html') {
-        if (!verificarPermissaoAdmin()) {
+        if (!(await verificarPermissaoAdmin())) {
             return;
         }
     }

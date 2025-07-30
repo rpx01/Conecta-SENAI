@@ -545,7 +545,8 @@ def listar_inscricoes(turma_id):
 @admin_required
 def criar_inscricao_admin(turma_id):
     """Adiciona manualmente uma inscrição em uma turma."""
-    if not db.session.get(TurmaTreinamento, turma_id):
+    turma = db.session.get(TurmaTreinamento, turma_id)
+    if not turma:
         return jsonify({"erro": "Turma não encontrada"}), 404
     data = request.json or {}
     try:
@@ -564,7 +565,13 @@ def criar_inscricao_admin(turma_id):
     try:
         db.session.add(insc)
         db.session.commit()
-        log_action(g.current_user.id, 'create', 'InscricaoTreinamento', insc.id, insc.to_dict())
+        dados_log = {
+            "id": insc.id,
+            "nome_inscrito": insc.nome,
+            "turma_id": turma.id,
+            "nome_treinamento": turma.treinamento.nome if turma.treinamento else "N/A",
+        }
+        log_action(g.current_user.id, 'create', 'InscricaoTreinamento', insc.id, dados_log)
         return jsonify(insc.to_dict()), 201
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -1273,7 +1280,15 @@ def listar_logs_treinamentos():
             detalhes = log.details or {}
             info = ""
 
-            if log.entity == 'InscricaoTreinamento' and log.action == 'delete':
+            if log.entity == 'InscricaoTreinamento' and log.action == 'create':
+                nome_treinamento = detalhes.get('nome_treinamento', 'N/A')
+                nome_inscrito = detalhes.get('nome_inscrito', 'N/A')
+                turma_id = detalhes.get('turma_id', 'N/A')
+                info = (
+                    f"Inscrito '{nome_inscrito}' adicionado ao treinamento "
+                    f"'{nome_treinamento}' (Turma ID: {turma_id})"
+                )
+            elif log.entity == 'InscricaoTreinamento' and log.action == 'delete':
                 nome_treinamento = detalhes.get('nome_treinamento', 'N/A')
                 nome_inscrito = detalhes.get('nome_inscrito', 'N/A')
                 turma_id = detalhes.get('turma_id', 'N/A')

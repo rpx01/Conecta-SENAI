@@ -255,7 +255,7 @@ def registrar_usuario():
         return handle_internal_error(e)
 
     if "text/html" in request.accept_mimetypes:
-        return redirect("/admin/login.html")
+        return redirect("/admin/login_admin.html")
     return jsonify({"mensagem": "Usuário registrado com sucesso"}), 201
 
 

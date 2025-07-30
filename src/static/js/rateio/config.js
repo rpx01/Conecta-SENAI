@@ -14,7 +14,7 @@ function novaConfig() {
 document.addEventListener('DOMContentLoaded', function() {
     // Validação de autenticação e permissões
     if (!verificarAutenticacao() || !isAdmin()) {
-        window.location.href = '/selecao-sistema.html';
+        window.location.href = '/selecao_sistema.html';
         return;
     }
 

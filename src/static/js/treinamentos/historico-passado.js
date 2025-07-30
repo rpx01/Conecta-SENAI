@@ -21,7 +21,7 @@ async function carregarHistoricoPassado() {
             const tr = document.createElement('tr');
             // Botão de Ações simplificado, apenas para ver inscrições
             const botoesAcoes = `
-                <a class="btn btn-sm btn-outline-info me-1" href="/treinamentos/admin-inscricoes.html?turma=${t.turma_id}" title="Ver Inscrições"><i class="bi bi-people"></i></a>
+                <a class="btn btn-sm btn-outline-info me-1" href="/treinamentos/inscricoes_admin_treinamentos.html?turma=${t.turma_id}" title="Ver Inscrições"><i class="bi bi-people"></i></a>
             `;
 
             tr.innerHTML = `

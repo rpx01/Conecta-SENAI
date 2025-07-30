@@ -600,7 +600,8 @@ document.addEventListener('DOMContentLoaded', function() {
             '/treinamentos/admin-turmas.html',
             '/treinamentos/admin-inscricoes.html',
             '/treinamentos/admin-historico-turmas.html',
-             '/treinamentos/admin-historico-passado.html'
+            '/treinamentos/admin-historico-passado.html',
+            '/treinamentos/admin-logs.html'
         ];
 
         if (!paginasDeExclusao.includes(paginaAtual)) {

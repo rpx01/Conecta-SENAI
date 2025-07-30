@@ -110,7 +110,8 @@ async function carregarOcupacoes(dataInicio, dataFim) {
     }
 }
 
-// Carrega resumo de ocupações por período
+// Consulta a API para obter o resumo de ocupações entre duas datas
+// Aplica também os filtros selecionados na interface
 async function carregarResumoPeriodo(dataInicio, dataFim) {
     try {
         const params = new URLSearchParams({

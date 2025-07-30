@@ -16,11 +16,9 @@ from src.models import db
 from src.models.user import User
 from src.models.sala import Sala
 from src.routes.user import user_bp, gerar_token_acesso, gerar_refresh_token
-from src.routes.sala import sala_bp
-from src.routes.turma import turma_bp
-from src.routes.agendamento import agendamento_bp
-from src.routes.instrutor import instrutor_bp
-from src.routes.treinamento import treinamento_bp
+from src.routes.ocupacao import sala_bp, instrutor_bp, ocupacao_bp
+from src.routes.treinamentos import turma_bp, treinamento_bp
+from src.routes.laboratorios import agendamento_bp, laboratorio_bp
 
 @pytest.fixture
 def app():
@@ -36,6 +34,8 @@ def app():
     app.register_blueprint(agendamento_bp, url_prefix='/api')
     app.register_blueprint(instrutor_bp, url_prefix='/api')
     app.register_blueprint(treinamento_bp, url_prefix='/api')
+    app.register_blueprint(ocupacao_bp, url_prefix='/api')
+    app.register_blueprint(laboratorio_bp, url_prefix='/api')
 
     with app.app_context():
         db.create_all()

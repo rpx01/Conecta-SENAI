@@ -1,10 +1,11 @@
 """Rotas para gerenciamento de turmas."""
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from src.models import db
 from sqlalchemy.exc import SQLAlchemyError
 from src.utils.error_handler import handle_internal_error
 from src.models.laboratorio_turma import Turma
 from src.routes.user import verificar_autenticacao, verificar_admin
+from src.utils.audit import log_action
 
 turma_bp = Blueprint('turma', __name__)
 
@@ -82,17 +83,21 @@ def atualizar_turma(id):
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
-    
+
+    g.current_user = user
+
     # Verifica permissões de administrador
     if not verificar_admin(user):
         return jsonify({'erro': 'Permissão negada'}), 403
-    
+
     turma = db.session.get(Turma, id)
     if not turma:
         return jsonify({'erro': 'Turma não encontrada'}), 404
-    
-    data = request.json or {}
 
+    # --- 2. Capturar o estado ANTES da alteração ---
+    estado_anterior = turma.to_dict()
+
+    data = request.json or {}
     nome = (data.get('nome') or '').strip()
 
     # Validação de dados
@@ -108,6 +113,17 @@ def atualizar_turma(id):
     try:
         turma.nome = nome
         db.session.commit()
+
+        # --- 3. Registrar a ação no LOG após o sucesso ---
+        dados_depois = turma.to_dict()
+        log_action(
+            user_id=g.current_user.id,
+            action='update',
+            entity='Turma',
+            entity_id=turma.id,
+            details={'de': estado_anterior, 'para': dados_depois}
+        )
+
         return jsonify(turma.to_dict())
     except SQLAlchemyError as e:
         db.session.rollback()

@@ -1,5 +1,3 @@
-# src/routes/treinamento.py
-
 """Rotas para gerenciamento de treinamentos e inscricoes."""
 
 from flask import Blueprint, request, jsonify, g
@@ -254,8 +252,7 @@ def listar_meus_cursos():
                 "treinamento": turma.treinamento.to_dict(),
                 "data_inicio": turma.data_inicio.isoformat() if turma.data_inicio else None,
                 "data_fim": turma.data_fim.isoformat() if turma.data_fim else None,
-                # --- CORREÇÃO APLICADA AQUI ---
-                # Campos que estavam faltando e foram adicionados:
+                # Campos que estavam faltando e foram adicionados
                 "horario": turma.horario,
                 "local_realizacao": turma.local_realizacao,
                 "instrutor_nome": turma.instrutor.nome if turma.instrutor else None,

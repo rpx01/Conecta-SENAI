@@ -12,7 +12,7 @@ from src.models import db
 from src.models.sala import Sala
 from src.models.user import User
 from src.routes.user import user_bp
-from src.routes.agendamento import agendamento_bp
+from src.routes.laboratorios import agendamento_bp
 from src.routes.ocupacao import ocupacao_bp
 
 

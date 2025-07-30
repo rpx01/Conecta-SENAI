@@ -14,16 +14,12 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 from src.models import db
-from src.routes.agendamento import agendamento_bp
-from src.routes.instrutor import instrutor_bp
-from src.routes.laboratorio import laboratorio_bp
+from src.routes.laboratorios import agendamento_bp, laboratorio_bp
 from src.routes.notificacao import notificacao_bp
-from src.routes.ocupacao import ocupacao_bp
-from src.routes.sala import sala_bp
-from src.routes.turma import turma_bp
+from src.routes.ocupacao import ocupacao_bp, sala_bp, instrutor_bp
 from src.routes.user import user_bp
 from src.routes.rateio import rateio_bp
-from src.routes.treinamento import treinamento_bp
+from src.routes.treinamentos import treinamento_bp, turma_bp
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 

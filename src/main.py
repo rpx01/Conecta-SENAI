@@ -5,7 +5,7 @@ import os
 import logging
 import traceback
 import sys
-from flask import Flask, redirect
+from flask import Flask, redirect, render_template
 from flask_migrate import Migrate
 from src.limiter import limiter
 from src.redis_client import init_redis
@@ -125,10 +125,12 @@ def create_app():
 
     @app.route('/')
     def index():
-        return redirect('/admin/login.html')
+        return redirect('/admin/login_admin.html')
 
     @app.route('/<path:path>')
     def static_file(path):
+        if path.endswith('.html'):
+            return render_template(path)
         return app.send_static_file(path)
 
     @app.route('/health')

@@ -39,11 +39,11 @@ async function carregarHistorico() {
                     <button class="btn btn-sm btn-outline-success me-1" onclick="abrirModalInscricaoAdmin(${t.turma_id})" title="Adicionar Participante">
                         <i class="bi bi-person-plus"></i>
                     </button>
-                    <a class="btn btn-sm btn-outline-info me-1" href="/treinamentos/admin-inscricoes.html?turma=${t.turma_id}" title="Ver Inscri\u00e7\u00f5es"><i class="bi bi-people"></i></a>
+                    <a class="btn btn-sm btn-outline-info me-1" href="/treinamentos/inscricoes_admin_treinamentos.html?turma=${t.turma_id}" title="Ver Inscri\u00e7\u00f5es"><i class="bi bi-people"></i></a>
                 `;
             } else if (dataFim < hoje) {
                 botoesAcoes = `
-                    <a class="btn btn-sm btn-outline-info me-1" href="/treinamentos/admin-inscricoes.html?turma=${t.turma_id}" title="Ver Inscri\u00e7\u00f5es"><i class="bi bi-people"></i></a>
+                    <a class="btn btn-sm btn-outline-info me-1" href="/treinamentos/inscricoes_admin_treinamentos.html?turma=${t.turma_id}" title="Ver Inscri\u00e7\u00f5es"><i class="bi bi-people"></i></a>
                 `;
             }
 

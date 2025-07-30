@@ -303,7 +303,7 @@ async function salvarOcupacao() {
         
         if (response.ok) {
             exibirAlerta('Ocupação salva com sucesso.', 'success');
-            window.location.href = '/ocupacao/calendario_ocupacao.html';
+            window.location.href = '/ocupacao/calendario.html';
         } else {
             throw new Error(formatarErros(resultado.erro) || 'Erro ao salvar ocupação');
         }

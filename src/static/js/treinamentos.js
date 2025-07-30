@@ -110,6 +110,10 @@ async function carregarTreinamentos() {
                             <i class="bi bi-calendar-range"></i>
                             <span><b>Período:</b> ${formatarData(t.data_inicio)} a ${formatarData(t.data_fim)}</span>
                         </div>
+                         <div class="curso-info-item">
+                            <i class="bi bi-clock-fill"></i>
+                            <span><b>Horário:</b> ${escapeHTML(t.horario || 'A definir')}</span>
+                        </div>               
                         <div class="curso-info-item">
                             <i class="bi bi-person-workspace"></i>
                             <span><b>Instrutor:</b> ${escapeHTML(t.instrutor_nome || 'A definir')}</span>

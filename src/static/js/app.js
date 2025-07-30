@@ -19,64 +19,6 @@ function sanitizeHTML(html) {
     return window.DOMPurify ? DOMPurify.sanitize(html) : html;
 }
 
-// ----- Inicialização da página de login -----
-document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('loginForm')) {
-        inicializarLogicaLogin();
-    }
-});
-
-async function inicializarLogicaLogin() {
-    let siteKey = '';
-    try {
-        const resp = await fetch('/api/recaptcha/site-key');
-        const data = await resp.json();
-        siteKey = data.site_key || '';
-        if (siteKey) {
-            const s = document.createElement('script');
-            s.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}`;
-            document.head.appendChild(s);
-        }
-    } catch (e) {
-        console.error('Erro ao carregar site key do reCAPTCHA:', e);
-    }
-
-    const loginForm = document.getElementById('loginForm');
-    if (!loginForm) return;
-
-    loginForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const btn = document.getElementById('btnLogin');
-
-        await executarAcaoComFeedback(btn, async () => {
-            const email = document.getElementById('email').value;
-            const senha = document.getElementById('senha').value;
-            let token = '';
-
-            if (siteKey && window.grecaptcha) {
-                try {
-                    token = await new Promise((resolve, reject) => {
-                        grecaptcha.ready(() => {
-                            grecaptcha.execute(siteKey, { action: 'login' })
-                                .then(resolve)
-                                .catch(reject);
-                        });
-                    });
-                } catch (err) {
-                    console.error('Erro ao obter token reCAPTCHA:', err);
-                }
-            }
-
-            try {
-                await realizarLogin(email, senha, token);
-            } catch (error) {
-                exibirAlerta(error.message, 'danger');
-                // o estado do botão é restaurado por executarAcaoComFeedback
-            }
-        });
-    });
-}
-
 // Funções de autenticação
 /**
  * Realiza o login do usuário

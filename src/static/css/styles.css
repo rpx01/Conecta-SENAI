@@ -20,7 +20,7 @@
 }
 
 body {
-  font-family: 'Gibson', 'Exo 2', Calibri, sans-serif;
+  font-family: 'Gibson', 'Neo Sans W1G', 'Exo 2', Calibri, sans-serif;
   font-size: 14px;
   color: var(--text-color);
   background-color: var(--background-color);
@@ -420,7 +420,7 @@ small, .small {
 
 /* ESTILO CHEIO (100% Ocupado) - CORREÇÃO */
 .turno-cheio {
-    background-color: #00539F !important; /* Azul SENAI. O !important força a prioridade. */
+    background-color: #164194 !important; /* Azul SENAI. O !important força a prioridade. */
     color: #FFFFFF;
     border-color: #00407d;
     font-weight: 600;
@@ -938,7 +938,7 @@ input, select, textarea {
 
 /* ESTILO CHEIO (100% Ocupado) - CORREÇÃO */
 .turno-cheio {
-    background-color: #00539F !important; /* Azul SENAI. O !important força a prioridade. */
+    background-color: #164194 !important; /* Azul SENAI. O !important força a prioridade. */
     color: #FFFFFF;
     border-color: #00407d;
     font-weight: 600;

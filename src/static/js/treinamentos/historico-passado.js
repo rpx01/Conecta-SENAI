@@ -13,7 +13,7 @@ async function carregarHistoricoPassado() {
 
         tbody.innerHTML = '';
         if (turmas.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum histórico de turmas encerradas encontrado.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum histórico de turmas encerradas encontrado.</td></tr>';
             return;
         }
 
@@ -27,6 +27,7 @@ async function carregarHistoricoPassado() {
             tr.innerHTML = `
                 <td>${t.turma_id}</td>
                 <td>${escapeHTML(t.treinamento.nome)}</td>
+                <td>${escapeHTML(t.horario || 'N/D')}</td>
                 <td>${formatarData(t.data_inicio)}</td>
                 <td>${formatarData(t.data_fim)}</td>
                 <td>${botoesAcoes}</td>`;

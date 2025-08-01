@@ -22,7 +22,7 @@ async function carregarHistorico() {
 
         tbody.innerHTML = '';
         if (turmas.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum hist\u00f3rico de turmas encontrado.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum hist\\u00f3rico de turmas encontrado.</td></tr>';
             return;
         }
 
@@ -39,17 +39,18 @@ async function carregarHistorico() {
                     <button class="btn btn-sm btn-outline-success me-1" onclick="abrirModalInscricaoAdmin(${t.turma_id})" title="Adicionar Participante">
                         <i class="bi bi-person-plus"></i>
                     </button>
-                    <a class="btn btn-sm btn-outline-info me-1" href="/treinamentos/admin-inscricoes.html?turma=${t.turma_id}" title="Ver Inscri\u00e7\u00f5es"><i class="bi bi-people"></i></a>
+                    <a class="btn btn-sm btn-outline-info me-1" href="/treinamentos/admin-inscricoes.html?turma=${t.turma_id}" title="Ver Inscri\\u00e7\\u00f5es"><i class="bi bi-people"></i></a>
                 `;
             } else if (dataFim < hoje) {
                 botoesAcoes = `
-                    <a class="btn btn-sm btn-outline-info me-1" href="/treinamentos/admin-inscricoes.html?turma=${t.turma_id}" title="Ver Inscri\u00e7\u00f5es"><i class="bi bi-people"></i></a>
+                    <a class="btn btn-sm btn-outline-info me-1" href="/treinamentos/admin-inscricoes.html?turma=${t.turma_id}" title="Ver Inscri\\u00e7\\u00f5es"><i class="bi bi-people"></i></a>
                 `;
             }
 
             tr.innerHTML = `
                 <td>${t.turma_id}</td>
                 <td>${escapeHTML(t.treinamento.nome)}</td>
+                <td>${escapeHTML(t.horario || 'N/D')}</td>
                 <td>${formatarData(t.data_inicio)}</td>
                 <td>${formatarData(t.data_fim)}</td>
                 <td>${botoesAcoes}</td>`;
@@ -63,7 +64,7 @@ async function carregarHistorico() {
 function abrirModalInscricaoAdmin(turmaId) {
     const modalEl = document.getElementById('adminInscricaoModal');
     if (!modalEl) {
-        console.error('O modal de inscri\u00e7\u00e3o n\u00e3o foi encontrado na p\u00e1gina.');
+        console.error('O modal de inscri\\u00e7\\u00e3o n\\u00e3o foi encontrado na p\\u00e1gina.');
         return;
     }
     document.getElementById('adminInscricaoForm').reset();
@@ -96,3 +97,4 @@ async function enviarInscricaoAdmin() {
         }
     });
 }
+

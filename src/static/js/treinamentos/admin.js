@@ -163,6 +163,7 @@ async function carregarTurmas() {
             tr.innerHTML = `
                 <td>${t.turma_id}</td>
                 <td>${escapeHTML(t.treinamento.nome)}</td>
+                <td>${escapeHTML(t.horario || 'N/D')}</td>
                 <td>${formatarData(t.data_inicio)}</td>
                 <td>${formatarData(t.data_fim)}</td>
                 <td>

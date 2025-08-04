@@ -70,7 +70,7 @@ class Turma(db.Model):
     __tablename__ = 'turmas'
     
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(50), nullable=False, unique=True)
+    nome = db.Column(db.String(255), nullable=False, unique=True)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

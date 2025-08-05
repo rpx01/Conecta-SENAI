@@ -22,7 +22,7 @@ class User(db.Model):
     __tablename__ = 'usuarios'
     
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
+    _nome = db.Column("nome", db.String(100), nullable=False)
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     senha_hash = db.Column(db.String(256), nullable=False)
@@ -32,12 +32,28 @@ class User(db.Model):
     # Novos campos opcionais
     cpf = db.Column(db.String(20), nullable=True)
     data_nascimento = db.Column(db.Date, nullable=True)
-    empresa = db.Column(db.String(150), nullable=True)
+    _empresa = db.Column("empresa", db.String(150), nullable=True)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relacionamento com agendamentos
     agendamentos = db.relationship('Agendamento', backref='usuario', lazy=True)
+
+    @property
+    def nome(self):
+        return self._nome
+
+    @nome.setter
+    def nome(self, value):
+        self._nome = value.upper() if value else None
+
+    @property
+    def empresa(self):
+        return self._empresa
+
+    @empresa.setter
+    def empresa(self, value):
+        self._empresa = value.upper() if value else None
     
     def __init__(self, nome, email, senha, tipo='comum', username=None):
         """

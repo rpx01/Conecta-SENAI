@@ -1260,7 +1260,7 @@ def listar_logs_treinamentos():
     """Lista os logs de auditoria relacionados a treinamentos e inscrições."""
     try:
         logs = (
-            db.session.query(AuditLog, User.nome)
+            db.session.query(AuditLog, User._nome)
             .join(User, User.id == AuditLog.user_id)
             .filter(
                 AuditLog.entity.in_([

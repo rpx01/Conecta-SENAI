@@ -573,36 +573,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     // CHAMA A NOVA FUNÇÃO PARA AJUSTAR A INTERFACE
     ajustarVisibilidadePorPapel();
     
-    // Adiciona o link para Laboratórios e Turmas somente no módulo de Agenda
+    // Adiciona os links de navegação para administradores apenas nos módulos permitidos
     if (isAdmin()) {
-        const paginasDeExclusao = [
-            '/ocupacao/dashboard.html',
-            '/ocupacao/calendario.html',
-            '/ocupacao/salas.html',
-            '/ocupacao/instrutores.html',
-            '/ocupacao/agendamento.html',
-            '/rateio/perfil.html',
-            '/rateio/dashboard.html',
-            '/rateio/config.html',
-            '/rateio/instrutores.html',
-            '/ocupacao/perfil.html',
-            '/admin/usuarios.html',
-            '/laboratorios/perfil.html',
-            '/admin/perfil.html',
-            '/ocupacao/turmas.html',
-            '/rateio/logs.html',
-            // Adicionando páginas de treinamento à lista de exclusão
-            '/treinamentos/index.html',
-            '/treinamentos/meus-cursos.html',
-            '/treinamentos/admin-catalogo.html',
-            '/treinamentos/admin-turmas.html',
-            '/treinamentos/admin-inscricoes.html',
-            '/treinamentos/admin-historico-turmas.html',
-            '/treinamentos/admin-historico-passado.html',
-            '/treinamentos/admin-logs.html'
+        const modulosDeInclusao = [
+            '/laboratorios/'
+            // Se outras áreas precisarem destes links, adicione aqui
         ];
 
-        if (!paginasDeExclusao.includes(paginaAtual)) {
+        const deveExibirLinks = modulosDeInclusao.some(modulo => paginaAtual.startsWith(modulo));
+
+        if (deveExibirLinks) {
             adicionarLinkLabTurmas('.navbar-nav.ms-auto', true);
             adicionarLinkLabTurmas('.sidebar .nav.flex-column', false);
 

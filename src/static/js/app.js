@@ -665,16 +665,19 @@ async function carregarNotificacoes() {
         let html = '';
         notificacoes.forEach(notificacao => {
             const classeNotificacao = notificacao.lida ? 'bg-light' : 'bg-info bg-opacity-10';
+            const mensagem = sanitizeHTML(notificacao.mensagem);
+            const dataCriacao = sanitizeHTML(formatarData(notificacao.data_criacao));
+            const idNotificacao = sanitizeHTML(String(notificacao.id));
             html += `
                 <div class="card mb-2 ${classeNotificacao}">
                     <div class="card-body">
-                        <p class="card-text">${sanitizeHTML(notificacao.mensagem)}</p>
+                        <p class="card-text">${mensagem}</p>
                         <p class="card-text"><small class="text-muted">
-                            ${formatarData(notificacao.data_criacao)}
+                            ${dataCriacao}
                         </small></p>
                         ${!notificacao.lida ? `
                             <button class="btn btn-sm btn-outline-primary marcar-lida"
-                                data-id="${notificacao.id}">Marcar como lida</button>
+                                data-id="${idNotificacao}">Marcar como lida</button>
                         ` : ''}
                     </div>
                 </div>

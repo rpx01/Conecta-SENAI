@@ -2,6 +2,7 @@
 
 from flask import Blueprint, request, jsonify, current_app, g, redirect
 import os
+import hmac
 
 from src.limiter import limiter
 import re
@@ -23,6 +24,7 @@ from src.auth import (
     login_required,
     admin_required,
 )
+from flask_wtf.csrf import generate_csrf
 
 
 def is_cpf_valid(cpf: str) -> bool:
@@ -53,6 +55,26 @@ RECAPTCHA_SECRET_KEY = (
     or os.getenv("SECRET_KEY")
 )
 RECAPTCHA_THRESHOLD = float(os.getenv("RECAPTCHA_THRESHOLD", "0.5"))
+
+
+@user_bp.before_request
+def verificar_csrf():
+    if request.method in {"POST", "PUT", "DELETE"} and request.endpoint != "user.get_csrf_token":
+        token_cookie = request.cookies.get("csrf_token")
+        token_header = request.headers.get("X-CSRFToken")
+        if not token_cookie or not token_header or not hmac.compare_digest(
+            token_cookie, token_header
+        ):
+            return jsonify({"erro": "CSRF token inválido"}), 400
+
+
+@user_bp.route("/csrf-token", methods=["GET"])
+def get_csrf_token():
+    token = generate_csrf()
+    secure_cookie = current_app.config.get("COOKIE_SECURE", True)
+    resp = jsonify({"csrf_token": token})
+    resp.set_cookie("csrf_token", token, secure=secure_cookie, samesite="Strict")
+    return resp
 
 
 @user_bp.route("/recaptcha/site-key", methods=["GET"])
@@ -460,27 +482,34 @@ def login():
             current_app.logger.error(f"Erro ao salvar refresh token: {e}")
             return jsonify(success=False, message="Erro ao salvar token"), 500
 
+        secure_cookie = current_app.config.get("COOKIE_SECURE", True)
+        csrf_token = generate_csrf()
         resp = jsonify(
             message="Login successful",
             token=access_token,
             refresh_token=refresh_token,
             usuario=usuario.to_dict(),
+            csrf_token=csrf_token,
         )
-        secure_cookie = current_app.config.get("COOKIE_SECURE", True)
-        samesite_cookie = current_app.config.get("COOKIE_SAMESITE", "Strict")
         resp.set_cookie(
             "access_token",
             access_token,
             httponly=True,
             secure=secure_cookie,
-            samesite=samesite_cookie,
+            samesite="Strict",
         )
         resp.set_cookie(
             "refresh_token",
             refresh_token,
             httponly=True,
             secure=secure_cookie,
-            samesite=samesite_cookie,
+            samesite="Strict",
+        )
+        resp.set_cookie(
+            "csrf_token",
+            csrf_token,
+            secure=secure_cookie,
+            samesite="Strict",
         )
         return resp, 200
     except SQLAlchemyError as e:
@@ -502,15 +531,21 @@ def refresh_token():
     if not usuario:
         return jsonify({"erro": "Refresh token inválido"}), 401
     novo_token = gerar_token_acesso(usuario)
-    resp = jsonify({"token": novo_token})
     secure_cookie = current_app.config.get("COOKIE_SECURE", True)
-    samesite_cookie = current_app.config.get("COOKIE_SAMESITE", "Strict")
+    csrf_token = generate_csrf()
+    resp = jsonify({"token": novo_token, "csrf_token": csrf_token})
     resp.set_cookie(
         "access_token",
         novo_token,
         httponly=True,
         secure=secure_cookie,
-        samesite=samesite_cookie,
+        samesite="Strict",
+    )
+    resp.set_cookie(
+        "csrf_token",
+        csrf_token,
+        secure=secure_cookie,
+        samesite="Strict",
     )
     return resp
 
@@ -553,20 +588,26 @@ def logout():
         return jsonify({"erro": "Token obrigatório"}), 400
 
     secure_cookie = current_app.config.get("COOKIE_SECURE", True)
-    samesite_cookie = current_app.config.get("COOKIE_SAMESITE", "Strict")
     resp = jsonify({"mensagem": "Logout realizado"})
     resp.set_cookie(
         "access_token",
         "",
         expires=0,
         secure=secure_cookie,
-        samesite=samesite_cookie,
+        samesite="Strict",
     )
     resp.set_cookie(
         "refresh_token",
         "",
         expires=0,
         secure=secure_cookie,
-        samesite=samesite_cookie,
+        samesite="Strict",
+    )
+    resp.set_cookie(
+        "csrf_token",
+        "",
+        expires=0,
+        secure=secure_cookie,
+        samesite="Strict",
     )
     return resp

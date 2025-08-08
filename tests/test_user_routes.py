@@ -349,3 +349,66 @@ def test_root_admin_can_downgrade_admin(client, login_admin):
     )
     assert resp_downgrade.status_code == 200
     assert resp_downgrade.get_json()['tipo'] == 'comum'
+
+
+def test_non_root_admin_cannot_delete_admin(client, login_admin):
+    token_root, _ = login_admin(client)
+    headers_root = {'Authorization': f'Bearer {token_root}', 'X-CSRFToken': fetch_csrf(client)}
+
+    csrf = fetch_csrf(client)
+    resp_create = client.post(
+        '/api/usuarios',
+        json={'nome': 'Admin2', 'email': 'admin2@example.com', 'senha': 'Senha@123'},
+        headers={'X-CSRFToken': csrf},
+        environ_base={'REMOTE_ADDR': '1.1.1.18'},
+    )
+    assert resp_create.status_code == 201
+    admin2_id = resp_create.get_json()['id']
+
+    headers_root['X-CSRFToken'] = fetch_csrf(client)
+    resp_promote = client.put(
+        f'/api/usuarios/{admin2_id}', json={'tipo': 'admin'}, headers=headers_root
+    )
+    assert resp_promote.status_code == 200
+
+    csrf = fetch_csrf(client)
+    resp_login = client.post(
+        '/api/login',
+        json={'email': 'admin2@example.com', 'senha': 'Senha@123'},
+        headers={'X-CSRFToken': csrf},
+    )
+    assert resp_login.status_code == 200
+    token_admin2 = resp_login.get_json()['token']
+    headers_admin2 = {'Authorization': f'Bearer {token_admin2}', 'X-CSRFToken': fetch_csrf(client)}
+
+    with client.application.app_context():
+        root_id = User.query.filter_by(email='admin@example.com').first().id
+
+    resp_delete = client.delete(f'/api/usuarios/{root_id}', headers=headers_admin2)
+    assert resp_delete.status_code == 403
+
+
+def test_root_admin_can_delete_admin(client, login_admin):
+    token_root, _ = login_admin(client)
+    headers_root = {'Authorization': f'Bearer {token_root}', 'X-CSRFToken': fetch_csrf(client)}
+
+    csrf = fetch_csrf(client)
+    resp_create = client.post(
+        '/api/usuarios',
+        json={'nome': 'Admin3', 'email': 'admin3@example.com', 'senha': 'Senha@123'},
+        headers={'X-CSRFToken': csrf},
+        environ_base={'REMOTE_ADDR': '1.1.1.19'},
+    )
+    assert resp_create.status_code == 201
+    admin3_id = resp_create.get_json()['id']
+
+    headers_root['X-CSRFToken'] = fetch_csrf(client)
+    resp_promote = client.put(
+        f'/api/usuarios/{admin3_id}', json={'tipo': 'admin'}, headers=headers_root
+    )
+    assert resp_promote.status_code == 200
+
+    headers_root['X-CSRFToken'] = fetch_csrf(client)
+    resp_delete = client.delete(f'/api/usuarios/{admin3_id}', headers=headers_root)
+    assert resp_delete.status_code == 200
+    assert resp_delete.get_json()['mensagem'] == 'Usuário removido com sucesso'

@@ -46,12 +46,16 @@ from reportlab.platypus import (
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 import locale
+import logging
 
 # Configura o locale para o formato de data em português
 try:
     locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
 except locale.Error:
-    locale.setlocale(locale.LC_TIME, "")  # Fallback para o locale padrão do sistema
+    locale.setlocale(locale.LC_TIME, "C")  # Fallback para um locale seguro
+    logging.warning(
+        "Locale 'pt_BR.UTF-8' not available. Falling back to 'C'."
+    )
 
 
 treinamento_bp = Blueprint("treinamento", __name__)

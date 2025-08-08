@@ -400,6 +400,16 @@ def remover_usuario(id):
     if not usuario:
         return jsonify({"erro": "Usuário não encontrado"}), 404
 
+    # Apenas o administrador raiz pode remover outro administrador
+    if usuario.tipo == "admin":
+        admin_email = os.getenv("ADMIN_EMAIL")
+        is_root = admin_email and user.email == admin_email
+        if not is_root:
+            return (
+                jsonify({"erro": "Você não tem permissão para remover um administrador"}),
+                403,
+            )
+
     try:
         db.session.delete(usuario)
         db.session.commit()

@@ -5,8 +5,7 @@ import os
 import hmac
 
 from src.limiter import limiter
-import re
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 import jwt
 import uuid
 from src.models import db
@@ -26,28 +25,11 @@ from src.auth import (
 )
 from flask_wtf.csrf import generate_csrf
 from src.services import user_service
+from pydantic import ValidationError
+from src.schemas.user import UserCreateSchema, UserUpdateSchema
 
 # Reexporta a expressão regular para compatibilidade
 PASSWORD_REGEX = user_service.PASSWORD_REGEX
-
-
-def is_cpf_valid(cpf: str) -> bool:
-    """Valida um CPF brasileiro."""
-    cpf = ''.join(re.findall(r'\d', str(cpf)))
-    if not cpf or len(cpf) != 11 or cpf == cpf[0] * 11:
-        return False
-
-    soma = sum(int(cpf[i]) * (10 - i) for i in range(9))
-    d1 = (soma * 10 % 11) % 10
-    if d1 != int(cpf[9]):
-        return False
-
-    soma = sum(int(cpf[i]) * (11 - i) for i in range(10))
-    d2 = (soma * 10 % 11) % 10
-    if d2 != int(cpf[10]):
-        return False
-
-    return True
 
 user_bp = Blueprint("user", __name__)
 
@@ -202,10 +184,13 @@ def criar_usuario():
     Usuários não autenticados podem criar apenas usuários comuns.
     Administradores podem criar qualquer tipo de usuário.
     """
-    dados = request.get_json() or {}
+    try:
+        payload = UserCreateSchema(**(request.get_json() or {}))
+    except ValidationError as e:
+        return jsonify({"erro": e.errors()[0]["msg"]}), 400
 
     try:
-        novo_usuario, erro = user_service.criar_usuario(dados)
+        novo_usuario, erro = user_service.criar_usuario(payload.model_dump(by_alias=True))
     except SQLAlchemyError as e:
         return handle_internal_error(e)
 
@@ -227,7 +212,12 @@ def registrar_usuario():
     }
 
     try:
-        _, erro = user_service.criar_usuario(dados)
+        payload = UserCreateSchema(**dados)
+    except ValidationError as e:
+        return jsonify({"erro": e.errors()[0]["msg"]}), 400
+
+    try:
+        _, erro = user_service.criar_usuario(payload.model_dump(by_alias=True))
     except SQLAlchemyError as e:  # pragma: no cover
         return handle_internal_error(e)
 
@@ -257,37 +247,31 @@ def atualizar_usuario(id):
     if not usuario:
         return jsonify({"erro": "Usuário não encontrado"}), 404
 
-    data = request.json
+    try:
+        dados = UserUpdateSchema(**(request.get_json() or {}))
+    except ValidationError as e:
+        return jsonify({"erro": e.errors()[0]["msg"]}), 400
+
+    data = dados.model_dump(exclude_unset=True)
 
     # Atualiza os campos fornecidos
     if "nome" in data:
         usuario.nome = data["nome"]
 
     if "email" in data:
-        # Verifica se o email já existe para outro usuário
         email_existente = User.query.filter_by(email=data["email"]).first()
         if email_existente and email_existente.id != id:
-            return jsonify({"erro": "Email já cadastrado para outro usuário"}), 400
+            return jsonify({"erro": "Email já cadastrado"}), 400
         usuario.email = data["email"]
 
-    # Novos campos opcionais
-    if "cpf" in data and data["cpf"]:
-        if not is_cpf_valid(data["cpf"]):
-            return jsonify({"erro": "CPF inválido"}), 400
-        usuario.cpf = ''.join(re.findall(r'\d', str(data["cpf"])))
+    if "cpf" in data:
+        usuario.cpf = data["cpf"]
     if "empresa" in data:
         usuario.empresa = data["empresa"]
-    if "data_nascimento" in data and data["data_nascimento"]:
-        try:
-            usuario.data_nascimento = date.fromisoformat(data["data_nascimento"])
-        except (ValueError, TypeError):
-            return jsonify({"erro": "Formato de data de nascimento inválido. Use YYYY-MM-DD"}), 400
+    if "data_nascimento" in data:
+        usuario.data_nascimento = data["data_nascimento"]
 
-    # Apenas administradores podem alterar o tipo de usuário
     if "tipo" in data and verificar_admin(user):
-        if data["tipo"] not in ["comum", "admin", "secretaria"]:
-            return jsonify({"erro": "Tipo de usuário inválido"}), 400
-
         novo_tipo = data["tipo"]
 
         # Evita que administradores comuns rebaixem outros administradores
@@ -307,30 +291,16 @@ def atualizar_usuario(id):
 
         usuario.tipo = novo_tipo
 
-    # Atualiza a senha se fornecida
     if "senha" in data:
         senha_atual = data.get("senha_atual")
 
-        # Se quem está alterando não é um administrador editando outro usuário,
-        # exige a senha atual para confirmar a operação
         if not verificar_admin(user) or user.id == id:
             if not senha_atual:
                 return jsonify({"erro": "Senha atual obrigatória"}), 400
             if not usuario.check_senha(senha_atual):
                 return jsonify({"erro": "Senha atual incorreta"}), 403
 
-        nova_senha = data["senha"]
-        if not user_service.PASSWORD_REGEX.match(nova_senha):
-            return (
-                jsonify(
-                    {
-                        "erro": "Senha deve ter ao menos 8 caracteres, incluindo letra maiúscula, letra minúscula, número e caractere especial"
-                    }
-                ),
-                400,
-            )
-
-        usuario.set_senha(nova_senha)
+        usuario.set_senha(data["senha"])
 
     try:
         db.session.commit()

@@ -10,10 +10,15 @@ notificacao_bp = Blueprint('notificacao', __name__)
 
 @notificacao_bp.route('/notificacoes', methods=['GET'])
 def listar_notificacoes():
-    """
-    Lista notificações de agendamentos próximos.
-    Usuários comuns veem apenas suas próprias notificações.
-    Administradores podem ver todas as notificações.
+    """Retorna notificações ordenadas por data de criação.
+
+    A rota exige autenticação e aplica regras de visibilidade
+    baseadas no perfil do usuário:
+
+    * Usuários comuns recebem apenas notificações associadas ao
+      seu próprio ``usuario_id``;
+    * Administradores podem visualizar todas as notificações do
+      sistema.
     """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
@@ -30,10 +35,12 @@ def listar_notificacoes():
 
 @notificacao_bp.route('/notificacoes/<int:id>/marcar-lida', methods=['PUT'])
 def marcar_notificacao_lida(id):
-    """
-    Marca uma notificação como lida.
-    Usuários só podem marcar suas próprias notificações como lidas.
-    Administradores podem marcar qualquer notificação como lida.
+    """Marca uma notificação como lida.
+
+    Requer autenticação: usuários comuns só podem alterar notificações
+    das quais são proprietários, enquanto administradores podem atuar
+    sobre qualquer uma. Retorna ``404`` se a notificação não existir e
+    ``403`` quando o usuário não possui permissão.
     """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
@@ -57,9 +64,13 @@ def marcar_notificacao_lida(id):
 
 # Função para criar notificações de agendamentos próximos
 def criar_notificacoes_agendamentos_proximos():
-    """
-    Cria notificações para agendamentos próximos.
-    Esta função seria chamada por um job agendado.
+    """Gera lembretes para agendamentos que ocorrerão em breve.
+
+    Seleciona agendamentos cuja data esteja entre o momento atual
+    (UTC) e as próximas 24 horas. Para cada agendamento encontrado,
+    cria uma notificação caso não exista outra não lida associada ao
+    mesmo agendamento. Destina-se à execução periódica por um job
+    agendado (por exemplo, ``cron``).
     """
     from datetime import datetime, timedelta
     from src.models.agendamento import Agendamento
@@ -75,22 +86,25 @@ def criar_notificacoes_agendamentos_proximos():
     ).all()
     
     for agendamento in agendamentos_proximos:
-        # Verifica se já existe notificação para este agendamento
+        # Busca uma notificação não lida já existente para evitar duplicidade
         notificacao_existente = Notificacao.query.filter_by(
             agendamento_id=agendamento.id,
             lida=False
         ).first()
-        
+
+        # Apenas cria nova notificação se nenhuma pendente for encontrada
         if not notificacao_existente:
-            # Cria uma nova notificação
-            mensagem = f"Lembrete: Você tem um agendamento para {agendamento.laboratorio} em {agendamento.data.strftime('%d/%m/%Y')}."
-            
+            mensagem = (
+                f"Lembrete: Você tem um agendamento para {agendamento.laboratorio} em "
+                f"{agendamento.data.strftime('%d/%m/%Y')}."
+            )
+
             nova_notificacao = Notificacao(
                 usuario_id=agendamento.usuario_id,
                 agendamento_id=agendamento.id,
                 mensagem=mensagem
             )
-            
+
             db.session.add(nova_notificacao)
     
     try:

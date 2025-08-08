@@ -25,6 +25,10 @@ from src.auth import (
     admin_required,
 )
 from flask_wtf.csrf import generate_csrf
+from src.services import user_service
+
+# Reexporta a expressão regular para compatibilidade
+PASSWORD_REGEX = user_service.PASSWORD_REGEX
 
 
 def is_cpf_valid(cpf: str) -> bool:
@@ -82,8 +86,6 @@ def obter_site_key():
     """Retorna a site key pública do reCAPTCHA."""
     return jsonify({"site_key": RECAPTCHA_SITE_KEY or ""})
 
-
-PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$")
 
 # Funções auxiliares para geração de tokens
 
@@ -189,92 +191,37 @@ def criar_usuario():
     Usuários não autenticados podem criar apenas usuários comuns.
     Administradores podem criar qualquer tipo de usuário.
     """
-    dados = request.get_json()
+    dados = request.get_json() or {}
 
-    email = dados.get("email", "").strip()
-    nome = dados.get("nome")
-    senha = dados.get("senha")
-    username = dados.get("username") or email.split('@')[0]
-
-    # Validação de dados
-    if not all([nome, email, senha]):
-        return jsonify({"erro": "Dados incompletos"}), 400
-
-    # Para registro público não permitimos definir tipo
-
-    # Verifica se o email já existe
-    if User.query.filter_by(email=email).first():
-        return jsonify({"erro": "Este e-mail já está registado"}), 400
-
-    # Validação de senha
-    if not PASSWORD_REGEX.match(senha):
-        return (
-            jsonify(
-                {
-                    "erro": "Senha deve ter ao menos 8 caracteres, incluindo letra maiúscula, letra minúscula, número e caractere especial"
-                }
-            ),
-            400,
-        )
-
-    # Cria o usuário
     try:
-        novo_usuario = User(
-            nome=nome,
-            email=email,
-            senha=senha,
-            tipo="comum",
-            username=username,
-        )
-        db.session.add(novo_usuario)
-        db.session.commit()
-        return jsonify(novo_usuario.to_dict()), 201
+        novo_usuario, erro = user_service.criar_usuario(dados)
     except SQLAlchemyError as e:
-        db.session.rollback()
         return handle_internal_error(e)
+
+    if erro:
+        return jsonify(erro[0]), erro[1]
+
+    return jsonify(novo_usuario.to_dict()), 201
 
 
 @user_bp.route("/registrar", methods=["POST"])
 def registrar_usuario():
     """Registra um usuário a partir de um formulário HTML."""
-    nome = request.form.get("nome", "").strip()
-    email = request.form.get("email", "").strip()
-    senha = request.form.get("senha")
-    username = request.form.get("username") or email.split('@')[0]
-    confirmar = request.form.get("confirmarSenha")
-
-    if not all([nome, email, senha, confirmar]):
-        return jsonify({"erro": "Dados incompletos"}), 400
-
-    if senha != confirmar:
-        return jsonify({"erro": "As senhas não coincidem"}), 400
-
-    if not PASSWORD_REGEX.match(senha):
-        return (
-            jsonify(
-                {
-                    "erro": "Senha deve ter ao menos 8 caracteres, incluindo letra maiúscula, letra minúscula, número e caractere especial"
-                }
-            ),
-            400,
-        )
-
-    if User.query.filter_by(email=email).first():
-        return jsonify({"erro": "Este e-mail já está registado"}), 400
+    dados = {
+        "nome": request.form.get("nome", "").strip(),
+        "email": request.form.get("email", "").strip(),
+        "senha": request.form.get("senha"),
+        "confirmarSenha": request.form.get("confirmarSenha"),
+        "username": request.form.get("username"),
+    }
 
     try:
-        novo_usuario = User(
-            nome=nome,
-            email=email,
-            senha=senha,
-            tipo="comum",
-            username=username,
-        )
-        db.session.add(novo_usuario)
-        db.session.commit()
+        _, erro = user_service.criar_usuario(dados)
     except SQLAlchemyError as e:  # pragma: no cover
-        db.session.rollback()
         return handle_internal_error(e)
+
+    if erro:
+        return jsonify(erro[0]), erro[1]
 
     if "text/html" in request.accept_mimetypes:
         return redirect("/admin/login.html")
@@ -362,7 +309,7 @@ def atualizar_usuario(id):
                 return jsonify({"erro": "Senha atual incorreta"}), 403
 
         nova_senha = data["senha"]
-        if not PASSWORD_REGEX.match(nova_senha):
+        if not user_service.PASSWORD_REGEX.match(nova_senha):
             return (
                 jsonify(
                     {

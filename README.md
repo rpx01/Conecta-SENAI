@@ -22,6 +22,8 @@ Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para detalhes das versões.
    ```
 Todas as variáveis disponíveis estão listadas em `.env.example`.
 
+   Substitua todos os placeholders `<definir_em_producao>` por valores reais antes do deploy.
+
    A aplicação também reconhece a variável `FLASK_SECRET_KEY`. Uma das duas deve estar definida; se nenhuma estiver presente, a aplicação aborta a inicialização. Use um valor longo e aleatório (por exemplo, `export SECRET_KEY=$(openssl rand -hex 32)`).
 
    Se `DATABASE_URL` não for informado ou estiver vazio, o sistema utiliza por padrão um banco SQLite local (`agenda_laboratorio.db`).

@@ -31,12 +31,21 @@ def create_admin(app):
         try:
             admin_email = os.environ.get('ADMIN_EMAIL')
             admin_password = os.environ.get('ADMIN_PASSWORD')
-            admin_username = os.environ.get('ADMIN_USERNAME') or admin_email.split('@')[0]
+            admin_username = os.environ.get('ADMIN_USERNAME')
             if not admin_email or not admin_password:
                 logging.error(
                     "ADMIN_EMAIL e ADMIN_PASSWORD precisam estar definidos para criar o usuário administrador"
                 )
                 return
+
+            if admin_email in {"admin@example.com", "<definir_em_producao>"} or \
+               admin_password in {"senha-segura", "<definir_em_producao>"}:
+                logging.error(
+                    "ADMIN_EMAIL e ADMIN_PASSWORD não podem usar os valores padrão"
+                )
+                return
+
+            admin_username = admin_username or admin_email.split('@')[0]
 
             admin = User.query.filter_by(email=admin_email).first()
             if not admin:
@@ -95,10 +104,10 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['REDIS_URL'] = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 
-    secret_key = os.getenv('SECRET_KEY') or os.getenv('FLASK_SECRET_KEY')
-    if not secret_key:
+    secret_key = (os.getenv('SECRET_KEY') or os.getenv('FLASK_SECRET_KEY') or '').strip()
+    if not secret_key or secret_key.lower() == 'changeme':
         raise RuntimeError(
-            "SECRET_KEY environment variable must be set for JWT signing"
+            "SECRET_KEY environment variable must be set to a secure value for JWT signing"
         )
     app.config['SECRET_KEY'] = secret_key
 

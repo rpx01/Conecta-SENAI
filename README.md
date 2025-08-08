@@ -118,6 +118,19 @@ Actions. O workflow `.github/workflows/ci.yml` instala as dependências do
 projeto e executa o `flake8`, o `bandit` e a suíte de testes com `pytest` a
 cada push ou pull request para a branch `main`.
 
+## Auditoria de dependências
+
+Para verificar vulnerabilidades nas dependências localmente, utilize o
+[`pip-audit`](https://pypi.org/project/pip-audit/):
+
+```bash
+pip install pip-audit
+pip-audit --progress-spinner off
+```
+
+O comando acima analisa o ambiente atual e retorna código de saída diferente de
+zero se encontrar vulnerabilidades de severidade alta ou crítica.
+
 
 ## Migrações automáticas
 

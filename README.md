@@ -56,6 +56,12 @@ Todas as variáveis disponíveis estão listadas em `.env.example`.
    administrador será criado automaticamente apenas se `ADMIN_EMAIL` e
    `ADMIN_PASSWORD` estiverem definidos.
 
+   As rotas de autenticação utilizam cookies com `Secure` e `SameSite=Strict`.
+   Em produção, a aplicação deve ser servida via **HTTPS** para que esses
+   cookies sejam aceitos pelos navegadores. Para testes locais sem HTTPS, é
+   possível definir `COOKIE_SECURE=False` e `COOKIE_SAMESITE=Lax` no arquivo
+   `.env`.
+
 6. As rotas de autenticação e cadastro possuem uma limitação de
    requisições por minuto para evitar abusos de login ou criação de contas.
 

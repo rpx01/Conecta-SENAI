@@ -466,17 +466,21 @@ def login():
             refresh_token=refresh_token,
             usuario=usuario.to_dict(),
         )
+        secure_cookie = current_app.config.get("COOKIE_SECURE", True)
+        samesite_cookie = current_app.config.get("COOKIE_SAMESITE", "Strict")
         resp.set_cookie(
             "access_token",
             access_token,
             httponly=True,
-            samesite="Lax",
+            secure=secure_cookie,
+            samesite=samesite_cookie,
         )
         resp.set_cookie(
             "refresh_token",
             refresh_token,
             httponly=True,
-            samesite="Lax",
+            secure=secure_cookie,
+            samesite=samesite_cookie,
         )
         return resp, 200
     except SQLAlchemyError as e:
@@ -499,11 +503,14 @@ def refresh_token():
         return jsonify({"erro": "Refresh token inválido"}), 401
     novo_token = gerar_token_acesso(usuario)
     resp = jsonify({"token": novo_token})
+    secure_cookie = current_app.config.get("COOKIE_SECURE", True)
+    samesite_cookie = current_app.config.get("COOKIE_SAMESITE", "Strict")
     resp.set_cookie(
         "access_token",
         novo_token,
         httponly=True,
-        samesite="Lax",
+        secure=secure_cookie,
+        samesite=samesite_cookie,
     )
     return resp
 
@@ -545,7 +552,21 @@ def logout():
     if not token and not refresh:
         return jsonify({"erro": "Token obrigatório"}), 400
 
+    secure_cookie = current_app.config.get("COOKIE_SECURE", True)
+    samesite_cookie = current_app.config.get("COOKIE_SAMESITE", "Strict")
     resp = jsonify({"mensagem": "Logout realizado"})
-    resp.set_cookie("access_token", "", expires=0)
-    resp.set_cookie("refresh_token", "", expires=0)
+    resp.set_cookie(
+        "access_token",
+        "",
+        expires=0,
+        secure=secure_cookie,
+        samesite=samesite_cookie,
+    )
+    resp.set_cookie(
+        "refresh_token",
+        "",
+        expires=0,
+        secure=secure_cookie,
+        samesite=samesite_cookie,
+    )
     return resp

@@ -5,8 +5,8 @@ from typing import Tuple, Optional, Dict, Any
 
 from sqlalchemy.exc import SQLAlchemyError
 
-from src.models import db
 from src.models.user import User
+from src.repositories.user_repository import UserRepository
 
 # Expressão regular para validar senhas
 PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$")
@@ -28,7 +28,7 @@ def criar_usuario(dados: Dict[str, Any]) -> Tuple[Optional[User], Optional[Tuple
     senha = dados.get("senha")
     username = dados.get("username") or (email.split("@")[0] if email else "")
 
-    if User.query.filter_by(email=email).first():
+    if UserRepository.get_by_email(email):
         return None, ({"erro": "Email já cadastrado"}, 400)
 
     try:
@@ -39,9 +39,8 @@ def criar_usuario(dados: Dict[str, Any]) -> Tuple[Optional[User], Optional[Tuple
             tipo="comum",
             username=username,
         )
-        db.session.add(novo_usuario)
-        db.session.commit()
+        UserRepository.add(novo_usuario)
         return novo_usuario, None
     except SQLAlchemyError as e:  # pragma: no cover - erros de banco
-        db.session.rollback()
+        UserRepository.rollback()
         raise e

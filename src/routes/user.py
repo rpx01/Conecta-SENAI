@@ -10,6 +10,7 @@ import jwt
 import uuid
 from src.models import db
 from src.models.user import User
+from src.repositories.user_repository import UserRepository
 from src.models.refresh_token import RefreshToken
 import hashlib
 from src.redis_client import redis_conn
@@ -101,7 +102,7 @@ def gerar_refresh_token(usuario):
     token = jwt.encode(payload, current_app.config["SECRET_KEY"], algorithm="HS256")
 
     # Confirma que o usuário ainda existe antes de salvar o token
-    if not db.session.get(User, usuario.id):
+    if not UserRepository.get_by_id(usuario.id):
         current_app.logger.error("Usuário inválido ao gerar refresh token")
         raise ValueError("Usuário inválido")
 
@@ -135,7 +136,7 @@ def verificar_refresh_token(token):
         ).first()
         if not rt or rt.is_expired():
             return None
-        usuario = db.session.get(User, dados.get("user_id"))
+        usuario = UserRepository.get_by_id(dados.get("user_id"))
         return usuario
     except jwt.ExpiredSignatureError:
         return None
@@ -150,7 +151,7 @@ def listar_usuarios():
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
     per_page = min(per_page, 100)
-    paginacao = User.query.paginate(page=page, per_page=per_page, error_out=False)
+    paginacao = UserRepository.paginate(page, per_page)
     return jsonify(
         {
             "items": [u.to_dict() for u in paginacao.items],
@@ -170,7 +171,7 @@ def obter_usuario(id):
     if not verificar_admin(user) and user.id != id:
         return jsonify({"erro": "Permissão negada"}), 403
 
-    usuario = db.session.get(User, id)
+    usuario = UserRepository.get_by_id(id)
     if not usuario:
         return jsonify({"erro": "Usuário não encontrado"}), 404
 
@@ -243,7 +244,7 @@ def atualizar_usuario(id):
     if not verificar_admin(user) and user.id != id:
         return jsonify({"erro": "Permissão negada"}), 403
 
-    usuario = db.session.get(User, id)
+    usuario = UserRepository.get_by_id(id)
     if not usuario:
         return jsonify({"erro": "Usuário não encontrado"}), 404
 
@@ -259,7 +260,7 @@ def atualizar_usuario(id):
         usuario.nome = data["nome"]
 
     if "email" in data:
-        email_existente = User.query.filter_by(email=data["email"]).first()
+        email_existente = UserRepository.get_by_email(data["email"])
         if email_existente and email_existente.id != id:
             return jsonify({"erro": "Email já cadastrado"}), 400
         usuario.email = data["email"]
@@ -303,10 +304,10 @@ def atualizar_usuario(id):
         usuario.set_senha(data["senha"])
 
     try:
-        db.session.commit()
+        UserRepository.commit()
         return jsonify(usuario.to_dict())
     except SQLAlchemyError as e:
-        db.session.rollback()
+        UserRepository.rollback()
         return handle_internal_error(e)
 
 
@@ -324,7 +325,7 @@ def remover_usuario(id):
     if user.id == id:
         return jsonify({"erro": "Não é possível remover o próprio usuário"}), 400
 
-    usuario = db.session.get(User, id)
+    usuario = UserRepository.get_by_id(id)
     if not usuario:
         return jsonify({"erro": "Usuário não encontrado"}), 404
 
@@ -339,11 +340,10 @@ def remover_usuario(id):
             )
 
     try:
-        db.session.delete(usuario)
-        db.session.commit()
+        UserRepository.delete(usuario)
         return jsonify({"mensagem": "Usuário removido com sucesso"})
     except SQLAlchemyError as e:
-        db.session.rollback()
+        UserRepository.rollback()
         return handle_internal_error(e)
 
 
@@ -398,7 +398,7 @@ def login():
         if not email or not senha:
             return jsonify(success=False, message="Email e senha são obrigatórios"), 400
 
-        usuario = User.query.filter_by(email=email).first()
+        usuario = UserRepository.get_by_email(email)
 
         try:
             senha_ok = usuario and check_password_hash(usuario.senha_hash, senha)
@@ -451,7 +451,7 @@ def login():
         )
         return resp, 200
     except SQLAlchemyError as e:
-        db.session.rollback()
+        UserRepository.rollback()
         current_app.logger.error(f"Erro ao fazer login: {e}")
         return jsonify(success=False, message="Erro interno no login"), 500
     except Exception as e:

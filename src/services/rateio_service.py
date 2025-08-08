@@ -2,7 +2,6 @@ from datetime import datetime
 import csv
 from io import StringIO
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import func, bindparam
 from pydantic import ValidationError
 from flask import jsonify, make_response
 
@@ -10,6 +9,7 @@ from src.models import db
 from src.models.rateio import RateioConfig, LancamentoRateio
 from src.models.instrutor import Instrutor
 from src.models.log_rateio import LogLancamentoRateio
+from src.repositories.log_rateio_repository import LogRateioRepository
 from src.schemas import RateioConfigCreateSchema, LancamentoRateioSchema
 from src.utils.error_handler import handle_internal_error
 
@@ -28,10 +28,9 @@ def registrar_log_rateio(user, acao, instrutor_nome, config, percentual, observa
             percentual=percentual,
             observacao=observacao,
         )
-        db.session.add(log)
-        db.session.commit()
+        LogRateioRepository.add(log)
     except Exception:
-        db.session.rollback()
+        LogRateioRepository.rollback()
 
 
 def listar_configs():
@@ -172,31 +171,13 @@ def salvar_lancamentos(data):
 
 
 def listar_logs_rateio(usuario, instrutor, tipo, data_acao, page, per_page):
-    query = LogLancamentoRateio.query
-    if usuario:
-        query = query.filter(
-            LogLancamentoRateio.usuario.ilike(
-                func.concat('%', bindparam('usuario'), '%')
-            )
-        ).params(usuario=usuario)
-    if instrutor:
-        query = query.filter(
-            LogLancamentoRateio.instrutor.ilike(
-                func.concat('%', bindparam('instrutor'), '%')
-            )
-        ).params(instrutor=instrutor)
-    if tipo:
-        query = query.filter(LogLancamentoRateio.acao == tipo)
-    if data_acao:
-        try:
-            dia = datetime.strptime(data_acao, '%Y-%m-%d').date()
-            query = query.filter(func.date(LogLancamentoRateio.timestamp) == dia)
-        except ValueError:
-            return jsonify({'erro': 'Formato de data inválido'}), 400
+    try:
+        paginacao = LogRateioRepository.list_logs(
+            usuario, instrutor, tipo, data_acao, page, per_page
+        )
+    except ValueError:
+        return jsonify({'erro': 'Formato de data inválido'}), 400
 
-    paginacao = query.order_by(LogLancamentoRateio.timestamp.desc()).paginate(
-        page=page, per_page=min(per_page, 100), error_out=False
-    )
     return jsonify(
         {
             'items': [
@@ -224,7 +205,7 @@ def listar_logs_rateio(usuario, instrutor, tipo, data_acao, page, per_page):
 
 
 def exportar_logs_rateio():
-    logs = LogLancamentoRateio.query.order_by(LogLancamentoRateio.timestamp.desc()).all()
+    logs = LogRateioRepository.all_ordered()
     si = StringIO()
     writer = csv.writer(si)
     writer.writerow(['Data/Hora', 'Ação', 'Usuário', 'Instrutor', 'Filial', 'UO', 'CR', 'Classe de Valor', 'Percentual', 'Observações'])

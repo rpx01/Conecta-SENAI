@@ -9,6 +9,7 @@ os.environ['DISABLE_REDIS'] = '1'
 
 import pytest
 from flask import Flask
+from flask_wtf.csrf import CSRFProtect
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -27,6 +28,8 @@ def app():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = 'test'
+    app.config['WTF_CSRF_CHECK_DEFAULT'] = False
+    CSRFProtect(app)
     db.init_app(app)
     app.register_blueprint(user_bp, url_prefix='/api')
     app.register_blueprint(sala_bp, url_prefix='/api')
@@ -61,6 +64,12 @@ def app():
 @pytest.fixture
 def client(app):
     return app.test_client()
+
+
+@pytest.fixture
+def csrf_token(client):
+    resp = client.get('/api/csrf-token')
+    return resp.get_json()['csrf_token']
 
 
 @pytest.fixture

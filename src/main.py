@@ -6,6 +6,7 @@ import logging
 import traceback
 import sys
 from flask import Flask, redirect
+from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
 from src.limiter import limiter
 from src.redis_client import init_redis
@@ -22,6 +23,8 @@ from src.routes.rateio import rateio_bp
 from src.routes.treinamentos import treinamento_bp, turma_bp
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+csrf = CSRFProtect()
 
 def create_admin(app):
     """Cria o usuário administrador padrão de forma idempotente."""
@@ -115,6 +118,8 @@ def create_app():
     Migrate(app, db, directory=migrations_dir)
     init_redis(app)
     limiter.init_app(app)
+    app.config['WTF_CSRF_CHECK_DEFAULT'] = False
+    csrf.init_app(app)
 
     # Configura chaves do reCAPTCHA (opcional)
     app.config['RECAPTCHA_SITE_KEY'] = os.getenv('RECAPTCHA_SITE_KEY') or os.getenv('SITE_KEY')

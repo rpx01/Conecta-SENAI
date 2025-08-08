@@ -208,12 +208,15 @@ def salvar_lancamentos():
 @rateio_bp.route('/logs-rateio', methods=['GET'])
 @admin_required
 def listar_logs_rateio():
-    """Lista logs de lançamentos de rateio."""
+    """Lista logs de lançamentos de rateio com paginação."""
     query = LogLancamentoRateio.query
     usuario = request.args.get('usuario')
     instrutor = request.args.get('instrutor')
     tipo = request.args.get('tipo')
     data_acao = request.args.get('data')
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    per_page = min(per_page, 100)
 
     if usuario:
         query = query.filter(LogLancamentoRateio.usuario.ilike(f'%{usuario}%'))
@@ -228,23 +231,33 @@ def listar_logs_rateio():
         except ValueError:
             return jsonify({'erro': 'Formato de data inválido'}), 400
 
-    logs = query.order_by(LogLancamentoRateio.timestamp.desc()).all()
-    return jsonify([
+    paginacao = query.order_by(LogLancamentoRateio.timestamp.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    return jsonify(
         {
-            'id': l.id,
-            'timestamp': l.timestamp.isoformat() if l.timestamp else None,
-            'acao': l.acao,
-            'usuario': l.usuario,
-            'instrutor': l.instrutor,
-            'filial': l.filial,
-            'uo': l.uo,
-            'cr': l.cr,
-            'classe_valor': l.classe_valor,
-            'percentual': l.percentual,
-            'observacao': l.observacao,
+            'items': [
+                {
+                    'id': l.id,
+                    'timestamp': l.timestamp.isoformat() if l.timestamp else None,
+                    'acao': l.acao,
+                    'usuario': l.usuario,
+                    'instrutor': l.instrutor,
+                    'filial': l.filial,
+                    'uo': l.uo,
+                    'cr': l.cr,
+                    'classe_valor': l.classe_valor,
+                    'percentual': l.percentual,
+                    'observacao': l.observacao,
+                }
+                for l in paginacao.items
+            ],
+            'page': paginacao.page,
+            'per_page': paginacao.per_page,
+            'total': paginacao.total,
+            'pages': paginacao.pages,
         }
-        for l in logs
-    ])
+    )
 
 
 @rateio_bp.route('/logs-rateio/export', methods=['GET'])

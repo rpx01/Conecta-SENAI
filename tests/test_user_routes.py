@@ -3,6 +3,7 @@ import jwt
 import uuid
 import logging
 from datetime import datetime, timedelta
+from src.models import db
 from src.models.user import User
 from src.routes.user import gerar_refresh_token
 
@@ -68,8 +69,39 @@ def test_listar_usuarios(client, login_admin):
     headers = {'Authorization': f'Bearer {token}'}
     response = client.get('/api/usuarios', headers=headers)
     assert response.status_code == 200
-    usuarios = response.get_json()
-    assert any(u['email'] == 'admin@example.com' for u in usuarios)
+    data = response.get_json()
+    assert 'items' in data
+    assert any(u['email'] == 'admin@example.com' for u in data['items'])
+
+
+def test_listar_usuarios_paginado(client, login_admin):
+    with client.application.app_context():
+        for i in range(15):
+            db.session.add(User(nome=f'U{i}', email=f'u{i}@example.com', senha='Senha@123', tipo='comum'))
+        db.session.commit()
+
+    token, _ = login_admin(client)
+    headers = {'Authorization': f'Bearer {token}'}
+    resp = client.get('/api/usuarios?page=2&per_page=5', headers=headers)
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['page'] == 2
+    assert len(data['items']) == 5
+
+
+def test_listar_usuarios_per_page_limit(client, login_admin):
+    with client.application.app_context():
+        for i in range(105):
+            db.session.add(User(nome=f'Lim{i}', email=f'lim{i}@example.com', senha='Senha@123', tipo='comum'))
+        db.session.commit()
+
+    token, _ = login_admin(client)
+    headers = {'Authorization': f'Bearer {token}'}
+    resp = client.get('/api/usuarios?per_page=200', headers=headers)
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert len(data['items']) == 100
+    assert data['pages'] == 2
 
 
 def test_refresh_token(client, login_admin):

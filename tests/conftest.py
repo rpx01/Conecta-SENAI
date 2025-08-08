@@ -16,10 +16,12 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from src.models import db
 from src.models.user import User
 from src.models.sala import Sala
+from src.models.log_rateio import LogLancamentoRateio
 from src.routes.user import user_bp, gerar_token_acesso, gerar_refresh_token
 from src.routes.ocupacao import sala_bp, instrutor_bp, ocupacao_bp
 from src.routes.treinamentos import turma_bp, treinamento_bp
 from src.routes.laboratorios import agendamento_bp, laboratorio_bp
+from src.routes.rateio.rateio import rateio_bp
 
 @pytest.fixture
 def app():
@@ -39,6 +41,7 @@ def app():
     app.register_blueprint(treinamento_bp, url_prefix='/api')
     app.register_blueprint(ocupacao_bp, url_prefix='/api')
     app.register_blueprint(laboratorio_bp, url_prefix='/api')
+    app.register_blueprint(rateio_bp, url_prefix='/api')
 
     with app.app_context():
         db.create_all()
@@ -58,6 +61,18 @@ def app():
         db.session.add(comum)
         sala = Sala(nome='Sala Teste', capacidade=10)
         db.session.add(sala)
+        for i in range(15):
+            log = LogLancamentoRateio(
+                acao='create',
+                usuario='Admin',
+                instrutor=f'Instrutor {i}',
+                filial='F',
+                uo='U',
+                cr='CR',
+                classe_valor='CL',
+                percentual=10,
+            )
+            db.session.add(log)
         db.session.commit()
     return app
 

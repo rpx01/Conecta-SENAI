@@ -10,8 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
     verificarPermissaoAdmin();
 
     const tabelaBody = document.querySelector('#tabelaLogs tbody');
+    const paginacaoEl = document.getElementById('paginacaoLogs');
+    let paginaAtual = 1;
+    const porPagina = 10;
 
-    async function carregarLogs() {
+    async function carregarLogs(page = 1) {
         const params = new URLSearchParams();
         const usuario = document.getElementById('filtroUsuario').value.trim();
         const instrutor = document.getElementById('filtroInstrutor').value.trim();
@@ -21,8 +24,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (instrutor) params.append('instrutor', instrutor);
         if (data) params.append('data', data);
         if (tipo) params.append('tipo', tipo);
-        const logs = await chamarAPI(`/logs-rateio?${params.toString()}`, 'GET');
-        atualizarTabela(logs);
+        params.append('page', page);
+        params.append('per_page', porPagina);
+        const resp = await chamarAPI(`/logs-rateio?${params.toString()}`, 'GET');
+        paginaAtual = resp.page;
+        atualizarTabela(resp.items);
+        atualizarPaginacao(resp.page, resp.pages);
     }
 
     function atualizarTabela(logs) {
@@ -48,7 +55,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    document.getElementById('btnAplicarFiltros').addEventListener('click', carregarLogs);
+    function atualizarPaginacao(pagina, totalPaginas) {
+        paginacaoEl.innerHTML = '';
+        const criarItem = (label, paginaAlvo, disabled = false, active = false) => {
+            return `<li class="page-item ${disabled ? 'disabled' : ''} ${active ? 'active' : ''}">
+                        <a class="page-link" href="#" data-page="${paginaAlvo}">${label}</a>
+                    </li>`;
+        };
+        paginacaoEl.insertAdjacentHTML('beforeend', criarItem('Anterior', pagina - 1, pagina <= 1));
+        for (let i = 1; i <= totalPaginas; i++) {
+            paginacaoEl.insertAdjacentHTML('beforeend', criarItem(i, i, false, i === pagina));
+        }
+        paginacaoEl.insertAdjacentHTML('beforeend', criarItem('Próxima', pagina + 1, pagina >= totalPaginas));
+
+        Array.from(paginacaoEl.querySelectorAll('a[data-page]')).forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                const alvo = parseInt(link.getAttribute('data-page'));
+                if (!isNaN(alvo) && alvo >= 1) {
+                    carregarLogs(alvo);
+                }
+            });
+        });
+    }
+
+    document.getElementById('btnAplicarFiltros').addEventListener('click', () => carregarLogs());
     document.getElementById('btnLimparFiltros').addEventListener('click', () => {
         document.getElementById('filtroUsuario').value = '';
         document.getElementById('filtroInstrutor').value = '';

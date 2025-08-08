@@ -164,9 +164,20 @@ def verificar_refresh_token(token):
 @user_bp.route("/usuarios", methods=["GET"])
 @admin_required
 def listar_usuarios():
-    """Lista todos os usuários."""
-    usuarios = User.query.all()
-    return jsonify([u.to_dict() for u in usuarios])
+    """Lista todos os usuários com paginação."""
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 10, type=int)
+    per_page = min(per_page, 100)
+    paginacao = User.query.paginate(page=page, per_page=per_page, error_out=False)
+    return jsonify(
+        {
+            "items": [u.to_dict() for u in paginacao.items],
+            "page": paginacao.page,
+            "per_page": paginacao.per_page,
+            "total": paginacao.total,
+            "pages": paginacao.pages,
+        }
+    )
 
 
 @user_bp.route("/usuarios/<int:id>", methods=["GET"])

@@ -398,6 +398,48 @@ def test_root_admin_can_downgrade_admin(client, login_admin):
     assert resp_downgrade.get_json()['tipo'] == 'comum'
 
 
+def test_listar_usuarios_permissao_negada(client, non_admin_auth_headers):
+    resp = client.get('/api/usuarios', headers=non_admin_auth_headers)
+    assert resp.status_code == 403
+
+
+def test_listar_usuarios_token_expirado(client):
+    with client.application.app_context():
+        user = User.query.filter_by(email='admin@example.com').first()
+        expired_token = jwt.encode(
+            {
+                'user_id': user.id,
+                'nome': user.nome,
+                'perfil': user.tipo,
+                'exp': datetime.utcnow() - timedelta(minutes=5),
+                'jti': str(uuid.uuid4()),
+            },
+            client.application.config['SECRET_KEY'],
+            algorithm='HS256',
+        )
+    resp = client.get('/api/usuarios', headers={'Authorization': f'Bearer {expired_token}'})
+    assert resp.status_code == 401
+
+
+def test_login_limite_de_tentativas(client):
+    csrf = fetch_csrf(client)
+    for _ in range(10):
+        resp = client.post(
+            '/api/login',
+            json={'email': 'admin@example.com', 'senha': 'errada'},
+            headers={'X-CSRFToken': csrf},
+            environ_base={'REMOTE_ADDR': '5.5.5.5'},
+        )
+        assert resp.status_code == 401
+    resp = client.post(
+        '/api/login',
+        json={'email': 'admin@example.com', 'senha': 'errada'},
+        headers={'X-CSRFToken': csrf},
+        environ_base={'REMOTE_ADDR': '5.5.5.5'},
+    )
+    assert resp.status_code == 429
+
+
 def test_non_root_admin_cannot_delete_admin(client, login_admin):
     token_root, _ = login_admin(client)
     headers_root = {'Authorization': f'Bearer {token_root}', 'X-CSRFToken': fetch_csrf(client)}

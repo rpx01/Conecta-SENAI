@@ -67,6 +67,10 @@ Todas as variáveis disponíveis estão listadas em `.env.example`.
 6. As rotas de autenticação e cadastro possuem uma limitação de
    requisições por minuto para evitar abusos de login ou criação de contas.
 
+7. Um scheduler baseado em APScheduler gera periodicamente lembretes de
+   agendamentos. O intervalo em minutos pode ser ajustado pela variável de
+   ambiente `NOTIFICACAO_INTERVALO_MINUTOS` (padrão: `60`).
+
 ## Usando Docker
 
 Uma alternativa é rodar a aplicação em um container Docker. Para construir a imagem execute:

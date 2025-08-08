@@ -21,6 +21,8 @@ from src.routes.ocupacao import ocupacao_bp, sala_bp, instrutor_bp
 from src.routes.user import user_bp
 from src.routes.rateio import rateio_bp
 from src.routes.treinamentos import treinamento_bp, turma_bp
+from apscheduler.schedulers.background import BackgroundScheduler
+from src.services.notificacao_service import criar_notificacoes_agendamentos_proximos
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -137,6 +139,9 @@ def create_app():
     app.register_blueprint(rateio_bp, url_prefix='/api')
     app.register_blueprint(treinamento_bp, url_prefix='/api')
 
+    # Inicia scheduler para notificações
+    iniciar_scheduler(app)
+
     @app.route('/')
     def index():
         return redirect('/admin/login.html')
@@ -154,6 +159,19 @@ def create_app():
     # separadamente durante o processo de deploy.
 
     return app
+
+
+def iniciar_scheduler(app):
+    """Configura scheduler para geração periódica de notificações."""
+    scheduler = BackgroundScheduler()
+
+    def job():
+        with app.app_context():
+            criar_notificacoes_agendamentos_proximos()
+
+    intervalo = int(os.getenv('NOTIFICACAO_INTERVALO_MINUTOS', '60'))
+    scheduler.add_job(job, 'interval', minutes=intervalo, id='notificacoes_agendamentos')
+    scheduler.start()
 
 
 try:

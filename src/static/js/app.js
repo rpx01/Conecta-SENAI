@@ -668,20 +668,20 @@ async function carregarNotificacoes() {
             html += `
                 <div class="card mb-2 ${classeNotificacao}">
                     <div class="card-body">
-                        <p class="card-text">${notificacao.mensagem}</p>
+                        <p class="card-text">${sanitizeHTML(notificacao.mensagem)}</p>
                         <p class="card-text"><small class="text-muted">
                             ${formatarData(notificacao.data_criacao)}
                         </small></p>
                         ${!notificacao.lida ? `
-                            <button class="btn btn-sm btn-outline-primary marcar-lida" 
+                            <button class="btn btn-sm btn-outline-primary marcar-lida"
                                 data-id="${notificacao.id}">Marcar como lida</button>
                         ` : ''}
                     </div>
                 </div>
             `;
         });
-        
-        notificacoesContainer.innerHTML = html;
+
+        notificacoesContainer.innerHTML = sanitizeHTML(html);
         
         // Adiciona event listeners para os botões de marcar como lida
         document.querySelectorAll('.marcar-lida').forEach(btn => {

@@ -5,6 +5,23 @@
 const API_URL = '/api';
 
 /**
+ * Obtém um token CSRF do backend.
+ * @returns {Promise<string>} Token CSRF ou string vazia em caso de erro
+ */
+async function obterCsrfToken() {
+    try {
+        const resp = await fetch(`${API_URL}/csrf-token`, {
+            credentials: 'include'
+        });
+        const data = await resp.json().catch(() => null);
+        return data?.csrf_token || '';
+    } catch (err) {
+        console.error('Erro ao obter CSRF token:', err);
+        return '';
+    }
+}
+
+/**
  * Escapa caracteres HTML para prevenir ataques XSS.
  * @param {string} str - Texto a escapar
  * @returns {string} - HTML escapado
@@ -28,10 +45,13 @@ function sanitizeHTML(html) {
  */
 async function realizarLogin(email, senha, recaptchaToken = '') {
     try {
+        const csrfToken = await obterCsrfToken();
         const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
+            credentials: 'include',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
             },
             body: JSON.stringify({ email, senha, recaptcha_token: recaptchaToken })
         });
@@ -79,10 +99,16 @@ async function realizarLogin(email, senha, recaptchaToken = '') {
  * Realiza o logout do usuário
  */
 function realizarLogout() {
-    fetch(`${API_URL}/logout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-    }).catch(() => {});
+    obterCsrfToken().then(csrfToken => {
+        fetch(`${API_URL}/logout`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        }).catch(() => {});
+    });
     localStorage.removeItem('usuario');
     window.location.href = '/admin/login.html';
 }

@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, make_response
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import func
+from sqlalchemy import func, bindparam
 from datetime import datetime
 from src.models import db
 from src.models.rateio import RateioConfig, LancamentoRateio
@@ -219,9 +219,17 @@ def listar_logs_rateio():
     per_page = min(per_page, 100)
 
     if usuario:
-        query = query.filter(LogLancamentoRateio.usuario.ilike(f'%{usuario}%'))
+        query = query.filter(
+            LogLancamentoRateio.usuario.ilike(
+                func.concat('%', bindparam('usuario'), '%')
+            )
+        ).params(usuario=usuario)
     if instrutor:
-        query = query.filter(LogLancamentoRateio.instrutor.ilike(f'%{instrutor}%'))
+        query = query.filter(
+            LogLancamentoRateio.instrutor.ilike(
+                func.concat('%', bindparam('instrutor'), '%')
+            )
+        ).params(instrutor=instrutor)
     if tipo:
         query = query.filter(LogLancamentoRateio.acao == tipo)
     if data_acao:

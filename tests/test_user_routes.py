@@ -6,19 +6,29 @@ from datetime import datetime, timedelta
 from src.models import db
 from src.models.user import User
 from src.routes.user import gerar_refresh_token
+from src.schemas.user import UserCreateSchema, UserUpdateSchema
 
 
 def fetch_csrf(client):
     return client.get('/api/csrf-token').get_json()['csrf_token']
 
 
+def create_payload(**kwargs):
+    return UserCreateSchema(**kwargs).model_dump(by_alias=True)
+
+
+def update_payload(**kwargs):
+    return UserUpdateSchema(**kwargs).model_dump(by_alias=True, exclude_unset=True)
+
+
 def test_criar_usuario(client):
     csrf = fetch_csrf(client)
-    response = client.post('/api/usuarios', json={
-        'nome': 'Novo Usuario',
-        'email': 'novo@example.com',
-        'senha': 'Senha@123'
-    }, headers={'X-CSRFToken': csrf}, environ_base={'REMOTE_ADDR': '1.1.1.10'})
+    response = client.post(
+        '/api/usuarios',
+        json=create_payload(nome='Novo Usuario', email='novo@example.com', senha='Senha@123'),
+        headers={'X-CSRFToken': csrf},
+        environ_base={'REMOTE_ADDR': '1.1.1.10'}
+    )
     assert response.status_code == 201
     data = response.get_json()
     assert data['email'] == 'novo@example.com'
@@ -27,7 +37,7 @@ def test_criar_usuario(client):
 def test_criar_usuario_sem_csrf(client):
     resp = client.post(
         '/api/usuarios',
-        json={'nome': 'CSRF', 'email': 'csrf@example.com', 'senha': 'Senha@123'},
+        json=create_payload(nome='CSRF', email='csrf@example.com', senha='Senha@123'),
         environ_base={'REMOTE_ADDR': '1.1.1.16'}
     )
     assert resp.status_code == 400
@@ -122,11 +132,12 @@ def test_refresh_token(client, login_admin):
 def test_atualizar_senha_requer_verificacao(client):
     # cria usuario normal
     csrf = fetch_csrf(client)
-    resp = client.post('/api/usuarios', json={
-        'nome': 'Teste',
-        'email': 'teste@example.com',
-        'senha': 'Original1!'
-    }, headers={'X-CSRFToken': csrf}, environ_base={'REMOTE_ADDR': '1.1.1.11'})
+    resp = client.post(
+        '/api/usuarios',
+        json=create_payload(nome='Teste', email='teste@example.com', senha='Original1!'),
+        headers={'X-CSRFToken': csrf},
+        environ_base={'REMOTE_ADDR': '1.1.1.11'}
+    )
     assert resp.status_code == 201
     user_id = resp.get_json()['id']
 
@@ -144,7 +155,7 @@ def test_atualizar_senha_requer_verificacao(client):
     # Falta senha_atual
     resp_put = client.put(
         f'/api/usuarios/{user_id}',
-        json={'senha': 'NovaSeg1!'},
+        json=update_payload(senha='NovaSeg1!'),
         headers=headers,
     )
     assert resp_put.status_code == 400
@@ -153,7 +164,7 @@ def test_atualizar_senha_requer_verificacao(client):
     headers['X-CSRFToken'] = fetch_csrf(client)
     resp_put = client.put(
         f'/api/usuarios/{user_id}',
-        json={'senha': 'NovaSeg1!', 'senha_atual': 'Errada1!'},
+        json=update_payload(senha='NovaSeg1!', senha_atual='Errada1!'),
         headers=headers,
     )
     assert resp_put.status_code == 403
@@ -162,7 +173,7 @@ def test_atualizar_senha_requer_verificacao(client):
     headers['X-CSRFToken'] = fetch_csrf(client)
     resp_put = client.put(
         f'/api/usuarios/{user_id}',
-        json={'senha': 'NovaSeg1!', 'senha_atual': 'Original1!'},
+        json=update_payload(senha='NovaSeg1!', senha_atual='Original1!'),
         headers=headers,
     )
     assert resp_put.status_code == 200
@@ -191,18 +202,20 @@ def test_criar_usuario_dados_incompletos(client):
 
 def test_criar_usuario_duplicado(client):
     csrf = fetch_csrf(client)
-    resp1 = client.post('/api/usuarios', json={
-        'nome': 'Dup',
-        'email': 'dup@example.com',
-        'senha': 'Dup#1234'
-    }, headers={'X-CSRFToken': csrf}, environ_base={'REMOTE_ADDR': '1.1.1.2'})
+    resp1 = client.post(
+        '/api/usuarios',
+        json=create_payload(nome='Dup', email='dup@example.com', senha='Dup#1234'),
+        headers={'X-CSRFToken': csrf},
+        environ_base={'REMOTE_ADDR': '1.1.1.2'}
+    )
     assert resp1.status_code == 201
     csrf = fetch_csrf(client)
-    resp2 = client.post('/api/usuarios', json={
-        'nome': 'Outro',
-        'email': 'dup@example.com',
-        'senha': 'Dup#4321'
-    }, headers={'X-CSRFToken': csrf}, environ_base={'REMOTE_ADDR': '1.1.1.3'})
+    resp2 = client.post(
+        '/api/usuarios',
+        json=create_payload(nome='Outro', email='dup@example.com', senha='Dup#4321'),
+        headers={'X-CSRFToken': csrf},
+        environ_base={'REMOTE_ADDR': '1.1.1.3'}
+    )
     assert resp2.status_code == 400
 
 
@@ -210,11 +223,12 @@ def test_atualizar_usuario_tipo_invalido(client, login_admin):
     token, _ = login_admin(client)
     headers = {'Authorization': f'Bearer {token}'}
     csrf = fetch_csrf(client)
-    resp = client.post('/api/usuarios', json={
-        'nome': 'Tipo',
-        'email': 'tipo@example.com',
-        'senha': 'Tipo@123'
-    }, headers={'X-CSRFToken': csrf}, environ_base={'REMOTE_ADDR': '1.1.1.4'})
+    resp = client.post(
+        '/api/usuarios',
+        json=create_payload(nome='Tipo', email='tipo@example.com', senha='Tipo@123'),
+        headers={'X-CSRFToken': csrf},
+        environ_base={'REMOTE_ADDR': '1.1.1.4'}
+    )
     assert resp.status_code == 201
     user_id = resp.get_json()['id']
     headers['X-CSRFToken'] = fetch_csrf(client)
@@ -290,11 +304,12 @@ def test_logout_com_token_expirado(client):
 
 def test_atualizar_usuario_senha_invalida(client):
     csrf = fetch_csrf(client)
-    resp = client.post('/api/usuarios', json={
-        'nome': 'Complex',
-        'email': 'complex@example.com',
-        'senha': 'Valida1!'
-    }, headers={'X-CSRFToken': csrf}, environ_base={'REMOTE_ADDR': '1.1.1.12'})
+    resp = client.post(
+        '/api/usuarios',
+        json=create_payload(nome='Complex', email='complex@example.com', senha='Valida1!'),
+        headers={'X-CSRFToken': csrf},
+        environ_base={'REMOTE_ADDR': '1.1.1.12'}
+    )
     assert resp.status_code == 201
     user_id = resp.get_json()['id']
 
@@ -324,7 +339,7 @@ def test_non_root_admin_cannot_downgrade_admin(client, login_admin):
     csrf = fetch_csrf(client)
     resp_create = client.post(
         '/api/usuarios',
-        json={'nome': 'Outro', 'email': 'outro@example.com', 'senha': 'Senha@123'},
+        json=create_payload(nome='Outro', email='outro@example.com', senha='Senha@123'),
         headers={'X-CSRFToken': csrf},
         environ_base={'REMOTE_ADDR': '1.1.1.13'},
     )
@@ -333,7 +348,7 @@ def test_non_root_admin_cannot_downgrade_admin(client, login_admin):
 
     headers_root['X-CSRFToken'] = fetch_csrf(client)
     resp_promote = client.put(
-        f'/api/usuarios/{novo_id}', json={'tipo': 'admin'}, headers=headers_root
+        f'/api/usuarios/{novo_id}', json=update_payload(tipo='admin'), headers=headers_root
     )
     assert resp_promote.status_code == 200
 
@@ -350,7 +365,7 @@ def test_non_root_admin_cannot_downgrade_admin(client, login_admin):
         root_id = User.query.filter_by(email='admin@example.com').first().id
 
     resp_downgrade = client.put(
-        f'/api/usuarios/{root_id}', json={'tipo': 'comum'}, headers=headers_new
+        f'/api/usuarios/{root_id}', json=update_payload(tipo='comum'), headers=headers_new
     )
     assert resp_downgrade.status_code == 403
 
@@ -362,7 +377,7 @@ def test_root_admin_can_downgrade_admin(client, login_admin):
     csrf = fetch_csrf(client)
     resp_create = client.post(
         '/api/usuarios',
-        json={'nome': 'Temp', 'email': 'temp@example.com', 'senha': 'Senha@123'},
+        json=create_payload(nome='Temp', email='temp@example.com', senha='Senha@123'),
         headers={'X-CSRFToken': csrf},
         environ_base={'REMOTE_ADDR': '1.1.1.14'},
     )
@@ -371,13 +386,13 @@ def test_root_admin_can_downgrade_admin(client, login_admin):
 
     headers_root['X-CSRFToken'] = fetch_csrf(client)
     resp_promote = client.put(
-        f'/api/usuarios/{admin_id}', json={'tipo': 'admin'}, headers=headers_root
+        f'/api/usuarios/{admin_id}', json=update_payload(tipo='admin'), headers=headers_root
     )
     assert resp_promote.status_code == 200
 
     headers_root['X-CSRFToken'] = fetch_csrf(client)
     resp_downgrade = client.put(
-        f'/api/usuarios/{admin_id}', json={'tipo': 'comum'}, headers=headers_root
+        f'/api/usuarios/{admin_id}', json=update_payload(tipo='comum'), headers=headers_root
     )
     assert resp_downgrade.status_code == 200
     assert resp_downgrade.get_json()['tipo'] == 'comum'
@@ -390,7 +405,7 @@ def test_non_root_admin_cannot_delete_admin(client, login_admin):
     csrf = fetch_csrf(client)
     resp_create = client.post(
         '/api/usuarios',
-        json={'nome': 'Admin2', 'email': 'admin2@example.com', 'senha': 'Senha@123'},
+        json=create_payload(nome='Admin2', email='admin2@example.com', senha='Senha@123'),
         headers={'X-CSRFToken': csrf},
         environ_base={'REMOTE_ADDR': '1.1.1.18'},
     )
@@ -399,7 +414,7 @@ def test_non_root_admin_cannot_delete_admin(client, login_admin):
 
     headers_root['X-CSRFToken'] = fetch_csrf(client)
     resp_promote = client.put(
-        f'/api/usuarios/{admin2_id}', json={'tipo': 'admin'}, headers=headers_root
+        f'/api/usuarios/{admin2_id}', json=update_payload(tipo='admin'), headers=headers_root
     )
     assert resp_promote.status_code == 200
 
@@ -427,7 +442,7 @@ def test_root_admin_can_delete_admin(client, login_admin):
     csrf = fetch_csrf(client)
     resp_create = client.post(
         '/api/usuarios',
-        json={'nome': 'Admin3', 'email': 'admin3@example.com', 'senha': 'Senha@123'},
+        json=create_payload(nome='Admin3', email='admin3@example.com', senha='Senha@123'),
         headers={'X-CSRFToken': csrf},
         environ_base={'REMOTE_ADDR': '1.1.1.19'},
     )
@@ -436,7 +451,7 @@ def test_root_admin_can_delete_admin(client, login_admin):
 
     headers_root['X-CSRFToken'] = fetch_csrf(client)
     resp_promote = client.put(
-        f'/api/usuarios/{admin3_id}', json={'tipo': 'admin'}, headers=headers_root
+        f'/api/usuarios/{admin3_id}', json=update_payload(tipo='admin'), headers=headers_root
     )
     assert resp_promote.status_code == 200
 

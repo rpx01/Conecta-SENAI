@@ -23,34 +23,13 @@ def criar_usuario(dados: Dict[str, Any]) -> Tuple[Optional[User], Optional[Tuple
         opcionalmente um tupla ``(mensagem, status)`` quando houver erro de
         validação.
     """
-    nome = dados.get("nome", "").strip()
-    email = dados.get("email", "").strip()
+    nome = dados.get("nome")
+    email = dados.get("email")
     senha = dados.get("senha")
-    confirmar = dados.get("confirmarSenha")
     username = dados.get("username") or (email.split("@")[0] if email else "")
 
-    if not all([nome, email, senha]):
-        return None, ({"erro": "Dados incompletos"}, 400)
-
-    if "confirmarSenha" in dados and not confirmar:
-        return None, ({"erro": "Dados incompletos"}, 400)
-
-    if confirmar is not None and senha != confirmar:
-        return None, ({"erro": "As senhas não coincidem"}, 400)
-
     if User.query.filter_by(email=email).first():
-        return None, ({"erro": "Este e-mail já está registado"}, 400)
-
-    if not PASSWORD_REGEX.match(senha):
-        return (
-            None,
-            (
-                {
-                    "erro": "Senha deve ter ao menos 8 caracteres, incluindo letra maiúscula, letra minúscula, número e caractere especial"
-                },
-                400,
-            ),
-        )
+        return None, ({"erro": "Email já cadastrado"}, 400)
 
     try:
         novo_usuario = User(

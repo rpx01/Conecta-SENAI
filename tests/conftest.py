@@ -6,6 +6,7 @@ import jwt
 os.environ['ADMIN_EMAIL'] = 'admin@example.com'
 os.environ['ADMIN_USERNAME'] = 'admin'
 os.environ['DISABLE_REDIS'] = '1'
+os.environ['REDIS_URL'] = 'memory://'
 
 import pytest
 from flask import Flask
@@ -17,6 +18,7 @@ from src.models import db
 from src.models.user import User
 from src.models.sala import Sala
 from src.models.log_rateio import LogLancamentoRateio
+from src.limiter import limiter
 from src.routes.user import user_bp, gerar_token_acesso, gerar_refresh_token
 from src.routes.ocupacao import sala_bp, instrutor_bp, ocupacao_bp
 from src.routes.treinamentos import turma_bp, treinamento_bp
@@ -31,8 +33,9 @@ def app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = 'test'
     app.config['WTF_CSRF_CHECK_DEFAULT'] = False
-    CSRFProtect(app)
     db.init_app(app)
+    limiter.init_app(app)
+    CSRFProtect(app)
     app.register_blueprint(user_bp, url_prefix='/api')
     app.register_blueprint(sala_bp, url_prefix='/api')
     app.register_blueprint(turma_bp, url_prefix='/api')

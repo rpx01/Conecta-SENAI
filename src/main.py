@@ -10,6 +10,8 @@ from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
 from src.limiter import limiter
 from src.redis_client import init_redis
+from src.config import DevConfig, ProdConfig, TestConfig
+from src.repositories.user_repository import UserRepository
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
@@ -52,7 +54,7 @@ def create_admin(app):
 
             admin_username = admin_username or admin_email.split('@')[0]
 
-            admin = User.query.filter_by(email=admin_email).first()
+            admin = UserRepository.get_by_email(admin_email)
             if not admin:
                 admin = User(
                     nome='Administrador',
@@ -61,13 +63,12 @@ def create_admin(app):
                     tipo='admin',
                     username=admin_username
                 )
-                db.session.add(admin)
-                db.session.commit()
+                UserRepository.add(admin)
                 logging.info("Usuário administrador criado com sucesso!")
             else:
                 logging.info("Usuário administrador já existe.")
         except SQLAlchemyError as e:
-            db.session.rollback()
+            UserRepository.rollback()
             logging.error("Erro ao criar usuário administrador: %s", str(e))
 
 
@@ -99,6 +100,15 @@ def create_app():
     """Fábrica de aplicação usada pelo Flask."""
     app = Flask(__name__, static_url_path='', static_folder='static')
 
+    env = os.getenv('FLASK_ENV', 'development').lower()
+    config_map = {
+        'production': ProdConfig,
+        'testing': TestConfig,
+    }
+    config_class = config_map.get(env, DevConfig)
+    app.config.from_object(config_class)
+    logging.getLogger().setLevel(app.config.get('LOG_LEVEL', logging.INFO))
+
     migrations_dir = os.path.join(project_root, 'migrations')
 
     db_uri = os.getenv("DATABASE_URL", "sqlite:///agenda_laboratorio.db").strip()
@@ -106,7 +116,6 @@ def create_app():
         db_uri = db_uri.replace('postgres://', 'postgresql://', 1)
 
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['REDIS_URL'] = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 
     secret_key = (os.getenv('SECRET_KEY') or os.getenv('FLASK_SECRET_KEY') or '').strip()

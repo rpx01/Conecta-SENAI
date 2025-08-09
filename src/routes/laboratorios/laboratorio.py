@@ -5,11 +5,13 @@ from src.models.laboratorio_turma import Laboratorio
 from src.auth import login_required, admin_required
 from sqlalchemy.exc import SQLAlchemyError
 from src.utils.error_handler import handle_internal_error
+from src.cache import cache
 
 laboratorio_bp = Blueprint('laboratorio', __name__)
 
 @laboratorio_bp.route('/laboratorios', methods=['GET'])
 @login_required
+@cache.cached(timeout=300, key_prefix="laboratorios")
 def listar_laboratorios():
     """Lista todos os laboratórios disponíveis."""
     try:
@@ -21,6 +23,7 @@ def listar_laboratorios():
 
 @laboratorio_bp.route('/laboratorios/<int:id>', methods=['GET'])
 @login_required
+@cache.cached(timeout=300)
 def obter_laboratorio(id):
     """
     Obtém detalhes de um laboratório específico.

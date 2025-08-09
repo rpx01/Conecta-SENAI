@@ -11,6 +11,8 @@ from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
 from src.limiter import limiter
 from src.redis_client import init_redis
+from src.cache import cache
+from src.tasks import init_task_queue
 from src.config import DevConfig, ProdConfig, TestConfig
 from src.repositories.user_repository import UserRepository
 
@@ -167,6 +169,15 @@ def create_app():
     db.init_app(app)
     Migrate(app, db, directory=migrations_dir)
     init_redis(app)
+    init_task_queue()
+    cache_type = "RedisCache"
+    if getattr(app, 'redis_conn', None).__class__.__name__ == 'DummyRedis':
+        cache_type = "NullCache"
+    cache.init_app(app, config={
+        "CACHE_TYPE": cache_type,
+        "CACHE_REDIS_URL": app.config['REDIS_URL'],
+        "CACHE_DEFAULT_TIMEOUT": 300,
+    })
     limiter.init_app(app)
     app.config['WTF_CSRF_CHECK_DEFAULT'] = False
     csrf.init_app(app)

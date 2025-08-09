@@ -5,9 +5,6 @@ import json
 import calendar
 import csv
 from io import StringIO, BytesIO
-from openpyxl import Workbook
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
 from src.models import db
 from src.models.agendamento import Agendamento
 from src.models.laboratorio_turma import Laboratorio, Turma
@@ -19,6 +16,7 @@ from sqlalchemy import func, extract
 from src.utils.error_handler import handle_internal_error
 from src.utils.audit import log_action
 from src.models.log_agendamento import LogAgendamento
+from src.tasks import queue, gerar_relatorio_agendamentos
 from src.services.agendamento_service import (
     listar_agendamentos as listar_agendamentos_service,
     obter_agendamento as obter_agendamento_service,
@@ -449,52 +447,40 @@ def exportar_agendamentos():
     else:
         agendamentos = Agendamento.query.filter_by(usuario_id=user.id).all()
 
-    if formato == 'pdf':
-        buffer = BytesIO()
-        c = canvas.Canvas(buffer, pagesize=letter)
-        c.drawString(50, 750, "Relatório de Agendamentos")
-        y = 730
-        c.drawString(50, y, "ID  Usuário  Data  Laboratório  Turma  Turno")
-        y -= 20
-        for ag in agendamentos:
-            nome = ag.usuario.nome if ag.usuario else ''
-            c.drawString(50, y, f"{ag.id}  {nome}  {ag.data}  {ag.laboratorio}  {ag.turma}  {ag.turno}")
-            y -= 20
-            if y < 50:
-                c.showPage()
-                y = 750
-        c.save()
-        buffer.seek(0)
-        return send_file(buffer, mimetype='application/pdf', as_attachment=True, download_name='agendamentos.pdf')
+    ag_data = [
+        {
+            'id': ag.id,
+            'usuario': ag.usuario.nome if ag.usuario else '',
+            'data': str(ag.data),
+            'laboratorio': ag.laboratorio,
+            'turma': ag.turma,
+            'turno': ag.turno,
+        }
+        for ag in agendamentos
+    ]
 
-    if formato == 'xlsx':
-        wb = Workbook()
-        ws = wb.active
-        ws.append(["ID", "Nome do Usuário", "Data", "Laboratório", "Turma", "Turno"])
-        for ag in agendamentos:
-            nome = ag.usuario.nome if ag.usuario else ''
-            ws.append([ag.id, nome, ag.data, ag.laboratorio, ag.turma, ag.turno])
-        output = BytesIO()
-        wb.save(output)
-        output.seek(0)
-        return send_file(
-            output,
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            as_attachment=True,
-            download_name='agendamentos.xlsx'
-        )
+    if queue:
+        job = queue.enqueue(gerar_relatorio_agendamentos, formato, ag_data)
+        return jsonify({'job_id': job.id}), 202
 
-    # CSV como padrão
-    si = StringIO()
-    writer = csv.writer(si)
-    writer.writerow(["ID", "Nome do Usuário", "Data", "Laboratório", "Turma", "Turno"])
-    for ag in agendamentos:
-        nome = ag.usuario.nome if ag.usuario else ''
-        writer.writerow([ag.id, nome, ag.data, ag.laboratorio, ag.turma, ag.turno])
-    output = make_response(si.getvalue())
-    output.headers["Content-Disposition"] = "attachment; filename=agendamentos.csv"
-    output.headers["Content-Type"] = "text/csv"
-    return output
+    data, mimetype, filename = gerar_relatorio_agendamentos(formato, ag_data)
+    return send_file(BytesIO(data), mimetype=mimetype, as_attachment=True, download_name=filename)
+
+
+@agendamento_bp.route('/agendamentos/export/<job_id>', methods=['GET'])
+def obter_export(job_id):
+    """Obtém o resultado de uma exportação de agendamentos."""
+    if not queue:
+        return jsonify({'erro': 'Tarefas assíncronas desabilitadas'}), 501
+
+    job = queue.fetch_job(job_id)
+    if not job:
+        return jsonify({'erro': 'Job não encontrado'}), 404
+    if not job.is_finished:
+        return jsonify({'status': job.get_status()}), 202
+
+    data, mimetype, filename = job.result
+    return send_file(BytesIO(data), mimetype=mimetype, as_attachment=True, download_name=filename)
 
 
 @agendamento_bp.route('/logs-agenda', methods=['GET'])

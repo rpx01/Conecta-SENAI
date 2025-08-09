@@ -9,7 +9,7 @@ class LogLancamentoRateio(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     acao = db.Column(db.String(20))
-    usuario = db.Column(db.String(100), index=True)
+    usuario = db.Column(db.String(100))
     instrutor = db.Column(db.String(100))
     filial = db.Column(db.String(100))
     uo = db.Column(db.String(100))

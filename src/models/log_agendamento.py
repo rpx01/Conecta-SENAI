@@ -7,11 +7,11 @@ class LogAgendamento(db.Model):
     __tablename__ = 'logs_agendamentos'
 
     id = db.Column(db.Integer, primary_key=True)
-    usuario = db.Column(db.String(100), index=True)
+    usuario = db.Column(db.String(100))
     tipo_acao = db.Column(db.String(20))
     laboratorio = db.Column(db.String(50))
     turno = db.Column(db.String(20))
-    data_agendamento = db.Column(db.Date, index=True)
+    data_agendamento = db.Column(db.Date)
     dados_antes = db.Column(db.JSON)
     dados_depois = db.Column(db.JSON)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)

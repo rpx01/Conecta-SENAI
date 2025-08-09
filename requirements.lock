@@ -6,71 +6,39 @@
 #
 alembic==1.16.4
     # via flask-migrate
-annotated-types==0.7.0
-    # via pydantic
-apscheduler==3.10.4
-    # via -r requirements.txt
 blinker==1.9.0
     # via flask
-cachelib==0.13.0
-    # via flask-caching
-certifi==2025.8.3
-    # via requests
 cffi==1.17.1
     # via cryptography
-chardet==5.2.0
-    # via reportlab
-charset-normalizer==3.4.2
-    # via requests
 click==8.2.1
-    # via
-    #   flask
-    #   rq
+    # via flask
 cryptography==45.0.5
     # via -r requirements.txt
 deprecated==1.2.18
     # via limits
-dnspython==2.7.0
-    # via email-validator
-email-validator==2.2.0
-    # via -r requirements.txt
-et-xmlfile==2.0.0
-    # via openpyxl
 flask==3.1.1
     # via
     #   -r requirements.txt
-    #   flask-caching
     #   flask-jwt-extended
     #   flask-limiter
     #   flask-migrate
     #   flask-sqlalchemy
-    #   flask-wtf
-flask-caching==2.3.1
-    # via -r requirements.txt
 flask-jwt-extended==4.6.0
     # via -r requirements.txt
 flask-limiter==3.12
     # via -r requirements.txt
-flask-migrate==4.0.5
+flask-migrate==4.1.0
     # via -r requirements.txt
 flask-sqlalchemy==3.1.1
     # via
     #   -r requirements.txt
     #   flask-migrate
-flask-wtf==1.2.1
-    # via -r requirements.txt
 greenlet==3.2.3
     # via sqlalchemy
 gunicorn==23.0.0
     # via -r requirements.txt
-idna==3.10
-    # via
-    #   email-validator
-    #   requests
 itsdangerous==2.2.0
-    # via
-    #   flask
-    #   flask-wtf
+    # via flask
 jinja2==3.1.6
     # via flask
 limits==5.4.0
@@ -85,69 +53,39 @@ markupsafe==3.0.2
     #   jinja2
     #   mako
     #   werkzeug
-    #   wtforms
 mdurl==0.1.2
     # via markdown-it-py
-openpyxl==3.1.2
-    # via -r requirements.txt
 ordered-set==4.1.0
     # via flask-limiter
 packaging==25.0
     # via
     #   gunicorn
     #   limits
-pillow==11.3.0
-    # via reportlab
 psycopg2-binary==2.9.10
     # via -r requirements.txt
 pycparser==2.22
     # via cffi
-pydantic==2.5.3
-    # via -r requirements.txt
-pydantic-core==2.14.6
-    # via pydantic
 pygments==2.19.2
     # via rich
 pyjwt==2.10.1
-    # via
-    #   -r requirements.txt
-    #   flask-jwt-extended
+    # via flask-jwt-extended
 pymysql==1.1.1
     # via -r requirements.txt
 python-dotenv==1.0.0
     # via -r requirements.txt
-pytz==2025.2
-    # via apscheduler
 redis==5.0.1
-    # via
-    #   -r requirements.txt
-    #   rq
-reportlab==4.0.8
-    # via -r requirements.txt
-requests==2.31.0
     # via -r requirements.txt
 rich==13.9.4
     # via flask-limiter
-rq==2.4.1
-    # via -r requirements.txt
-six==1.17.0
-    # via apscheduler
 sqlalchemy==2.0.23
     # via
-    #   -r requirements.txt
     #   alembic
     #   flask-sqlalchemy
 typing-extensions==4.14.0
     # via
     #   alembic
     #   limits
-    #   pydantic
-    #   pydantic-core
     #   sqlalchemy
-tzlocal==5.3.1
-    # via apscheduler
-urllib3==2.5.0
-    # via requests
 werkzeug==3.1.3
     # via
     #   -r requirements.txt
@@ -155,5 +93,3 @@ werkzeug==3.1.3
     #   flask-jwt-extended
 wrapt==1.17.2
     # via deprecated
-wtforms==3.2.1
-    # via flask-wtf

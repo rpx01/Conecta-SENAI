@@ -343,14 +343,20 @@ function formatarHorario(horario) {
 }
 
 /**
- * Exibe uma mensagem de alerta na página
+ * Exibe uma mensagem usando toasts do Bootstrap
  * @param {string} mensagem - Mensagem a ser exibida
- * @param {string} tipo - Tipo de alerta (success, danger, warning, info)
- * @param {string} containerId - ID do container onde o alerta será exibido
+ * @param {string} tipo - Tipo do toast (success, danger, warning, info)
  */
-function exibirAlerta(mensagem, tipo = 'info', containerId = 'alertContainer') {
-    const toastContainer = document.querySelector('.toast-container');
-    if (!toastContainer) return;
+function showToast(mensagem, tipo = 'info') {
+    let toastContainer = document.querySelector('.toast-container');
+
+    // Garante que o container exista
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        toastContainer.style.zIndex = 1100;
+        document.body.appendChild(toastContainer);
+    }
 
     const toastId = `toast-${Date.now()}`;
     const bgColor =
@@ -378,6 +384,11 @@ function exibirAlerta(mensagem, tipo = 'info', containerId = 'alertContainer') {
 
     toast.show();
 }
+
+// Alias para compatibilidade com código existente
+const exibirAlerta = showToast;
+window.showToast = showToast;
+window.exibirAlerta = exibirAlerta;
 
 /**
  * Retorna a classe CSS correspondente ao turno
@@ -721,7 +732,7 @@ async function carregarNotificacoes() {
                     // Recarrega as notificações
                     carregarNotificacoes();
                 } catch (error) {
-                    exibirAlerta('Erro ao marcar notificação como lida', 'danger');
+                    showToast('Não foi possível marcar a notificação como lida.', 'danger');
                 }
             });
         });
@@ -776,7 +787,7 @@ async function exportarDados(endpoint, formato, nomeArquivo) {
         window.URL.revokeObjectURL(url);
     } catch (error) {
         console.error('Erro ao exportar dados:', error);
-        exibirAlerta('Falha ao exportar dados', 'danger');
+        showToast('Não foi possível exportar os dados.', 'danger');
     }
 }
 

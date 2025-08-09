@@ -1,4 +1,20 @@
 
+@font-face {
+  font-family: "Gibson";
+  src: url("data:font/woff2;base64,") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Exo 2";
+  src: url("data:font/woff2;base64,") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --header-color: #164194;
   --primary-color: #164194;
@@ -20,7 +36,7 @@
 }
 
 body {
-  font-family: 'Gibson', 'Neo Sans W1G', 'Exo 2', Calibri, sans-serif;
+  font-family: "Gibson", "Exo 2", sans-serif;
   font-size: 14px;
   color: var(--text-color);
   background-color: var(--background-color);
@@ -133,7 +149,7 @@ small, .small {
 
 .sidebar .nav-link.active::before {
   content: ">";
-  font-family: 'Gibson', 'Exo 2', Calibri, sans-serif;
+  font-family: "Gibson", "Exo 2", sans-serif;
   color: var(--accent-color);
   font-weight: 900;
   margin-right: 8px;
@@ -678,7 +694,7 @@ footer {
 }
 
 .fc-toolbar-title {
-  font-family: 'Gibson', 'Exo 2', Calibri, sans-serif;
+  font-family: "Gibson", "Exo 2", sans-serif;
   color: var(--primary-color);
 }
 .fc-button-primary {

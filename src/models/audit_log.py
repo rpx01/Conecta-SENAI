@@ -7,11 +7,11 @@ class AuditLog(db.Model):
     __tablename__ = 'audit_logs'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
     action = db.Column(db.String(50))
-    entity = db.Column(db.String(50), index=True)
-    entity_id = db.Column(db.Integer, index=True)
+    entity = db.Column(db.String(50))
+    entity_id = db.Column(db.Integer)
     details = db.Column(db.JSON)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     user = db.relationship('User', backref='audit_logs')

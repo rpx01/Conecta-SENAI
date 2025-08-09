@@ -4,6 +4,46 @@
 // Constantes globais
 const API_URL = '/api';
 
+// Overlay de carregamento reutilizável
+let loadingOverlay;
+
+function criarLoadingOverlay() {
+    if (loadingOverlay) return;
+    loadingOverlay = document.createElement('div');
+    loadingOverlay.id = 'loading-overlay';
+    loadingOverlay.className = 'loading-overlay d-none';
+    loadingOverlay.setAttribute('role', 'status');
+    loadingOverlay.setAttribute('aria-live', 'polite');
+    loadingOverlay.setAttribute('tabindex', '0');
+    loadingOverlay.innerHTML = `
+        <div class="loading-content">
+            <div class="spinner-border text-primary" aria-hidden="true"></div>
+            <span class="ms-2">Carregando...</span>
+        </div>`;
+    document.body.appendChild(loadingOverlay);
+}
+
+function mostrarLoading() {
+    criarLoadingOverlay();
+    document.body.setAttribute('aria-busy', 'true');
+    loadingOverlay.classList.remove('d-none');
+}
+
+function ocultarLoading() {
+    if (!loadingOverlay) return;
+    loadingOverlay.classList.add('d-none');
+    document.body.removeAttribute('aria-busy');
+}
+
+async function executarComLoading(acao) {
+    mostrarLoading();
+    try {
+        return await acao();
+    } finally {
+        ocultarLoading();
+    }
+}
+
 /**
  * Obtém um token CSRF do backend.
  * @returns {Promise<string>} Token CSRF ou string vazia em caso de erro
@@ -262,46 +302,48 @@ async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = tru
         options.body = JSON.stringify(body);
     }
     
-    try {
-        let response = await fetch(url, options);
+    return await executarComLoading(async () => {
+        try {
+            let response = await fetch(url, options);
 
-        // Verifica se a resposta indica falta de autorização e redireciona imediatamente
-        if (response.status === 401) {
-            localStorage.removeItem('usuario');
-            window.location.href = '/admin/login.html';
-            throw new Error('Sessão expirada');
-        }
-
-        if (!response.ok) {
-            let mensagemErro = `Erro ${response.status}`;
-
-            const data = await response.json().catch(() => ({}));
-            const detalhe = data.erro || data.detail;
-
-            // Verifica se o detalhe do erro é uma lista (padrão de erros de validação)
-            if (Array.isArray(detalhe)) {
-                // Mapeia a lista de objetos de erro para uma única string legível
-                mensagemErro = detalhe
-                    .map(e => {
-                        if (e.loc && e.msg) {
-                            return `${e.loc.join(' → ')}: ${e.msg}`;
-                        }
-                        return JSON.stringify(e);
-                    })
-                    .join('; ');
-            } else if (detalhe) {
-                mensagemErro = detalhe;
+            // Verifica se a resposta indica falta de autorização e redireciona imediatamente
+            if (response.status === 401) {
+                localStorage.removeItem('usuario');
+                window.location.href = '/admin/login.html';
+                throw new Error('Sessão expirada');
             }
 
-            throw new Error(mensagemErro);
-        }
+            if (!response.ok) {
+                let mensagemErro = `Erro ${response.status}`;
 
-        const data = await response.json().catch(() => ({}));
-        return data;
-    } catch (error) {
-        console.error(`Erro na chamada à API ${url}:`, error);
-        throw error;
-    }
+                const data = await response.json().catch(() => ({}));
+                const detalhe = data.erro || data.detail;
+
+                // Verifica se o detalhe do erro é uma lista (padrão de erros de validação)
+                if (Array.isArray(detalhe)) {
+                    // Mapeia a lista de objetos de erro para uma única string legível
+                    mensagemErro = detalhe
+                        .map(e => {
+                            if (e.loc && e.msg) {
+                                return `${e.loc.join(' → ')}: ${e.msg}`;
+                            }
+                            return JSON.stringify(e);
+                        })
+                        .join('; ');
+                } else if (detalhe) {
+                    mensagemErro = detalhe;
+                }
+
+                throw new Error(mensagemErro);
+            }
+
+            const data = await response.json().catch(() => ({}));
+            return data;
+        } catch (error) {
+            console.error(`Erro na chamada à API ${url}:`, error);
+            throw error;
+        }
+    });
 }
 
 // Funções de formatação e utilidades
@@ -433,7 +475,7 @@ async function executarAcaoComFeedback(btn, acao) {
     if (textoSpan) textoSpan.textContent = 'Processando...';
 
     try {
-        return await acao();
+        return await executarComLoading(acao);
     } finally {
         if (spinner) spinner.classList.add('d-none');
         if (textoSpan) textoSpan.textContent = textoOriginal;
@@ -802,15 +844,8 @@ async function preencherTabela(idTabela, endpoint, funcaoRenderizarLinha) {
     const tbody = tabela.querySelector('tbody');
     const numColunas = thead ? thead.querySelector('tr').childElementCount : 1;
 
-    // Exibe o spinner centralizado enquanto os dados são carregados
-    tbody.innerHTML = `
-        <tr>
-            <td colspan="${numColunas}" class="text-center py-4">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Carregando...</span>
-                </div>
-            </td>
-        </tr>`;
+    // Exibe um texto enquanto os dados são carregados
+    tbody.innerHTML = `<tr><td colspan="${numColunas}" class="text-center py-4">Carregando...</td></tr>`;
 
     try {
         const dados = await chamarAPI(endpoint, 'GET');

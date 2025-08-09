@@ -31,6 +31,9 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 csrf = CSRFProtect()
 
+# Scheduler global para evitar múltiplas instâncias
+scheduler = None
+
 swagger_template = {
     "components": {
         "schemas": {
@@ -230,6 +233,11 @@ def create_app():
 
 def iniciar_scheduler(app):
     """Configura scheduler para geração periódica de notificações."""
+    global scheduler
+    if scheduler and scheduler.running:
+        logging.debug("Scheduler já está em execução; ignorando nova inicialização")
+        return
+
     scheduler = BackgroundScheduler()
 
     def job():

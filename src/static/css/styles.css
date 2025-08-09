@@ -45,6 +45,12 @@ body {
   flex-direction: column;
 }
 
+/* Normalize Bootstrap icon appearance */
+i.bi {
+  font-style: normal;
+  line-height: 1;
+}
+
 .content-wrapper {
   flex: 1;
 }

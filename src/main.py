@@ -172,7 +172,23 @@ def create_app():
         'title': 'Conecta SENAI API',
         'uiversion': 3,
     }
-    Swagger(app, template=swagger_template, config={"specs_route": "/docs"})
+
+    swagger_config = {
+        "headers": [],
+        "specs": [
+            {
+                "endpoint": "apispec_1",
+                "route": "/apispec_1.json",
+                "rule_filter": lambda rule: True,
+                "model_filter": lambda tag: True,
+            }
+        ],
+        "static_url_path": "/flasgger_static",
+        "swagger_ui": True,
+        "specs_route": "/docs",
+    }
+
+    Swagger(app, config=swagger_config, template=swagger_template)
 
     # Configura chaves do reCAPTCHA (opcional)
     app.config['RECAPTCHA_SITE_KEY'] = os.getenv('RECAPTCHA_SITE_KEY') or os.getenv('SITE_KEY')

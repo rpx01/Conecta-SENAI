@@ -82,6 +82,15 @@ Todas as variáveis disponíveis estão listadas em `.env.example`.
   `ADMIN_PASSWORD` e `SECRET_KEY` antes de iniciar a aplicação. Não utilize os
   valores de exemplo em ambientes de produção.
 
+## Política de Segredos
+
+- O recurso de [secret scanning](https://docs.github.com/code-security/secret-scanning/about-secret-scanning)
+  do GitHub está habilitado para alertar sobre exposições acidentais de credenciais.
+- Nunca versione senhas, tokens ou chaves privadas. Utilize variáveis de ambiente
+  e os **GitHub Secrets** nos pipelines.
+- Se um segredo for exposto, revogue-o e gere um novo imediatamente, atualizando
+  as referências necessárias.
+
 ## Usando Docker
 
 Uma alternativa é rodar a aplicação em um container Docker. Para construir a imagem execute:

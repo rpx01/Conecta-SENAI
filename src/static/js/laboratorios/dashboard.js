@@ -1,3 +1,5 @@
+const rootStyle = getComputedStyle(document.documentElement);
+
 async function carregarKpis() {
     try {
         const dados = await chamarAPI('/dashboard/laboratorios/kpis');
@@ -47,7 +49,7 @@ async function carregarLabsMaisUtilizados() {
         const valores = dados.map(d => d.total);
         new Chart(ctx, {
             type: 'bar',
-            data: { labels, datasets: [{ data: valores, backgroundColor: '#0d6efd' }] },
+            data: { labels, datasets: [{ data: valores, backgroundColor: rootStyle.getPropertyValue('--primary-color').trim() }] },
             options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
         });
     } catch (error) {
@@ -66,7 +68,7 @@ async function carregarTendenciaMensal() {
             type: 'line',
             data: {
                 labels,
-                datasets: [{ label: 'Agendamentos', data: valores, borderColor: '#0d6efd', tension: 0.3 }]
+                datasets: [{ label: 'Agendamentos', data: valores, borderColor: rootStyle.getPropertyValue('--primary-color').trim(), tension: 0.3 }]
             },
             options: { scales: { y: { beginAtZero: true } } }
         });

@@ -20,19 +20,19 @@
   --primary-color: #164194;
   --accent-color: #008BD2;
   --secondary-color: #e6f4ff;
-  --success-color: #52c41a;
-  --danger-color: #ff4d4f;
-  --warning-color: #ffc107;
-  --info-color: #0dcaf0;
+  --success-color: #006837;
+  --danger-color: #D50032;
+  --warning-color: #FFB612;
+  --info-color: #00539F;
   --light-color: #f8f9fa;
   --dark-color: #212529;
   --text-color: #333333;
   --muted-color: #888888;
   --background-color: #f7f9fc;
 
-  --turno-manha-color: #FFEB3B;
-  --turno-tarde-color: #03A9F4;
-  --turno-noite-color: #673AB7;
+  --turno-manha-color: #FDD835;
+  --turno-tarde-color: #00539F;
+  --turno-noite-color: #512DA8;
 }
 
 body {
@@ -354,20 +354,21 @@ small, .small {
 
 .agendamento-manha {
   background-color: var(--turno-manha-color);
-  border-left: 3px solid #FDD835;
+  border-left: 3px solid var(--turno-manha-color);
+  color: #000;
 }
 
 
 .agendamento-tarde {
   background-color: var(--turno-tarde-color);
-  border-left: 3px solid #0288D1;
+  border-left: 3px solid var(--turno-tarde-color);
   color: #fff;
 }
 
 
 .agendamento-noite {
   background-color: var(--turno-noite-color);
-  border-left: 3px solid #512DA8;
+  border-left: 3px solid var(--turno-noite-color);
   color: #fff;
 }
 
@@ -394,17 +395,17 @@ small, .small {
 
 .legenda-cor-manha {
   background-color: var(--turno-manha-color);
-  border-left: 3px solid #FDD835;
+  border-left: 3px solid var(--turno-manha-color);
 }
 
 .legenda-cor-tarde {
   background-color: var(--turno-tarde-color);
-  border-left: 3px solid #0288D1;
+  border-left: 3px solid var(--turno-tarde-color);
 }
 
 .legenda-cor-noite {
   background-color: var(--turno-noite-color);
-  border-left: 3px solid #512DA8;
+  border-left: 3px solid var(--turno-noite-color);
 }
 
 /* ======================================================= */
@@ -428,28 +429,29 @@ small, .small {
 /* ESTILO LIVRE (0% Ocupado) */
 .turno-livre {
     background-color: #f8f9fa;
-    color: #6c757d;
+    color: var(--muted-color);
     border-color: #dee2e6;
 }
 
 /* ESTILO PARCIAL (1-99% Ocupado) - CORREÇÃO */
 .turno-parcial {
-    background-color: #FF8A00 !important; /* Laranja SENAI. O !important força a prioridade. */
-    color: #FFFFFF;
-    border-color: #E67B00;
-    font-weight: 600;
+  background-color: var(--warning-color) !important;
+  color: #000;
+  border-color: var(--warning-color);
+  font-weight: 600;
 }
 
 /* ESTILO CHEIO (100% Ocupado) - CORREÇÃO */
 .turno-cheio {
-    background-color: #164194 !important; /* Azul SENAI. O !important força a prioridade. */
-    color: #FFFFFF;
-    border-color: #00407d;
-    font-weight: 600;
+  background-color: var(--primary-color) !important;
+  color: #FFFFFF;
+  border-color: #00407d;
+  font-weight: 600;
 }
 
 .resumo-card-manha {
   background-color: var(--turno-manha-color);
+  color: #000;
 }
 
 .resumo-card-tarde {
@@ -673,21 +675,21 @@ footer {
   height: 300px;
 }
 .ocupacao-item {
-  border-left: 4px solid #007bff;
+  border-left: 4px solid var(--primary-color);
   padding-left: 12px;
   margin-bottom: 10px;
 }
 .ocupacao-item.aula_regular {
-  border-left-color: #4CAF50;
+  border-left-color: var(--success-color);
 }
 .ocupacao-item.evento_especial {
-  border-left-color: #FF9800;
+  border-left-color: var(--warning-color);
 }
 .ocupacao-item.reuniao {
-  border-left-color: #2196F3;
+  border-left-color: var(--info-color);
 }
 .ocupacao-item.manutencao {
-  border-left-color: #F44336;
+  border-left-color: var(--danger-color);
 }
 .ocupacao-item.reserva_especial {
   border-left-color: #9C27B0;
@@ -728,7 +730,7 @@ footer {
   background-color: #FFFFFF;
 }
 .fc-daygrid-day.fc-day-today {
-  border: 1px solid #00539F;
+  border: 1px solid var(--turno-tarde-color);
 }
 .fc-daygrid-day.fc-day-other {
   opacity: 0.6;
@@ -737,20 +739,20 @@ footer {
   border-radius: 3px;
 }
 .ocupacao-aula_regular {
-  background-color: #4CAF50 !important;
-  border-color: #4CAF50 !important;
+  background-color: var(--success-color) !important;
+  border-color: var(--success-color) !important;
 }
 .ocupacao-evento_especial {
-  background-color: #FF9800 !important;
-  border-color: #FF9800 !important;
+  background-color: var(--warning-color) !important;
+  border-color: var(--warning-color) !important;
 }
 .ocupacao-reuniao {
-  background-color: #2196F3 !important;
-  border-color: #2196F3 !important;
+  background-color: var(--info-color) !important;
+  border-color: var(--info-color) !important;
 }
 .ocupacao-manutencao {
-  background-color: #F44336 !important;
-  border-color: #F44336 !important;
+  background-color: var(--danger-color) !important;
+  border-color: var(--danger-color) !important;
 }
 .ocupacao-reserva_especial {
   background-color: #9C27B0 !important;
@@ -771,15 +773,15 @@ footer {
   transition: all 0.3s;
 }
 .disponibilidade-check.disponivel {
-  border-color: #28a745;
+  border-color: var(--success-color);
   background-color: #f8fff9;
 }
 .disponibilidade-check.indisponivel {
-  border-color: #dc3545;
+  border-color: var(--danger-color);
   background-color: #fff8f8;
 }
 .disponibilidade-check.verificando {
-  border-color: #ffc107;
+  border-color: var(--warning-color);
   background-color: #fffdf5;
 }
 .conflito-item {
@@ -804,7 +806,7 @@ footer {
   height: 30px;
   border-radius: 50%;
   background-color: #e9ecef;
-  color: #6c757d;
+  color: var(--muted-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -812,11 +814,11 @@ footer {
   margin-right: 8px;
 }
 .step.active .step-number {
-  background-color: #007bff;
+  background-color: var(--primary-color);
   color: #fff;
 }
 .step.completed .step-number {
-  background-color: #28a745;
+  background-color: var(--success-color);
   color: #fff;
 }
 .step-line {
@@ -826,7 +828,7 @@ footer {
   margin: 0 10px;
 }
 .step.completed + .step-line {
-  background-color: #28a745;
+  background-color: var(--success-color);
 }
 
 footer.bg-dark {
@@ -904,7 +906,7 @@ input, select, textarea {
 }
 .action-tile:hover {
   color: #FFFFFF;
-  border-color: #00539F;
+  border-color: var(--turno-tarde-color);
 }
 .action-tile i {
   font-size: 2.5rem;
@@ -946,21 +948,21 @@ input, select, textarea {
 /* ESTILO LIVRE (0% Ocupado) */
 .turno-livre {
     background-color: #f8f9fa;
-    color: #6c757d;
+    color: var(--muted-color);
     border-color: #dee2e6;
 }
 
 /* ESTILO PARCIAL (1-99% Ocupado) - CORREÇÃO */
 .turno-parcial {
-    background-color: #FF8A00 !important; /* Laranja SENAI. O !important força a prioridade. */
-    color: #FFFFFF;
-    border-color: #E67B00;
+    background-color: var(--warning-color) !important;
+    color: #000;
+    border-color: var(--warning-color);
     font-weight: 600;
 }
 
 /* ESTILO CHEIO (100% Ocupado) - CORREÇÃO */
 .turno-cheio {
-    background-color: #164194 !important; /* Azul SENAI. O !important força a prioridade. */
+    background-color: var(--primary-color) !important;
     color: #FFFFFF;
     border-color: #00407d;
     font-weight: 600;
@@ -1045,7 +1047,7 @@ input, select, textarea {
 }
 
 #seletor-laboratorios .lab-icon.active {
-    background-color: #00539F;
+    background-color: var(--turno-tarde-color);
     color: #fff;
     border-color: #00407d;
     transform: translateY(-2px);
@@ -1071,7 +1073,7 @@ input, select, textarea {
 .turno-card .card-header {
     background-color: #f8f9fa; font-weight: 700;
     text-transform: none; font-size: 0.9rem;
-    color: #00539F;
+    color: var(--turno-tarde-color);
 }
 .agendamento-item {
     display: flex; justify-content: space-between; align-items: center;
@@ -1079,7 +1081,7 @@ input, select, textarea {
 }
 .agendamento-item:last-child { border-bottom: none; }
 .agendamento-info strong { color: #333; }
-.agendamento-info span { font-size: 0.9em; color: #6c757d; }
+.agendamento-info span { font-size: 0.9em; color: var(--muted-color); }
 .btn-novo-agendamento-turno { font-weight: 500; }
 
 

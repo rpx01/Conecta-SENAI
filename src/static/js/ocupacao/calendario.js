@@ -9,6 +9,8 @@ let tiposOcupacao = [];
 let resumoOcupacoes = {};
 let diaResumoAtual = null;
 
+const rootStyle = getComputedStyle(document.documentElement);
+
 // Converte o nome do turno em um identificador CSS sem acentos
 function slugifyTurno(turno) {
     return turno
@@ -525,7 +527,7 @@ function mostrarDetalhesOcupacao(ocupacao) {
 // Retorna cor do tipo por valor
 function getTipoCorPorValor(valor) {
     const tipo = tiposOcupacao.find(t => t.valor === valor);
-    return tipo ? tipo.cor : '#6c757d';
+    return tipo ? tipo.cor : rootStyle.getPropertyValue('--muted-color').trim();
 }
 
 // Retorna classe do badge de status

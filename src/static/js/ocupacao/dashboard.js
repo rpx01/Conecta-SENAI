@@ -5,6 +5,15 @@ let estatisticasGerais = {};
 let proximasOcupacoes = [];
 let relatorioMensal = {};
 
+const rootStyle = getComputedStyle(document.documentElement);
+const coresOcorrencia = {
+    'aula_regular': rootStyle.getPropertyValue('--success-color').trim(),
+    'evento_especial': rootStyle.getPropertyValue('--warning-color').trim(),
+    'reuniao': rootStyle.getPropertyValue('--info-color').trim(),
+    'manutencao': rootStyle.getPropertyValue('--danger-color').trim(),
+    'reserva_especial': '#9C27B0'
+};
+
 // Carrega indicadores de salas por mês
 async function carregarIndicadoresMensais() {
     try {
@@ -347,14 +356,6 @@ function renderizarOcupacoesPorTipo() {
     
     container.innerHTML = '';
     
-    const cores = {
-        'aula_regular': '#4CAF50',
-        'evento_especial': '#FF9800',
-        'reuniao': '#2196F3',
-        'manutencao': '#F44336',
-        'reserva_especial': '#9C27B0'
-    };
-    
     const nomes = {
         'aula_regular': 'Aula Regular',
         'evento_especial': 'Evento Especial',
@@ -367,7 +368,7 @@ function renderizarOcupacoesPorTipo() {
     
     relatorioMensal.ocupacoes_por_tipo.forEach(item => {
         const porcentagem = Math.round((item.total / total) * 100);
-        const cor = cores[item.tipo] || '#6c757d';
+        const cor = coresOcorrencia[item.tipo] || rootStyle.getPropertyValue('--muted-color').trim();
         const nome = nomes[item.tipo] || item.tipo;
         
         const div = document.createElement('div');
@@ -402,14 +403,6 @@ function renderizarOcupacoesPorTipoBasico(tipos) {
     
     container.innerHTML = '';
     
-    const cores = {
-        'aula_regular': '#4CAF50',
-        'evento_especial': '#FF9800',
-        'reuniao': '#2196F3',
-        'manutencao': '#F44336',
-        'reserva_especial': '#9C27B0'
-    };
-    
     const nomes = {
         'aula_regular': 'Aula Regular',
         'evento_especial': 'Evento Especial',
@@ -422,7 +415,7 @@ function renderizarOcupacoesPorTipoBasico(tipos) {
     
     tipos.forEach(item => {
         const porcentagem = Math.round((item.total / total) * 100);
-        const cor = cores[item.tipo] || '#6c757d';
+        const cor = coresOcorrencia[item.tipo] || rootStyle.getPropertyValue('--muted-color').trim();
         const nome = nomes[item.tipo] || item.tipo;
         
         const div = document.createElement('div');
@@ -501,7 +494,7 @@ function renderizarGraficoTendencia(dados) {
             datasets: [{
                 label: 'Ocupações',
                 data: valores,
-                borderColor: '#0d6efd',
+                borderColor: rootStyle.getPropertyValue('--primary-color').trim(),
                 tension: 0.3
             }]
         },

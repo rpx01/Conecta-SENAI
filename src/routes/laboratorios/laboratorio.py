@@ -5,11 +5,13 @@ from src.models.laboratorio_turma import Laboratorio
 from src.auth import login_required, admin_required
 from sqlalchemy.exc import SQLAlchemyError
 from src.utils.error_handler import handle_internal_error
+from src.cache import cache
 
 laboratorio_bp = Blueprint('laboratorio', __name__)
 
 @laboratorio_bp.route('/laboratorios', methods=['GET'])
 @login_required
+@cache.cached(timeout=300, key_prefix='laboratorios')
 def listar_laboratorios():
     """Lista todos os laboratórios disponíveis."""
     try:
@@ -57,6 +59,7 @@ def criar_laboratorio():
         )
         db.session.add(novo_laboratorio)
         db.session.commit()
+        cache.delete('laboratorios')
         return jsonify(novo_laboratorio.to_dict()), 201
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -89,6 +92,7 @@ def atualizar_laboratorio(id):
         laboratorio.nome = data['nome']
         laboratorio.classe_icone = data.get('classe_icone', laboratorio.classe_icone)
         db.session.commit()
+        cache.delete('laboratorios')
         return jsonify(laboratorio.to_dict())
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -108,6 +112,7 @@ def remover_laboratorio(id):
     try:
         db.session.delete(laboratorio)
         db.session.commit()
+        cache.delete('laboratorios')
         return jsonify({'mensagem': 'Laboratório removido com sucesso'})
     except SQLAlchemyError as e:
         db.session.rollback()

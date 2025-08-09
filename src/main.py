@@ -10,6 +10,7 @@ from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
 from src.limiter import limiter
 from src.redis_client import init_redis
+from src.cache import init_cache, cache
 from src.config import DevConfig, ProdConfig, TestConfig
 from src.repositories.user_repository import UserRepository
 
@@ -128,6 +129,7 @@ def create_app():
     db.init_app(app)
     Migrate(app, db, directory=migrations_dir)
     init_redis(app)
+    init_cache(app)
     limiter.init_app(app)
     app.config['WTF_CSRF_CHECK_DEFAULT'] = False
     csrf.init_app(app)

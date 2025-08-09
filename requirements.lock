@@ -16,6 +16,8 @@ attrs==25.3.0
     #   referencing
 blinker==1.9.0
     # via flask
+cachelib==0.9.0
+    # via flask-caching
 certifi==2025.8.3
     # via requests
 cffi==1.17.1
@@ -25,7 +27,9 @@ chardet==5.2.0
 charset-normalizer==3.4.2
     # via requests
 click==8.2.1
-    # via flask
+    # via
+    #   flask
+    #   rq
 cryptography==45.0.5
     # via -r requirements.txt
 deprecated==1.2.18
@@ -42,11 +46,14 @@ flask==3.1.1
     # via
     #   -r requirements.txt
     #   flasgger
+    #   flask-caching
     #   flask-jwt-extended
     #   flask-limiter
     #   flask-migrate
     #   flask-sqlalchemy
     #   flask-wtf
+flask-caching==2.1.0
+    # via -r requirements.txt
 flask-jwt-extended==4.6.0
     # via -r requirements.txt
 flask-limiter==3.12
@@ -128,7 +135,9 @@ pytz==2025.2
 pyyaml==6.0.2
     # via flasgger
 redis==5.0.1
-    # via -r requirements.txt
+    # via
+    #   -r requirements.txt
+    #   rq
 referencing==0.36.2
     # via
     #   jsonschema
@@ -143,6 +152,8 @@ rpds-py==0.27.0
     # via
     #   jsonschema
     #   referencing
+rq==1.15.1
+    # via -r requirements.txt
 six==1.17.0
     # via
     #   apscheduler

@@ -42,7 +42,7 @@
                             <a href="#" class="text-muted small">Esqueceu-se da senha?</a>
                         </div>
                         <div class="d-grid">
-                            <button class="btn btn-primary btn-lg" type="submit" id="btnLogin">ENTRAR</button>
+                        <button class="btn btn-primary btn-lg" type="submit" id="btnLogin">Entrar</button>
                         </div>
                     </form>
                     <div class="text-center mt-4">
@@ -77,7 +77,7 @@
                     e.preventDefault();
                     const btn = document.getElementById('btnLogin');
                     btn.disabled = true;
-                    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> A ENTRAR...';
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Entrando...';
 
                     const email = document.getElementById('email').value;
                     const senha = document.getElementById('senha').value;
@@ -100,7 +100,7 @@
                     } catch (error) {
                         exibirAlerta(error.message, 'danger');
                         btn.disabled = false;
-                        btn.innerHTML = 'ENTRAR';
+                        btn.innerHTML = 'Entrar';
                     }
                 });
             }

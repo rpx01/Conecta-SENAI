@@ -67,7 +67,7 @@ body {
 
 h1, .h1, h2, .h2 {
   font-weight: 700;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.5px;
 }
 
@@ -173,12 +173,12 @@ small, .small {
   background-color: #fff;
   border-bottom: 1px solid rgba(0, 0, 0, 0.125);
   font-weight: 700;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .card-title {
   font-weight: 700;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .form-label {
@@ -198,7 +198,7 @@ small, .small {
   background-image: none;
   background-color: var(--primary-color);
   border-color: var(--primary-color);
-  text-transform: uppercase;
+  text-transform: none;
   font-weight: 600;
 }
 
@@ -219,7 +219,7 @@ small, .small {
 }
 
 .table > thead {
-  text-transform: uppercase;
+  text-transform: none;
   font-weight: 700;
   font-size: 0.8rem;
   color: #333;
@@ -861,7 +861,7 @@ input, select, textarea {
   background-color: transparent;
   border-bottom: 1px solid #f0f0f0;
   font-weight: 700;
-  text-transform: uppercase;
+  text-transform: none;
   color: #333;
 }
 
@@ -1064,7 +1064,7 @@ input, select, textarea {
 .turno-card { border: 1px solid #e9ecef; margin-bottom: 1.5rem; }
 .turno-card .card-header {
     background-color: #f8f9fa; font-weight: 700;
-    text-transform: uppercase; font-size: 0.9rem;
+    text-transform: none; font-size: 0.9rem;
     color: #00539F;
 }
 .agendamento-item {

@@ -220,7 +220,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" form="laboratorioForm" class="btn btn-primary" id="btnSalvarLaboratorio">
-                        <i class="bi bi-plus-circle me-2"></i>Adicionar
+                        <i class="bi bi-plus-circle me-2"></i>Salvar laboratório
                     </button>
                 </div>
             </div>
@@ -246,7 +246,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" form="turmaForm" class="btn btn-primary" id="btnSalvarTurma">
-                        <i class="bi bi-plus-circle me-2"></i>Adicionar
+                        <i class="bi bi-plus-circle me-2"></i>Salvar turma
                     </button>
                 </div>
             </div>
@@ -274,13 +274,13 @@
             laboratorioModalEl.addEventListener('hidden.bs.modal', () => {
                 document.getElementById('laboratorioForm').reset();
                 document.getElementById('laboratorioId').value = '';
-                document.getElementById('btnSalvarLaboratorio').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
+                document.getElementById('btnSalvarLaboratorio').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Salvar laboratório';
             });
 
             turmaModalEl.addEventListener('hidden.bs.modal', () => {
                 document.getElementById('turmaForm').reset();
                 document.getElementById('turmaId').value = '';
-                document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
+                document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Salvar turma';
             });
             
             // Carrega os dados iniciais
@@ -409,7 +409,7 @@
                     // Limpa o formulário e recarrega a lista
                     document.getElementById('laboratorioForm').reset();
                     document.getElementById('laboratorioId').value = '';
-                    document.getElementById('btnSalvarLaboratorio').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
+                    document.getElementById('btnSalvarLaboratorio').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Salvar laboratório';
                     laboratorioModal.hide();
                     carregarLaboratorios();
                 } catch (error) {
@@ -441,7 +441,7 @@
                     // Limpa o formulário e recarrega a lista
                     document.getElementById('turmaForm').reset();
                     document.getElementById('turmaId').value = '';
-                    document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
+                    document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Salvar turma';
                     turmaModal.hide();
                     carregarTurmas();
                 } catch (error) {
@@ -454,7 +454,7 @@
                 document.getElementById('laboratorioId').value = id;
                 document.getElementById('nomeLaboratorio').value = nome;
                 document.getElementById('classeIconeLaboratorio').value = classe || '';
-                document.getElementById('btnSalvarLaboratorio').innerHTML = '<i class="bi bi-check-circle me-2"></i>Atualizar';
+                document.getElementById('btnSalvarLaboratorio').innerHTML = '<i class="bi bi-check-circle me-2"></i>Atualizar laboratório';
                 laboratorioModal.show();
                 document.getElementById('nomeLaboratorio').focus();
             };
@@ -463,7 +463,7 @@
             window.editarTurma = function(id, nome) {
                 document.getElementById('turmaId').value = id;
                 document.getElementById('nomeTurma').value = nome;
-                document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-check-circle me-2"></i>Atualizar';
+                document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-check-circle me-2"></i>Atualizar turma';
                 turmaModal.show();
                 document.getElementById('nomeTurma').focus();
             };

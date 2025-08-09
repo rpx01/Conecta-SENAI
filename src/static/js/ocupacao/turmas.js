@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('turmaModal').addEventListener('hidden.bs.modal', () => {
         document.getElementById('turmaForm').reset();
         document.getElementById('turmaId').value = '';
-        document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
+        document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Salvar turma';
     });
 
     function renderizarLinhaTurma(turma) {
@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.getElementById('turmaForm').reset();
             document.getElementById('turmaId').value = '';
-            document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
+            document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Salvar turma';
             turmaModal.hide();
             carregarTurmas();
         } catch (error) {
@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.editarTurma = function(id, nome) {
         document.getElementById('turmaId').value = id;
         document.getElementById('nomeTurma').value = nome;
-        document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-check-circle me-2"></i>Atualizar';
+        document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-check-circle me-2"></i>Atualizar turma';
         turmaModal.show();
         document.getElementById('nomeTurma').focus();
     };
@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.novaTurma = function() {
         document.getElementById('turmaForm').reset();
         document.getElementById('turmaId').value = '';
-        document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
+        document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Salvar turma';
         turmaModal.show();
     };
 

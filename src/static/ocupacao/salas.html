@@ -104,7 +104,7 @@
                 <div class="page-header">
                     <h2 class="mb-0">Gerenciar Salas</h2>
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalSala" onclick="novaSala()">
-                        <i class="bi bi-plus-circle me-2"></i>Adicionar
+                        <i class="bi bi-plus-circle me-2"></i>Adicionar sala
                     </button>
                 </div>
 
@@ -203,6 +203,7 @@
                                 <div class="mb-3">
                                     <label for="salaCapacidade" class="form-label">Capacidade *</label>
                                     <input type="number" class="form-control" id="salaCapacidade" min="1" required>
+                                    <small class="form-text text-muted">Informe o número máximo de pessoas.</small>
                                 </div>
                             </div>
                         </div>
@@ -216,6 +217,7 @@
                                         <option value="1º Andar">1º Andar</option>
                                         <option value="2º Andar">2º Andar</option>
                                     </select>
+                                    <small class="form-text text-muted">Escolha o andar onde a sala está.</small>
                                 </div>
                             </div>
                         </div>
@@ -235,6 +237,7 @@
                         
                         <div class="mb-3">
                             <label class="form-label">Recursos Disponíveis</label>
+                            <small class="text-muted d-block">Marque os equipamentos presentes na sala.</small>
                             <div id="recursosContainer" class="row">
                             </div>
                         </div>

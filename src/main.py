@@ -6,6 +6,7 @@ import logging
 import traceback
 import sys
 from flask import Flask, redirect
+from flasgger import Swagger
 from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
 from src.limiter import limiter
@@ -29,6 +30,41 @@ from src.services.notificacao_service import criar_notificacoes_agendamentos_pro
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 csrf = CSRFProtect()
+
+swagger_template = {
+    "components": {
+        "schemas": {
+            "User": {
+                "type": "object",
+                "properties": {
+                    "id": {"type": "integer"},
+                    "nome": {"type": "string"},
+                    "email": {"type": "string"},
+                    "tipo": {"type": "string"},
+                },
+            },
+            "UserCreate": {
+                "type": "object",
+                "properties": {
+                    "nome": {"type": "string"},
+                    "email": {"type": "string"},
+                    "senha": {"type": "string"},
+                    "tipo": {"type": "string"},
+                },
+                "required": ["nome", "email", "senha"],
+            },
+            "Notification": {
+                "type": "object",
+                "properties": {
+                    "id": {"type": "integer"},
+                    "mensagem": {"type": "string"},
+                    "lida": {"type": "boolean"},
+                    "criada_em": {"type": "string", "format": "date-time"},
+                },
+            },
+        }
+    }
+}
 
 def create_admin(app):
     """Cria o usuário administrador padrão de forma idempotente."""
@@ -131,6 +167,12 @@ def create_app():
     limiter.init_app(app)
     app.config['WTF_CSRF_CHECK_DEFAULT'] = False
     csrf.init_app(app)
+
+    app.config['SWAGGER'] = {
+        'title': 'Conecta SENAI API',
+        'uiversion': 3,
+    }
+    Swagger(app, template=swagger_template, config={"specs_route": "/docs"})
 
     # Configura chaves do reCAPTCHA (opcional)
     app.config['RECAPTCHA_SITE_KEY'] = os.getenv('RECAPTCHA_SITE_KEY') or os.getenv('SITE_KEY')

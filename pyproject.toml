@@ -29,6 +29,7 @@ dependencies = [
     ,"requests (==2.31.0)"
     ,"flask-wtf (==1.2.1)"
     ,"apscheduler (==3.10.4)"
+    ,"flasgger (==0.9.7.1)"
 ]
 
 [tool.poetry]
@@ -61,6 +62,7 @@ flask-migrate = "4.0.5"
 flask-jwt-extended = "4.6.0"
 flask-wtf = "1.2.1"
 apscheduler = "3.10.4"
+flasgger = "0.9.7.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "8.4.1"

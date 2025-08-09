@@ -71,6 +71,17 @@ Todas as variáveis disponíveis estão listadas em `.env.example`.
    agendamentos. O intervalo em minutos pode ser ajustado pela variável de
    ambiente `NOTIFICACAO_INTERVALO_MINUTOS` (padrão: `60`).
 
+## Segurança
+
+- **JWT**: A API utiliza tokens JWT para autenticação. Tokens de acesso possuem
+  curta duração e tokens de refresh podem ser revogados a qualquer momento.
+- **Rate Limiting**: Rotas sensíveis como login e criação de usuários são
+  protegidas por limitação de requisições via Flask-Limiter para mitigar
+  ataques de força bruta.
+- **Credenciais padrão**: Defina valores seguros para `ADMIN_EMAIL`,
+  `ADMIN_PASSWORD` e `SECRET_KEY` antes de iniciar a aplicação. Não utilize os
+  valores de exemplo em ambientes de produção.
+
 ## Usando Docker
 
 Uma alternativa é rodar a aplicação em um container Docker. Para construir a imagem execute:

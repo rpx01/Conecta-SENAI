@@ -147,7 +147,43 @@ def verificar_refresh_token(token):
 @user_bp.route("/usuarios", methods=["GET"])
 @admin_required
 def listar_usuarios():
-    """Lista todos os usuários com paginação."""
+    """Lista todos os usuários com paginação.
+
+    ---
+    tags:
+      - Usuários
+    parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Página atual
+      - in: query
+        name: per_page
+        schema:
+          type: integer
+        description: Itens por página
+    responses:
+      200:
+        description: Lista paginada de usuários
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/User'
+                page:
+                  type: integer
+                per_page:
+                  type: integer
+                total:
+                  type: integer
+                pages:
+                  type: integer
+    """
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
     per_page = min(per_page, 100)
@@ -166,7 +202,30 @@ def listar_usuarios():
 @user_bp.route("/usuarios/<int:id>", methods=["GET"])
 @login_required
 def obter_usuario(id):
-    """Obtém detalhes de um usuário específico."""
+    """Obtém detalhes de um usuário específico.
+
+    ---
+    tags:
+      - Usuários
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+        description: ID do usuário
+    responses:
+      200:
+        description: Usuário encontrado
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      403:
+        description: Permissão negada
+      404:
+        description: Usuário não encontrado
+    """
     user = g.current_user
     if not verificar_admin(user) and user.id != id:
         return jsonify({"erro": "Permissão negada"}), 403
@@ -184,6 +243,25 @@ def criar_usuario():
     """Cria um novo usuário.
     Usuários não autenticados podem criar apenas usuários comuns.
     Administradores podem criar qualquer tipo de usuário.
+
+    ---
+    tags:
+      - Usuários
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserCreate'
+    responses:
+      201:
+        description: Usuário criado
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      400:
+        description: Erro de validação
     """
     try:
         payload = UserCreateSchema(**(request.get_json() or {}))
@@ -350,7 +428,42 @@ def remover_usuario(id):
 @user_bp.route("/login", methods=["POST"])
 @limiter.limit("10 per minute")
 def login():
-    """Autentica um usuário e retorna tokens JWT."""
+    """Autentica um usuário e retorna tokens JWT.
+
+    ---
+    tags:
+      - Autenticação
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+              senha:
+                type: string
+              recaptcha_token:
+                type: string
+            required:
+              - email
+              - senha
+    responses:
+      200:
+        description: Tokens de acesso e refresh
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                refresh_token:
+                  type: string
+      400:
+        description: Requisição inválida
+    """
     try:
         dados = request.get_json(silent=True)
 

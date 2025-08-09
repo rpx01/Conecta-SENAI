@@ -13,13 +13,20 @@ notificacao_bp = Blueprint('notificacao', __name__)
 def listar_notificacoes():
     """Retorna notificações ordenadas por data de criação.
 
-    A rota exige autenticação e aplica regras de visibilidade
-    baseadas no perfil do usuário:
-
-    * Usuários comuns recebem apenas notificações associadas ao
-      seu próprio ``usuario_id``;
-    * Administradores podem visualizar todas as notificações do
-      sistema.
+    ---
+    tags:
+      - Notificações
+    responses:
+      200:
+        description: Lista de notificações
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Notification'
+      401:
+        description: Não autenticado
     """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
@@ -31,10 +38,27 @@ def listar_notificacoes():
 def marcar_notificacao_lida(id):
     """Marca uma notificação como lida.
 
-    Requer autenticação: usuários comuns só podem alterar notificações
-    das quais são proprietários, enquanto administradores podem atuar
-    sobre qualquer uma. Retorna ``404`` se a notificação não existir e
-    ``403`` quando o usuário não possui permissão.
+    ---
+    tags:
+      - Notificações
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+        description: ID da notificação
+    responses:
+      200:
+        description: Notificação marcada como lida
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+      401:
+        description: Não autenticado
+      404:
+        description: Notificação não encontrada
     """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:

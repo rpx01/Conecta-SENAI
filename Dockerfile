@@ -8,7 +8,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-RUN pip install poetry
+RUN apt-get update && \
+    apt-get install -y build-essential && \
+    rm -rf /var/lib/apt/lists/* && \
+    pip install poetry
 
 COPY poetry.lock pyproject.toml ./
 

@@ -243,8 +243,8 @@ def test_calendario_ocupacoes_cor_por_turno(client, app):
     eventos = resp_cal.get_json()
     assert len(eventos) == 1
     evento = eventos[0]
-    assert evento['backgroundColor'] == '#673AB7'
-    assert evento['borderColor'] == '#673AB7'
+    assert evento['backgroundColor'] == '#512DA8'
+    assert evento['borderColor'] == '#512DA8'
     assert evento['extendedProps']['turno'] == 'Noite'
 
 

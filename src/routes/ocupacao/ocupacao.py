@@ -592,11 +592,11 @@ def obter_ocupacoes_calendario():
     def cor_turno(t):
         """Retorna a cor associada ao turno."""
         cores = {
-            'Manhã': '#FFEB3B',
-            'Tarde': '#03A9F4',
-            'Noite': '#673AB7'
+            'Manhã': '#FDD835',
+            'Tarde': '#00539F',
+            'Noite': '#512DA8'
         }
-        return cores.get(t, '#607D8B')
+        return cores.get(t, '#888888')
 
     eventos_calendario = []
     for ocupacao in ocupacoes:
@@ -719,10 +719,10 @@ def listar_tipos_ocupacao():
         return jsonify({'erro': 'Não autenticado'}), 401
     
     tipos = [
-        {'valor': 'aula_regular', 'nome': 'Aula Regular', 'cor': '#4CAF50'},
-        {'valor': 'evento_especial', 'nome': 'Evento Especial', 'cor': '#FF9800'},
-        {'valor': 'reuniao', 'nome': 'Reunião', 'cor': '#2196F3'},
-        {'valor': 'manutencao', 'nome': 'Manutenção', 'cor': '#F44336'},
+        {'valor': 'aula_regular', 'nome': 'Aula Regular', 'cor': '#006837'},
+        {'valor': 'evento_especial', 'nome': 'Evento Especial', 'cor': '#FFB612'},
+        {'valor': 'reuniao', 'nome': 'Reunião', 'cor': '#00539F'},
+        {'valor': 'manutencao', 'nome': 'Manutenção', 'cor': '#D50032'},
         {'valor': 'reserva_especial', 'nome': 'Reserva Especial', 'cor': '#9C27B0'}
     ]
     

@@ -189,11 +189,11 @@ def agendamentos_calendario_periodo():
     def cor_turno(t):
         """Retorna a cor correspondente ao turno."""
         cores = {
-            'Manhã': '#F3B54E',
-            'Tarde': '#FFC107',
-            'Noite': '#164194'
+            'Manhã': '#FDD835',
+            'Tarde': '#00539F',
+            'Noite': '#512DA8'
         }
-        return cores.get(t, '#607D8B')
+        return cores.get(t, '#888888')
 
     eventos = []
     for a in agendamentos:

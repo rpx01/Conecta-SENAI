@@ -125,13 +125,13 @@ class Ocupacao(db.Model):
         Retorna a cor associada ao tipo de ocupação.
         """
         cores = {
-            'aula_regular': '#4CAF50',      # Verde
-            'evento_especial': '#FF9800',   # Laranja
-            'reuniao': '#2196F3',           # Azul
-            'manutencao': '#F44336',        # Vermelho
+            'aula_regular': '#006837',      # Verde FIEMG
+            'evento_especial': '#FFB612',   # Amarelo FIEMG
+            'reuniao': '#00539F',           # Azul FIEMG
+            'manutencao': '#D50032',        # Vermelho FIEMG
             'reserva_especial': '#9C27B0'   # Roxo
         }
-        return cores.get(self.tipo_ocupacao, '#607D8B')  # Cinza como padrão
+        return cores.get(self.tipo_ocupacao, '#888888')  # Cinza como padrão
     
     def to_dict(self, include_relations=True):
         """

@@ -20,12 +20,12 @@ class Agendamento(db.Model):
     __tablename__ = 'agendamentos'
     
     id = db.Column(db.Integer, primary_key=True)
-    data = db.Column(db.Date, nullable=False, index=True)
-    laboratorio = db.Column(db.String(50), nullable=False, index=True)
+    data = db.Column(db.Date, nullable=False)
+    laboratorio = db.Column(db.String(50), nullable=False)
     turma = db.Column(db.String(50), nullable=False)
-    turno = db.Column(db.String(20), nullable=False, index=True)
+    turno = db.Column(db.String(20), nullable=False)
     horarios = db.Column(db.JSON, nullable=False)
-    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False, index=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

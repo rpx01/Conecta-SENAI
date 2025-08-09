@@ -28,6 +28,7 @@ from flask_wtf.csrf import generate_csrf
 from src.services import user_service
 from pydantic import ValidationError
 from src.schemas.user import UserCreateSchema, UserUpdateSchema
+from flasgger import swag_from
 
 # Reexporta a expressão regular para compatibilidade
 PASSWORD_REGEX = user_service.PASSWORD_REGEX
@@ -145,6 +146,14 @@ def verificar_refresh_token(token):
 
 
 @user_bp.route("/usuarios", methods=["GET"])
+@swag_from({
+    'tags': ['Usuários'],
+    'parameters': [
+        {'in': 'query', 'name': 'page', 'schema': {'type': 'integer'}, 'required': False},
+        {'in': 'query', 'name': 'per_page', 'schema': {'type': 'integer'}, 'required': False},
+    ],
+    'responses': {200: {'description': 'Lista paginada de usuários'}}
+})
 @admin_required
 def listar_usuarios():
     """Lista todos os usuários com paginação."""
@@ -164,6 +173,17 @@ def listar_usuarios():
 
 
 @user_bp.route("/usuarios/<int:id>", methods=["GET"])
+@swag_from({
+    'tags': ['Usuários'],
+    'parameters': [
+        {'in': 'path', 'name': 'id', 'schema': {'type': 'integer'}, 'required': True},
+    ],
+    'responses': {
+        200: {'description': 'Usuário encontrado'},
+        403: {'description': 'Permissão negada'},
+        404: {'description': 'Usuário não encontrado'},
+    },
+})
 @login_required
 def obter_usuario(id):
     """Obtém detalhes de um usuário específico."""
@@ -179,6 +199,21 @@ def obter_usuario(id):
 
 
 @user_bp.route("/usuarios", methods=["POST"])
+@swag_from({
+    'tags': ['Usuários'],
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': UserCreateSchema.model_json_schema(),
+            }
+        }
+    },
+    'responses': {
+        201: {'description': 'Usuário criado com sucesso'},
+        400: {'description': 'Erro de validação'},
+    },
+})
 @limiter.limit("5 per minute")
 def criar_usuario():
     """Cria um novo usuário.

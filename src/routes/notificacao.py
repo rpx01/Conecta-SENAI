@@ -5,11 +5,16 @@ from src.services.notificacao_service import (
     listar_notificacoes as listar_notificacoes_service,
     marcar_notificacao_lida as marcar_notificacao_lida_service,
 )
+from flasgger import swag_from
 
 
 notificacao_bp = Blueprint('notificacao', __name__)
 
 @notificacao_bp.route('/notificacoes', methods=['GET'])
+@swag_from({
+    'tags': ['Notificações'],
+    'responses': {200: {'description': 'Lista de notificações'}},
+})
 def listar_notificacoes():
     """Retorna notificações ordenadas por data de criação.
 
@@ -28,6 +33,17 @@ def listar_notificacoes():
     return listar_notificacoes_service(user)
 
 @notificacao_bp.route('/notificacoes/<int:id>/marcar-lida', methods=['PUT'])
+@swag_from({
+    'tags': ['Notificações'],
+    'parameters': [
+        {'in': 'path', 'name': 'id', 'schema': {'type': 'integer'}, 'required': True},
+    ],
+    'responses': {
+        200: {'description': 'Notificação marcada como lida'},
+        403: {'description': 'Permissão negada'},
+        404: {'description': 'Notificação não encontrada'},
+    },
+})
 def marcar_notificacao_lida(id):
     """Marca uma notificação como lida.
 

@@ -8,6 +8,7 @@ import sys
 from flask import Flask, redirect
 from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
+from flasgger import Swagger
 from src.limiter import limiter
 from src.redis_client import init_redis
 from src.config import DevConfig, ProdConfig, TestConfig
@@ -147,6 +148,20 @@ def create_app():
     app.register_blueprint(ocupacao_bp, url_prefix='/api')
     app.register_blueprint(rateio_bp, url_prefix='/api')
     app.register_blueprint(treinamento_bp, url_prefix='/api')
+
+    # Configura documentação Swagger UI
+    app.config['SWAGGER'] = {'uiversion': 3}
+    Swagger(
+        app,
+        template={
+            'openapi': '3.0.2',
+            'info': {
+                'title': 'Conecta SENAI API',
+                'version': '1.0.0',
+            },
+        },
+        config={'specs_route': '/docs'},
+    )
 
     # Inicia scheduler para notificações
     iniciar_scheduler(app)

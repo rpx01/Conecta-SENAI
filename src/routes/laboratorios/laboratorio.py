@@ -5,10 +5,15 @@ from src.models.laboratorio_turma import Laboratorio
 from src.auth import login_required, admin_required
 from sqlalchemy.exc import SQLAlchemyError
 from src.utils.error_handler import handle_internal_error
+from flasgger import swag_from
 
 laboratorio_bp = Blueprint('laboratorio', __name__)
 
 @laboratorio_bp.route('/laboratorios', methods=['GET'])
+@swag_from({
+    'tags': ['Laboratórios'],
+    'responses': {200: {'description': 'Lista de laboratórios'}}
+})
 @login_required
 def listar_laboratorios():
     """Lista todos os laboratórios disponíveis."""
@@ -20,6 +25,16 @@ def listar_laboratorios():
         return handle_internal_error(e)
 
 @laboratorio_bp.route('/laboratorios/<int:id>', methods=['GET'])
+@swag_from({
+    'tags': ['Laboratórios'],
+    'parameters': [
+        {'in': 'path', 'name': 'id', 'schema': {'type': 'integer'}, 'required': True},
+    ],
+    'responses': {
+        200: {'description': 'Detalhes do laboratório'},
+        404: {'description': 'Laboratório não encontrado'},
+    },
+})
 @login_required
 def obter_laboratorio(id):
     """
@@ -33,6 +48,28 @@ def obter_laboratorio(id):
     return jsonify(laboratorio.to_dict())
 
 @laboratorio_bp.route('/laboratorios', methods=['POST'])
+@swag_from({
+    'tags': ['Laboratórios'],
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'nome': {'type': 'string'},
+                        'classe_icone': {'type': 'string'},
+                    },
+                    'required': ['nome'],
+                }
+            }
+        }
+    },
+    'responses': {
+        201: {'description': 'Laboratório criado'},
+        400: {'description': 'Dados inválidos'},
+    },
+})
 @admin_required
 def criar_laboratorio():
     """
@@ -63,6 +100,32 @@ def criar_laboratorio():
         return handle_internal_error(e)
 
 @laboratorio_bp.route('/laboratorios/<int:id>', methods=['PUT'])
+@swag_from({
+    'tags': ['Laboratórios'],
+    'parameters': [
+        {'in': 'path', 'name': 'id', 'schema': {'type': 'integer'}, 'required': True},
+    ],
+    'requestBody': {
+        'required': True,
+        'content': {
+            'application/json': {
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'nome': {'type': 'string'},
+                        'classe_icone': {'type': 'string'},
+                    },
+                    'required': ['nome'],
+                }
+            }
+        }
+    },
+    'responses': {
+        200: {'description': 'Laboratório atualizado'},
+        400: {'description': 'Dados inválidos'},
+        404: {'description': 'Laboratório não encontrado'},
+    },
+})
 @admin_required
 def atualizar_laboratorio(id):
     """
@@ -95,6 +158,16 @@ def atualizar_laboratorio(id):
         return handle_internal_error(e)
 
 @laboratorio_bp.route('/laboratorios/<int:id>', methods=['DELETE'])
+@swag_from({
+    'tags': ['Laboratórios'],
+    'parameters': [
+        {'in': 'path', 'name': 'id', 'schema': {'type': 'integer'}, 'required': True},
+    ],
+    'responses': {
+        200: {'description': 'Laboratório removido'},
+        404: {'description': 'Laboratório não encontrado'},
+    },
+})
 @admin_required
 def remover_laboratorio(id):
     """

@@ -28,7 +28,8 @@ dependencies = [
     "flask-jwt-extended (==4.6.0)"
     ,"requests (==2.31.0)"
     ,"flask-wtf (==1.2.1)"
-    ,"apscheduler (==3.10.4)"
+    ,"apscheduler (==3.10.4)",
+    "flasgger (>=0.9.7.1,<0.10.0.0)"
 ]
 
 [tool.poetry]

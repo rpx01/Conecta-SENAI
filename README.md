@@ -71,6 +71,15 @@ Todas as variáveis disponíveis estão listadas em `.env.example`.
    agendamentos. O intervalo em minutos pode ser ajustado pela variável de
    ambiente `NOTIFICACAO_INTERVALO_MINUTOS` (padrão: `60`).
 
+## Segurança
+
+- A autenticação das rotas usa **JWT**. Tokens de acesso possuem vida curta e
+  podem ser renovados através de tokens de refresh.
+- Para mitigar abusos, rotas críticas como login e criação de usuários possuem
+  **rate limiting** configurado via Flask-Limiter.
+- Defina valores próprios para `ADMIN_EMAIL`, `ADMIN_PASSWORD` e `ADMIN_USERNAME`.
+  As credenciais de exemplo presentes no `.env` não devem ser utilizadas em produção.
+
 ## Usando Docker
 
 Uma alternativa é rodar a aplicação em um container Docker. Para construir a imagem execute:

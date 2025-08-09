@@ -49,12 +49,16 @@ import locale
 import logging
 
 # Configura o locale para o formato de data em português
-try:
-    locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
-except locale.Error:
+for loc in ("pt_BR.UTF-8", "pt_BR.utf8", "pt_BR"):
+    try:
+        locale.setlocale(locale.LC_TIME, loc)
+        break
+    except locale.Error:
+        continue
+else:
     locale.setlocale(locale.LC_TIME, "C")  # Fallback para um locale seguro
     logging.warning(
-        "Locale 'pt_BR.UTF-8' not available. Falling back to 'C'."
+        "Locale 'pt_BR' not available. Falling back to 'C'."
     )
 
 

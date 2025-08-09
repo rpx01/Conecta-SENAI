@@ -111,7 +111,7 @@ class GerenciadorSalas {
         } else {
             mensagem += ` ${error.message}`;
         }
-        exibirAlerta(mensagem, 'danger');
+        showToast(mensagem, 'danger');
     } finally {
         document.getElementById('loadingSalas').style.display = 'none';
     }
@@ -246,7 +246,7 @@ class GerenciadorSalas {
         }
     } catch (error) {
         console.error('Erro ao editar sala:', error);
-        exibirAlerta('Erro ao carregar dados da sala.', 'danger');
+        showToast('Não foi possível carregar os dados da sala.', 'danger');
     }
 }
 
@@ -273,12 +273,12 @@ class GerenciadorSalas {
         
         // Validações
         if (!formData.nome) {
-            exibirAlerta('Nome da sala é obrigatório.', 'warning');
+            showToast('Por favor, informe o nome da sala.', 'warning');
             return;
         }
         
         if (!formData.capacidade || formData.capacidade <= 0) {
-            exibirAlerta('Capacidade deve ser um número maior que zero.', 'warning');
+            showToast('A capacidade deve ser um número maior que zero.', 'warning');
             return;
         }
         
@@ -298,7 +298,7 @@ class GerenciadorSalas {
         const result = await response.json();
         
         if (response.ok) {
-            exibirAlerta(`Sala ${isEdicao ? 'atualizada' : 'criada'} com sucesso!`, 'success');
+            showToast(`Sala ${isEdicao ? 'atualizada' : 'criada'} com sucesso!`, 'success');
 
             // Fecha o modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalSala'));
@@ -332,7 +332,7 @@ class GerenciadorSalas {
         }
     } catch (error) {
         console.error('Erro ao salvar sala:', error);
-        exibirAlerta(error.message, 'danger');
+        showToast(`Não foi possível salvar a sala: ${error.message}`, 'danger');
     } finally {
         if (btn && spinner) {
             btn.disabled = false;
@@ -364,7 +364,7 @@ class GerenciadorSalas {
         const result = await response.json();
         
         if (response.ok) {
-            exibirAlerta('Sala excluída com sucesso!', 'success');
+            showToast('Sala excluída com sucesso!', 'success');
             
             // Fecha o modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalExcluirSala'));
@@ -377,7 +377,7 @@ class GerenciadorSalas {
         }
     } catch (error) {
         console.error('Erro ao excluir sala:', error);
-        exibirAlerta(error.message, 'danger');
+        showToast(`Não foi possível excluir a sala: ${error.message}`, 'danger');
     }
 }
 
@@ -389,34 +389,7 @@ class GerenciadorSalas {
 
 }
 
-// Função para exibir alertas
-function exibirAlerta(mensagem, tipo) {
-    // Remove alertas existentes
-    const alertasExistentes = document.querySelectorAll('.alert-auto-dismiss');
-    alertasExistentes.forEach(alerta => alerta.remove());
-
-    // Cria novo alerta
-    const alerta = document.createElement('div');
-    alerta.className = `alert alert-${tipo} alert-dismissible fade show alert-auto-dismiss`;
-    alerta.textContent = mensagem;
-    const closeBtn = document.createElement('button');
-    closeBtn.type = 'button';
-    closeBtn.className = 'btn-close';
-    closeBtn.setAttribute('data-bs-dismiss', 'alert');
-    closeBtn.setAttribute('aria-label', 'Close');
-    alerta.appendChild(closeBtn);
-    
-    // Insere no início do main
-    const main = document.querySelector('main');
-    main.insertBefore(alerta, main.firstChild);
-    
-    // Remove automaticamente após 5 segundos
-    setTimeout(() => {
-        if (alerta.parentNode) {
-            alerta.remove();
-        }
-    }, 5000);
-}
+// Removido: alertas em linha substituídos por toasts globais
 
 // Instancia o gerenciador de salas e o torna global para acesso inline
 window.gerenciadorSalas = new GerenciadorSalas();

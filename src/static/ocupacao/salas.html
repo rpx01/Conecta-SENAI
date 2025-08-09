@@ -289,7 +289,7 @@
             // Verifica se é administrador
             const usuario = getUsuarioLogado();
             if (!isAdmin()) {
-                alert('Acesso negado. Apenas administradores podem gerenciar salas.');
+                showToast('Acesso negado. Somente administradores podem gerenciar salas.', 'danger');
                 window.location.href = '/ocupacao/dashboard.html';
                 return;
             }

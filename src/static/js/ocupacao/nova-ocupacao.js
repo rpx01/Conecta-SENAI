@@ -188,7 +188,7 @@ async function carregarOcupacaoParaEdicao(id) {
         }
     } catch (error) {
         console.error('Erro ao carregar ocupação para edição:', error);
-        exibirAlerta('Erro ao carregar dados da ocupação.', 'danger');
+        showToast('Não foi possível carregar os dados da ocupação.', 'danger');
     }
 }
 
@@ -302,14 +302,14 @@ async function salvarOcupacao() {
         const resultado = await response.json();
         
         if (response.ok) {
-            exibirAlerta('Ocupação salva com sucesso.', 'success');
+            showToast('Ocupação salva com sucesso!', 'success');
             window.location.href = '/ocupacao/calendario.html';
         } else {
             throw new Error(formatarErros(resultado.erro) || 'Erro ao salvar ocupação');
         }
     } catch (error) {
         console.error('Erro ao salvar ocupação:', error);
-        exibirAlerta(error.message, 'danger');
+        showToast(`Não foi possível salvar a ocupação: ${error.message}`, 'danger');
     }
 }
 
@@ -344,7 +344,7 @@ function validarFormulario() {
     }
     
     if (!valido) {
-        exibirAlerta('Por favor, preencha todos os campos obrigatórios corretamente.', 'warning');
+        showToast('Por favor, preencha todos os campos obrigatórios.', 'warning');
     }
     
     return valido;
@@ -352,34 +352,7 @@ function validarFormulario() {
 
 // Avança para próximo passo
 
-// Função para exibir alertas
-function exibirAlerta(mensagem, tipo) {
-    // Remove alertas existentes
-    const alertasExistentes = document.querySelectorAll('.alert-auto-dismiss');
-    alertasExistentes.forEach(alerta => alerta.remove());
-
-    // Cria novo alerta
-    const alerta = document.createElement('div');
-    alerta.className = `alert alert-${tipo} alert-dismissible fade show alert-auto-dismiss`;
-    alerta.textContent = mensagem;
-    const closeBtn = document.createElement('button');
-    closeBtn.type = 'button';
-    closeBtn.className = 'btn-close';
-    closeBtn.setAttribute('data-bs-dismiss', 'alert');
-    closeBtn.setAttribute('aria-label', 'Close');
-    alerta.appendChild(closeBtn);
-    
-    // Insere no início do main
-    const main = document.querySelector('main');
-    main.insertBefore(alerta, main.firstChild);
-    
-    // Remove automaticamente após 5 segundos
-    setTimeout(() => {
-        if (alerta.parentNode) {
-            alerta.remove();
-        }
-    }, 5000);
-}
+// Removido: alertas em linha substituídos por toasts globais
 
 // Exibe aviso quando "Aula Regular" é selecionada
 function monitorarSelecaoAulaRegular() {

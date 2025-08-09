@@ -96,17 +96,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const nome = document.getElementById('nomeTurma').value;
 
         if (!nome) {
-            exibirAlerta('O nome da turma é obrigatório.', 'danger');
+            showToast('Por favor, informe o nome da turma.', 'warning');
             return;
         }
 
         try {
             if (id) {
                 await chamarAPI(`/turmas/${id}`, 'PUT', { nome });
-                exibirAlerta('Turma atualizada com sucesso!', 'success');
+                showToast('Turma atualizada com sucesso!', 'success');
             } else {
                 await chamarAPI('/turmas', 'POST', { nome });
-                exibirAlerta('Turma cadastrada com sucesso!', 'success');
+                showToast('Turma cadastrada com sucesso!', 'success');
             }
 
             document.getElementById('turmaForm').reset();
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
             turmaModal.hide();
             carregarTurmas();
         } catch (error) {
-            exibirAlerta(`Erro ao salvar turma: ${error.message}`, 'danger');
+            showToast(`Não foi possível salvar a turma: ${error.message}`, 'danger');
         } finally {
             if (btn && spinner) {
                 btn.disabled = false;
@@ -151,10 +151,10 @@ document.addEventListener('DOMContentLoaded', () => {
     async function excluirTurma(id) {
         try {
             await chamarAPI(`/turmas/${id}`, 'DELETE');
-            exibirAlerta('Turma excluída com sucesso!', 'success');
+            showToast('Turma excluída com sucesso!', 'success');
             carregarTurmas();
         } catch (error) {
-            exibirAlerta(`Erro ao excluir turma: ${error.message}`, 'danger');
+            showToast(`Não foi possível excluir a turma: ${error.message}`, 'danger');
         }
     }
 

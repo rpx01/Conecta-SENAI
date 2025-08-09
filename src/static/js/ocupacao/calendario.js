@@ -625,7 +625,7 @@ async function confirmarExclusaoOcupacao(modo) {
         const result = await response.json();
         
         if (response.ok) {
-            exibirAlerta('Ocupação excluída com sucesso!', 'success');
+            showToast('Ocupação excluída com sucesso!', 'success');
 
             // Fecha o modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalExcluirOcupacao'));
@@ -647,38 +647,11 @@ async function confirmarExclusaoOcupacao(modo) {
         }
     } catch (error) {
         console.error('Erro ao excluir ocupação:', error);
-        exibirAlerta(error.message, 'danger');
+        showToast(`Não foi possível excluir a ocupação: ${error.message}`, 'danger');
     }
 }
 
-// Função para exibir alertas
-function exibirAlerta(mensagem, tipo) {
-    // Remove alertas existentes
-    const alertasExistentes = document.querySelectorAll('.alert-auto-dismiss');
-    alertasExistentes.forEach(alerta => alerta.remove());
-
-    // Cria novo alerta
-    const alerta = document.createElement('div');
-    alerta.className = `alert alert-${tipo} alert-dismissible fade show alert-auto-dismiss`;
-    alerta.textContent = mensagem;
-    const closeBtn = document.createElement('button');
-    closeBtn.type = 'button';
-    closeBtn.className = 'btn-close';
-    closeBtn.setAttribute('data-bs-dismiss', 'alert');
-    closeBtn.setAttribute('aria-label', 'Close');
-    alerta.appendChild(closeBtn);
-    
-    // Insere no início do main
-    const main = document.querySelector('main');
-    main.insertBefore(alerta, main.firstChild);
-    
-    // Remove automaticamente após 5 segundos
-    setTimeout(() => {
-        if (alerta.parentNode) {
-            alerta.remove();
-        }
-    }, 5000);
-}
+// Removido: alertas em linha substituídos por toasts globais
 
 function formatarDataCurta(dataStr) {
     const data = new Date(dataStr + 'T00:00:00');

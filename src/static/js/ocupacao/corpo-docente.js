@@ -109,7 +109,7 @@ class GerenciadorInstrutores {
             this.instrutores = dados;
             this.renderizarTabela();
         } catch (err) {
-            exibirAlerta('Erro ao carregar instrutores', 'danger');
+            showToast('Não foi possível carregar os instrutores.', 'danger');
         }
     }
 
@@ -163,7 +163,7 @@ class GerenciadorInstrutores {
             this.btnSalvar.querySelector('.btn-text').textContent = 'Atualizar';
             this.modalInstrutor.show();
         } catch (e) {
-            exibirAlerta('Erro ao carregar dados do instrutor', 'danger');
+            showToast('Não foi possível carregar os dados do instrutor.', 'danger');
         }
     }
 
@@ -185,7 +185,7 @@ class GerenciadorInstrutores {
     async salvarInstrutor() {
         const dados = this.coletarFormData();
         if (!dados.nome || !dados.email) {
-            exibirAlerta('Preencha nome e e-mail.', 'warning');
+            showToast('Por favor, preencha o nome e o e-mail.', 'warning');
             return;
         }
         const spinner = this.btnSalvar.querySelector('.spinner-border');
@@ -197,11 +197,11 @@ class GerenciadorInstrutores {
         const method = isEdicao ? 'PUT' : 'POST';
         try {
             await chamarAPI(endpoint, method, dados);
-            exibirAlerta(`Instrutor ${isEdicao ? 'atualizado' : 'cadastrado'} com sucesso!`, 'success');
+            showToast(`Instrutor ${isEdicao ? 'atualizado' : 'cadastrado'} com sucesso!`, 'success');
             this.modalInstrutor.hide();
             this.carregarInstrutores();
         } catch (e) {
-            exibirAlerta(e.message, 'danger');
+            showToast(`Não foi possível salvar o instrutor: ${e.message}`, 'danger');
         } finally {
             this.btnSalvar.disabled = false;
             spinner.classList.add('d-none');
@@ -217,11 +217,11 @@ class GerenciadorInstrutores {
     async confirmarExclusao() {
         try {
             await chamarAPI(`/instrutores/${this.instrutorParaExcluir}`, 'DELETE');
-            exibirAlerta('Instrutor excluído com sucesso!', 'success');
+            showToast('Instrutor excluído com sucesso!', 'success');
             this.modalExcluir.hide();
             this.carregarInstrutores();
         } catch (e) {
-            exibirAlerta(e.message, 'danger');
+            showToast(`Não foi possível excluir o instrutor: ${e.message}`, 'danger');
         }
     }
 }

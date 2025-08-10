@@ -236,9 +236,9 @@
                     // Atualiza o nome na navbar
                     document.getElementById('userName').textContent = dadosAtualizacao.nome;
                     
-                    exibirAlerta('Perfil atualizado com sucesso!', 'success');
+                    showToast('Perfil atualizado com sucesso!', 'success');
                 } catch (error) {
-                    exibirAlerta(`Erro ao atualizar perfil: ${error.message}`, 'danger');
+                    showToast(`Não foi possível atualizar perfil: ${error.message}`, 'danger');
                 }
             });
             
@@ -252,7 +252,7 @@
                 
                 // Validação básica
                 if (novaSenha !== confirmarSenha) {
-                    exibirAlerta('As senhas não coincidem', 'warning');
+                    showToast('As senhas não coincidem. Por favor, verifique.', 'warning');
                     return;
                 }
                 
@@ -264,12 +264,12 @@
                         senha_atual: senhaAtual
                     });
                     
-                    exibirAlerta('Senha alterada com sucesso!', 'success');
+                    showToast('Senha alterada com sucesso!', 'success');
                     
                     // Limpa o formulário
                     document.getElementById('senhaForm').reset();
                 } catch (error) {
-                    exibirAlerta(`Erro ao alterar senha: ${error.message}`, 'danger');
+                    showToast(`Não foi possível alterar senha: ${error.message}`, 'danger');
                 }
             });
         });
@@ -299,7 +299,7 @@
                 // Exibe a data de criação
                 document.getElementById('membroDesde').textContent = formatarData(dadosUsuario.data_criacao);
             } catch (error) {
-                exibirAlerta(`Erro ao carregar dados do usuário: ${error.message}`, 'danger');
+                showToast(`Não foi possível carregar dados do usuário: ${error.message}`, 'danger');
             }
         }
         
@@ -309,12 +309,9 @@
                 const agendamentos = await chamarAPI('/agendamentos');
                 document.getElementById('totalAgendamentos').textContent = agendamentos.length;
             } catch (error) {
-                console.error('Erro ao carregar estatísticas:', error);
+                console.error('Não foi possível carregar estatísticas:', error);
             }
         }
     </script>
-<div aria-live="polite" aria-atomic="true" class="position-relative">
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>
-</div>
 </body>
 </html>

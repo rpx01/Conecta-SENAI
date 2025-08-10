@@ -202,7 +202,7 @@ async function carregarTreinamentos() {
         iniciarContadores();
 
     } catch (e) {
-        exibirAlerta(e.message, 'danger');
+        showToast(e.message, 'danger');
         container.innerHTML = '<p class="text-center text-danger w-100">Falha ao carregar os cursos.</p>';
     }
 }
@@ -299,7 +299,7 @@ async function carregarMeusCursos() {
         renderizarGrupoCursos(grupos.concluidos, containers.concluidos, 'concluido', 'Concluído');
 
     } catch (e) {
-        exibirAlerta(e.message, 'danger');
+        showToast(e.message, 'danger');
         Object.values(containers).forEach(c => c.innerHTML = '<p class="text-center text-danger">Falha ao carregar seus cursos.</p>');
     }
 }
@@ -455,13 +455,13 @@ async function enviarInscricaoPropria() {
     };
 
     if (!body.nome || !body.email || !body.cpf) {
-        exibirAlerta('Nome, Email e CPF são obrigatórios.', 'warning');
+        showToast('Nome, Email e CPF são obrigatórios.', 'warning');
         return;
     }
 
     try {
         await chamarAPI(`/treinamentos/${turmaId}/inscricoes`, 'POST', body);
-        exibirAlerta('Inscrição realizada com sucesso!', 'success');
+        showToast('Inscrição realizada com sucesso!', 'success');
         bootstrap.Modal.getInstance(document.getElementById('inscricaoModal')).hide();
         
         await carregarTreinamentos();
@@ -469,7 +469,7 @@ async function enviarInscricaoPropria() {
             carregarMeusCursos();
         }
     } catch (e) {
-        exibirAlerta(e.message, 'danger');
+        showToast(e.message, 'danger');
     }
 }
 
@@ -487,15 +487,15 @@ async function enviarInscricaoExterna() {
     };
 
     if (!body.nome || !body.email || !body.cpf) {
-        exibirAlerta('Nome, Email e CPF são obrigatórios.', 'warning');
+        showToast('Nome, Email e CPF são obrigatórios.', 'warning');
         return;
     }
 
     try {
         await chamarAPI(`/treinamentos/${turmaId}/inscricoes/externo`, 'POST', body);
-        exibirAlerta('Inscrição para o participante externo realizada com sucesso!', 'success');
+        showToast('Inscrição para o participante externo realizada com sucesso!', 'success');
         bootstrap.Modal.getInstance(document.getElementById('inscricaoModal')).hide();
     } catch (e) {
-        exibirAlerta(e.message, 'danger');
+        showToast(e.message, 'danger');
     }
 }

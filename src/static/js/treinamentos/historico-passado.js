@@ -34,6 +34,6 @@ async function carregarHistoricoPassado() {
             tbody.appendChild(tr);
         }
     } catch (e) {
-        exibirAlerta(e.message, 'danger');
+        showToast(e.message, 'danger');
     }
 }

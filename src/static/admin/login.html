@@ -67,7 +67,7 @@
                     document.head.appendChild(s);
                 }
             } catch (e) {
-                console.error('Erro ao carregar site key:', e);
+                console.error('Não foi possível carregar site key:', e);
             }
 
             const loginForm = document.getElementById('loginForm');
@@ -90,14 +90,14 @@
                                 });
                             });
                         } catch (err) {
-                            console.error('Erro ao obter token reCAPTCHA:', err);
+                            console.error('Não foi possível obter token reCAPTCHA:', err);
                         }
                     }
 
                     try {
                         await realizarLogin(email, senha, token);
                     } catch (error) {
-                        exibirAlerta(error.message, 'danger');
+                        showToast(error.message, 'danger');
                         btn.disabled = false;
                         btn.innerHTML = 'Entrar';
                     }
@@ -105,9 +105,6 @@
             }
         });
     </script>
-    <div aria-live="polite" aria-atomic="true" class="position-relative">
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>
-    </div>
 <footer class="mt-5 py-3 bg-dark text-white text-center">
     <div class="container">
         <p class="mb-0">Sistema FIEMG | O futuro se faz juntos.</p>

@@ -42,7 +42,7 @@ async function carregarCatalogo() {
             tbody.appendChild(tr);
         }
     } catch (e) {
-        exibirAlerta(e.message, 'danger');
+        showToast(e.message, 'danger');
     }
 }
 
@@ -67,7 +67,7 @@ async function salvarTreinamento() {
         bootstrap.Modal.getInstance(document.getElementById('treinamentoModal')).hide();
         carregarCatalogo();
     } catch (e) {
-        exibirAlerta(e.message, 'danger');
+        showToast(e.message, 'danger');
     }
 }
 
@@ -86,7 +86,7 @@ async function editarTreinamento(id) {
         document.getElementById('linksTrein').value = (t.links_materiais || []).join('\n');
         new bootstrap.Modal(document.getElementById('treinamentoModal')).show();
     } catch(e) {
-        exibirAlerta(`Erro ao carregar dados para edição: ${e.message}`, 'danger');
+        showToast(`Não foi possível carregar dados para edição: ${e.message}`, 'danger');
     }
 }
 
@@ -97,7 +97,7 @@ async function excluirTreinamento(id) {
         await chamarAPI(`/treinamentos/catalogo/${id}`, 'DELETE');
         carregarCatalogo();
     } catch (e) {
-        exibirAlerta(e.message, 'danger');
+        showToast(e.message, 'danger');
     }
 }
 
@@ -135,11 +135,11 @@ async function enviarInscricaoAdmin() {
 
         try {
             await chamarAPI(`/treinamentos/turmas/${turmaId}/inscricoes/admin`, 'POST', body);
-            exibirAlerta('Participante inscrito com sucesso!', 'success');
+            showToast('Participante inscrito com sucesso!', 'success');
             const modal = bootstrap.Modal.getInstance(document.getElementById('adminInscricaoModal'));
             modal.hide();
         } catch (e) {
-            exibirAlerta(e.message, 'danger');
+            showToast(e.message, 'danger');
             throw e;
         }
     });
@@ -177,7 +177,7 @@ async function carregarTurmas() {
             tbody.appendChild(tr);
         }
     } catch (e) {
-        exibirAlerta(e.message, 'danger');
+        showToast(e.message, 'danger');
     }
 }
 
@@ -197,10 +197,10 @@ async function executarExclusao() {
 
     try {
         await chamarAPI(`/treinamentos/turmas/${turmaParaExcluirId}`, 'DELETE');
-        exibirAlerta('Turma excluída com sucesso!', 'success');
+        showToast('Turma excluída com sucesso!', 'success');
         carregarTurmas();
     } catch (e) {
-        exibirAlerta(`Erro ao excluir: ${e.message}`, 'danger');
+        showToast(`Não foi possível excluir: ${e.message}`, 'danger');
     } finally {
         if (modal) {
             modal.hide();
@@ -265,7 +265,7 @@ async function abrirModalTurma(id = null) {
             document.getElementById('horario').value = t.horario || '';
 
         } catch(e) {
-            exibirAlerta(`Erro ao carregar dados da turma: ${e.message}`, 'danger');
+            showToast(`Não foi possível carregar dados da turma: ${e.message}`, 'danger');
             return; // Não abre o modal se houver erro
         }
     } else {
@@ -300,7 +300,7 @@ async function salvarTurma() {
     };
 
     if (!body.treinamento_id || !body.data_inicio || !body.data_fim) {
-        exibirAlerta("Por favor, preencha todos os campos obrigatórios.", "warning");
+        showToast("Por favor, preencha todos os campos obrigatórios.", "warning");
         return;
     }
 
@@ -311,7 +311,7 @@ async function salvarTurma() {
         bootstrap.Modal.getInstance(document.getElementById('turmaModal')).hide();
         carregarTurmas();
     } catch (e) {
-        exibirAlerta(e.message, 'danger');
+        showToast(e.message, 'danger');
     }
 }
 
@@ -374,7 +374,7 @@ async function carregarDetalhesDaTurma(turmaId) {
         }
         return temPratica;
     } catch (e) {
-        exibirAlerta(`Erro ao carregar detalhes da turma: ${e.message}`, 'danger');
+        showToast(`Não foi possível carregar detalhes da turma: ${e.message}`, 'danger');
         return false;
     }
 }
@@ -437,7 +437,7 @@ async function carregarInscricoes(turmaId) {
             tbody.appendChild(tr);
         }
     } catch (e) {
-        exibirAlerta(e.message, 'danger');
+        showToast(e.message, 'danger');
     }
 }
 
@@ -452,14 +452,14 @@ function confirmarExclusaoParticipante(inscricaoId, nome) {
 async function executarExclusaoParticipante(inscricaoId) {
     try {
         await chamarAPI(`/treinamentos/inscricoes/${inscricaoId}`, 'DELETE');
-        exibirAlerta('Participante removido com sucesso!', 'success');
+        showToast('Participante removido com sucesso!', 'success');
 
         const linhaParaRemover = document.querySelector(`#inscricoesTableBody tr[data-id='${inscricaoId}']`);
         if (linhaParaRemover) {
             linhaParaRemover.remove();
         }
     } catch (e) {
-        exibirAlerta(`Erro ao remover participante: ${e.message}`, 'danger');
+        showToast(`Não foi possível remover participante: ${e.message}`, 'danger');
     }
 }
 
@@ -492,9 +492,9 @@ async function salvarAlteracoesInscricoes() {
 
         try {
             await Promise.all(promessas);
-            exibirAlerta('Todas as alterações foram salvas com sucesso!', 'success');
+            showToast('Todas as alterações foram salvas com sucesso!', 'success');
         } catch (e) {
-            console.error("Erro ao salvar alterações:", e);
+            console.error("Não foi possível salvar alterações:", e);
             throw e;
         }
     });
@@ -553,7 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const handleExport = async (formato, btn) => {
             if (!turmaId) {
-                exibirAlerta('ID da turma não encontrado.', 'danger');
+                showToast('ID da turma não encontrado.', 'danger');
                 return;
             }
             const endpoint = `/treinamentos/turmas/${turmaId}/inscricoes/export`;

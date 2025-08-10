@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 tableBody.appendChild(tr);
             });
         } catch (error) {
-            exibirAlerta(`Erro ao carregar configurações: ${error.message}`, 'danger');
+            showToast(`Não foi possível carregar configurações: ${error.message}`, 'danger');
         }
     }
 
@@ -98,15 +98,15 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             if (configEmEdicaoId) {
                 await chamarAPI(`/rateio-configs/${configEmEdicaoId}`, 'PUT', dados);
-                exibirAlerta('Configuração atualizada com sucesso!', 'success');
+                showToast('Configuração atualizada com sucesso!', 'success');
             } else {
                 await chamarAPI('/rateio-configs', 'POST', dados);
-                exibirAlerta('Configuração criada com sucesso!', 'success');
+                showToast('Configuração criada com sucesso!', 'success');
             }
             window.configModal.hide();
             carregarConfiguracoes();
         } catch (error) {
-            exibirAlerta(`Erro ao salvar: ${error.message}`, 'danger');
+            showToast(`Não foi possível salvar: ${error.message}`, 'danger');
         }
     });
 
@@ -133,10 +133,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!configParaExcluirId) return;
         try {
             await chamarAPI(`/rateio-configs/${configParaExcluirId}`, 'DELETE');
-            exibirAlerta('Configuração excluída com sucesso!', 'success');
+            showToast('Configuração excluída com sucesso!', 'success');
             carregarConfiguracoes();
         } catch (error) {
-            exibirAlerta(`Erro ao excluir: ${error.message}`, 'danger');
+            showToast(`Não foi possível excluir: ${error.message}`, 'danger');
         } finally {
             confirmacaoModal.hide();
             configParaExcluirId = null;

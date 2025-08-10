@@ -341,8 +341,8 @@
                     tableBody.innerHTML = html;
                 } catch (error) {
                     document.getElementById('laboratoriosTableBody').innerHTML = 
-                        '<tr><td colspan="4" class="text-center text-danger">Erro ao carregar laboratórios.</td></tr>';
-                    console.error('Erro ao carregar laboratórios:', error);
+                        '<tr><td colspan="4" class="text-center text-danger">Não foi possível carregar laboratórios.</td></tr>';
+                    console.error('Não foi possível carregar laboratórios:', error);
                 }
             }
             
@@ -379,8 +379,8 @@
                     tableBody.innerHTML = html;
                 } catch (error) {
                     document.getElementById('turmasTableBody').innerHTML = 
-                        '<tr><td colspan="4" class="text-center text-danger">Erro ao carregar turmas.</td></tr>';
-                    console.error('Erro ao carregar turmas:', error);
+                        '<tr><td colspan="4" class="text-center text-danger">Não foi possível carregar turmas.</td></tr>';
+                    console.error('Não foi possível carregar turmas:', error);
                 }
             }
             
@@ -391,7 +391,7 @@
                 const classeIcone = document.getElementById('classeIconeLaboratorio').value;
                 
                 if (!nome) {
-                    exibirAlerta('O nome do laboratório é obrigatório.', 'danger');
+                    showToast('O nome do laboratório é obrigatório.', 'danger');
                     return;
                 }
                 
@@ -399,11 +399,11 @@
                     if (id) {
                         // Atualização
                         await chamarAPI(`/laboratorios/${id}`, 'PUT', { nome, classe_icone: classeIcone });
-                        exibirAlerta('Laboratório atualizado com sucesso!', 'success');
+                        showToast('Laboratório atualizado com sucesso!', 'success');
                     } else {
                         // Criação
                         await chamarAPI('/laboratorios', 'POST', { nome, classe_icone: classeIcone });
-                        exibirAlerta('Laboratório cadastrado com sucesso!', 'success');
+                        showToast('Laboratório cadastrado com sucesso!', 'success');
                     }
                     
                     // Limpa o formulário e recarrega a lista
@@ -413,7 +413,7 @@
                     laboratorioModal.hide();
                     carregarLaboratorios();
                 } catch (error) {
-                    exibirAlerta(`Erro ao salvar laboratório: ${error.message}`, 'danger');
+                    showToast(`Não foi possível salvar laboratório: ${error.message}`, 'danger');
                 }
             }
             
@@ -423,7 +423,7 @@
                 const nome = document.getElementById('nomeTurma').value;
                 
                 if (!nome) {
-                    exibirAlerta('O nome da turma é obrigatório.', 'danger');
+                    showToast('O nome da turma é obrigatório.', 'danger');
                     return;
                 }
                 
@@ -431,11 +431,11 @@
                     if (id) {
                         // Atualização
                         await chamarAPI(`/turmas/${id}`, 'PUT', { nome });
-                        exibirAlerta('Turma atualizada com sucesso!', 'success');
+                        showToast('Turma atualizada com sucesso!', 'success');
                     } else {
                         // Criação
                         await chamarAPI('/turmas', 'POST', { nome });
-                        exibirAlerta('Turma cadastrada com sucesso!', 'success');
+                        showToast('Turma cadastrada com sucesso!', 'success');
                     }
                     
                     // Limpa o formulário e recarrega a lista
@@ -445,7 +445,7 @@
                     turmaModal.hide();
                     carregarTurmas();
                 } catch (error) {
-                    exibirAlerta(`Erro ao salvar turma: ${error.message}`, 'danger');
+                    showToast(`Não foi possível salvar turma: ${error.message}`, 'danger');
                 }
             }
             
@@ -488,10 +488,10 @@
             async function excluirLaboratorio(id) {
                 try {
                     await chamarAPI(`/laboratorios/${id}`, 'DELETE');
-                    exibirAlerta('Laboratório excluído com sucesso!', 'success');
+                    showToast('Laboratório excluído com sucesso!', 'success');
                     carregarLaboratorios();
                 } catch (error) {
-                    exibirAlerta(`Erro ao excluir laboratório: ${error.message}`, 'danger');
+                    showToast(`Não foi possível excluir laboratório: ${error.message}`, 'danger');
                 }
             }
             
@@ -499,10 +499,10 @@
             async function excluirTurma(id) {
                 try {
                     await chamarAPI(`/turmas/${id}`, 'DELETE');
-                    exibirAlerta('Turma excluída com sucesso!', 'success');
+                    showToast('Turma excluída com sucesso!', 'success');
                     carregarTurmas();
                 } catch (error) {
-                    exibirAlerta(`Erro ao excluir turma: ${error.message}`, 'danger');
+                    showToast(`Não foi possível excluir turma: ${error.message}`, 'danger');
                 }
             }
 
@@ -524,8 +524,5 @@
             }
         });
     </script>
-<div aria-live="polite" aria-atomic="true" class="position-relative">
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>
-</div>
 </body>
 </html>

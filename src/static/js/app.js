@@ -244,7 +244,7 @@ async function verificarPermissaoAdmin() {
 
     // Passo 3: Se NÃO for a página de seleção, continue com a verificação de admin.
     if (!isAdmin()) {
-        alert('Acesso não autorizado');
+        showToast('Acesso não autorizado. Redirecionando...', 'warning');
         window.location.href = '/selecao-sistema.html'; // Redireciona para um local seguro
         return false;
     }
@@ -401,17 +401,20 @@ function showToast(mensagem, tipo = 'info') {
     }
 
     const toastId = `toast-${Date.now()}`;
+    const baseTextColor = tipo === 'warning' ? 'text-dark' : 'text-white';
     const bgColor =
         tipo === 'danger' ? 'bg-danger' :
-        (tipo === 'success' ? 'bg-success' : 'bg-primary');
+        (tipo === 'success' ? 'bg-success' :
+        (tipo === 'warning' ? 'bg-warning' : 'bg-primary'));
+    const closeBtnClass = tipo === 'warning' ? '' : 'btn-close-white';
 
     const toastHtml = `
-        <div id="${toastId}" class="toast text-white ${bgColor}" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+        <div id="${toastId}" class="toast ${baseTextColor} ${bgColor}" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
             <div class="d-flex">
                 <div class="toast-body">
                     ${escapeHTML(mensagem)}
                 </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                <button type="button" class="btn-close ${closeBtnClass} me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>`;
 
@@ -427,10 +430,7 @@ function showToast(mensagem, tipo = 'info') {
     toast.show();
 }
 
-// Alias para compatibilidade com código existente
-const exibirAlerta = showToast;
 window.showToast = showToast;
-window.exibirAlerta = exibirAlerta;
 
 /**
  * Retorna a classe CSS correspondente ao turno

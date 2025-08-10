@@ -23,6 +23,13 @@ function criarLoadingOverlay() {
     document.body.appendChild(loadingOverlay);
 }
 
+function refreshIcons() {
+    if (window.lucide) {
+        lucide.createIcons({ attrs: { strokeWidth: 1.75 } });
+    }
+}
+window.refreshIcons = refreshIcons;
+
 function mostrarLoading() {
     criarLoadingOverlay();
     document.body.setAttribute('aria-busy', 'true');
@@ -585,10 +592,10 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
         const link = document.createElement('a');
         link.className = 'nav-link';
         link.href = '/laboratorios/turmas.html';
-        link.innerHTML = '<i class="bi bi-building me-1"></i> Laboratórios e Turmas';
+        link.innerHTML = '<i data-lucide="building-2" class="me-1"></i> Laboratórios e Turmas';
         
         navItem.appendChild(link);
-        
+
         // Insere antes do último item (dropdown do usuário)
         const lastItem = container.querySelector('.dropdown');
         if (lastItem) {
@@ -596,12 +603,13 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
         } else {
             container.appendChild(navItem);
         }
+        refreshIcons();
     } else {
         // Para sidebar (menu lateral)
         const link = document.createElement('a');
         link.className = 'nav-link admin-only';
         link.href = '/laboratorios/turmas.html';
-        link.innerHTML = '<i class="bi bi-building"></i> Laboratórios e Turmas';
+        link.innerHTML = '<i data-lucide="building-2"></i> Laboratórios e Turmas';
         
         // Insere antes do último item (Meu Perfil)
         const lastItem = container.querySelector('a[href="/laboratorios/perfil.html"], a[href="/ocupacao/perfil.html"], a[href="/admin/perfil.html"]');
@@ -610,6 +618,7 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
         } else {
             container.appendChild(link);
         }
+        refreshIcons();
     }
 }
 
@@ -628,7 +637,7 @@ function adicionarLinkLogs(containerSelector, isNavbar = false) {
         const link = document.createElement('a');
         link.className = 'nav-link';
         link.href = '/laboratorios/logs.html';
-        link.innerHTML = '<i class="bi bi-journal-text me-1"></i> Logs';
+        link.innerHTML = '<i data-lucide="book-open-text" class="me-1"></i> Logs';
 
         navItem.appendChild(link);
 
@@ -638,11 +647,12 @@ function adicionarLinkLogs(containerSelector, isNavbar = false) {
         } else {
             container.appendChild(navItem);
         }
+        refreshIcons();
     } else {
         const link = document.createElement('a');
         link.className = 'nav-link admin-only';
         link.href = '/laboratorios/logs.html';
-        link.innerHTML = '<i class="bi bi-journal-text"></i> Logs';
+        link.innerHTML = '<i data-lucide="book-open-text"></i> Logs';
 
         const lastItem = container.querySelector('a[href="/laboratorios/perfil.html"], a[href="/ocupacao/perfil.html"], a[href="/admin/perfil.html"]');
         if (lastItem) {
@@ -650,6 +660,7 @@ function adicionarLinkLogs(containerSelector, isNavbar = false) {
         } else {
             container.appendChild(link);
         }
+        refreshIcons();
     }
 }
 
@@ -669,7 +680,7 @@ function adicionarBotaoSelecaoSistema() {
         const link = document.createElement('a');
         link.className = 'dropdown-item';
         link.href = '/selecao-sistema.html';
-        link.innerHTML = '<i class="bi bi-arrow-return-left me-2"></i> Retornar à tela de seleção de sistema';
+        link.innerHTML = '<i data-lucide="arrow-left" class="me-2"></i> Retornar à tela de seleção de sistema';
         link.addEventListener('click', () => localStorage.removeItem('moduloSelecionado'));
 
         li.appendChild(link);
@@ -680,6 +691,7 @@ function adicionarBotaoSelecaoSistema() {
         } else {
             menu.appendChild(li);
         }
+        refreshIcons();
     });
 }
 

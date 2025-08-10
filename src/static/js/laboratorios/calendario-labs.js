@@ -69,7 +69,7 @@ async function carregarLaboratoriosParaFiltro() {
             select.innerHTML += `<option value="${lab.nome}">${lab.nome}</option>`;
         });
     } catch (error) {
-        console.error('Erro ao carregar laboratórios:', error);
+        console.error('Não foi possível carregar laboratórios:', error);
     }
 }
 
@@ -109,8 +109,8 @@ async function aplicarFiltrosCalendario() {
         }
         
     } catch (error) {
-        console.error("Erro ao aplicar filtros e buscar resumo:", error);
-        exibirAlerta("Não foi possível carregar os dados do calendário.", "danger");
+        console.error("Não foi possível aplicar filtros e buscar resumo:", error);
+        showToast("Não foi possível carregar os dados do calendário.", "danger");
     } finally {
         if(loadingEl) loadingEl.style.display = 'none';
     }

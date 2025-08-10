@@ -57,7 +57,7 @@ async function carregarHistorico() {
             tbody.appendChild(tr);
         }
     } catch (e) {
-        exibirAlerta(e.message, 'danger');
+        showToast(e.message, 'danger');
     }
 }
 
@@ -88,11 +88,11 @@ async function enviarInscricaoAdmin() {
 
         try {
             await chamarAPI(`/treinamentos/turmas/${turmaId}/inscricoes/admin`, 'POST', body);
-            exibirAlerta('Participante inscrito com sucesso!', 'success');
+            showToast('Participante inscrito com sucesso!', 'success');
             const modal = bootstrap.Modal.getInstance(document.getElementById('adminInscricaoModal'));
             modal.hide();
         } catch (e) {
-            exibirAlerta(e.message, 'danger');
+            showToast(e.message, 'danger');
             throw e;
         }
     });

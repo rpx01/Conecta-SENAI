@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }).join('');
             }
         } catch (error) {
-            exibirAlerta('Erro ao carregar laboratórios.', 'danger');
+            showToast('Não foi possível carregar laboratórios.', 'danger');
         }
     };
 
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (error) {
             console.error("Erro detalhado ao carregar agenda:", error);
-            exibirAlerta('Erro ao carregar agenda diária.', 'danger');
+            showToast('Não foi possível carregar agenda diária.', 'danger');
             agendaContainer.innerHTML = '<p class="text-danger text-center">Não foi possível carregar os agendamentos.</p>';
         }
     };
@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
             detalhesModal.show();
         } catch (error) {
-            exibirAlerta('Erro ao carregar detalhes da reserva', 'danger');
+            showToast('Não foi possível carregar detalhes da reserva', 'danger');
         }
     };
     
@@ -207,10 +207,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             await chamarAPI(`/agendamentos/${agendamentoParaExcluirId}`, 'DELETE');
-            exibirAlerta('Agendamento excluído com sucesso!', 'success');
+            showToast('Agendamento excluído com sucesso!', 'success');
             await carregarAgendaDiaria();
         } catch (error) {
-            exibirAlerta(`Erro ao excluir agendamento: ${error.message}`, 'danger');
+            showToast(`Não foi possível excluir agendamento: ${error.message}`, 'danger');
         } finally {
             agendamentoParaExcluirId = null;
             confirmacaoModal.hide();

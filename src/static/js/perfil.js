@@ -45,7 +45,7 @@ async function carregarDadosUsuario() {
         document.getElementById('userName').textContent = dadosUsuario.nome;
         
     } catch (error) {
-        exibirAlerta(`Erro ao carregar dados do usuário: ${error.message}`, 'danger');
+        showToast(`Não foi possível carregar dados do usuário: ${error.message}`, 'danger');
     }
 }
 
@@ -70,9 +70,9 @@ async function salvarDadosPerfil(e) {
             localStorage.setItem('usuario', JSON.stringify(usuario));
             
             document.getElementById('userName').textContent = dadosAtualizacao.nome;
-            exibirAlerta('Perfil atualizado com sucesso!', 'success');
+            showToast('Perfil atualizado com sucesso!', 'success');
         } catch (error) {
-            exibirAlerta(`Erro ao atualizar perfil: ${error.message}`, 'danger');
+            showToast(`Não foi possível atualizar perfil: ${error.message}`, 'danger');
             throw error;
         }
     });
@@ -88,7 +88,7 @@ async function salvarNovaSenha(e) {
         const confirmarSenha = document.getElementById('confirmarSenha').value;
         
         if (novaSenha !== confirmarSenha) {
-            exibirAlerta('As senhas não coincidem', 'warning');
+            showToast('As senhas não coincidem. Por favor, verifique.', 'warning');
             return;
         }
         
@@ -99,10 +99,10 @@ async function salvarNovaSenha(e) {
                 senha_atual: senhaAtual
             });
             
-            exibirAlerta('Senha alterada com sucesso!', 'success');
+            showToast('Senha alterada com sucesso!', 'success');
             e.target.reset();
         } catch (error) {
-            exibirAlerta(`Erro ao alterar senha: ${error.message}`, 'danger');
+            showToast(`Não foi possível alterar senha: ${error.message}`, 'danger');
             throw error;
         }
     });

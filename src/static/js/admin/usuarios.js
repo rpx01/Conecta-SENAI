@@ -19,10 +19,10 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 await chamarAPI(`/usuarios/${usuarioIdParaExcluir}`, 'DELETE');
                 confirmacaoModal.hide();
-                exibirAlerta('Usuário excluído com sucesso!', 'success');
+                showToast('Usuário excluído com sucesso!', 'success');
                 carregarUsuarios(paginaAtual);
             } catch (error) {
-                exibirAlerta(`Erro ao excluir usuário: ${error.message}`, 'danger');
+                showToast(`Não foi possível excluir usuário: ${error.message}`, 'danger');
             }
         }
     });
@@ -67,8 +67,8 @@ document.addEventListener('DOMContentLoaded', function() {
             paginaAtual = resp.page;
             atualizarPaginacao(resp.pages);
         } catch (error) {
-            document.getElementById('usuariosTableBody').innerHTML = '<tr><td colspan="5" class="text-center text-danger">Erro ao carregar usuários.</td></tr>';
-            console.error('Erro ao carregar usuários:', error);
+            document.getElementById('usuariosTableBody').innerHTML = '<tr><td colspan="5" class="text-center text-danger">Não foi possível carregar usuários.</td></tr>';
+            console.error('Não foi possível carregar usuários:', error);
         }
     }
 
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const tipo = document.getElementById('tipo').value;
 
         if (!nome || !email || (!usuarioId && !senha)) {
-            exibirAlerta('Preencha todos os campos obrigatórios', 'warning');
+            showToast('Preencha todos os campos obrigatórios', 'warning');
             return;
         }
 
@@ -116,10 +116,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (usuarioId) {
                 await chamarAPI(`/usuarios/${usuarioId}`, 'PUT', dadosUsuario);
-                exibirAlerta('Usuário atualizado com sucesso!', 'success');
+                showToast('Usuário atualizado com sucesso!', 'success');
             } else {
                 await chamarAPI('/usuarios', 'POST', dadosUsuario);
-                exibirAlerta('Usuário criado com sucesso!', 'success');
+                showToast('Usuário criado com sucesso!', 'success');
             }
 
             usuarioModal.hide();
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('usuarioForm').reset();
             document.getElementById('usuarioId').value = '';
         } catch (error) {
-            exibirAlerta(`Erro ao salvar usuário: ${error.message}`, 'danger');
+            showToast(`Não foi possível salvar usuário: ${error.message}`, 'danger');
         }
     }
 
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('senhaHelp').style.display = 'block';
             usuarioModal.show();
         } catch (error) {
-            exibirAlerta(`Erro ao carregar dados do usuário: ${error.message}`, 'danger');
+            showToast(`Não foi possível carregar dados do usuário: ${error.message}`, 'danger');
         }
     };
 

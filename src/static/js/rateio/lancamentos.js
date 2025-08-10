@@ -37,7 +37,7 @@ class LancamentosApp {
             this.selectInstrutor.innerHTML = '<option value="">Selecione</option>' +
                 instrutores.map(i => `<option value="${i.id}">${escapeHTML(i.nome)}</option>`).join('');
         } catch (e) {
-            exibirAlerta(e.message, 'danger');
+            showToast(e.message, 'danger');
         }
     }
 
@@ -56,7 +56,7 @@ class LancamentosApp {
             this.selectConfig.innerHTML = '<option value="">Selecione</option>' +
                 configs.map(c => `<option value="${c.id}">${escapeHTML(c.classe_valor)}</option>`).join('');
         } catch (e) {
-            exibirAlerta(e.message, 'danger');
+            showToast(e.message, 'danger');
         }
     }
 
@@ -68,7 +68,7 @@ class LancamentosApp {
             this.dadosAno = await chamarAPI(`/rateio/lancamentos-ano?instrutor_id=${instrutorId}&ano=${ano}`);
             this.renderizarGrid();
         } catch (e) {
-            exibirAlerta(e.message, 'danger');
+            showToast(e.message, 'danger');
         }
     }
 
@@ -177,9 +177,9 @@ class LancamentosApp {
             this.dadosAno[mes] = atualizados;
             this.atualizarCard(mes);
             this.modal.hide();
-            exibirAlerta('Lançamentos salvos!', 'success');
+            showToast('Lançamentos salvos!', 'success');
         } catch (e) {
-            exibirAlerta(e.message, 'danger');
+            showToast(e.message, 'danger');
         }
     }
 

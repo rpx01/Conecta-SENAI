@@ -113,20 +113,17 @@
 
                 if (!senhaRegex.test(senha)) {
                     e.preventDefault();
-                    exibirAlerta('A senha não atende aos requisitos de complexidade.', 'danger');
+                    showToast('A senha não atende aos requisitos de complexidade. Por favor, tente novamente.', 'danger');
                     return;
                 }
 
                 if (senha !== confirmarSenha) {
                     e.preventDefault();
-                    exibirAlerta('As senhas não coincidem. Por favor, tente novamente.', 'danger');
+                    showToast('As senhas não coincidem. Por favor, verifique e tente novamente.', 'danger');
                 }
             });
         });
     </script>
-<div aria-live="polite" aria-atomic="true" class="position-relative">
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>
-</div>
 <footer class="mt-5 py-3 bg-dark text-white text-center">
     <div class="container">
         <p class="mb-0">Sistema FIEMG | O futuro se faz juntos.</p>

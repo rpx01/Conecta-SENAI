@@ -253,7 +253,7 @@
                 });
                 
                 if (horariosSelecionados.length === 0) {
-                    exibirAlerta('Selecione pelo menos um horário', 'warning');
+                    showToast('Selecione pelo menos um horário', 'warning');
                     return;
                 }
                 
@@ -280,11 +280,11 @@
                     if (modoEdicao) {
                         // Atualiza o agendamento existente
                         await chamarAPI(`/agendamentos/${agendamentoId}`, 'PUT', dadosAgendamento);
-                        exibirAlerta('Agendamento atualizado com sucesso!', 'success');
+                        showToast('Agendamento atualizado com sucesso!', 'success');
                     } else {
                         // Cria um novo agendamento
                         await chamarAPI('/agendamentos', 'POST', dadosAgendamento);
-                        exibirAlerta('Agendamento criado com sucesso!', 'success');
+                        showToast('Agendamento criado com sucesso!', 'success');
                         
                         // Limpa o formulário
                         document.getElementById('agendamentoForm').reset();
@@ -297,9 +297,9 @@
                     }, 2000);
                 } catch (error) {
                     if (error.message.includes('Conflito de horários')) {
-                        exibirAlerta('Existe um conflito de horários. Por favor, escolha outro horário ou data.', 'danger');
+                        showToast('Existe um conflito de horários. Por favor, escolha outro horário ou data.', 'danger');
                     } else {
-                        exibirAlerta(`Erro ao salvar agendamento: ${error.message}`, 'danger');
+                        showToast(`Não foi possível salvar agendamento: ${error.message}`, 'danger');
                     }
                 }
             });
@@ -335,8 +335,8 @@
                         });
                     }
                 } catch (error) {
-                    console.error('Erro ao carregar laboratórios:', error);
-                    exibirAlerta('Erro ao carregar laboratórios. Por favor, tente novamente.', 'danger');
+                    console.error('Não foi possível carregar laboratórios:', error);
+                    showToast('Não foi possível carregar laboratórios. Por favor, tente novamente.', 'danger');
                 }
             }
             
@@ -371,8 +371,8 @@
                         });
                     }
                 } catch (error) {
-                    console.error('Erro ao carregar turmas:', error);
-                    exibirAlerta('Erro ao carregar turmas. Por favor, tente novamente.', 'danger');
+                    console.error('Não foi possível carregar turmas:', error);
+                    showToast('Não foi possível carregar turmas. Por favor, tente novamente.', 'danger');
                 }
             }
             
@@ -413,9 +413,9 @@
                         horariosInfo.textContent = 'Todos os horários estão disponíveis.';
                     }
                 } catch (error) {
-                    console.error('Erro ao verificar disponibilidade:', error);
-                    horariosInfo.textContent = 'Erro ao verificar disponibilidade. Por favor, tente novamente.';
-                    exibirAlerta('Erro ao verificar disponibilidade de horários.', 'danger');
+                    console.error('Não foi possível verificar disponibilidade:', error);
+                    horariosInfo.textContent = 'Não foi possível verificar disponibilidade. Por favor, tente novamente.';
+                    showToast('Não foi possível verificar disponibilidade de horários.', 'danger');
                 }
             }
             
@@ -489,7 +489,7 @@
                         selectUsuario.appendChild(option);
                     });
                 } catch (error) {
-                    console.error('Erro ao carregar usuários:', error);
+                    console.error('Não foi possível carregar usuários:', error);
                 }
             }
             
@@ -533,7 +533,7 @@
                         }
                     }, 500);
                 } catch (error) {
-                    exibirAlerta(`Erro ao carregar agendamento: ${error.message}`, 'danger');
+                    showToast(`Não foi possível carregar agendamento: ${error.message}`, 'danger');
                 }
             }
         });
@@ -569,8 +569,5 @@
     setTimeout(preencherCampos, 500);
 });
 </script>
-<div aria-live="polite" aria-atomic="true" class="position-relative">
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>
-</div>
 </body>
 </html>

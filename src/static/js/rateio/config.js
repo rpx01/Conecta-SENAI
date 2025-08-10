@@ -53,15 +53,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${escapeHTML(config.descricao || '')}</td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary me-1 btn-editar" data-id="${config.id}" title="Editar">
-                            <i class="bi bi-pencil"></i>
+                            <i data-lucide="pencil"></i>
                         </button>
                         <button class="btn btn-sm btn-outline-danger btn-excluir" data-id="${config.id}" title="Excluir">
-                            <i class="bi bi-trash"></i>
+                            <i data-lucide="trash"></i>
                         </button>
                     </td>
                 `;
                 tableBody.appendChild(tr);
             });
+            refreshIcons();
         } catch (error) {
             showToast(`Não foi possível carregar configurações: ${error.message}`, 'danger');
         }

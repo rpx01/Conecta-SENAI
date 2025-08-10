@@ -138,11 +138,14 @@ p, input, textarea {
 
 ## Iconografia
 
-O projeto utiliza os [Bootstrap Icons](https://icons.getbootstrap.com/).
+O projeto utiliza os [Lucide Icons](https://lucide.dev/) para manter um estilo linear consistente.
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<i class="bi bi-calendar-check"></i>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>lucide.createIcons({attrs:{strokeWidth:1.75}})</script>
+<i data-lucide="calendar"></i>
 ```
+
+Os ícones herdam a cor do texto e evitam preenchimentos pesados.
 
 Atualize este documento sempre que novos componentes visuais forem adicionados ao sistema.

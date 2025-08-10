@@ -103,14 +103,15 @@ class LancamentosApp {
                     </div>
                     <div class="card-footer">
                         <button class="btn btn-primary btn-sm w-100" data-mes="${m}">
-                            <i class="bi bi-pencil-square me-1"></i> Gerenciar Lançamentos
+                            <i data-lucide="pencil" class="me-1"></i> Gerenciar Lançamentos
                         </button>
                     </div>
                 </div>`;
             card.querySelector('button').addEventListener('click', () => this.abrirModal(m));
-            this.gridContainer.appendChild(card);
+        this.gridContainer.appendChild(card);
         }
         this.gridContainer.style.display = 'flex';
+        refreshIcons();
     }
 
     nomeMes(m) {
@@ -136,13 +137,14 @@ class LancamentosApp {
         div.innerHTML = `
             <span class="input-group-text flex-grow-1">${escapeHTML(lancamento.rateio_config.classe_valor)}</span>
             <input type="number" class="form-control percentual" value="${lancamento.percentual}" min="0" max="100">
-            <button class="btn btn-outline-danger btn-remover" type="button"><i class="bi bi-trash"></i></button>`;
+            <button class="btn btn-outline-danger btn-remover" type="button"><i data-lucide="trash"></i></button>`;
         div.querySelector('.btn-remover').addEventListener('click', () => {
             div.remove();
             this.atualizarTotal();
         });
         div.querySelector('.percentual').addEventListener('input', () => this.atualizarTotal());
         this.lancamentosContainer.appendChild(div);
+        refreshIcons();
     }
 
     adicionarItem() {
@@ -211,11 +213,12 @@ class LancamentosApp {
                 </div>
                 <div class="card-footer">
                     <button class="btn btn-primary btn-sm w-100" data-mes="${mes}">
-                        <i class="bi bi-pencil-square me-1"></i> Gerenciar Lançamentos
+                        <i data-lucide="pencil" class="me-1"></i> Gerenciar Lançamentos
                     </button>
                 </div>
             </div>`;
         card.querySelector('button').addEventListener('click', () => this.abrirModal(mes));
+        refreshIcons();
     }
 }
 

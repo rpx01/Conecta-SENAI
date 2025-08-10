@@ -88,11 +88,12 @@ class GerenciadorInstrutores {
                 <td><span class="badge ${inst.status === 'ativo' ? 'bg-success' : 'bg-secondary'}">${inst.status}</span></td>
                 <td><div class="d-flex gap-1">${this.badgesDisponibilidade(inst.disponibilidade)}</div></td>
                 <td class="text-end">
-                    <button class="btn btn-sm btn-outline-primary btn-editar"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm btn-outline-danger btn-excluir"><i class="bi bi-trash"></i></button>
+                    <button class="btn btn-sm btn-outline-primary btn-editar"><i data-lucide="pencil"></i></button>
+                    <button class="btn btn-sm btn-outline-danger btn-excluir"><i data-lucide="trash"></i></button>
                 </td>`;
             this.tabelaBody.appendChild(row);
         });
+        refreshIcons();
     }
 
     async carregarInstrutores() {

@@ -3,6 +3,89 @@
 Este documento descreve os padrões de interface aprovados pela FIEMG.
 Use-o como referência e atualize-o sempre que novos componentes forem introduzidos.
 
+## Guia Rápido
+
+### Fonts
+
+Utilize a pilha "Gibson", "Exo 2", sans-serif.
+Gibson é licenciada e deve ser servida localmente:
+
+```html
+<link rel="preload" href="/static/fonts/gibson.woff2" as="font" type="font/woff2" crossorigin>
+```
+
+Exo 2 pode ser carregada via Google Fonts:
+
+```html
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600&display=swap" rel="stylesheet">
+```
+
+```css
+body { font-family: "Gibson", "Exo 2", sans-serif; }
+```
+
+### Colors
+
+| Variável CSS      | Hex      | Uso                         |
+|-------------------|----------|-----------------------------|
+| `--color-primary` | `#164194`| Ações primárias e links     |
+| `--color-info`    | `#0dcaf0`| Mensagens informativas      |
+| `--color-success` | `#006837`| Mensagens de sucesso        |
+| `--color-warning` | `#FFB612`| Avisos                      |
+| `--color-danger`  | `#D50032`| Erros e ações destrutivas   |
+
+### Components
+
+#### Tabela
+
+```html
+<table class="table table-striped">
+  <thead class="table-primary">
+    <tr><th>Coluna 1</th><th>Coluna 2</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Valor 1</td><td>Valor 2</td></tr>
+  </tbody>
+</table>
+```
+
+#### Modal
+
+```html
+<div class="modal" id="demoModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Título</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p>Conteúdo do modal.</p>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+#### Toast
+
+```html
+<div class="toast align-items-center show" role="alert" aria-live="assertive" aria-atomic="true">
+  <div class="d-flex">
+    <div class="toast-body">Mensagem de exemplo.</div>
+    <button type="button" class="btn-close ms-auto" data-bs-dismiss="toast"></button>
+  </div>
+</div>
+```
+
+### Acessibilidade
+
+- Uma `<h1>` por página.
+- Campos de formulário com `<label>`.
+- Relacione mensagens de ajuda com `aria-describedby`.
+- Ordem de foco previsível e visível.
+- Contraste mínimo nível AA.
+
 ## Tipografia
 
 - **Gibson** – títulos e elementos de destaque.

@@ -44,10 +44,19 @@
                 <p class="lead">Selecione o sistema que deseja acessar:</p>
             </div>
         </div>
+
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-4 text-center">
+                <div class="form-check d-inline-block">
+                    <input class="form-check-input" type="checkbox" id="rememberChoice">
+                    <label class="form-check-label" for="rememberChoice">Lembrar minha escolha</label>
+                </div>
+            </div>
+        </div>
         
         <div class="row justify-content-center">
             <div class="col-md-5 mb-4">
-                <div class="card sistema-card h-100" onclick="window.location.href='/laboratorios/dashboard.html'">
+                <div class="card sistema-card h-100" data-url="/laboratorios/dashboard.html">
                     <div class="card-body text-center p-5">
                         <div class="sistema-icon">
                             <i class="bi bi-calendar-check"></i>
@@ -62,7 +71,7 @@
             </div>
 
             <div class="col-md-5 mb-4">
-                <div class="card sistema-card h-100" onclick="window.location.href='/treinamentos/index.html'">
+                <div class="card sistema-card h-100" data-url="/treinamentos/index.html">
                     <div class="card-body text-center p-5">
                         <div class="sistema-icon">
                             <i class="bi bi-easel2"></i>
@@ -77,7 +86,7 @@
             </div>
 
             <div class="col-md-5 mb-4">
-                <div class="card sistema-card h-100" onclick="window.location.href='/ocupacao/dashboard.html'">
+                <div class="card sistema-card h-100" data-url="/ocupacao/dashboard.html">
                     <div class="card-body text-center p-5">
                         <div class="sistema-icon">
                             <i class="bi bi-building"></i>
@@ -92,7 +101,7 @@
             </div>
 
             <div class="col-md-5 mb-4 admin-only">
-                <div class="card sistema-card h-100" onclick="window.location.href='/rateio/dashboard.html'">
+                <div class="card sistema-card h-100" data-url="/rateio/dashboard.html">
                     <div class="card-body text-center p-5">
                         <div class="sistema-icon">
                             <i class="bi bi-coin"></i>
@@ -107,7 +116,7 @@
             </div>
 
             <div class="col-md-5 mb-4 admin-only">
-                <div class="card sistema-card h-100" onclick="window.location.href='/admin/usuarios.html'">
+                <div class="card sistema-card h-100" data-url="/admin/usuarios.html">
                     <div class="card-body text-center p-5">
                         <div class="sistema-icon">
                             <i class="bi bi-person-gear"></i>
@@ -141,6 +150,13 @@
             const usuario = getUsuarioLogado();
             if (usuario) {
                 document.getElementById('userName').textContent = usuario.nome;
+                const modulosDisponiveis = obterModulosDisponiveis(usuario);
+                document.querySelectorAll('.sistema-card').forEach(card => {
+                    const url = card.getAttribute('data-url');
+                    if (!modulosDisponiveis.includes(url)) {
+                        card.closest('.col-md-5').style.display = 'none';
+                    }
+                });
             }
 
             // LÓGICA PARA OCULTAR OS CARDS DE ADMIN PARA USUÁRIOS COMUNS
@@ -154,6 +170,23 @@
             document.getElementById('btnLogout').addEventListener('click', function(e) {
                 e.preventDefault();
                 realizarLogout();
+            });
+
+            const rememberCheckbox = document.getElementById('rememberChoice');
+            if (localStorage.getItem('moduloSelecionado')) {
+                rememberCheckbox.checked = true;
+            }
+
+            document.querySelectorAll('.sistema-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const url = card.getAttribute('data-url');
+                    if (rememberCheckbox.checked) {
+                        localStorage.setItem('moduloSelecionado', url);
+                    } else {
+                        localStorage.removeItem('moduloSelecionado');
+                    }
+                    window.location.href = url;
+                });
             });
         });
     </script>

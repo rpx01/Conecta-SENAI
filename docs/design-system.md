@@ -114,10 +114,11 @@ p, input, textarea {
 
 ```html
 <table class="table table-striped">
-  <thead class="bg-fiemg-blue text-white">
+  <caption class="visually-hidden">Tabela de exemplo do design system</caption>
+  <thead class="table-primary">
     <tr>
-      <th>Coluna 1</th>
-      <th>Coluna 2</th>
+      <th scope="col">Coluna 1</th>
+      <th scope="col">Coluna 2</th>
     </tr>
   </thead>
   <tbody>

@@ -142,9 +142,9 @@ function construirTabelaSemanal(inicio, dados) {
         d.setDate(inicio.getDate()+i);
         dias.push(d);
     }
-    let html = '<table class="table table-bordered small"><thead><tr><th>Laboratório</th>';
+    let html = '<table class="table table-bordered small"><caption class="visually-hidden">Visão semanal de ocupação dos laboratórios</caption><thead class="table-primary"><tr><th scope="col">Laboratório</th>';
     dias.forEach(d => {
-        html += `<th>${d.toLocaleDateString('pt-BR')}</th>`;
+        html += `<th scope="col">${d.toLocaleDateString('pt-BR')}</th>`;
     });
     html += '</tr></thead><tbody>';
     for(const lab in dados) {

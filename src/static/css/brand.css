@@ -1,0 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&display=swap');
+
+/* Optional: habilite se houver arquivos de fonte Gibson locais
+@font-face{
+  font-family:"Gibson";
+  src: url("/static/fonts/gibson/Gibson-Regular.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face{
+  font-family:"Gibson";
+  src: url("/static/fonts/gibson/Gibson-Semibold.woff2") format("woff2");
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+*/
+
+/* Ordem de preferência: Gibson > Exo 2 > Calibri > sistema */
+:root{
+  --font-sans: "Gibson","Exo 2","Calibri",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+
+html,body{ font-family: var(--font-sans); letter-spacing: .01em; }
+h1,h2,h3,h4,h5,h6{ font-family: var(--font-sans); font-weight: 600; }
+.lead,p,li{ line-height: 1.6; }
+
+/* Títulos e subtítulos conforme guia (semibold em títulos, medium em subtítulos) */
+.display-1,.display-2,.display-3,.display-4,h1,h2{ font-weight: 600; }
+h3,h4,h5,h6, .subtitle{ font-weight: 500; }

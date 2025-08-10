@@ -50,3 +50,7 @@ h3,h4,h5,h6, .subtitle{ font-weight: 500; }
   --bs-dark:  var(--brand-gray-800);
 }
 .btn-primary, .bg-primary{ background-image:none; } /* evitar gradientes indesejados */
+
+.modal-header{ background: var(--brand-primary); color:#fff; }
+.modal-title{ font-weight:600; }
+.btn-primary:disabled, .btn:disabled{ opacity:.65; }

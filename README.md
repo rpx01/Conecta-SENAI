@@ -6,6 +6,10 @@ Agenda de laboratórios e salas do SENAI
 ## Changelog
 Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para detalhes das versões.
 
+## Design System
+As diretrizes de estilo do projeto estão descritas em [docs/design-system.md](docs/design-system.md).
+Atualize esse documento sempre que novos componentes visuais forem adicionados.
+
 ## Configuração rápida
 
 1. Instale as dependências do projeto usando o Poetry:

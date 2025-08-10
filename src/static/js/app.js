@@ -76,6 +76,29 @@ function sanitizeHTML(html) {
     return window.DOMPurify ? DOMPurify.sanitize(html) : html;
 }
 
+/**
+ * Alterna o estado de processamento de um botão, exibindo um spinner.
+ * @param {HTMLElement} btn - Botão alvo
+ * @param {boolean} busy - Se verdadeiro, ativa o estado de espera
+ */
+function setBusy(btn, busy = true) {
+    if (!btn) return;
+
+    if (busy) {
+        if (!btn.dataset.originalHtml) {
+            btn.dataset.originalHtml = btn.innerHTML;
+        }
+        btn.disabled = true;
+        btn.innerHTML = `${btn.dataset.originalHtml}<span class="spinner-border" role="status" aria-hidden="true"></span>`;
+    } else {
+        btn.disabled = false;
+        if (btn.dataset.originalHtml) {
+            btn.innerHTML = btn.dataset.originalHtml;
+            delete btn.dataset.originalHtml;
+        }
+    }
+}
+
 // Mapeia os módulos disponíveis de acordo com o tipo de usuário
 function obterModulosDisponiveis(usuario) {
     const modulos = [];
@@ -475,7 +498,18 @@ function showToast(mensagem, tipo = 'info') {
     toast.show();
 }
 
+/**
+ * Exibe notificação rápida via Toast do Bootstrap.
+ * @param {string} tipo - success|warning|danger|info
+ * @param {string} mensagem - Mensagem a ser exibida
+ */
+function notify(tipo, mensagem) {
+    showToast(mensagem, tipo);
+}
+
 window.showToast = showToast;
+window.notify = notify;
+window.setBusy = setBusy;
 document.addEventListener('DOMContentLoaded', criarToastContainer);
 
 /**

@@ -25,3 +25,28 @@ h1,h2,h3,h4,h5,h6{ font-family: var(--font-sans); font-weight: 600; }
 /* Títulos e subtítulos conforme guia (semibold em títulos, medium em subtítulos) */
 .display-1,.display-2,.display-3,.display-4,h1,h2{ font-weight: 600; }
 h3,h4,h5,h6, .subtitle{ font-weight: 500; }
+
+:root{
+  /* Cores principais */
+  --brand-primary: #164194; /* FIEMG 293C */
+  --brand-info:    #008BD2; /* Medium Blue C */
+
+  /* Secundárias sugeridas (Guia) */
+  --brand-success: #6fb47f; /* 346C */
+  --brand-warning: #f3c258; /* 141C */
+  --brand-danger:  #e06267; /* 7418 */
+  --brand-gray-100:#f8f9fa;
+  --brand-gray-300:#d8d9dd; /* 7541C aprox. */
+  --brand-gray-800:#5b5b5f; /* Cool Gray 11 */
+
+  /* Bootstrap overrides */
+  --bs-primary: var(--brand-primary);
+  --bs-info:    var(--brand-info);
+  --bs-success: var(--brand-success);
+  --bs-warning: var(--brand-warning);
+  --bs-danger:  var(--brand-danger);
+  --bs-secondary: var(--brand-gray-800);
+  --bs-light: var(--brand-gray-100);
+  --bs-dark:  var(--brand-gray-800);
+}
+.btn-primary, .bg-primary{ background-image:none; } /* evitar gradientes indesejados */

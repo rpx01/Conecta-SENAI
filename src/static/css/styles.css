@@ -1235,8 +1235,3 @@ input, select, textarea {
     gap: 8px;
     color: var(--primary-color);
 }
-
-.nav-link.active {
-  color: var(--brand-primary)!important;
-  font-weight: 600;
-}

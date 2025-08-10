@@ -76,6 +76,44 @@ function sanitizeHTML(html) {
     return window.DOMPurify ? DOMPurify.sanitize(html) : html;
 }
 
+// Mapeia os módulos disponíveis de acordo com o tipo de usuário
+function obterModulosDisponiveis(usuario) {
+    const modulos = [];
+
+    // Módulo padrão disponível para todos
+    modulos.push('/laboratorios/dashboard.html');
+
+    if (usuario.tipo === 'secretaria') {
+        modulos.push('/treinamentos/index.html');
+    }
+
+    if (usuario.tipo === 'admin') {
+        modulos.push('/treinamentos/index.html');
+        modulos.push('/ocupacao/dashboard.html');
+        modulos.push('/rateio/dashboard.html');
+        modulos.push('/admin/usuarios.html');
+    }
+
+    return modulos;
+}
+
+// Redireciona o usuário após o login com base nos módulos disponíveis
+function redirecionarAposLogin(usuario) {
+    const modulos = obterModulosDisponiveis(usuario);
+    const moduloSalvo = localStorage.getItem('moduloSelecionado');
+
+    if (moduloSalvo && modulos.includes(moduloSalvo)) {
+        window.location.href = moduloSalvo;
+        return;
+    }
+
+    if (modulos.length === 1) {
+        window.location.href = modulos[0];
+    } else {
+        window.location.href = '/selecao-sistema.html';
+    }
+}
+
 // Funções de autenticação
 /**
  * Realiza o login do usuário
@@ -106,8 +144,8 @@ async function realizarLogin(email, senha, recaptchaToken = '') {
                 localStorage.setItem('usuario', JSON.stringify(data.usuario));
                 localStorage.setItem('isAdmin', data.usuario.tipo === 'admin');
 
-                // Após o login, redireciona sempre para a página de seleção de sistema
-                window.location.href = '/selecao-sistema.html';
+                // Após o login, redireciona conforme módulos disponíveis
+                redirecionarAposLogin(data.usuario);
                 return data;
             }
 
@@ -598,6 +636,7 @@ function adicionarBotaoSelecaoSistema() {
         link.className = 'dropdown-item';
         link.href = '/selecao-sistema.html';
         link.innerHTML = '<i class="bi bi-arrow-return-left me-2"></i> Retornar à tela de seleção de sistema';
+        link.addEventListener('click', () => localStorage.removeItem('moduloSelecionado'));
 
         li.appendChild(link);
 
@@ -676,9 +715,14 @@ function configurarMenuOffcanvas() {
 
 // Inicialização da página
 document.addEventListener('DOMContentLoaded', async function() {
-    
+
     // Verifica autenticação em todas as páginas exceto login e registro
     const paginaAtual = window.location.pathname;
+
+    // Limpa escolha salva ao retornar para a seleção de sistema
+    document.querySelectorAll('a[href="/selecao-sistema.html"]').forEach(link => {
+        link.addEventListener('click', () => localStorage.removeItem('moduloSelecionado'));
+    });
     
     // Configura o botão de logout em todas as páginas
     const btnLogout = document.getElementById('btnLogout');

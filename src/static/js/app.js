@@ -650,67 +650,45 @@ function adicionarBotaoSelecaoSistema() {
 }
 
 /**
- * Configura o menu off-canvas clonando o conteúdo da sidebar
- * e ajustando o botão de abertura da navbar.
+ * Converte a navbar colapsável em offcanvas para telas pequenas.
  */
-function configurarMenuOffcanvas() {
-    const sidebar = document.querySelector('.sidebar');
+function configurarNavbarOffcanvas() {
+    const navbar = document.querySelector('.navbar');
     const toggler = document.querySelector('.navbar-toggler');
-    if (!sidebar || !toggler) return;
+    const collapse = document.querySelector('.navbar .collapse.navbar-collapse');
 
-    // Configura atributos acessíveis do botão
+    if (!navbar || !toggler || !collapse) return;
+
+    // Ajusta breakpoint de expansão
+    navbar.classList.remove('navbar-expand-lg');
+    navbar.classList.add('navbar-expand-md');
+
+    // Configura o botão para abrir o offcanvas
     toggler.setAttribute('data-bs-toggle', 'offcanvas');
-    toggler.setAttribute('data-bs-target', '#offcanvasSidebar');
-    toggler.setAttribute('aria-controls', 'offcanvasSidebar');
+    toggler.setAttribute('data-bs-target', '#navOffcanvas');
+    toggler.setAttribute('aria-controls', 'navOffcanvas');
     toggler.setAttribute('aria-label', 'Abrir menu');
 
-    // Cria o container do off-canvas caso não exista
-    let offcanvas = document.getElementById('offcanvasSidebar');
-    if (!offcanvas) {
-        offcanvas = document.createElement('div');
-        offcanvas.id = 'offcanvasSidebar';
-        offcanvas.className = 'offcanvas offcanvas-start';
-        offcanvas.tabIndex = -1;
-        offcanvas.setAttribute('aria-labelledby', 'offcanvasSidebarLabel');
-        offcanvas.innerHTML = `
-            <div class="offcanvas-header">
-                <h5 class="offcanvas-title" id="offcanvasSidebarLabel">Menu</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar menu"></button>
-            </div>
-            <div class="offcanvas-body"></div>
-        `;
-        document.body.appendChild(offcanvas);
-    }
+    // Cria estrutura do offcanvas
+    const offcanvas = document.createElement('div');
+    offcanvas.id = 'navOffcanvas';
+    offcanvas.className = 'offcanvas offcanvas-start offcanvas-md';
+    offcanvas.tabIndex = -1;
+    offcanvas.innerHTML = `
+        <div class="offcanvas-header d-md-none">
+            <h5 class="offcanvas-title">Menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body"></div>
+    `;
 
     const body = offcanvas.querySelector('.offcanvas-body');
 
-    function atualizarConteudoOffcanvas() {
-        body.innerHTML = '';
-        const clone = sidebar.cloneNode(true);
-        // Evita IDs duplicados que podem causar conflitos
-        clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
-
-        const nav = clone.querySelector('.nav.flex-column');
-        if (nav) {
-            const logout = document.createElement('a');
-            logout.className = 'nav-link';
-            logout.href = '#';
-            logout.innerHTML = '<i class="bi bi-box-arrow-right"></i> Sair';
-            logout.addEventListener('click', function (e) {
-                e.preventDefault();
-                realizarLogout();
-            });
-            nav.appendChild(logout);
-        }
-
-        body.appendChild(clone);
+    while (collapse.firstChild) {
+        body.appendChild(collapse.firstChild);
     }
 
-    atualizarConteudoOffcanvas();
-
-    // Atualiza o off-canvas sempre que a sidebar for modificada
-    const observer = new MutationObserver(atualizarConteudoOffcanvas);
-    observer.observe(sidebar, { childList: true, subtree: true });
+    collapse.parentNode.replaceChild(offcanvas, collapse);
 }
 
 // Inicialização da página
@@ -788,7 +766,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
-    configurarMenuOffcanvas();
+    configurarNavbarOffcanvas();
 });
 
 /**

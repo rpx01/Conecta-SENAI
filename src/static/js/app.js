@@ -602,6 +602,70 @@ function adicionarBotaoSelecaoSistema() {
     });
 }
 
+/**
+ * Configura o menu off-canvas clonando o conteúdo da sidebar
+ * e ajustando o botão de abertura da navbar.
+ */
+function configurarMenuOffcanvas() {
+    const sidebar = document.querySelector('.sidebar');
+    const toggler = document.querySelector('.navbar-toggler');
+    if (!sidebar || !toggler) return;
+
+    // Configura atributos acessíveis do botão
+    toggler.setAttribute('data-bs-toggle', 'offcanvas');
+    toggler.setAttribute('data-bs-target', '#offcanvasSidebar');
+    toggler.setAttribute('aria-controls', 'offcanvasSidebar');
+    toggler.setAttribute('aria-label', 'Abrir menu');
+
+    // Cria o container do off-canvas caso não exista
+    let offcanvas = document.getElementById('offcanvasSidebar');
+    if (!offcanvas) {
+        offcanvas = document.createElement('div');
+        offcanvas.id = 'offcanvasSidebar';
+        offcanvas.className = 'offcanvas offcanvas-start';
+        offcanvas.tabIndex = -1;
+        offcanvas.setAttribute('aria-labelledby', 'offcanvasSidebarLabel');
+        offcanvas.innerHTML = `
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="offcanvasSidebarLabel">Menu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar menu"></button>
+            </div>
+            <div class="offcanvas-body"></div>
+        `;
+        document.body.appendChild(offcanvas);
+    }
+
+    const body = offcanvas.querySelector('.offcanvas-body');
+
+    function atualizarConteudoOffcanvas() {
+        body.innerHTML = '';
+        const clone = sidebar.cloneNode(true);
+        // Evita IDs duplicados que podem causar conflitos
+        clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+
+        const nav = clone.querySelector('.nav.flex-column');
+        if (nav) {
+            const logout = document.createElement('a');
+            logout.className = 'nav-link';
+            logout.href = '#';
+            logout.innerHTML = '<i class="bi bi-box-arrow-right"></i> Sair';
+            logout.addEventListener('click', function (e) {
+                e.preventDefault();
+                realizarLogout();
+            });
+            nav.appendChild(logout);
+        }
+
+        body.appendChild(clone);
+    }
+
+    atualizarConteudoOffcanvas();
+
+    // Atualiza o off-canvas sempre que a sidebar for modificada
+    const observer = new MutationObserver(atualizarConteudoOffcanvas);
+    observer.observe(sidebar, { childList: true, subtree: true });
+}
+
 // Inicialização da página
 document.addEventListener('DOMContentLoaded', async function() {
     
@@ -671,6 +735,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             configurarObservadoresMenu();
         }
     }
+
+    configurarMenuOffcanvas();
 });
 
 /**

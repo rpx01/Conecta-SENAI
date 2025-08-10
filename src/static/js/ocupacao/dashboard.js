@@ -52,6 +52,7 @@ async function carregarIndicadoresMensais() {
         preencher('Seguinte', seguinte, 'linkMesSeguinte');
     } catch (error) {
         console.error('Erro ao carregar indicadores mensais:', error);
+        showToast('Não conseguimos carregar os indicadores. Tente novamente mais tarde.', 'danger');
     }
 }
 
@@ -107,6 +108,7 @@ async function carregarEstatisticasGerais() {
         
     } catch (error) {
         console.error('Erro ao carregar estatísticas gerais:', error);
+        showToast('Não conseguimos carregar as estatísticas. Tente novamente.', 'danger');
     }
 }
 
@@ -137,6 +139,7 @@ async function carregarProximasOcupacoes() {
         }
     } catch (error) {
         console.error('Erro ao carregar próximas ocupações:', error);
+        showToast('Não conseguimos carregar as próximas ocupações. Tente novamente.', 'danger');
     } finally {
         document.getElementById('loadingProximasOcupacoes').style.display = 'none';
     }
@@ -223,6 +226,7 @@ async function carregarRelatorioMensal() {
         }
     } catch (error) {
         console.error('Erro ao carregar relatório mensal:', error);
+        showToast('Não conseguimos carregar o relatório mensal. Tente novamente.', 'danger');
     } finally {
         document.getElementById('loadingSalasMaisUtilizadas').style.display = 'none';
         document.getElementById('loadingOcupacoesPorTipo').style.display = 'none';
@@ -250,6 +254,7 @@ async function carregarDadosBasicos(dataInicio, dataFim) {
         }
     } catch (error) {
         console.error('Erro ao carregar dados básicos:', error);
+        showToast('Não conseguimos carregar os dados solicitados.', 'danger');
     }
 }
 
@@ -477,6 +482,7 @@ async function carregarTendenciaMensal() {
         }
     } catch (error) {
         console.error('Erro ao carregar tendência mensal:', error);
+        showToast('Não conseguimos carregar a tendência mensal. Tente novamente.', 'danger');
     }
 }
 

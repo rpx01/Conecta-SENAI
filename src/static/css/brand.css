@@ -60,3 +60,5 @@ h3,h4,h5,h6, .subtitle{ font-weight: 500; }
 
 .brand-gradient{ background: linear-gradient(135deg, #164194 0%, #008BD2 100%); }
 .brand-shear{ transform: skewY(-9.19deg); }
+:focus-visible{ outline: 3px solid #f3c258; outline-offset: 2px; } /* amarelo da paleta */
+a:not(.btn){ text-decoration-thickness: .12em; text-underline-offset: .2em; }

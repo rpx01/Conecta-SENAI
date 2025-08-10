@@ -31,13 +31,17 @@
                     
                     <form id="loginForm">
                         <div class="form-floating mb-3">
-                            <input type="email" class="form-control" id="email" name="email" placeholder="seu@email.com" required>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="seu@email.com" required aria-required="true" aria-describedby="email-help email-error">
                             <label for="email"><i class="bi bi-envelope me-2"></i>Email</label>
+                            <div id="email-error" class="invalid-feedback">Por favor, informe um email válido.</div>
                         </div>
+                        <div id="email-help" class="form-text">Digite seu email institucional.</div>
                         <div class="form-floating mb-3">
-                            <input type="password" class="form-control" id="senha" name="senha" placeholder="Senha" required>
+                            <input type="password" class="form-control" id="senha" name="senha" placeholder="Senha" required aria-required="true" aria-describedby="senha-help senha-error">
                             <label for="senha"><i class="bi bi-lock me-2"></i>Senha</label>
+                            <div id="senha-error" class="invalid-feedback">Por favor, informe sua senha.</div>
                         </div>
+                        <div id="senha-help" class="form-text">Digite sua senha de acesso.</div>
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <a href="#" class="text-muted small">Esqueceu-se da senha?</a>
                         </div>
@@ -73,14 +77,32 @@
 
             const loginForm = document.getElementById('loginForm');
             if (loginForm) {
+                const emailInput = document.getElementById('email');
+                const senhaInput = document.getElementById('senha');
+
+                [emailInput, senhaInput].forEach(input => {
+                    input.addEventListener('input', () => input.classList.remove('is-invalid'));
+                });
+
                 loginForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
                     const btn = document.getElementById('btnLogin');
+                    let hasError = false;
+                    [emailInput, senhaInput].forEach(input => {
+                        if (!input.value.trim()) {
+                            input.classList.add('is-invalid');
+                            hasError = true;
+                        }
+                    });
+                    if (hasError) {
+                        return;
+                    }
+
                     btn.disabled = true;
                     btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Entrando...';
 
-                    const email = document.getElementById('email').value;
-                    const senha = document.getElementById('senha').value;
+                    const email = emailInput.value;
+                    const senha = senhaInput.value;
                     let token = '';
 
                     if (siteKey && window.grecaptcha) {

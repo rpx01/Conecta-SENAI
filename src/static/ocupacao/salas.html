@@ -292,7 +292,7 @@
             // Verifica se é administrador
             const usuario = getUsuarioLogado();
             if (!isAdmin()) {
-                showToast('Acesso negado. Somente administradores podem gerenciar salas.', 'danger');
+                showToast('Desculpe, apenas administradores podem gerenciar salas.', 'danger');
                 window.location.href = '/ocupacao/dashboard.html';
                 return;
             }
@@ -308,8 +308,8 @@
             const modalElem = document.getElementById('modalSala');
             modalElem.addEventListener('hidden.bs.modal', novaSala);
         });
-    </script>
-    <script>
+</script>
+<script>
         document.addEventListener('DOMContentLoaded', () => {
             if (!isUserAdmin()) {
                 document.body.classList.add('read-only');
@@ -321,6 +321,7 @@
         <p class="mb-0">Sistema FIEMG | O futuro se faz juntos.</p>
     </div>
 </footer>
+<div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 </body>
 </html>
 

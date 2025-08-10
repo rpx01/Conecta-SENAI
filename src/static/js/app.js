@@ -244,7 +244,7 @@ async function verificarPermissaoAdmin() {
 
     // Passo 3: Se NÃO for a página de seleção, continue com a verificação de admin.
     if (!isAdmin()) {
-        showToast('Acesso não autorizado. Redirecionando...', 'warning');
+        showToast('Desculpe, você não tem permissão para acessar esta página. Vamos redirecioná-lo(a).', 'warning');
         window.location.href = '/selecao-sistema.html'; // Redireciona para um local seguro
         return false;
     }
@@ -385,20 +385,27 @@ function formatarHorario(horario) {
 }
 
 /**
+ * Garante a existência de um container global para toasts
+ * @returns {HTMLElement} - Elemento container
+ */
+function criarToastContainer() {
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        container.style.zIndex = 1100;
+        document.body.appendChild(container);
+    }
+    return container;
+}
+
+/**
  * Exibe uma mensagem usando toasts do Bootstrap
  * @param {string} mensagem - Mensagem a ser exibida
  * @param {string} tipo - Tipo do toast (success, danger, warning, info)
  */
 function showToast(mensagem, tipo = 'info') {
-    let toastContainer = document.querySelector('.toast-container');
-
-    // Garante que o container exista
-    if (!toastContainer) {
-        toastContainer = document.createElement('div');
-        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-        toastContainer.style.zIndex = 1100;
-        document.body.appendChild(toastContainer);
-    }
+    const toastContainer = criarToastContainer();
 
     const toastId = `toast-${Date.now()}`;
     const baseTextColor = tipo === 'warning' ? 'text-dark' : 'text-white';
@@ -431,6 +438,7 @@ function showToast(mensagem, tipo = 'info') {
 }
 
 window.showToast = showToast;
+document.addEventListener('DOMContentLoaded', criarToastContainer);
 
 /**
  * Retorna a classe CSS correspondente ao turno
@@ -840,7 +848,7 @@ async function carregarNotificacoes() {
                     // Recarrega as notificações
                     carregarNotificacoes();
                 } catch (error) {
-                    showToast('Não foi possível marcar a notificação como lida.', 'danger');
+                    showToast('Não conseguimos marcar a notificação como lida.', 'danger');
                 }
             });
         });
@@ -895,7 +903,7 @@ async function exportarDados(endpoint, formato, nomeArquivo) {
         window.URL.revokeObjectURL(url);
     } catch (error) {
         console.error('Erro ao exportar dados:', error);
-        showToast('Não foi possível exportar os dados.', 'danger');
+        showToast('Não conseguimos exportar os dados.', 'danger');
     }
 }
 

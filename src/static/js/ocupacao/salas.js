@@ -105,7 +105,7 @@ class GerenciadorSalas {
         }
     } catch (error) {
         console.error('Erro ao carregar salas:', error);
-        let mensagem = 'Erro ao carregar salas.';
+        let mensagem = 'Não conseguimos carregar as salas.';
         if (error.message.includes('Failed to fetch')) {
             mensagem += ' Verifique sua conexão e tente novamente.';
         } else {
@@ -273,12 +273,12 @@ class GerenciadorSalas {
         
         // Validações
         if (!formData.nome) {
-            showToast('Por favor, informe o nome da sala.', 'warning');
+            showToast('Informe o nome da sala para continuar.', 'warning');
             return;
         }
         
         if (!formData.capacidade || formData.capacidade <= 0) {
-            showToast('A capacidade deve ser um número maior que zero.', 'warning');
+            showToast('A capacidade precisa ser um número maior que zero.', 'warning');
             return;
         }
         
@@ -332,7 +332,7 @@ class GerenciadorSalas {
         }
     } catch (error) {
         console.error('Erro ao salvar sala:', error);
-        showToast(`Não foi possível salvar a sala: ${error.message}`, 'danger');
+            showToast(`Não conseguimos salvar a sala: ${error.message}`, 'danger');
     } finally {
         if (btn && spinner) {
             btn.disabled = false;
@@ -377,7 +377,7 @@ class GerenciadorSalas {
         }
     } catch (error) {
         console.error('Erro ao excluir sala:', error);
-        showToast(`Não foi possível excluir a sala: ${error.message}`, 'danger');
+        showToast(`Não conseguimos excluir a sala: ${error.message}`, 'danger');
     }
 }
 

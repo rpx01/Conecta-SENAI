@@ -4,6 +4,15 @@
 // Constantes globais
 const API_URL = '/api';
 
+// Rotas padrão dos módulos disponíveis no sistema
+const ROTAS_MODULOS = {
+    laboratorios: '/laboratorios/dashboard.html',
+    treinamentos: '/treinamentos/index.html',
+    ocupacao: '/ocupacao/dashboard.html',
+    rateio: '/rateio/dashboard.html',
+    admin: '/admin/usuarios.html'
+};
+
 // Overlay de carregamento reutilizável
 let loadingOverlay;
 
@@ -106,8 +115,32 @@ async function realizarLogin(email, senha, recaptchaToken = '') {
                 localStorage.setItem('usuario', JSON.stringify(data.usuario));
                 localStorage.setItem('isAdmin', data.usuario.tipo === 'admin');
 
-                // Após o login, redireciona sempre para a página de seleção de sistema
-                window.location.href = '/selecao-sistema.html';
+                // Determina os módulos liberados para o usuário
+                let modulos = data.modulos || data.usuario?.modulos || [];
+                let modulosUrls = modulos.map(m => ROTAS_MODULOS[m] || m).filter(Boolean);
+
+                // Caso a API não retorne explicitamente, infere pelos tipos padrão
+                if (modulosUrls.length === 0) {
+                    if (data.usuario.tipo === 'admin') {
+                        modulosUrls = Object.keys(ROTAS_MODULOS).map(k => ROTAS_MODULOS[k]);
+                    } else {
+                        modulosUrls = ['laboratorios', 'treinamentos', 'ocupacao'].map(m => ROTAS_MODULOS[m]);
+                    }
+                }
+
+                localStorage.setItem('modulosDisponiveis', JSON.stringify(modulosUrls));
+
+                const ultimaEscolha = localStorage.getItem('ultimoModulo');
+
+                if (modulosUrls.length === 1) {
+                    const destino = modulosUrls[0];
+                    localStorage.setItem('ultimoModulo', destino);
+                    window.location.href = destino;
+                } else if (ultimaEscolha && modulosUrls.includes(ultimaEscolha)) {
+                    window.location.href = ultimaEscolha;
+                } else {
+                    window.location.href = '/selecao-sistema.html';
+                }
                 return data;
             }
 
@@ -705,6 +738,30 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (!(await verificarPermissaoAdmin())) {
             return;
         }
+
+        const modulosSalvos = JSON.parse(localStorage.getItem('modulosDisponiveis') || '[]');
+        const ultimaEscolha = localStorage.getItem('ultimoModulo');
+
+        if (modulosSalvos.length === 1) {
+            window.location.href = modulosSalvos[0];
+            return;
+        }
+
+        if (modulosSalvos.length > 1 && ultimaEscolha && modulosSalvos.includes(ultimaEscolha)) {
+            window.location.href = ultimaEscolha;
+            return;
+        }
+
+        // Armazena a escolha do usuário ao clicar em um módulo
+        document.querySelectorAll('.sistema-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const match = card.getAttribute('onclick')?.match(/'([^']+)'/);
+                if (match && match[1]) {
+                    localStorage.setItem('ultimoModulo', match[1]);
+                }
+            });
+        });
+
         return;
     }
     

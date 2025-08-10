@@ -226,9 +226,13 @@ small, .small {
 
 .table > thead {
   text-transform: none;
-  font-weight: 700;
   font-size: 0.8rem;
-  color: #333;
+}
+
+.table thead th {
+  background-color: var(--brand-primary)!important;
+  color: #fff;
+  font-weight: 600;
 }
 
 .table td,

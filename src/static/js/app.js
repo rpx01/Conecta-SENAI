@@ -108,18 +108,13 @@ function setBusy(btn, busy = true) {
 
 // Mapeia os módulos disponíveis de acordo com o tipo de usuário
 function obterModulosDisponiveis(usuario) {
-    const modulos = [];
-
-    // Módulo padrão disponível para todos
-    modulos.push('/laboratorios/dashboard.html');
-
-    if (usuario.tipo === 'secretaria') {
-        modulos.push('/treinamentos/index.html');
-    }
+    const modulos = [
+        '/laboratorios/dashboard.html',
+        '/treinamentos/index.html',
+        '/ocupacao/dashboard.html'
+    ];
 
     if (usuario.tipo === 'admin') {
-        modulos.push('/treinamentos/index.html');
-        modulos.push('/ocupacao/dashboard.html');
         modulos.push('/rateio/dashboard.html');
         modulos.push('/admin/usuarios.html');
     }
@@ -668,14 +663,16 @@ function adicionarLinkLogs(containerSelector, isNavbar = false) {
  * Adiciona ao menu do usuário um botão para retornar à tela de seleção de sistema
  */
 function adicionarBotaoSelecaoSistema() {
-    if (!isAdmin()) return;
+    const usuario = getUsuarioLogado();
+    if (!usuario) return;
+    const modulos = obterModulosDisponiveis(usuario);
+    if (modulos.length <= 1) return;
 
     document.querySelectorAll('.dropdown-menu').forEach(menu => {
         // Evita duplicação do botão
         if (menu.querySelector('a[href="/selecao-sistema.html"]')) return;
 
         const li = document.createElement('li');
-        li.className = 'admin-only';
 
         const link = document.createElement('a');
         link.className = 'dropdown-item';

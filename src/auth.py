@@ -9,6 +9,12 @@ from src.models import db
 from src.models.user import User
 
 
+# Tipos de usuário utilizados pelo sistema
+ROLE_ADMIN = "admin"
+ROLE_GESTOR = "secretaria"
+ROLE_USER = "comum"
+
+
 def verificar_autenticacao(req):
     """Verifica o token JWT no cabeçalho Authorization ou cookie."""
     auth_header = req.headers.get('Authorization')
@@ -21,10 +27,12 @@ def verificar_autenticacao(req):
         g.token_message = None
         return False, None
     try:
-        dados = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+        dados = jwt.decode(
+            token, current_app.config['SECRET_KEY'], algorithms=['HS256']
+        )
         jti = dados.get('jti')
         if jti and redis_conn.get(jti):
-            g.token_message = "Token has been revoked"
+            g.token_message = "Token has been revoked"  # nosec B105
             return False, None
         user = db.session.get(User, dados.get('user_id'))
         if user:
@@ -72,3 +80,20 @@ def admin_required(func):
         return func(*args, **kwargs)
 
     return wrapper
+
+
+def require_roles(*roles):
+    """Decorator que exige que o usuário possua um dos papéis informados."""
+
+    def decorator(func):
+        @wraps(func)
+        @login_required
+        def wrapper(*args, **kwargs):
+            user = g.current_user
+            if user.tipo not in roles:
+                return jsonify({"erro": "Permissão negada"}), 403
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator

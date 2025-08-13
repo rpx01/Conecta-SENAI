@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h1 class="mb-0">Planejamento de Treinamentos</h1>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-primary" href="{{ url_for('planejamento.matriz') }}">Matriz Mensal</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('planejamento.lista') }}">Lista</a>
+    {% if user_role in ('ADMIN','GESTOR') %}
+      <button id="btnImportar" class="btn btn-primary">Importar Planilha</button>
+      <button id="btnExportar" class="btn btn-secondary">Exportar XLSX</button>
+    {% endif %}
+  </div>
+</div>
+<p class="text-muted">Visualize e organize o planejamento mensal por instrutor ou em lista detalhada.</p>
+{% endblock %}

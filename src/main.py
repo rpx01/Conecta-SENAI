@@ -1,6 +1,5 @@
-"""
-Inicializa a aplicacao Flask e registra os blueprints.
-"""
+"""Inicializa a aplicacao Flask e registra os blueprints."""
+# flake8: noqa
 import os
 import logging
 import traceback
@@ -14,9 +13,6 @@ from src.redis_client import init_redis
 from src.config import DevConfig, ProdConfig, TestConfig
 from src.repositories.user_repository import UserRepository
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-
 from src.models import db
 from src.routes.laboratorios import agendamento_bp, laboratorio_bp
 from src.routes.notificacao import notificacao_bp
@@ -24,8 +20,15 @@ from src.routes.ocupacao import ocupacao_bp, sala_bp, instrutor_bp
 from src.routes.user import user_bp
 from src.routes.rateio import rateio_bp
 from src.routes.treinamentos import treinamento_bp, turma_bp
+from src.routes.planejamento import bp as planejamento_bp
 from apscheduler.schedulers.background import BackgroundScheduler
 from src.services.notificacao_service import criar_notificacoes_agendamentos_proximos
+
+logging.basicConfig(
+    stream=sys.stdout,
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -208,6 +211,7 @@ def create_app():
     app.register_blueprint(ocupacao_bp, url_prefix='/api')
     app.register_blueprint(rateio_bp, url_prefix='/api')
     app.register_blueprint(treinamento_bp, url_prefix='/api')
+    app.register_blueprint(planejamento_bp, url_prefix='/planejamento')
 
     # Inicia scheduler para notificações
     iniciar_scheduler(app)

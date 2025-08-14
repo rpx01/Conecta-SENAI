@@ -13,16 +13,7 @@ from .treinamento import (  # noqa: E402
     TurmaTreinamento,
     InscricaoTreinamento,
 )  # noqa: E402
-
-# Planejamento é um módulo opcional localizado fora do pacote ``src``.
-# Em alguns ambientes ele pode não estar instalado no ``PYTHONPATH``,
-# o que fazia o Gunicorn falhar ao inicializar.  Realizamos a importação
-# de forma defensiva para que a ausência do módulo não interrompa o
-# carregamento dos demais modelos.
-try:  # pragma: no cover - caminho simples já testado nos imports
-    from app.planejamento.models import Planejamento  # noqa: E402
-except ImportError:  # pragma: no cover - módulo ausente é aceitável
-    Planejamento = None
+from app.planejamento.models import Planejamento  # noqa: E402
 
 __all__ = [
     "db",
@@ -35,7 +26,5 @@ __all__ = [
     "Treinamento",
     "TurmaTreinamento",
     "InscricaoTreinamento",
+    "Planejamento",
 ]
-
-if Planejamento is not None:
-    __all__.append("Planejamento")

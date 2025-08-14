@@ -13,6 +13,7 @@ from .treinamento import (
     TurmaTreinamento,
     InscricaoTreinamento,
 )  # noqa: E402
+from src.planejamento.models import Planejamento  # noqa: E402
 
 __all__ = [
     "db",
@@ -25,4 +26,5 @@ __all__ = [
     "Treinamento",
     "TurmaTreinamento",
     "InscricaoTreinamento",
+    "Planejamento",
 ]

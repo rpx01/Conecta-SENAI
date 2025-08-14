@@ -40,6 +40,31 @@ def verificar_autenticacao(req):
         return False, None
 
 
+# Role constants
+ROLE_ADMIN = "admin"
+ROLE_GESTOR = "secretaria"
+ROLE_USER = "comum"
+
+
+def require_roles(*roles):
+    """Decorator to require authentication and specific user roles."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            autenticado, user = verificar_autenticacao(request)
+            if not autenticado:
+                msg = getattr(g, 'token_message', None)
+                if msg:
+                    return jsonify({'erro': msg}), 401
+                return jsonify({'erro': 'Não autenticado'}), 401
+            if user.tipo not in roles:
+                return jsonify({'erro': 'Permissão negada'}), 403
+            g.current_user = user
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
 def verificar_admin(user: User) -> bool:
     """Verifica se o usuário fornecido tem privilégios de administrador."""
     return user is not None and user.tipo in ['admin', 'secretaria']

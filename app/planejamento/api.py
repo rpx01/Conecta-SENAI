@@ -63,6 +63,13 @@ def api_list():
 def api_create():
     """Cria um novo item de planejamento."""
     data = request.get_json() or {}
+    exists = Planejamento.query.filter_by(
+        data=data["data"],
+        turno=data["turno"],
+        instrutor_id=data["instrutor_id"],
+    ).first()
+    if exists:
+        return jsonify({"error": "Conflito de agenda"}), 409
     p = Planejamento(
         data=data["data"],
         turno=data["turno"],
@@ -87,6 +94,14 @@ def api_update(pid: int):
     """Atualiza um item de planejamento existente."""
     p = Planejamento.query.get_or_404(pid)
     data = request.get_json() or {}
+    new_data = data.get("data", p.data)
+    new_turno = data.get("turno", p.turno)
+    new_instrutor = data.get("instrutor_id", p.instrutor_id)
+    exists = Planejamento.query.filter_by(
+        data=new_data, turno=new_turno, instrutor_id=new_instrutor
+    ).first()
+    if exists and exists.id != pid:
+        return jsonify({"error": "Conflito de agenda"}), 409
     for f in [
         "data",
         "turno",

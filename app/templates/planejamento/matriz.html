@@ -37,45 +37,45 @@
 <div class="modal fade" id="mdlSlot" tabindex="-1">
   <div class="modal-dialog modal-lg"><div class="modal-content">
     <div class="modal-header bg-primary text-white"><h5 class="modal-title">Editar Slot</h5>
-      <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      <button class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
     </div>
     <div class="modal-body">
       <form id="formSlot" class="row g-3">
         <input type="hidden" id="slotId">
         <div class="col-md-4">
-          <label class="form-label">Treinamento</label>
-          <input id="treinamento" class="form-control" required>
+          <label for="treinamento" class="form-label">Treinamento</label>
+          <input id="treinamento" class="form-control" required aria-label="Treinamento" autofocus>
         </div>
         <div class="col-md-3">
-          <label class="form-label">Modalidade</label>
-          <select id="modalidade" class="form-select">
+          <label for="modalidade" class="form-label">Modalidade</label>
+          <select id="modalidade" class="form-select" aria-label="Modalidade">
             <option>Presencial</option><option>Online</option>
           </select>
         </div>
         <div class="col-md-2">
-          <label class="form-label">Carga (h)</label>
-          <input id="carga" type="number" class="form-control" min="1">
+          <label for="carga" class="form-label">Carga (h)</label>
+          <input id="carga" type="number" class="form-control" min="1" aria-label="Carga horária">
         </div>
         <div class="col-md-3">
-          <label class="form-label">Status</label>
-          <select id="status" class="form-select">
+          <label for="status" class="form-label">Status</label>
+          <select id="status" class="form-select" aria-label="Status">
             <option>Planejado</option><option>Confirmado</option><option>Cancelado</option>
           </select>
         </div>
         <div class="col-md-6">
-          <label class="form-label">Local</label><input id="local" class="form-control">
+          <label for="local" class="form-label">Local</label><input id="local" class="form-control" aria-label="Local">
         </div>
         <div class="col-md-6">
-          <label class="form-label">Cliente</label><input id="cliente" class="form-control" placeholder="CMD / SAG / SIB ...">
+          <label for="cliente" class="form-label">Cliente</label><input id="cliente" class="form-control" placeholder="CMD / SAG / SIB ..." aria-label="Cliente">
         </div>
         <div class="col-12">
-          <label class="form-label">Observação</label><textarea id="obs" class="form-control"></textarea>
+          <label for="obs" class="form-label">Observação</label><textarea id="obs" class="form-control" aria-label="Observação"></textarea>
         </div>
       </form>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-      <button id="btnSalvarSlot" class="btn btn-primary">Salvar</button>
+      <button class="btn btn-secondary" data-bs-dismiss="modal" accesskey="f">Fechar</button>
+      <button id="btnSalvarSlot" class="btn btn-primary" accesskey="s">Salvar</button>
     </div>
   </div></div>
 </div>

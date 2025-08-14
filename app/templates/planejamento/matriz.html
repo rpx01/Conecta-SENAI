@@ -1,85 +1,10 @@
-{% extends "base.html" %}
-{% block content %}
-<h1 class="mb-3">Matriz Mensal por Instrutor</h1>
-
-<div class="row g-3 align-items-end mb-3">
-  <div class="col-auto">
-    <label class="form-label">Mês</label>
-    <input type="month" id="mes" class="form-control" value="{{ current_year_month }}">
-  </div>
-  <div class="col-auto">
-    <label class="form-label">Instrutor</label>
-    <select id="filtroInstrutor" class="form-select"><option value="">Todos</option></select>
-  </div>
-  <div class="col-auto">
-    <button id="btnCarregar" class="btn btn-primary">Aplicar</button>
-  </div>
-</div>
-
-<div class="table-responsive" style="max-height:70vh;">
-  <table class="table table-bordered align-middle">
-    <thead class="table-primary sticky-top">
-      <tr>
-        <th style="min-width:110px">Data</th>
-        <th style="min-width:90px">Semana</th>
-        <th style="min-width:90px">Turno</th>
-        <!-- colunas dinâmicas por instrutor via JS -->
-      </tr>
-    </thead>
-    <tbody id="tbodyMatriz">
-      <!-- linhas via JS: cada célula = slot (data+turno+instrutor) -->
-    </tbody>
-  </table>
-</div>
-
-{% if user_role in ('ADMIN','GESTOR') %}
-<!-- Modal quick-edit -->
-<div class="modal fade" id="mdlSlot" tabindex="-1">
-  <div class="modal-dialog modal-lg"><div class="modal-content">
-    <div class="modal-header bg-primary text-white"><h5 class="modal-title">Editar Slot</h5>
-      <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-    </div>
-    <div class="modal-body">
-      <form id="formSlot" class="row g-3">
-        <input type="hidden" id="slotId">
-        <div class="col-md-4">
-          <label class="form-label">Treinamento</label>
-          <input id="treinamento" class="form-control" required>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Modalidade</label>
-          <select id="modalidade" class="form-select">
-            <option>Presencial</option><option>Online</option>
-          </select>
-        </div>
-        <div class="col-md-2">
-          <label class="form-label">Carga (h)</label>
-          <input id="carga" type="number" class="form-control" min="1">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Status</label>
-          <select id="status" class="form-select">
-            <option>Planejado</option><option>Confirmado</option><option>Cancelado</option>
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Local</label><input id="local" class="form-control">
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Cliente</label><input id="cliente" class="form-control" placeholder="CMD / SAG / SIB ...">
-        </div>
-        <div class="col-12">
-          <label class="form-label">Observação</label><textarea id="obs" class="form-control"></textarea>
-        </div>
-      </form>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-      <button id="btnSalvarSlot" class="btn btn-primary">Salvar</button>
-    </div>
-  </div></div>
-</div>
-{% endif %}
-
-<script src="{{ url_for('static', filename='js/planejamento.js') }}"></script>
-{% endblock %}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Matriz de Planejamento</title>
+</head>
+<body>
+    <h1>Matriz de Planejamento</h1>
+</body>
+</html>

@@ -111,7 +111,6 @@ function obterModulosDisponiveis(usuario) {
     const modulos = [
         '/laboratorios/dashboard.html',
         '/treinamentos/index.html',
-        '/planejamento/',
         '/ocupacao/dashboard.html'
     ];
 

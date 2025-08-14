@@ -3,11 +3,12 @@ from datetime import date
 
 from openpyxl import Workbook, load_workbook
 
-from src.models import db, Planejamento
+from app.planejamento.models import Planejamento
+from src.models import db
 from src.models.instrutor import Instrutor
 
 
-def test_api_planejamento_export(client, non_admin_auth_headers):
+def test_api_planejamento_export(client):
     with client.application.app_context():
         instr = Instrutor(nome="Instrutor Teste")
         db.session.add(instr)
@@ -26,18 +27,15 @@ def test_api_planejamento_export(client, non_admin_auth_headers):
         )
         db.session.add(p)
         db.session.commit()
-    resp = client.get(
-        "/planejamento/api/planejamento/export?mes=2024-01",
-        headers=non_admin_auth_headers,
-    )
+    resp = client.get("/api/planejamento/export?mes=2024-01", headers={"X-Role": "ROLE_USER"})
     assert resp.status_code == 200
     wb = load_workbook(filename=io.BytesIO(resp.data))
     ws = wb.active
     assert ws.title == "Planejamento"
     assert ws.cell(row=2, column=1).value == "05/01/2024"
-    assert ws.cell(row=2, column=4).value == "Instrutor Teste"
+    assert ws.cell(row=2, column=7).value == "Instrutor Teste"
 
-def test_api_planejamento_import(client, login_admin):
+def test_api_planejamento_import(client):
     wb = Workbook()
     ws = wb.active
     ws.append([
@@ -68,13 +66,11 @@ def test_api_planejamento_import(client, login_admin):
     wb.save(stream)
     stream.seek(0)
     data = {"file": (stream, "import.xlsx")}
-    token, _ = login_admin(client)
-    headers = {"Authorization": f"Bearer {token}"}
     resp = client.post(
-        "/planejamento/api/planejamento/import",
+        "/api/planejamento/import",
         data=data,
         content_type="multipart/form-data",
-        headers=headers,
+        headers={"X-Role": "ROLE_ADMIN"},
     )
     assert resp.status_code == 200
     assert resp.json["ok"] is True
@@ -87,7 +83,7 @@ def test_api_planejamento_import(client, login_admin):
         assert instrutor.nome == "Instrutor Novo"
 
 
-def test_api_planejamento_conflict(client, login_admin):
+def test_api_planejamento_conflict(client):
     with client.application.app_context():
         instr = Instrutor(nome="Instrutor Conflito")
         db.session.add(instr)
@@ -108,22 +104,20 @@ def test_api_planejamento_conflict(client, login_admin):
         db.session.add_all([p1, p2])
         db.session.commit()
         pid2 = p2.id
-    token, _ = login_admin(client)
-    headers = {"Authorization": f"Bearer {token}"}
     resp = client.post(
-        "/planejamento/api/planejamento",
+        "/api/planejamento",
         json={
             "data": "2024-01-01",
             "turno": "MANHA",
             "treinamento": "Curso X",
             "instrutor_id": instr_id,
         },
-        headers=headers,
+        headers={"X-Role": "ROLE_ADMIN"},
     )
     assert resp.status_code == 409
     resp2 = client.put(
-        f"/planejamento/api/planejamento/{pid2}",
+        f"/api/planejamento/{pid2}",
         json={"data": "2024-01-01", "turno": "MANHA"},
-        headers=headers,
+        headers={"X-Role": "ROLE_ADMIN"},
     )
     assert resp2.status_code == 409

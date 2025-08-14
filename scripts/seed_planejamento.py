@@ -1,13 +1,9 @@
 from datetime import date
-import os
 
-os.environ.setdefault("SECRET_KEY", "dev")
-
-from src.main import create_app
-from src.models import db, Planejamento
+from app import app
+from app.extensions import db
+from app.planejamento.models import Planejamento
 from src.models.instrutor import Instrutor
-
-app = create_app()
 
 
 def run():

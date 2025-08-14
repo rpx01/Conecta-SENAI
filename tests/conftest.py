@@ -24,6 +24,7 @@ from src.routes.ocupacao import sala_bp, instrutor_bp, ocupacao_bp
 from src.routes.treinamentos import turma_bp, treinamento_bp
 from src.routes.laboratorios import agendamento_bp, laboratorio_bp
 from src.routes.rateio.rateio import rateio_bp
+from app.planejamento import bp as planejamento_bp
 
 @pytest.fixture
 def app():
@@ -45,6 +46,7 @@ def app():
     app.register_blueprint(ocupacao_bp, url_prefix='/api')
     app.register_blueprint(laboratorio_bp, url_prefix='/api')
     app.register_blueprint(rateio_bp, url_prefix='/api')
+    app.register_blueprint(planejamento_bp)
 
     with app.app_context():
         db.create_all()

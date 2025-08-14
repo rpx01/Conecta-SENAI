@@ -1,18 +1,8 @@
 """Rotas web para o módulo de planejamento."""
-from datetime import date
-from flask import render_template, g, request
+from flask import render_template
 
 from app.auth import require_roles, ROLE_ADMIN, ROLE_GESTOR, ROLE_USER
 from app.planejamento import bp
-
-
-@bp.app_context_processor
-def inject_globals():
-    role = getattr(g, "current_role", request.headers.get("X-Role"))
-    return {
-        "user_role": role,
-        "current_year_month": date.today().strftime("%Y-%m"),
-    }
 
 
 @bp.route("/")

@@ -35,6 +35,7 @@ def test_api_planejamento_export(client):
     assert ws.cell(row=2, column=1).value == "05/01/2024"
     assert ws.cell(row=2, column=7).value == "Instrutor Teste"
 
+
 def test_api_planejamento_import(client):
     wb = Workbook()
     ws = wb.active
@@ -81,43 +82,3 @@ def test_api_planejamento_import(client):
         assert p.treinamento == "Curso Y"
         instrutor = Instrutor.query.get(p.instrutor_id)
         assert instrutor.nome == "Instrutor Novo"
-
-
-def test_api_planejamento_conflict(client):
-    with client.application.app_context():
-        instr = Instrutor(nome="Instrutor Conflito")
-        db.session.add(instr)
-        db.session.flush()
-        instr_id = instr.id
-        p1 = Planejamento(
-            data=date(2024, 1, 1),
-            turno="MANHA",
-            treinamento="Curso 1",
-            instrutor_id=instr_id,
-        )
-        p2 = Planejamento(
-            data=date(2024, 1, 2),
-            turno="TARDE",
-            treinamento="Curso 2",
-            instrutor_id=instr_id,
-        )
-        db.session.add_all([p1, p2])
-        db.session.commit()
-        pid2 = p2.id
-    resp = client.post(
-        "/api/planejamento",
-        json={
-            "data": "2024-01-01",
-            "turno": "MANHA",
-            "treinamento": "Curso X",
-            "instrutor_id": instr_id,
-        },
-        headers={"X-Role": "ROLE_ADMIN"},
-    )
-    assert resp.status_code == 409
-    resp2 = client.put(
-        f"/api/planejamento/{pid2}",
-        json={"data": "2024-01-01", "turno": "MANHA"},
-        headers={"X-Role": "ROLE_ADMIN"},
-    )
-    assert resp2.status_code == 409

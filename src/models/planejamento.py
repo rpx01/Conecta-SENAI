@@ -1,7 +1,5 @@
-"""Modelos para o módulo de planejamento."""
 from sqlalchemy import UniqueConstraint
-
-from app.extensions import db
+from . import db
 
 
 class Planejamento(db.Model):
@@ -43,7 +41,7 @@ class Planejamento(db.Model):
     criado_em = db.Column(db.DateTime, server_default=db.func.now())
     atualizado_em = db.Column(db.DateTime, onupdate=db.func.now())
 
-    instrutor = db.relationship("Instrutor", backref="planejamentos")
+    instrutor = db.relationship("Instrutor", backref=db.backref("planejamentos", lazy=True))
 
     __table_args__ = (
         UniqueConstraint(
@@ -53,3 +51,20 @@ class Planejamento(db.Model):
             name="uq_planejamento_slot_instrutor",
         ),
     )
+
+    def to_dict(self):
+        """Converte o objeto para um dicionário."""
+        return {
+            "id": self.id,
+            "data": self.data.isoformat(),
+            "turno": self.turno,
+            "carga_horas": self.carga_horas,
+            "modalidade": self.modalidade,
+            "treinamento": self.treinamento,
+            "instrutor_id": self.instrutor_id,
+            "instrutor": self.instrutor.nome if self.instrutor else None,
+            "local": self.local,
+            "cliente": self.cliente,
+            "observacao": self.observacao,
+            "status": self.status,
+        }

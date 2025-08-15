@@ -556,6 +556,21 @@ redis = ["limits[redis]"]
 valkey = ["limits[valkey]"]
 
 [[package]]
+name = "flask-mail"
+version = "0.9.1"
+description = "Flask extension for sending email"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "Flask-Mail-0.9.1.tar.gz", hash = "sha256:22e5eb9a940bf407bcf30410ecc3708f3c56cc44b29c34e1726fe85006935f41"},
+]
+
+[package.dependencies]
+blinker = "*"
+Flask = "*"
+
+[[package]]
 name = "flask-migrate"
 version = "4.0.5"
 description = "SQLAlchemy database migrations for Flask applications using Alembic."
@@ -2073,4 +2088,4 @@ email = ["email-validator"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.13"
-content-hash = "cb0ab37bdb7ac6161d20b4dbd069e256184265507b50166bb1d256aa532963c2"
+content-hash = "f95343837e4a139fc3610496575d57d29c1371a5523d4d7d6dc9529b82214b49"

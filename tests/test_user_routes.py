@@ -2,6 +2,7 @@
 import jwt
 import uuid
 import logging
+import re
 from datetime import datetime, timedelta
 from src.models import db
 from src.models.user import User
@@ -501,3 +502,21 @@ def test_root_admin_can_delete_admin(client, login_admin):
     resp_delete = client.delete(f'/api/usuarios/{admin3_id}', headers=headers_root)
     assert resp_delete.status_code == 200
     assert resp_delete.get_json()['mensagem'] == 'Usuário removido com sucesso'
+
+
+def test_register_page_sets_csrf_cookie(client):
+    resp = client.get('/register')
+    assert resp.status_code == 200
+    html = resp.get_data(as_text=True)
+    match = re.search(r'name="csrf_token" value="([^"]+)"', html)
+    assert match is not None
+    token = match.group(1)
+    data = {
+        'nome': 'Registro',
+        'email': 'registro@example.com',
+        'senha': 'Senha@123',
+        'confirmarSenha': 'Senha@123'
+    }
+    resp_post = client.post('/api/registrar', json=data, headers={'X-CSRFToken': token})
+    assert resp_post.status_code == 201
+    assert resp_post.get_json()['mensagem'] == 'Usuário registrado com sucesso'

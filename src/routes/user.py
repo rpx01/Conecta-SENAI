@@ -58,9 +58,10 @@ def verificar_csrf():
 @user_bp.route("/csrf-token", methods=["GET"])
 def get_csrf_token():
     token = generate_csrf()
-    secure_cookie = current_app.config.get("COOKIE_SECURE", True)
+    secure_cookie = current_app.config.get("COOKIE_SECURE", False)
+    samesite = current_app.config.get("COOKIE_SAMESITE", "Lax")
     resp = jsonify({"csrf_token": token})
-    resp.set_cookie("csrf_token", token, secure=secure_cookie, samesite="Strict")
+    resp.set_cookie("csrf_token", token, secure=secure_cookie, samesite=samesite)
     return resp
 
 

@@ -281,13 +281,14 @@ def criar_usuario():
 
 @user_bp.route("/registrar", methods=["POST"])
 def registrar_usuario():
-    """Registra um usuário a partir de um formulário HTML."""
+    """Registra um usuário a partir de um formulário HTML ou JSON."""
+    origem = request.get_json() if request.is_json else request.form
     dados = {
-        "nome": request.form.get("nome", "").strip(),
-        "email": request.form.get("email", "").strip(),
-        "senha": request.form.get("senha"),
-        "confirmarSenha": request.form.get("confirmarSenha"),
-        "username": request.form.get("username"),
+        "nome": (origem.get("nome") or "").strip(),
+        "email": (origem.get("email") or "").strip(),
+        "senha": origem.get("senha"),
+        "confirmarSenha": origem.get("confirmarSenha"),
+        "username": origem.get("username"),
     }
 
     try:

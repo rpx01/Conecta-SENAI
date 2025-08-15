@@ -26,6 +26,7 @@ from src.routes.user import user_bp
 from src.routes.rateio import rateio_bp
 from src.routes.treinamentos import treinamento_bp, turma_bp
 from src.blueprints.auth_reset import auth_reset_bp
+from src.blueprints.auth import auth_bp
 from apscheduler.schedulers.background import BackgroundScheduler
 from src.services.notificacao_service import criar_notificacoes_agendamentos_proximos
 
@@ -165,6 +166,11 @@ def create_app():
             "SECRET_KEY environment variable must be set to a secure value for JWT signing"
         )
     app.config['SECRET_KEY'] = secret_key
+    app.config.update(
+        SESSION_COOKIE_SAMESITE="Lax",
+        SESSION_COOKIE_SECURE=not app.config.get('DEBUG', False),
+        WTF_CSRF_TIME_LIMIT=3600,
+    )
 
     db.init_app(app)
     Migrate(app, db, directory=migrations_dir)
@@ -212,6 +218,7 @@ def create_app():
     app.register_blueprint(rateio_bp, url_prefix='/api')
     app.register_blueprint(treinamento_bp, url_prefix='/api')
     app.register_blueprint(auth_reset_bp)
+    app.register_blueprint(auth_bp)
 
     # Inicia scheduler para notificações
     iniciar_scheduler(app)

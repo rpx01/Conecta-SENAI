@@ -321,7 +321,7 @@ async function verificarPermissaoAdmin() {
 // evitando loops na página de login ou registro.
 (async function() {
     const currentPage = window.location.pathname;
-    const paginasPublicas = ['/admin/login.html', '/register.html'];
+    const paginasPublicas = ['/admin/login.html', '/register'];
 
     // Se a página não for pública, valida a sessão no servidor
     if (!paginasPublicas.includes(currentPage)) {
@@ -755,7 +755,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
     
-    if (paginaAtual === '/admin/login.html' || paginaAtual === '/register.html') {
+    if (paginaAtual === '/admin/login.html' || paginaAtual === '/register') {
         return;
     }
     

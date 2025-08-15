@@ -24,10 +24,16 @@ from src.routes.ocupacao import sala_bp, instrutor_bp, ocupacao_bp
 from src.routes.treinamentos import turma_bp, treinamento_bp
 from src.routes.laboratorios import agendamento_bp, laboratorio_bp
 from src.routes.rateio.rateio import rateio_bp
+from src.blueprints.auth import auth_bp
 
 @pytest.fixture
 def app():
-    app = Flask(__name__)
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    app = Flask(
+        __name__,
+        template_folder=os.path.join(base_dir, 'src', 'templates'),
+        static_folder=os.path.join(base_dir, 'src', 'static')
+    )
     app.config['TESTING'] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -45,6 +51,7 @@ def app():
     app.register_blueprint(ocupacao_bp, url_prefix='/api')
     app.register_blueprint(laboratorio_bp, url_prefix='/api')
     app.register_blueprint(rateio_bp, url_prefix='/api')
+    app.register_blueprint(auth_bp)
 
     with app.app_context():
         db.create_all()

@@ -172,6 +172,15 @@ def create_app():
         WTF_CSRF_TIME_LIMIT=3600,
     )
 
+    cookie_secure_env = os.getenv('COOKIE_SECURE')
+    if cookie_secure_env is None:
+        cookie_secure = not app.config.get('DEBUG', False)
+    else:
+        cookie_secure = cookie_secure_env.lower() in ('true', '1', 't')
+    cookie_samesite = os.getenv('COOKIE_SAMESITE', 'Strict' if cookie_secure else 'Lax')
+    app.config['COOKIE_SECURE'] = cookie_secure
+    app.config['COOKIE_SAMESITE'] = cookie_samesite
+
     db.init_app(app)
     Migrate(app, db, directory=migrations_dir)
     init_redis(app)

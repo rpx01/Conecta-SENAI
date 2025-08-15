@@ -8,7 +8,8 @@ auth_bp = Blueprint("auth", __name__)
 def register_page():
     """Renderiza a página de registro e define o cookie CSRF."""
     token = generate_csrf()
-    secure_cookie = current_app.config.get("COOKIE_SECURE", True)
+    secure_cookie = current_app.config.get("COOKIE_SECURE", False)
+    samesite = current_app.config.get("COOKIE_SAMESITE", "Lax")
     resp = make_response(render_template("admin/register.html", csrf_token=token))
-    resp.set_cookie("csrf_token", token, secure=secure_cookie, samesite="Strict")
+    resp.set_cookie("csrf_token", token, secure=secure_cookie, samesite=samesite)
     return resp

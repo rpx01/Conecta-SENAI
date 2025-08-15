@@ -13,6 +13,7 @@ from src.limiter import limiter
 from src.redis_client import init_redis
 from src.config import DevConfig, ProdConfig, TestConfig
 from src.repositories.user_repository import UserRepository
+from src.extensions import mail
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
@@ -24,6 +25,7 @@ from src.routes.ocupacao import ocupacao_bp, sala_bp, instrutor_bp
 from src.routes.user import user_bp
 from src.routes.rateio import rateio_bp
 from src.routes.treinamentos import treinamento_bp, turma_bp
+from src.blueprints.auth_reset import auth_reset_bp
 from apscheduler.schedulers.background import BackgroundScheduler
 from src.services.notificacao_service import criar_notificacoes_agendamentos_proximos
 
@@ -170,6 +172,7 @@ def create_app():
     limiter.init_app(app)
     app.config['WTF_CSRF_CHECK_DEFAULT'] = False
     csrf.init_app(app)
+    mail.init_app(app)
 
     app.config['SWAGGER'] = {
         'title': 'Conecta SENAI API',
@@ -208,6 +211,7 @@ def create_app():
     app.register_blueprint(ocupacao_bp, url_prefix='/api')
     app.register_blueprint(rateio_bp, url_prefix='/api')
     app.register_blueprint(treinamento_bp, url_prefix='/api')
+    app.register_blueprint(auth_reset_bp)
 
     # Inicia scheduler para notificações
     iniciar_scheduler(app)

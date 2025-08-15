@@ -111,8 +111,7 @@ function obterModulosDisponiveis(usuario) {
     const modulos = [
         '/laboratorios/dashboard.html',
         '/treinamentos/index.html',
-        '/ocupacao/dashboard.html',
-        '/static/planejamento-treinamentos.html'
+        '/ocupacao/dashboard.html'
     ];
 
     if (usuario.tipo === 'admin') {

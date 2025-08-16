@@ -347,23 +347,14 @@ async function verificarPermissaoAdmin() {
  * @returns {Promise} - Promise com o resultado da chamada
  */
 async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = true) {
-    let csrfToken;
-    if (method !== 'GET') {
-        const metaTag = document.querySelector('meta[name="csrf-token"]');
-        csrfToken = metaTag?.content;
-        if (!csrfToken || csrfToken.includes('{{')) {
-            csrfToken = await obterCsrfToken();
-            if (metaTag) {
-                metaTag.setAttribute('content', csrfToken);
-            }
-        }
-    }
+    // Busca o token da meta tag que adicionamos no HTML
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
     const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Content-Type': 'application/json'
     };
-
+    
+    // Adiciona o cabeçalho CSRF se o método não for GET e o token existir
     if (method !== 'GET' && csrfToken) {
         headers['X-CSRFToken'] = csrfToken;
     }

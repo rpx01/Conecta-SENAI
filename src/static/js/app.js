@@ -51,20 +51,31 @@ async function executarComLoading(acao) {
     }
 }
 
+// Variável global para armazenar o token CSRF e evitar múltiplas buscas
+let csrfToken = null;
+
 /**
- * Obtém um token CSRF do backend.
- * @returns {Promise<string>} Token CSRF ou string vazia em caso de erro
+ * Busca o token CSRF da API e o armazena globalmente.
+ * @returns {Promise<string>} O token CSRF.
  */
-async function obterCsrfToken() {
+async function getCsrfToken() {
+    if (csrfToken) {
+        return csrfToken; // Retorna o token se já foi buscado
+    }
     try {
         const resp = await fetch(`${API_URL}/csrf-token`, {
             credentials: 'include'
         });
-        const data = await resp.json().catch(() => null);
-        return data?.csrf_token || '';
+        if (!resp.ok) {
+            throw new Error('Falha ao obter o token CSRF.');
+        }
+        const data = await resp.json();
+        csrfToken = data.csrf_token; // Armazena o token na variável global
+        return csrfToken;
     } catch (err) {
-        console.error('Erro ao obter CSRF token:', err);
-        return '';
+        console.error(err);
+        showToast('Erro de segurança. Não foi possível carregar o token CSRF.', 'danger');
+        throw err; // Propaga o erro
     }
 }
 
@@ -149,7 +160,7 @@ function redirecionarAposLogin(usuario) {
  */
 async function realizarLogin(email, senha, recaptchaToken = '') {
     try {
-        const csrfToken = await obterCsrfToken();
+        const csrfToken = await getCsrfToken();
         const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
             credentials: 'include',
@@ -203,7 +214,7 @@ async function realizarLogin(email, senha, recaptchaToken = '') {
  * Realiza o logout do usuário
  */
 function realizarLogout() {
-    obterCsrfToken().then(csrfToken => {
+    getCsrfToken().then(csrfToken => {
         fetch(`${API_URL}/logout`, {
             method: 'POST',
             credentials: 'include',
@@ -347,16 +358,18 @@ async function verificarPermissaoAdmin() {
  * @returns {Promise} - Promise com o resultado da chamada
  */
 async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = true) {
-    // Busca o token da meta tag que adicionamos no HTML
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-
     const headers = {
         'Content-Type': 'application/json'
     };
-    
-    // Adiciona o cabeçalho CSRF se o método não for GET e o token existir
-    if (method !== 'GET' && csrfToken) {
-        headers['X-CSRFToken'] = csrfToken;
+
+    // Garante que o token CSRF seja obtido para métodos que alteram dados
+    if (method !== 'GET') {
+        try {
+            const token = await getCsrfToken();
+            headers['X-CSRFToken'] = token;
+        } catch (error) {
+            return Promise.reject('Ação cancelada devido a um erro de segurança.');
+        }
     }
     
     // Garante que o endpoint comece com /

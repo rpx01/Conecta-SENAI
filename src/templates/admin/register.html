@@ -102,68 +102,53 @@
       document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('form-registro');
         const btnRegistrar = document.getElementById('btn-registrar');
-        const btnText = document.getElementById('btn-text');
-        const btnSpinner = document.getElementById('btn-spinner');
 
         form.addEventListener('submit', function (event) {
-          event.preventDefault(); // Impede o envio padrão do formulário
+          event.preventDefault();
 
-          // Desabilita o botão para evitar cliques duplos
-          btnRegistrar.disabled = true;
-          btnText.textContent = 'Registrando...';
-          btnSpinner.classList.remove('d-none');
+          const dadosForm = {
+            nome: document.getElementById('nome').value,
+            email: document.getElementById('email').value,
+            senha: document.getElementById('senha').value,
+            confirmarSenha: document.getElementById('confirmarSenha').value
+          };
 
-          const formData = new FormData(form);
-          const data = Object.fromEntries(formData.entries());
-          
-          // Pega o token CSRF do campo oculto no formulário
-          const csrfToken = data.csrf_token;
+          // Usa a função global para feedback visual no botão
+          executarAcaoComFeedback(btnRegistrar, async () => {
+            try {
+              const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+              const response = await fetch('/api/registrar', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(dadosForm)
+              });
 
-          fetch('/api/registrar', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': csrfToken // Adiciona o token CSRF ao cabeçalho
-            },
-            body: JSON.stringify({
-                nome: data.nome,
-                email: data.email,
-                senha: data.senha,
-                confirmarSenha: data.confirmarSenha
-            })
-          })
-          .then(response => {
-            if (response.headers.get("content-type") && response.headers.get("content-type").includes("application/json")) {
-                return response.json();
+              // ANÁLISE ROBUSTA DA RESPOSTA
+              if (response.headers.get("content-type")?.includes("application/json")) {
+                  const result = await response.json();
+                  if (!response.ok) {
+                      throw new Error(result.erro || 'Ocorreu um erro desconhecido.');
+                  }
+                  showToast(result.sucesso || 'Usuário registrado com sucesso!', 'success');
+                  setTimeout(() => { window.location.href = '/admin/login.html'; }, 2000);
+              } else {
+                  // Se a resposta não for JSON, trata como um erro de texto
+                  const text = await response.text();
+                  throw new Error("Resposta inesperada do servidor: " + text);
+              }
+
+            } catch (error) {
+              console.error('Erro na requisição de registro:', error);
+              showToast(error.message, 'danger');
+              // Lança o erro para que `executarAcaoComFeedback` saiba que falhou
+              throw error;
             }
-            // Se a resposta não for JSON, trata como um erro de texto
-            return response.text().then(text => { throw new Error("Resposta inesperada do servidor: " + text) });
-          })
-          .then(result => {
-            if (result.sucesso) {
-              showToast(result.sucesso, 'success');
-              setTimeout(() => {
-                window.location.href = '/admin/login.html';
-              }, 2000);
-            } else if (result.erro) {
-              showToast(result.erro, 'danger');
-            } else {
-              showToast('Ocorreu um erro desconhecido.', 'danger');
-            }
-          })
-          .catch(error => {
-            console.error('Erro na requisição:', error);
-            showToast('Falha na comunicação com o servidor. Verifique o console para mais detalhes.', 'danger');
-          })
-          .finally(() => {
-            // Reabilita o botão após a conclusão
-            btnRegistrar.disabled = false;
-            btnText.textContent = 'Registrar';
-            btnSpinner.classList.add('d-none');
           });
         });
       });
     </script>
-
-</body>
+    </body>
 </html>

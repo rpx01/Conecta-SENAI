@@ -347,22 +347,29 @@ async function verificarPermissaoAdmin() {
  * @returns {Promise} - Promise com o resultado da chamada
  */
 async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = true) {
+    // Busca o token da meta tag que adicionamos no HTML
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
     const headers = {
         'Content-Type': 'application/json'
     };
     
+    // Adiciona o cabeçalho CSRF se o método não for GET e o token existir
+    if (method !== 'GET' && csrfToken) {
+        headers['X-CSRFToken'] = csrfToken;
+    }
+    
     // Garante que o endpoint comece com /
     const endpointFormatado = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const url = `${API_URL}${endpointFormatado}`;
-    
-    
+
     const options = {
         method,
         headers,
         credentials: 'include'
     };
-    
-    if (body && (method === 'POST' || method === 'PUT')) {
+
+    if (body && (method === 'POST' || method === 'PUT' || method === 'DELETE')) { // Adicionado DELETE aqui
         options.body = JSON.stringify(body);
     }
     

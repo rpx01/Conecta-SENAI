@@ -119,8 +119,10 @@
               const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
               const response = await fetch('/api/registrar', {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                   'Content-Type': 'application/json',
+                  'Accept': 'application/json',
                   'X-CSRFToken': csrfToken
                 },
                 body: JSON.stringify(dadosForm)

@@ -305,9 +305,9 @@ def registrar_usuario():
     if erro:
         return jsonify(erro[0]), erro[1]
 
-    if "text/html" in request.accept_mimetypes:
-        return redirect("/admin/login.html")
-    return jsonify({"mensagem": "Usuário registrado com sucesso"}), 201
+    if request.is_json:
+        return jsonify({"mensagem": "Usuário registrado com sucesso"}), 201
+    return redirect("/admin/login.html")
 
 
 @user_bp.route("/usuarios/<int:id>", methods=["PUT"])

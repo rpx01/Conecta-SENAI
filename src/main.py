@@ -213,9 +213,7 @@ def create_app():
 
     # Configura chaves do reCAPTCHA (opcional)
     app.config['RECAPTCHA_SITE_KEY'] = os.getenv('RECAPTCHA_SITE_KEY') or os.getenv('SITE_KEY')
-    app.config['RECAPTCHA_SECRET_KEY'] = (
-        os.getenv('RECAPTCHA_SECRET_KEY') or os.getenv('CAPTCHA_SECRET_KEY')
-    )
+    app.config['RECAPTCHA_SECRET_KEY'] = os.getenv('RECAPTCHA_SECRET_KEY') or os.getenv('CAPTCHA_SECRET_KEY') or os.getenv('SECRET_KEY')
     app.config['RECAPTCHA_THRESHOLD'] = float(os.getenv('RECAPTCHA_THRESHOLD', '0.5'))
 
     app.register_blueprint(user_bp, url_prefix='/api')

@@ -92,7 +92,7 @@
                         <div class="card h-100">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h2 class="card-title mb-0"><i class="bi bi-person-badge me-2"></i>Instrutores</h2>
-                                <button class="btn btn-primary btn-sm" onclick="abrirModal('instrutor')"><i class="bi bi-plus-circle me-1"></i> Adicionar</button>
+                                <button class="btn btn-primary btn-sm" onclick="abrirModalInstrutor()"><i class="bi bi-plus-circle me-1"></i> Adicionar</button>
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive">
@@ -154,7 +154,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6 mb-4">
+                     <div class="col-md-6 mb-4">
                         <div class="card h-100">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h2 class="card-title mb-0"><i class="bi bi-hourglass-split me-2"></i>Carga Horária</h2>
@@ -200,6 +200,79 @@
         </div>
     </div>
 
+    <div class="modal fade" id="instrutorModal" tabindex="-1" aria-labelledby="instrutorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="instrutorModalLabel">Novo Instrutor</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formInstrutor">
+                        <input type="hidden" id="instrutorId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="instrutorNome" class="form-label">Nome *</label>
+                                    <input type="text" class="form-control" id="instrutorNome" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="instrutorEmail" class="form-label">E-mail *</label>
+                                    <input type="email" class="form-control" id="instrutorEmail" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="instrutorArea" class="form-label">Área de Atuação *</label>
+                                    <select class="form-select" id="instrutorArea" required></select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="instrutorStatus" class="form-label">Status</label>
+                                    <select class="form-select" id="instrutorStatus">
+                                        <option value="ativo">Ativo</option>
+                                        <option value="inativo">Inativo</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="instrutorObservacoes" class="form-label">Observações</label>
+                            <textarea class="form-control" id="instrutorObservacoes" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Disponibilidade</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="dispManha" value="manha">
+                                <label class="form-check-label" for="dispManha">Manhã</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="dispTarde" value="tarde">
+                                <label class="form-check-label" for="dispTarde">Tarde</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="dispNoite" value="noite">
+                                <label class="form-check-label" for="dispNoite">Noite</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnSalvarInstrutor">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        <span class="btn-text">Salvar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="confirmacaoModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -223,3 +296,4 @@
     <script src="/js/planejamento-basedados.js"></script>
 </body>
 </html>
+

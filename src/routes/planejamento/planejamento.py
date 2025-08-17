@@ -16,9 +16,12 @@ def listar_planejamentos():
     autenticado, _ = verificar_autenticacao(request)
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
-
-    itens = PlanejamentoItem.query.all()
-    return jsonify([item.to_dict() for item in itens])
+    try:
+        itens = PlanejamentoItem.query.all()
+        return jsonify([item.to_dict() for item in itens])
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return handle_internal_error(e)
 
 
 @planejamento_bp.route('/planejamento', methods=['POST'])

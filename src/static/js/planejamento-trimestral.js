@@ -1,8 +1,9 @@
-/* global bootstrap, showToast */
+/* global bootstrap, showToast, chamarAPI, escapeHTML */
+
 document.addEventListener('DOMContentLoaded', () => {
-    // -------------------
-    // Elementos do DOM
-    // -------------------
+    // ---
+    // Elementos do DOM (mantenha os existentes)
+    // ---
     const btnAdicionar = document.getElementById('btn-adicionar-planejamento');
     const tabelaPlanejamento = document.getElementById('tabela-planejamento-trimestral').getElementsByTagName('tbody')[0];
     const modalEl = document.getElementById('modal-planejamento');
@@ -10,20 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('form-planejamento');
     const contadorLinhasEl = document.getElementById('contador-linhas');
 
-    // Mapeamento dos campos do formulário para os IDs das tabelas na base de dados
-    const MAPEAMENTO_CAMPOS = {
-        horario: 'tabela-horario',
-        carga_horaria: 'tabela-cargahoraria',
-        modalidade: 'tabela-modalidade',
-        treinamento: 'tabela-treinamento',
-        cmd: 'tabela-publico-alvo',
-        sjb: 'tabela-publico-alvo',
-        sag_tombos: 'tabela-publico-alvo',
-        instrutor: 'tabela-instrutor',
-        local: 'tabela-local'
-    };
-    
-    // Cache para armazenar os dados da base de dados e evitar múltiplas buscas
+    // Cache para armazenar os dados da base de dados
     let cacheOpcoes = null;
 
     // -------------------
@@ -31,47 +19,36 @@ document.addEventListener('DOMContentLoaded', () => {
     // -------------------
 
     /**
-     * Busca e extrai as opções da página de base de dados.
-     * Utiliza um cache para evitar buscas repetidas na mesma sessão.
+     * Busca os dados para os selects da API.
+     * Utiliza um cache para evitar buscas repetidas.
      * @returns {Promise<Object>} Um objeto com as listas de opções.
      */
-    async function carregarOpcoesDaBaseDeDados() {
+    async function carregarOpcoesDaAPI() {
         if (cacheOpcoes) {
             return cacheOpcoes;
         }
 
         try {
-            const response = await fetch('/planejamento-basedados.html');
-            if (!response.ok) {
-                throw new Error('Não foi possível carregar a base de dados.');
-            }
-            const htmlText = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(htmlText, 'text/html');
-            
-            const dadosExtraidos = {};
+            // Faz chamadas concorrentes para a API para buscar todas as opções
+            const [dadosBase, treinamentos, instrutores] = await Promise.all([
+                chamarAPI('/planejamento/basedados'),
+                chamarAPI('/treinamentos/catalogo'),
+                chamarAPI('/instrutores')
+            ]);
 
-            // Helper para extrair texto da primeira célula de cada linha de uma tabela
-            const extrairOpcoes = (idTabela) => {
-                const tabelaBody = doc.getElementById(idTabela);
-                if (!tabelaBody) return [];
-                return Array.from(tabelaBody.querySelectorAll('tr'))
-                    .map((tr) => tr.cells[0]?.textContent.trim())
-                    .filter(Boolean);
+            cacheOpcoes = {
+                horario: dadosBase.horario || [],
+                carga_horaria: dadosBase.carga_horaria || [],
+                modalidade: dadosBase.modalidade || [],
+                local: dadosBase.local || [],
+                publico_alvo: dadosBase.publico_alvo || [],
+                treinamento: treinamentos.map(t => t.nome) || [],
+                instrutor: instrutores.map(i => i.nome) || []
             };
-
-            Object.keys(MAPEAMENTO_CAMPOS).forEach((campo) => {
-                const idTabela = MAPEAMENTO_CAMPOS[campo];
-                // Evita duplicar a busca para campos que usam a mesma tabela
-                if (!dadosExtraidos[idTabela]) {
-                    dadosExtraidos[idTabela] = extrairOpcoes(idTabela);
-                }
-            });
-
-            cacheOpcoes = dadosExtraidos;
+            
             return cacheOpcoes;
         } catch (error) {
-            console.error('Erro ao carregar base de dados:', error);
+            console.error('Erro ao carregar opções da API:', error);
             showToast('Erro ao carregar opções do formulário.', 'danger');
             return null;
         }
@@ -89,29 +66,34 @@ document.addEventListener('DOMContentLoaded', () => {
         opcoes.forEach((opcao) => {
             const optionEl = document.createElement('option');
             optionEl.value = opcao;
-            optionEl.textContent = opcao;
+            optionEl.textContent = escapeHTML(opcao);
             selectEl.appendChild(optionEl);
         });
     }
 
     /**
-     * Popula todos os selects do modal com os dados carregados da base.
+     * Popula todos os selects do modal com os dados carregados da API.
      */
     async function popularFormulario() {
-        const dados = await carregarOpcoesDaBaseDeDados();
+        const dados = await carregarOpcoesDaAPI();
         if (!dados) return;
 
-        Object.keys(MAPEAMENTO_CAMPOS).forEach((campo) => {
-            const selectEl = form.querySelector(`[name="${campo}"]`);
-            const idTabela = MAPEAMENTO_CAMPOS[campo];
-            popularSelect(selectEl, dados[idTabela], `Selecione um(a) ${campo}...`);
-        });
+        popularSelect(form.horario, dados.horario, 'Selecione um horário...');
+        popularSelect(form.carga_horaria, dados.carga_horaria, 'Selecione uma C.H...');
+        popularSelect(form.modalidade, dados.modalidade, 'Selecione uma modalidade...');
+        popularSelect(form.treinamento, dados.treinamento, 'Selecione um treinamento...');
+        popularSelect(form.instrutor, dados.instrutor, 'Selecione um instrutor...');
+        popularSelect(form.local, dados.local, 'Selecione um local...');
         
-        // Permite "nenhum" para os campos de público alvo
-        ['cmd', 'sjb', 'sag_tombos'].forEach((campo) => {
-            form.querySelector(`[name="${campo}"]`).options[0].textContent = 'Nenhum';
-        });
+        // Popula os campos de público alvo
+        popularSelect(form.cmd, dados.publico_alvo, 'Nenhum');
+        popularSelect(form.sjb, dados.publico_alvo, 'Nenhum');
+        popularSelect(form.sag_tombos, dados.publico_alvo, 'Nenhum');
     }
+
+    // --- Mantenha o restante das funções como estão ---
+    // (atualizarContadorLinhas, validarFormulario, ordenarTabela, salvarPlanejamento, removerLinha)
+    // ...
 
     /**
      * Calcula a diferença de dias entre duas datas e atualiza o contador de linhas.
@@ -185,17 +167,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!validarFormulario()) return;
 
         const dadosForm = Object.fromEntries(new FormData(form).entries());
-        const dataInicio = new Date(`${dadosForm.inicio}T00:00:00-03:00`); // Ajuste para fuso
+        const dataInicio = new Date(`${dadosForm.inicio}T00:00:00-03:00`);
         const dataFim = new Date(`${dadosForm.fim}T00:00:00-03:00`);
 
-        // Loop para criar uma linha por dia no intervalo
         for (let d = new Date(dataInicio); d <= dataFim; d.setDate(d.getDate() + 1)) {
             const dataAtual = new Date(d);
             const dataFormatada = dataAtual.toISOString().split('T')[0];
             const diaSemana = dataAtual.toLocaleDateString('pt-BR', { weekday: 'long' });
 
             const newRow = tabelaPlanejamento.insertRow();
-            newRow.dataset.date = dataFormatada; // Atributo para ordenação
+            newRow.dataset.date = dataFormatada;
 
             newRow.innerHTML = `
                 <td>${dataFormatada.split('-').reverse().join('/')}</td>
@@ -238,11 +219,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+
     // -------------------
     // Event Listeners
     // -------------------
     btnAdicionar.addEventListener('click', () => {
-        // Popula o formulário ao abrir o modal, se ainda não tiver sido populado
         if (!cacheOpcoes) {
             popularFormulario();
         }
@@ -252,7 +233,6 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', salvarPlanejamento);
     tabelaPlanejamento.addEventListener('click', removerLinha);
 
-    // Listeners para atualizar o contador de linhas em tempo real
     form.inicio.addEventListener('change', atualizarContadorLinhas);
     form.fim.addEventListener('change', atualizarContadorLinhas);
 });

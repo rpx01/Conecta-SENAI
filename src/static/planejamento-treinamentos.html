@@ -16,7 +16,7 @@
                 <img src="/img/senai-logo.png" alt="SENAI" height="28" class="me-2">
                 <span class="navbar-brand-text" title="Planejamento de Treinamentos">Sistema FIEMG | Planejamento de Treinamentos</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar" aria-label="Abrir menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -38,7 +38,17 @@
                             <span id="userName">Usuário</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="#" id="btnLogout"><i class="bi bi-box-arrow-right me-2"></i>Sair</a></li>
+                            <li>
+                                <a class="dropdown-item" href="/planejamento/perfil.html">
+                                    <i class="bi bi-person me-2"></i> Meu Perfil
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="#" id="btnLogout">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Sair
+                                </a>
+                            </li>
                         </ul>
                     </li>
                 </ul>
@@ -52,9 +62,9 @@
                 <div class="sidebar rounded shadow-sm">
                     <h2 class="mb-3">Menu de Planejamento</h2>
                     <div class="nav flex-column">
-                        <a class="nav-link active" href="/static/planejamento-treinamentos.html"><i class="bi bi-card-list me-2"></i> Treinamentos Disponíveis</a>
-                        <a class="nav-link" href="/static/planejamento-trimestral.html"><i class="bi bi-calendar-range me-2"></i> Planejamento Trimestral</a>
-                        <a class="nav-link" href="/static/planejamento-instrutores.html"><i class="bi bi-person-workspace me-2"></i> Planejamento por Instrutor</a>
+                        <a class="nav-link active" href="/planejamento-treinamentos.html"><i class="bi bi-card-list me-2"></i> Treinamentos Disponíveis</a>
+                        <a class="nav-link" href="/planejamento-trimestral.html"><i class="bi bi-calendar-range me-2"></i> Planejamento Trimestral</a>
+                        <a class="nav-link" href="/planejamento-instrutores.html"><i class="bi bi-person-workspace me-2"></i> Planejamento por Instrutor</a>
                     </div>
                 </div>
             </div>

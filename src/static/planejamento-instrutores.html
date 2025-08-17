@@ -6,6 +6,7 @@
     <title>Planejamento por Instrutores - Sistema FIEMG</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/brand.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="/css/styles.css" rel="stylesheet">
 </head>
 <body>
@@ -21,25 +22,23 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/planejamento-treinamentos.html"><i data-lucide="list" class="me-1"></i> Treinamentos Disponíveis</a>
+                        <a class="nav-link" href="/planejamento-treinamentos.html"><i class="bi bi-card-list me-1"></i> Treinamentos Disponíveis</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/planejamento-trimestral.html"><i data-lucide="calendar-range" class="me-1"></i> Planejamento Trimestral</a>
+                        <a class="nav-link" href="/planejamento-trimestral.html"><i class="bi bi-calendar-range me-1"></i> Planejamento Trimestral</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/planejamento-instrutores.html"><i data-lucide="briefcase" class="me-1"></i> Planejamento por Instrutor</a>
+                        <a class="nav-link active" href="/planejamento-instrutores.html"><i class="bi bi-person-workspace me-1"></i> Planejamento por Instrutor</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i data-lucide="user-round" class="me-1"></i>
+                            <i class="bi bi-person-circle me-1"></i>
                             <span id="userName">Usuário</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="/admin/perfil.html"><i data-lucide="user" class="me-2"></i>Meu Perfil</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#" onclick="realizarLogout()"><i data-lucide="log-out" class="me-2"></i>Sair</a></li>
+                            <li><a class="dropdown-item" href="#" id="btnLogout"><i class="bi bi-box-arrow-right me-2"></i>Sair</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -53,9 +52,9 @@
                 <div class="sidebar rounded shadow-sm">
                     <h2 class="mb-3">Menu de Planejamento</h2>
                     <div class="nav flex-column">
-                        <a class="nav-link" href="/planejamento-treinamentos.html"><i data-lucide="list" class="me-2"></i> Treinamentos Disponíveis</a>
-                        <a class="nav-link" href="/planejamento-trimestral.html"><i data-lucide="calendar-range" class="me-2"></i> Planejamento Trimestral</a>
-                        <a class="nav-link active" href="/planejamento-instrutores.html"><i data-lucide="briefcase" class="me-2"></i> Planejamento por Instrutor</a>
+                        <a class="nav-link" href="/static/planejamento-treinamentos.html"><i class="bi bi-card-list me-2"></i> Treinamentos Disponíveis</a>
+                        <a class="nav-link" href="/static/planejamento-trimestral.html"><i class="bi bi-calendar-range me-2"></i> Planejamento Trimestral</a>
+                        <a class="nav-link active" href="/static/planejamento-instrutores.html"><i class="bi bi-person-workspace me-2"></i> Planejamento por Instrutor</a>
                     </div>
                 </div>
             </div>
@@ -68,8 +67,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="/js/app.js"></script>
-    <script>lucide.createIcons({attrs:{strokeWidth:1.75}})</script>
 </body>
 </html>

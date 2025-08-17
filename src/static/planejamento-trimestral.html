@@ -67,111 +67,13 @@
             <main class="col-lg-9 col-md-12">
                 <div class="page-header">
                     <h1 class="mb-0">Planejamento Trimestral</h1>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAdicionarTreinamento">
-                        <i class="bi bi-plus-circle me-2"></i>Adicionar Treinamento
-                    </button>
-                </div>
-
-                <div class="card mt-4">
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead class="table-primary">
-                                    <tr>
-                                        <th>Início</th>
-                                        <th>Término</th>
-                                        <th>Semana</th>
-                                        <th>Horário</th>
-                                        <th>C.H.</th>
-                                        <th>Modalidade</th>
-                                        <th>Treinamentos</th>
-                                        <th>CMD</th>
-                                        <th>SJB</th>
-                                        <th>SAG/TOMBOS</th>
-                                        <th>Instrutor</th>
-                                        <th>Local</th>
-                                        <th>Observação</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabela-planejamento-body">
-                                    </tbody>
-                            </table>
-                        </div>
-                    </div>
                 </div>
             </main>
         </div>
     </div>
 
-    <div class="modal fade" id="modalAdicionarTreinamento" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 class="modal-title" id="modalLabel">Adicionar Novo Treinamento</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="form-treinamento">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="data-inicio" class="form-label">Data de Início</label>
-                                <input type="date" class="form-control" id="data-inicio" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="data-termino" class="form-label">Data de Término</label>
-                                <input type="date" class="form-control" id="data-termino" required>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="select-treinamento" class="form-label">Treinamento</label>
-                                <select id="select-treinamento" class="form-select" required></select>
-                            </div>
-                             <div class="col-md-6 mb-3">
-                                <label for="select-instrutor" class="form-label">Instrutor</label>
-                                <select id="select-instrutor" class="form-select" required></select>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="select-horario" class="form-label">Horário</label>
-                                <select id="select-horario" class="form-select" required></select>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="select-carga-horaria" class="form-label">Carga Horária</label>
-                                <select id="select-carga-horaria" class="form-select" required></select>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="select-modalidade" class="form-label">Modalidade</label>
-                                <select id="select-modalidade" class="form-select" required></select>
-                            </div>
-                        </div>
-                         <div class="mb-3">
-                            <label for="select-local" class="form-label">Local</label>
-                            <select id="select-local" class="form-select" required></select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Público Alvo</label>
-                            <div id="checkbox-publico-alvo">
-                                </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="observacao" class="form-label">Observação</label>
-                            <textarea id="observacao" class="form-control" rows="3"></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="btn-salvar-treinamento">Salvar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/app.js"></script>
-    <script src="/js/planejamento-basedados.js"></script>
-    <script src="/js/planejamento-trimestral.js"></script>
 </body>
 </html>
+

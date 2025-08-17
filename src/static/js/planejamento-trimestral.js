@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.form.fim.addEventListener('change', () => this.atualizarContadorLinhas());
 
             this.popularFormulario(); // Pré-carrega os selects
+            this.carregarPlanejamentos();
         },
 
         // --- FUNÇÕES DE CARREGAMENTO E RENDERIZAÇÃO ---
@@ -85,6 +86,16 @@ document.addEventListener('DOMContentLoaded', () => {
             this.popularSelect(this.form.cmd, dados.publico_alvo, 'Nenhum');
             this.popularSelect(this.form.sjb, dados.publico_alvo, 'Nenhum');
             this.popularSelect(this.form.sag_tombos, dados.publico_alvo, 'Nenhum');
+        },
+
+        async carregarPlanejamentos() {
+            try {
+                const dados = await chamarAPI('/planejamento');
+                this.planejamentos = Array.isArray(dados) ? dados : [];
+                this.renderizarTabela();
+            } catch (error) {
+                showToast('Erro ao carregar planejamentos.', 'danger');
+            }
         },
 
         renderizarTabela() {
@@ -164,24 +175,25 @@ document.addEventListener('DOMContentLoaded', () => {
             this.modal.show();
         },
 
-        salvar(event) {
+        async salvar(event) {
             event.preventDefault();
             if (!this.validarFormulario()) return;
 
             const modo = this.modalEl.dataset.mode;
             if (modo === 'edit') {
-                this.executarEdicao();
+                await this.executarEdicao();
             } else {
-                this.executarAdicao();
+                await this.executarAdicao();
             }
         },
 
-        executarAdicao() {
+        async executarAdicao() {
             const dadosForm = Object.fromEntries(new FormData(this.form).entries());
             const dataInicio = new Date(`${dadosForm.inicio}T12:00:00Z`);
             const dataFim = new Date(`${dadosForm.fim}T12:00:00Z`);
             const loteId = this.gerarUUID();
 
+            const novosItens = [];
             for (let d = new Date(dataInicio); d <= dataFim; d.setDate(d.getDate() + 1)) {
                 const dataAtual = new Date(d);
                 const novoItem = {
@@ -201,19 +213,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     observacao: dadosForm.observacao
                 };
                 this.planejamentos.push(novoItem);
+                novosItens.push(novoItem);
             }
-            showToast('Lote de planejamento adicionado com sucesso!', 'success');
+            try {
+                await Promise.all(novosItens.map(item => chamarAPI('/planejamento', 'POST', item)));
+                showToast('Lote de planejamento adicionado com sucesso!', 'success');
+            } catch (error) {
+                showToast('Erro ao salvar planejamento.', 'danger');
+            }
             this.finalizarAcao();
         },
 
-        executarEdicao() {
+        async executarEdicao() {
             const rowId = this.modalEl.dataset.rowId;
             const itemIndex = this.planejamentos.findIndex(p => p.rowId === rowId);
 
             if (itemIndex > -1) {
                 const dadosForm = Object.fromEntries(new FormData(this.form).entries());
                 const dataAtualizada = new Date(`${dadosForm.inicio}T12:00:00Z`);
-                
+
                 // Atualiza os dados do objeto no array
                 this.planejamentos[itemIndex] = {
                     ...this.planejamentos[itemIndex], // Mantém rowId e loteId
@@ -230,8 +248,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     local: dadosForm.local,
                     observacao: dadosForm.observacao
                 };
-                showToast('Item atualizado com sucesso!', 'success');
-                this.finalizarAcao();
+                try {
+                    await chamarAPI(`/planejamento/${rowId}`, 'PUT', this.planejamentos[itemIndex]);
+                    showToast('Item atualizado com sucesso!', 'success');
+                    this.finalizarAcao();
+                } catch (error) {
+                    showToast('Erro ao atualizar item.', 'danger');
+                }
             } else {
                 showToast('Erro: Item não encontrado para edição.', 'danger');
             }
@@ -254,11 +277,16 @@ document.addEventListener('DOMContentLoaded', () => {
             this.confirmacaoModal.show();
         },
         
-        executarExclusao() {
+        async executarExclusao() {
             if (this.loteParaExcluir) {
-                this.planejamentos = this.planejamentos.filter(p => p.loteId !== this.loteParaExcluir);
-                this.renderizarTabela();
-                showToast('Lote de planejamento excluído com sucesso!', 'info');
+                try {
+                    await chamarAPI(`/planejamento/lote/${this.loteParaExcluir}`, 'DELETE');
+                    this.planejamentos = this.planejamentos.filter(p => p.loteId !== this.loteParaExcluir);
+                    this.renderizarTabela();
+                    showToast('Lote de planejamento excluído com sucesso!', 'info');
+                } catch (error) {
+                    showToast('Erro ao excluir lote.', 'danger');
+                }
             }
             this.loteParaExcluir = null;
             this.confirmacaoModal.hide();

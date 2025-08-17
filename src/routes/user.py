@@ -39,7 +39,6 @@ RECAPTCHA_SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY") or os.getenv("SITE_KEY")
 RECAPTCHA_SECRET_KEY = (
     os.getenv("RECAPTCHA_SECRET_KEY")
     or os.getenv("CAPTCHA_SECRET_KEY")
-    or os.getenv("SECRET_KEY")
 )
 RECAPTCHA_THRESHOLD = float(os.getenv("RECAPTCHA_THRESHOLD", "0.5"))
 

@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- DADOS DE EXEMPLO (MOCK) ---
-    // Os dados dos instrutores agora virão da API.
-    // Mantemos os outros dados de exemplo por enquanto.
+    // Mantemos os dados que não vêm da API.
     const mockData = {
         treinamento: [
             { id: 1, nome: 'Gerenciamento de Risco' },
@@ -32,10 +31,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- VARIÁVEIS GLOBAIS ---
     const geralModal = new bootstrap.Modal(document.getElementById('geralModal'));
+    const instrutorModal = new bootstrap.Modal(document.getElementById('instrutorModal'));
     const confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
     let itemParaExcluir = { type: null, id: null };
+    let areasDeAtuacao = [];
 
-    // --- FUNÇÕES DE CARREGAMENTO DE DADOS ---
+    // ===================================================================
+    // LÓGICA PARA INSTRUTORES (MODAL COMPLETO)
+    // ===================================================================
+
+    /**
+     * Carrega as áreas de atuação da API para popular o select do modal.
+     */
+    async function carregarAreasParaModal() {
+        if (areasDeAtuacao.length > 0) return;
+        try {
+            areasDeAtuacao = await chamarAPI('/instrutores/areas-atuacao');
+            const select = document.getElementById('instrutorArea');
+            select.innerHTML = '<option value="">Selecione...</option>';
+            areasDeAtuacao.forEach(area => {
+                select.innerHTML += `<option value="${escapeHTML(area.valor)}">${escapeHTML(area.nome)}</option>`;
+            });
+        } catch (e) {
+            console.error('Falha ao carregar áreas de atuação:', e);
+            showToast('Não foi possível carregar as áreas de atuação.', 'danger');
+        }
+    }
 
     /**
      * Carrega os instrutores da API e renderiza a tabela.
@@ -43,29 +64,109 @@ document.addEventListener('DOMContentLoaded', () => {
     async function carregarInstrutoresDaAPI() {
         try {
             const instrutores = await chamarAPI('/instrutores');
-            renderizarTabela('instrutor', instrutores);
+            const tbody = document.getElementById('tabela-instrutor');
+            tbody.innerHTML = '';
+
+            if (instrutores.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" class="text-center text-muted">Nenhum instrutor cadastrado.</td></tr>`;
+                return;
+            }
+
+            instrutores.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${escapeHTML(item.nome)}</td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalInstrutor(${item.id})"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusao('instrutor', ${item.id})"><i class="bi bi-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
         } catch (error) {
             console.error('Falha ao carregar instrutores:', error);
             showToast('Não foi possível carregar a lista de instrutores.', 'danger');
-            const tbody = document.getElementById('tabela-instrutor');
-            if (tbody) {
-                tbody.innerHTML = `<tr><td colspan="2" class="text-center text-danger">Falha ao carregar dados.</td></tr>`;
-            }
         }
     }
 
-    // --- FUNÇÕES PRINCIPAIS ---
+    /**
+     * Abre o modal completo para adicionar ou editar um instrutor.
+     * @param {number|null} id - O ID do instrutor para edição.
+     */
+    window.abrirModalInstrutor = async (id = null) => {
+        await carregarAreasParaModal();
+        const form = document.getElementById('formInstrutor');
+        form.reset();
+        document.getElementById('instrutorModalLabel').textContent = id ? 'Editar Instrutor' : 'Novo Instrutor';
+        document.getElementById('instrutorId').value = id || '';
+
+        if (id) {
+            try {
+                const instrutor = await chamarAPI(`/instrutores/${id}`);
+                document.getElementById('instrutorNome').value = instrutor.nome;
+                document.getElementById('instrutorEmail').value = instrutor.email || '';
+                document.getElementById('instrutorArea').value = instrutor.area_atuacao || '';
+                document.getElementById('instrutorStatus').value = instrutor.status || 'ativo';
+                document.getElementById('instrutorObservacoes').value = instrutor.observacoes || '';
+                (instrutor.disponibilidade || []).forEach(d => {
+                    const el = document.getElementById(`disp${d.charAt(0).toUpperCase() + d.slice(1)}`);
+                    if (el) el.checked = true;
+                });
+            } catch(e) {
+                showToast(`Erro ao carregar dados do instrutor: ${e.message}`, 'danger');
+                return;
+            }
+        }
+        instrutorModal.show();
+    };
 
     /**
-     * Renderiza os dados nas tabelas da página.
-     * @param {string} type - O tipo de dado a ser renderizado (ex: 'treinamento').
-     * @param {Array} dados - A lista de dados a ser renderizada.
+     * Coleta os dados do formulário de instrutor e salva (cria ou atualiza).
      */
-    function renderizarTabela(type, dados) {
+    async function salvarInstrutor() {
+        const id = document.getElementById('instrutorId').value;
+        const disponibilidade = [];
+        if (document.getElementById('dispManha').checked) disponibilidade.push('manha');
+        if (document.getElementById('dispTarde').checked) disponibilidade.push('tarde');
+        if (document.getElementById('dispNoite').checked) disponibilidade.push('noite');
+
+        const body = {
+            nome: document.getElementById('instrutorNome').value,
+            email: document.getElementById('instrutorEmail').value,
+            area_atuacao: document.getElementById('instrutorArea').value,
+            status: document.getElementById('instrutorStatus').value,
+            observacoes: document.getElementById('instrutorObservacoes').value,
+            disponibilidade
+        };
+
+        if (!body.nome || !body.email) {
+            showToast('Nome e E-mail são obrigatórios.', 'warning');
+            return;
+        }
+
+        try {
+            const endpoint = id ? `/instrutores/${id}` : '/instrutores';
+            const method = id ? 'PUT' : 'POST';
+            await chamarAPI(endpoint, method, body);
+            showToast(`Instrutor ${id ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
+            instrutorModal.hide();
+            carregarInstrutoresDaAPI();
+        } catch(e) {
+            showToast(`Erro ao salvar instrutor: ${e.message}`, 'danger');
+        }
+    }
+
+
+    // ===================================================================
+    // LÓGICA PARA ITENS GENÉRICOS (MODAL SIMPLES)
+    // ===================================================================
+
+    function renderizarTabelaGenerica(type) {
         const tbody = document.getElementById(`tabela-${type}`);
         if (!tbody) return;
 
         tbody.innerHTML = '';
+        const dados = mockData[type] || [];
 
         if (dados.length === 0) {
             tbody.innerHTML = `<tr><td colspan="2" class="text-center text-muted">Nenhum item cadastrado.</td></tr>`;
@@ -74,7 +175,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         dados.forEach(item => {
             const tr = document.createElement('tr');
-            // O campo principal para instrutores da API é 'nome'.
             tr.innerHTML = `
                 <td>${escapeHTML(item.nome)}</td>
                 <td class="text-end">
@@ -86,62 +186,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /**
-     * Abre o modal para adicionar ou editar um item.
-     * @param {string} type - O tipo de item.
-     * @param {number|null} id - O ID do item para edição, ou null para adição.
-     */
-    window.abrirModal = async (type, id = null) => {
+    window.abrirModal = (type, id = null) => {
         const form = document.getElementById('geralForm');
         form.reset();
-
+        
         document.getElementById('itemType').value = type;
         const modalLabel = document.getElementById('geralModalLabel');
-
+        
         const titulos = {
-            treinamento: 'Treinamento',
-            instrutor: 'Instrutor',
-            local: 'Local',
-            modalidade: 'Modalidade',
-            horario: 'Horário',
-            cargahoraria: 'Carga Horária'
+            treinamento: 'Treinamento', local: 'Local', modalidade: 'Modalidade',
+            horario: 'Horário', cargahoraria: 'Carga Horária'
         };
         const titulo = titulos[type] || 'Item';
 
         if (id) {
-            // Modo Edição
             modalLabel.textContent = `Editar ${titulo}`;
-            document.getElementById('itemId').value = id;
-
-            try {
-                let item;
-                if (type === 'instrutor') {
-                    item = await chamarAPI(`/instrutores/${id}`);
-                } else {
-                    item = mockData[type].find(i => i.id === id);
-                }
-
-                if (item) {
-                    document.getElementById('itemName').value = item.nome;
-                }
-            } catch (error) {
-                showToast(`Erro ao carregar dados para edição: ${error.message}`, 'danger');
-                return;
+            const item = mockData[type].find(i => i.id === id);
+            if (item) {
+                document.getElementById('itemId').value = id;
+                document.getElementById('itemName').value = item.nome;
             }
-
         } else {
-            // Modo Adição
             modalLabel.textContent = `Adicionar Novo ${titulo}`;
             document.getElementById('itemId').value = '';
         }
-
+        
         geralModal.show();
     };
 
-    /**
-     * Salva um item (adição ou edição), agora com lógica para a API.
-     */
-    async function salvarItem() {
+    function salvarItem() {
         const id = document.getElementById('itemId').value;
         const type = document.getElementById('itemType').value;
         const name = document.getElementById('itemName').value;
@@ -150,81 +223,57 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('O nome não pode estar vazio.');
             return;
         }
-
-        try {
-            if (type === 'instrutor') {
-                const endpoint = id ? `/instrutores/${id}` : '/instrutores';
-                const method = id ? 'PUT' : 'POST';
-                // A API espera um objeto com o campo 'nome'
-                await chamarAPI(endpoint, method, { nome: name });
-                showToast(`Instrutor ${id ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
-                carregarInstrutoresDaAPI(); // Recarrega a lista da API
-            } else {
-                // Lógica antiga para os dados mockados
-                if (id) { // Edição
-                    const index = mockData[type].findIndex(i => i.id == id);
-                    if (index > -1) mockData[type][index].nome = name;
-                } else { // Adição
-                    const newId = (mockData[type].length > 0) ? Math.max(...mockData[type].map(i => i.id)) + 1 : 1;
-                    mockData[type].push({ id: newId, nome: name });
-                }
-                renderizarTabela(type, mockData[type]);
-            }
-            geralModal.hide();
-        } catch (error) {
-            showToast(`Erro ao salvar: ${error.message}`, 'danger');
+        
+        if (id) {
+            const index = mockData[type].findIndex(i => i.id == id);
+            if (index > -1) mockData[type][index].nome = name;
+        } else {
+            const newId = (mockData[type].length > 0) ? Math.max(...mockData[type].map(i => i.id)) + 1 : 1;
+            mockData[type].push({ id: newId, nome: name });
         }
+        
+        renderizarTabelaGenerica(type);
+        geralModal.hide();
     }
 
-    /**
-     * Abre o modal de confirmação para excluir um item.
-     * @param {string} type - O tipo de item.
-     * @param {number} id - O ID do item.
-     */
     window.confirmarExclusao = (type, id) => {
         itemParaExcluir = { type, id };
         confirmacaoModal.show();
     };
 
-    /**
-     * Exclui um item, agora com lógica para a API.
-     */
     async function excluirItem() {
         const { type, id } = itemParaExcluir;
         if (!type || !id) return;
-
-        try {
-            if (type === 'instrutor') {
+        
+        if (type === 'instrutor') {
+            try {
                 await chamarAPI(`/instrutores/${id}`, 'DELETE');
                 showToast('Instrutor excluído com sucesso!', 'success');
-                carregarInstrutoresDaAPI(); // Recarrega a lista da API
-            } else {
-                // Lógica antiga para os dados mockados
-                const index = mockData[type].findIndex(i => i.id === id);
-                if (index > -1) {
-                    mockData[type].splice(index, 1);
-                }
-                renderizarTabela(type, mockData[type]);
+                carregarInstrutoresDaAPI();
+            } catch(error) {
+                showToast(`Erro ao excluir: ${error.message}`, 'danger');
             }
-            confirmacaoModal.hide();
-        } catch(error) {
-            showToast(`Erro ao excluir: ${error.message}`, 'danger');
-        } finally {
-            itemParaExcluir = { type: null, id: null };
+        } else {
+            // Lógica antiga para os dados mockados
+            const index = mockData[type].findIndex(i => i.id === id);
+            if (index > -1) mockData[type].splice(index, 1);
+            renderizarTabelaGenerica(type);
         }
+        
+        confirmacaoModal.hide();
+        itemParaExcluir = { type: null, id: null };
     }
 
-    // --- REGISTRO DE EVENTOS ---
+    // --- REGISTRO DE EVENTOS E CARGA INICIAL ---
     document.getElementById('btnSalvarGeral').addEventListener('click', salvarItem);
+    document.getElementById('btnSalvarInstrutor').addEventListener('click', salvarInstrutor);
     document.getElementById('btnConfirmarExclusao').addEventListener('click', excluirItem);
 
-
-    // --- CARGA INICIAL ---
-    // Carrega instrutores da API e os outros dados do mock.
     carregarInstrutoresDaAPI();
-    renderizarTabela('treinamento', mockData.treinamento);
-    renderizarTabela('local', mockData.local);
-    renderizarTabela('modalidade', mockData.modalidade);
-    renderizarTabela('horario', mockData.horario);
-    renderizarTabela('cargahoraria', mockData.cargahoraria);
+    renderizarTabelaGenerica('treinamento');
+    renderizarTabelaGenerica('local');
+    renderizarTabelaGenerica('modalidade');
+    renderizarTabelaGenerica('horario');
+    renderizarTabelaGenerica('cargahoraria');
 });
+

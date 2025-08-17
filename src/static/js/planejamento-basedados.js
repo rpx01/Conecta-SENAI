@@ -26,7 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
             { id: 1, nome: '4 horas' },
             { id: 2, nome: '8 horas' },
             { id: 3, nome: '16 horas' }
-        ]
+        ],
+        turma: []
     };
 
     // --- VARIÁVEIS GLOBAIS ---
@@ -86,6 +87,34 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Falha ao carregar instrutores:', error);
             showToast('Não foi possível carregar a lista de instrutores.', 'danger');
+        }
+    }
+
+    async function carregarTurmasDaAPI() {
+        try {
+            const turmas = await chamarAPI('/turmas');
+            const tbody = document.getElementById('tabela-turma');
+            tbody.innerHTML = '';
+
+            if (turmas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" class="text-center text-muted">Nenhuma turma cadastrada.</td></tr>`;
+                return;
+            }
+
+            turmas.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${escapeHTML(item.nome)}</td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModal('turma', ${item.id})"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusao('turma', ${item.id})"><i class="bi bi-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (error) {
+            console.error('Falha ao carregar turmas:', error);
+            showToast('Não foi possível carregar a lista de turmas.', 'danger');
         }
     }
 
@@ -195,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const titulos = {
             treinamento: 'Treinamento', local: 'Local', modalidade: 'Modalidade',
-            horario: 'Horário', cargahoraria: 'Carga Horária'
+            horario: 'Horário', cargahoraria: 'Carga Horária', turma: 'Turma'
         };
         const titulo = titulos[type] || 'Item';
 
@@ -269,6 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnSalvarInstrutor').addEventListener('click', salvarInstrutor);
     document.getElementById('btnConfirmarExclusao').addEventListener('click', excluirItem);
 
+    carregarTurmasDaAPI();
     carregarInstrutoresDaAPI();
     renderizarTabelaGenerica('treinamento');
     renderizarTabelaGenerica('local');

@@ -1244,3 +1244,35 @@ input, select, textarea {
   color: var(--brand-primary)!important;
   font-weight: 600;
 }
+
+/* Título da seção */
+.page-title{
+  color: var(--bs-emphasis-color);   /* cor mais escura em Bootstrap 5 */
+  letter-spacing: .2px;
+}
+
+/* Barra/linha sob o título para separar do conteúdo */
+.section-header{
+  border-bottom: 1px solid var(--bs-border-color);
+  padding-bottom: .5rem;
+}
+
+/* Diferencia levemente o header da tabela */
+#tabela-planejamento-trimestral thead th{
+  background-color: var(--bs-gray-100);
+  color: var(--bs-gray-900);
+  font-weight: 600;
+}
+
+/* Em dark mode, mantenha contraste adequado */
+@media (prefers-color-scheme: dark){
+  #tabela-planejamento-trimestral thead th{
+    background-color: rgba(255,255,255,.06);
+    color: rgba(255,255,255,.92);
+  }
+}
+
+/* Compacta a borda da tabela para não colar no título */
+#tabela-planejamento-trimestral{
+  margin-top: .75rem;
+}

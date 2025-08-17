@@ -39,6 +39,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
     let itemParaExcluir = { type: null, id: null };
     let areasDeAtuacao = [];
+    const dadosCache = {
+        local: mockData.local,
+        modalidade: mockData.modalidade,
+        horario: mockData.horario,
+        cargahoraria: mockData.cargahoraria,
+        'publico-alvo': mockData['publico-alvo'],
+        treinamento: []
+    };
+
+    /**
+     * Carrega os treinamentos da API e atualiza o cache local.
+     */
+    async function carregarTreinamentosDaAPI() {
+        try {
+            dadosCache.treinamento = await chamarAPI('/treinamentos');
+        } catch (e) {
+            console.error('Falha ao carregar treinamentos:', e);
+            dadosCache.treinamento = mockData.treinamento;
+        }
+    }
 
     // ===================================================================
     // LÓGICA PARA INSTRUTORES (MODAL COMPLETO)
@@ -165,19 +185,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // LÓGICA PARA ITENS GENÉRICOS (MODAL SIMPLES)
     // ===================================================================
 
-    function renderizarTabelaGenerica(type) {
+    async function renderizarTabelaGenerica(type) {
         const tbody = document.getElementById(`tabela-${type}`);
         if (!tbody) return;
 
+        if (type === 'treinamento' && dadosCache.treinamento.length === 0) {
+            await carregarTreinamentosDaAPI();
+        }
+
         tbody.innerHTML = '';
-        const dados = mockData[type] || [];
+        const dados = dadosCache[type] || [];
 
         if (dados.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="2" class="text-center text-muted">Nenhum item cadastrado.</td></tr>`;
+            tbody.innerHTML = '<tr><td colspan="2" class="text-center text-muted">Nenhum item cadastrado.</td></tr>';
             return;
         }
 
-        dados.forEach(item => {
+        dados.forEach((item) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${escapeHTML(item.nome)}</td>
@@ -190,22 +214,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    window.abrirModal = (type, id = null) => {
+    window.abrirModal = async (type, id = null) => {
         const form = document.getElementById('geralForm');
         form.reset();
-        
+
         document.getElementById('itemType').value = type;
         const modalLabel = document.getElementById('geralModalLabel');
-        
+
         const titulos = {
             treinamento: 'Treinamento', local: 'Local', modalidade: 'Modalidade',
             horario: 'Horário', cargahoraria: 'Carga Horária', 'publico-alvo': 'Público Alvo'
         };
         const titulo = titulos[type] || 'Item';
 
+        if (type === 'treinamento' && dadosCache.treinamento.length === 0) {
+            await carregarTreinamentosDaAPI();
+        }
+
         if (id) {
             modalLabel.textContent = `Editar ${titulo}`;
-            const item = mockData[type].find(i => i.id === id);
+            const item = (dadosCache[type] || []).find((i) => i.id === id);
             if (item) {
                 document.getElementById('itemId').value = id;
                 document.getElementById('itemName').value = item.nome;
@@ -214,12 +242,12 @@ document.addEventListener('DOMContentLoaded', () => {
             modalLabel.textContent = `Adicionar Novo ${titulo}`;
             document.getElementById('itemId').value = '';
         }
-        
+
         geralModal.show();
     };
 
     function salvarItem() {
-        const id = document.getElementById('itemId').value;
+        const id = Number(document.getElementById('itemId').value);
         const type = document.getElementById('itemType').value;
         const name = document.getElementById('itemName').value;
 
@@ -228,14 +256,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
+        const lista = dadosCache[type] || [];
+
         if (id) {
-            const index = mockData[type].findIndex(i => i.id == id);
-            if (index > -1) mockData[type][index].nome = name;
+            const index = lista.findIndex((i) => i.id === id);
+            if (index > -1) lista[index].nome = name;
         } else {
-            const newId = (mockData[type].length > 0) ? Math.max(...mockData[type].map(i => i.id)) + 1 : 1;
-            mockData[type].push({ id: newId, nome: name });
+            const newId = (lista.length > 0) ? Math.max(...lista.map((i) => i.id)) + 1 : 1;
+            lista.push({ id: newId, nome: name });
         }
-        
+
+        dadosCache[type] = lista;
         renderizarTabelaGenerica(type);
         geralModal.hide();
     }
@@ -259,8 +290,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             // Lógica antiga para os dados mockados
-            const index = mockData[type].findIndex(i => i.id === id);
-            if (index > -1) mockData[type].splice(index, 1);
+            const lista = dadosCache[type] || [];
+            const index = lista.findIndex((i) => i.id === id);
+            if (index > -1) lista.splice(index, 1);
+            dadosCache[type] = lista;
             renderizarTabelaGenerica(type);
         }
         

@@ -9,13 +9,16 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="/css/styles.css" rel="stylesheet">
     <style>
+        /* Estilo para manter o cabeçalho da tabela fixo */
         .table-responsive {
-            max-height: 75vh;
+            max-height: 70vh;
+            overflow-y: auto;
         }
         .table thead th {
             position: sticky;
             top: 0;
             z-index: 1;
+            /* A propriedade background-color foi removida daqui para usar o estilo global */
         }
     </style>
 </head>
@@ -86,22 +89,22 @@
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-striped table-hover mb-0" id="tabela-planejamento-trimestral">
-                                <thead>
+                                <thead class="table-primary">
                                     <tr>
-                                        <th>Início</th>
-                                        <th>Fim</th>
-                                        <th>Semana</th>
-                                        <th>Horário</th>
-                                        <th>C.H.</th>
-                                        <th>Modalidade</th>
-                                        <th>Treinamentos</th>
-                                        <th>CMD</th>
-                                        <th>SJB</th>
-                                        <th>SAG/TOMBOS</th>
-                                        <th>Instrutor</th>
-                                        <th>Local</th>
-                                        <th>Observação</th>
-                                        <th class="text-end">Ações</th>
+                                        <th scope="col">Início</th>
+                                        <th scope="col">Fim</th>
+                                        <th scope="col">Semana</th>
+                                        <th scope="col">Horário</th>
+                                        <th scope="col">C.H.</th>
+                                        <th scope="col">Modalidade</th>
+                                        <th scope="col">Treinamentos</th>
+                                        <th scope="col">CMD</th>
+                                        <th scope="col">SJB</th>
+                                        <th scope="col">SAG/TOMBOS</th>
+                                        <th scope="col">Instrutor</th>
+                                        <th scope="col">Local</th>
+                                        <th scope="col">Observação</th>
+                                        <th scope="col">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -135,51 +138,75 @@
                                 <div class="invalid-feedback">A data de término deve ser igual ou posterior à data de início.</div>
                             </div>
                         </div>
+
                         <div id="contador-linhas" class="alert alert-info d-none" role="alert"></div>
+
                         <div class="row">
                              <div class="col-md-6 mb-3">
                                 <label for="horario" class="form-label">Horário</label>
-                                <select class="form-select" id="horario" name="horario" required></select>
+                                <select class="form-select" id="horario" name="horario" required>
+                                    <option value="">Carregando...</option>
+                                </select>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="carga_horaria" class="form-label">C.H. (Carga Horária)</label>
-                                <select class="form-select" id="carga_horaria" name="carga_horaria" required></select>
+                                <select class="form-select" id="carga_horaria" name="carga_horaria" required>
+                                    <option value="">Carregando...</option>
+                                </select>
                             </div>
                         </div>
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="modalidade" class="form-label">Modalidade</label>
-                                <select class="form-select" id="modalidade" name="modalidade" required></select>
+                                <select class="form-select" id="modalidade" name="modalidade" required>
+                                    <option value="">Carregando...</option>
+                                </select>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="treinamento" class="form-label">Treinamentos</label>
-                                <select class="form-select" id="treinamento" name="treinamento" required></select>
+                                <select class="form-select" id="treinamento" name="treinamento" required>
+                                    <option value="">Carregando...</option>
+                                </select>
                             </div>
                         </div>
+
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label for="cmd" class="form-label">CMD</label>
-                                <select class="form-select" id="cmd" name="cmd"></select>
+                                <select class="form-select" id="cmd" name="cmd">
+                                    <option value="">Carregando...</option>
+                                </select>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label for="sjb" class="form-label">SJB</label>
-                                <select class="form-select" id="sjb" name="sjb"></select>
+                                <select class="form-select" id="sjb" name="sjb">
+                                    <option value="">Carregando...</option>
+                                </select>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label for="sag_tombos" class="form-label">SAG/TOMBOS</label>
-                                <select class="form-select" id="sag_tombos" name="sag_tombos"></select>
+                                <select class="form-select" id="sag_tombos" name="sag_tombos">
+                                    <option value="">Carregando...</option>
+                                </select>
                             </div>
                         </div>
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="instrutor" class="form-label">Instrutor</label>
-                                <select class="form-select" id="instrutor" name="instrutor" required></select>
+                                <select class="form-select" id="instrutor" name="instrutor" required>
+                                    <option value="">Carregando...</option>
+                                </select>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="local" class="form-label">Local</label>
-                                <select class="form-select" id="local" name="local" required></select>
+                                <select class="form-select" id="local" name="local" required>
+                                    <option value="">Carregando...</option>
+                                </select>
                             </div>
                         </div>
+
                         <div class="mb-3">
                             <label for="observacao" class="form-label">Observação</label>
                             <textarea class="form-control" id="observacao" name="observacao" rows="3"></textarea>
@@ -188,7 +215,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" form="form-planejamento" class="btn btn-primary" id="btn-salvar-planejamento">
+                    <button type="submit" form="form-planejamento" class="btn btn-primary">
                         <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                         <span class="btn-text">Salvar</span>
                     </button>
@@ -196,24 +223,6 @@
             </div>
         </div>
     </div>
-    
-    <div class="modal fade" id="confirmacaoExclusaoModal" tabindex="-1" aria-labelledby="confirmacaoExclusaoModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 class="modal-title" id="confirmacaoExclusaoModalLabel">Excluir lote de planejamento?</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body" id="confirmacaoExclusaoModalBody">
-                    </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger" id="btn-confirmar-exclusao">Sim, Excluir</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/app.js"></script>

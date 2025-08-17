@@ -200,13 +200,6 @@ small, .small {
   min-height: 36px;
 }
 
-#tabela-planejamento-trimestral thead th {
-  position: sticky;
-  top: 0;
-  background: var(--light-color);
-  z-index: 1;
-}
-
 .btn-primary {
   background-image: none;
   background-color: var(--primary-color);

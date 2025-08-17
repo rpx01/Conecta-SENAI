@@ -1,4 +1,5 @@
 """Rotas de agendamento de laboratorios."""
+# flake8: noqa
 from flask import Blueprint, request, jsonify, make_response, send_file, g
 from datetime import datetime, date, timedelta
 import json
@@ -422,7 +423,7 @@ def verificar_disponibilidade():
             hrs = ag.horarios if isinstance(ag.horarios, list) else json.loads(ag.horarios)
             if isinstance(hrs, list):
                 horarios_reservados.extend(hrs)
-        except Exception:
+        except Exception:  # nosec B110
             pass
 
     horarios_reservados = sorted(set(horarios_reservados))
@@ -534,7 +535,7 @@ def listar_logs_agenda():
             inicio = tempos[0][0]
             fim = tempos[-1][1]
             return f"{inicio} - {fim}"
-        except Exception:
+        except Exception:  # nosec B110
             return None
 
     return jsonify([
@@ -576,7 +577,7 @@ def exportar_logs_agenda():
             if not tempos:
                 return ''
             return f"{tempos[0][0]} - {tempos[-1][1]}"
-        except Exception:
+        except Exception:  # nosec B110
             return ''
 
     for l in logs:

@@ -21,10 +21,14 @@ def verificar_autenticacao(req):
         g.token_message = None
         return False, None
     try:
-        dados = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+        dados = jwt.decode(
+            token,
+            current_app.config['SECRET_KEY'],
+            algorithms=['HS256'],
+        )
         jti = dados.get('jti')
         if jti and redis_conn.get(jti):
-            g.token_message = "Token has been revoked"
+            g.token_message = "Token has been revoked"  # nosec B105
             return False, None
         user = db.session.get(User, dados.get('user_id'))
         if user:

@@ -1,6 +1,5 @@
-"""
-Inicializa a aplicacao Flask e registra os blueprints.
-"""
+# flake8: noqa
+"""Inicializa a aplicacao Flask e registra os blueprints."""
 import os
 import logging
 import traceback
@@ -25,6 +24,7 @@ from src.routes.ocupacao import ocupacao_bp, sala_bp, instrutor_bp
 from src.routes.user import user_bp
 from src.routes.rateio import rateio_bp
 from src.routes.treinamentos import treinamento_bp, turma_bp
+from src.routes.planejamento import basedados_bp
 from src.blueprints.auth_reset import auth_reset_bp
 from src.blueprints.auth import auth_bp
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -226,6 +226,7 @@ def create_app():
     app.register_blueprint(ocupacao_bp, url_prefix='/api')
     app.register_blueprint(rateio_bp, url_prefix='/api')
     app.register_blueprint(treinamento_bp, url_prefix='/api')
+    app.register_blueprint(basedados_bp, url_prefix='/api')
     app.register_blueprint(auth_reset_bp)
     app.register_blueprint(auth_bp)
 

@@ -21,18 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
             { id: 1, nome: 'Semipresencial' },
             { id: 2, nome: 'Presencial' },
             { id: 3, nome: 'Online' }
-        ],
-        horario: [
-            { id: 1, nome: '08:00 - 12:00' },
-            { id: 2, nome: '13:00 - 17:00' },
-            { id: 3, nome: '18:00 - 22:00' }
-        ],
-        cargahoraria: [
-            { id: 1, nome: '4' },
-            { id: 2, nome: '8' },
-            { id: 3, nome: '16' },
-            { id: 4, nome: '24' },
-            { id: 5, nome: '40' }
         ]
     };
 
@@ -83,33 +71,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.getElementById('itemType').value = type;
         const modalLabel = document.getElementById('geralModalLabel');
-        const itemNameLabel = document.getElementById('itemNameLabel');
-        const itemNameInput = document.getElementById('itemName');
         
         const titulos = {
             treinamento: 'Treinamento',
             instrutor: 'Instrutor',
             local: 'Local',
-            modalidade: 'Modalidade',
-            horario: 'Horário',
-            cargahoraria: 'Carga Horária'
+            modalidade: 'Modalidade'
         };
         const titulo = titulos[type] || 'Item';
-
-        // Personaliza o label e o tipo do input
-        if (type === 'cargahoraria') {
-            itemNameLabel.textContent = 'Valor (em horas)';
-            itemNameInput.type = 'number';
-            itemNameInput.placeholder = 'Ex: 40';
-        } else if (type === 'horario') {
-            itemNameLabel.textContent = 'Descrição do Horário';
-            itemNameInput.type = 'text';
-            itemNameInput.placeholder = 'Ex: 08:00 - 12:00';
-        } else {
-            itemNameLabel.textContent = 'Nome';
-            itemNameInput.type = 'text';
-            itemNameInput.placeholder = '';
-        }
 
         if (id) {
             // Modo Edição
@@ -136,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = document.getElementById('itemName').value;
 
         if (!name.trim()) {
-            alert('O valor não pode estar vazio.');
+            alert('O nome não pode estar vazio.');
             return;
         }
 
@@ -185,32 +154,18 @@ document.addEventListener('DOMContentLoaded', () => {
         renderizarTabela(type);
         confirmacaoModal.hide();
         itemParaExcluir = { type: null, id: null };
-    /**
-     * Escapa caracteres HTML para prevenir XSS.
-     * @param {string} str A string a ser escapada.
-     * @returns {string} A string segura.
-     */
-    function escapeHTML(str) {
-        return str.replace(/[&<>"']/g, function(match) {
-            return {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#39;'
-            }[match];
-        });
     }
+
 
     // --- REGISTRO DE EVENTOS ---
     document.getElementById('btnSalvarGeral').addEventListener('click', salvarItem);
     document.getElementById('btnConfirmarExclusao').addEventListener('click', excluirItem);
+
 
     // --- CARGA INICIAL ---
     renderizarTabela('treinamento');
     renderizarTabela('instrutor');
     renderizarTabela('local');
     renderizarTabela('modalidade');
-    renderizarTabela('horario');
-    renderizarTabela('cargahoraria');
 });
+

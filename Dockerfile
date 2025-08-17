@@ -1,44 +1,39 @@
-# Estágio 1: Builder - Instala as dependências
 FROM python:3.12-slim AS builder
 
-# Define variáveis de ambiente para o Poetry
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_CREATE=false
+    POETRY_NO_INTERACTION=1
 
-# Instala o Poetry
-RUN pip install poetry
-
-# Define o diretório de trabalho
 WORKDIR /app
 
-# Copia os arquivos de dependência para aproveitar o cache do Docker
+# Install build tools and poetry, then project dependencies
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir poetry
+
 COPY pyproject.toml poetry.lock ./
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-dev --no-interaction --no-ansi
 
-# Instala as dependências do projeto, excluindo as de desenvolvimento
-RUN poetry install --no-dev --no-root
-
-# Estágio 2: Runtime - A imagem final que será executada
-FROM python:3.12-slim AS runtime
-
-# Define o diretório de trabalho
-WORKDIR /app
-
-# Instala o cliente do PostgreSQL para o comando 'pg_isready'
-RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
-
-# Copia o ambiente Python com as dependências instaladas do estágio 'builder'
-COPY --from=builder /usr/local /usr/local
-
-# Copia o código da sua aplicação para o container
 COPY . .
 
-# Torna o script de inicialização executável
-RUN chmod +x /app/scripts/auto_migrate.sh
+FROM python:3.12-slim AS runtime
 
-# Expõe a porta que sua aplicação usará
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install runtime packages
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /usr/local /usr/local
+COPY --from=builder /app /app
+
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl -f http://localhost:8080/ || exit 1
 
-# Define o script de inicialização como o ponto de entrada do container
-ENTRYPOINT ["/app/scripts/auto_migrate.sh"]
+CMD sh -c "flask --app src.main db upgrade && gunicorn --factory -b 0.0.0.0:${PORT:-8080} src.main:create_app"

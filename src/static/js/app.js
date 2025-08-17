@@ -759,14 +759,15 @@ function configurarNavbarOffcanvas() {
 // Inicialização da página
 document.addEventListener('DOMContentLoaded', async function() {
 
-    // Verifica autenticação em todas as páginas exceto login e registro
+    // Verifica autenticação em todas as páginas exceto as públicas
     const paginaAtual = window.location.pathname;
+    const paginasPublicas = ['/admin/login.html', '/register', '/forgot', '/reset'];
 
     // Limpa escolha salva ao retornar para a seleção de sistema
     document.querySelectorAll('a[href="/selecao-sistema.html"]').forEach(link => {
         link.addEventListener('click', () => localStorage.removeItem('moduloSelecionado'));
     });
-    
+
     // Configura o botão de logout em todas as páginas
     const btnLogout = document.getElementById('btnLogout');
     if (btnLogout) {
@@ -775,11 +776,11 @@ document.addEventListener('DOMContentLoaded', async function() {
             realizarLogout();
         });
     }
-    
-    if (paginaAtual === '/admin/login.html' || paginaAtual === '/register') {
+
+    if (paginasPublicas.includes(paginaAtual)) {
         return;
     }
-    
+
     // Verifica se o usuário está autenticado
     if (!(await verificarAutenticacao())) {
         return;

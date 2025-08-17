@@ -332,7 +332,8 @@ async function verificarPermissaoAdmin() {
 // evitando loops na página de login ou registro.
 (async function() {
     const currentPage = window.location.pathname;
-    const paginasPublicas = ['/admin/login.html', '/register'];
+    // Adiciona '/forgot' e '/reset' à lista de páginas públicas
+    const paginasPublicas = ['/admin/login.html', '/register', '/forgot', '/reset'];
 
     // Se a página não for pública, valida a sessão no servidor
     if (!paginasPublicas.includes(currentPage)) {

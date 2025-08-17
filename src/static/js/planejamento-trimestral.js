@@ -1,6 +1,7 @@
-/* global bootstrap, showToast, chamarAPI, escapeHTML */
+/* global bootstrap, showToast, chamarAPI, escapeHTML, verificarAutenticacao */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    if (!(await verificarAutenticacao())) return;
     // Objeto principal para encapsular a lógica da página
     const gerenciadorPlanejamento = {
         // --- SELETORES E ESTADO ---

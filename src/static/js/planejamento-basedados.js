@@ -26,6 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
             { id: 1, nome: '4 horas' },
             { id: 2, nome: '8 horas' },
             { id: 3, nome: '16 horas' }
+        ],
+        'publico-alvo': [
+            { id: 1, nome: 'Empregados Anglo American' },
+            { id: 2, nome: 'Comunidade' }
         ]
     };
 
@@ -195,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const titulos = {
             treinamento: 'Treinamento', local: 'Local', modalidade: 'Modalidade',
-            horario: 'Horário', cargahoraria: 'Carga Horária'
+            horario: 'Horário', cargahoraria: 'Carga Horária', 'publico-alvo': 'Público Alvo'
         };
         const titulo = titulos[type] || 'Item';
 
@@ -275,5 +279,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderizarTabelaGenerica('modalidade');
     renderizarTabelaGenerica('horario');
     renderizarTabelaGenerica('cargahoraria');
+    renderizarTabelaGenerica('publico-alvo');
 });
 

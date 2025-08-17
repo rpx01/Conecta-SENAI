@@ -1,6 +1,7 @@
 """Rotas para gerenciamento de itens do planejamento trimestral."""
 from datetime import datetime
 from flask import Blueprint, request, jsonify
+from sqlalchemy import inspect
 from sqlalchemy.exc import SQLAlchemyError
 from src.models import db
 from src.models.planejamento import PlanejamentoItem
@@ -10,6 +11,12 @@ from src.utils.error_handler import handle_internal_error
 planejamento_bp = Blueprint('planejamento', __name__)
 
 
+def _tabela_planejamento_existe() -> bool:
+    """Verifica se a tabela de planejamento está presente no banco."""
+    insp = inspect(db.engine)
+    return insp.has_table(PlanejamentoItem.__tablename__)
+
+
 @planejamento_bp.route('/planejamento', methods=['GET'])
 def listar_planejamentos():
     """Lista todos os itens de planejamento."""
@@ -17,6 +24,8 @@ def listar_planejamentos():
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
     try:
+        if not _tabela_planejamento_existe():
+            return jsonify([]), 200
         itens = PlanejamentoItem.query.all()
         return jsonify([item.to_dict() for item in itens])
     except SQLAlchemyError as e:
@@ -30,6 +39,12 @@ def criar_planejamento():
     autenticado, _ = verificar_autenticacao(request)
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
+
+    if not _tabela_planejamento_existe():
+        return (
+            jsonify({'erro': 'Tabela planejamento_itens não existe; execute as migrações.'}),
+            500,
+        )
 
     data = request.json or {}
     data_str = data.get('data')
@@ -69,6 +84,12 @@ def atualizar_planejamento(row_id):
     autenticado, _ = verificar_autenticacao(request)
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
+
+    if not _tabela_planejamento_existe():
+        return (
+            jsonify({'erro': 'Tabela planejamento_itens não existe; execute as migrações.'}),
+            500,
+        )
 
     item = PlanejamentoItem.query.filter_by(row_id=row_id).first()
     if not item:
@@ -110,6 +131,12 @@ def excluir_lote(lote_id):
     autenticado, _ = verificar_autenticacao(request)
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
+
+    if not _tabela_planejamento_existe():
+        return (
+            jsonify({'erro': 'Tabela planejamento_itens não existe; execute as migrações.'}),
+            500,
+        )
 
     try:
         PlanejamentoItem.query.filter_by(lote_id=lote_id).delete()

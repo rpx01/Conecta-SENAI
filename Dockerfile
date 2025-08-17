@@ -8,6 +8,28 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# syntax=docker/dockerfile:1
+FROM python:3.12-slim
+
+# Instala o postgresql-client para usar o comando pg_isready
+RUN apt-get update && apt-get install -y postgresql-client
+
+WORKDIR /app
+
+# Instalação das dependências (mantenha como estava)
+COPY pyproject.toml poetry.lock ./
+RUN pip install --no-cache-dir poetry && poetry config virtualenvs.create false && poetry install --no-dev --no-interaction --no-ansi
+
+COPY . .
+
+# Expõe a porta (mantenha como estava)
+EXPOSE 8080
+
+# Seta o entrypoint para o script (mantenha como estava)
+ENTRYPOINT ["/app/scripts/auto_migrate.sh"]
+
+WORKDIR /app
+
 RUN apt-get update && \
     apt-get install -y build-essential && \
     rm -rf /var/lib/apt/lists/* && \

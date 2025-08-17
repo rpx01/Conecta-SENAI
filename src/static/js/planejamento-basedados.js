@@ -21,6 +21,16 @@ document.addEventListener('DOMContentLoaded', () => {
             { id: 1, nome: 'Semipresencial' },
             { id: 2, nome: 'Presencial' },
             { id: 3, nome: 'Online' }
+        ],
+        horario: [
+            { id: 1, nome: '08:00 - 12:00' },
+            { id: 2, nome: '13:00 - 17:00' },
+            { id: 3, nome: '18:00 - 22:00' }
+        ],
+        cargahoraria: [
+            { id: 1, nome: '4 horas' },
+            { id: 2, nome: '8 horas' },
+            { id: 3, nome: '16 horas' }
         ]
     };
 
@@ -76,7 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
             treinamento: 'Treinamento',
             instrutor: 'Instrutor',
             local: 'Local',
-            modalidade: 'Modalidade'
+            modalidade: 'Modalidade',
+            horario: 'Horário',
+            cargahoraria: 'Carga Horária'
         };
         const titulo = titulos[type] || 'Item';
 
@@ -167,5 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderizarTabela('instrutor');
     renderizarTabela('local');
     renderizarTabela('modalidade');
+    renderizarTabela('horario');
+    renderizarTabela('cargahoraria');
 });
 

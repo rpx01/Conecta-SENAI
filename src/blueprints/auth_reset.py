@@ -57,7 +57,7 @@ def forgot_post():
             except Exception as e:  # pragma: no cover - envio de email
                 current_app.logger.error('Falha ao enviar e-mail de redefinição: %s', e)
     flash('Se o e-mail existir em nossa base, você receberá as instruções para redefinir sua senha.', 'info')
-    return redirect(url_for('auth_reset.forgot_get'))
+    return redirect('/admin/login.html')
 
 
 @auth_reset_bp.get('/reset')

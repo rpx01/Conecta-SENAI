@@ -17,7 +17,7 @@ WORKDIR /app
 COPY pyproject.toml poetry.lock ./
 
 # Instala as dependências do projeto, excluindo as de desenvolvimento
-RUN poetry install --no-dev --no-root
+RUN poetry install --no-root
 
 # Estágio 2: Runtime - A imagem final que será executada
 FROM python:3.12-slim AS runtime

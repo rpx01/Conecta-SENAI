@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from sqlalchemy import inspect
 from src.models import db
 from src.models.planejamento import (
     PlanejamentoBDItem,
@@ -24,9 +25,17 @@ MODELOS = {
 }
 
 
+def ensure_table_exists(model):
+    """Cria a tabela do modelo se ela ainda não existir."""
+    inspector = inspect(db.engine)
+    if not inspector.has_table(model.__tablename__):
+        model.__table__.create(db.engine)
+
+
 @basedados_bp.route("/itens", methods=["GET"])
 def get_planejamento_itens():
     """Busca os itens principais da base de dados."""
+    ensure_table_exists(PlanejamentoBDItem)
     itens = PlanejamentoBDItem.query.all()
     return jsonify([item.to_dict() for item in itens])
 
@@ -34,11 +43,13 @@ def get_planejamento_itens():
 @basedados_bp.route("/itens", methods=["POST"])
 def create_planejamento_item():
     """Cria um novo item principal na base de dados."""
+    ensure_table_exists(PlanejamentoBDItem)
     data = request.json or {}
     descricao = data.get("descricao")
     instrutor_id = data.get("instrutor_id")
     if not descricao or not instrutor_id:
-        return jsonify({"erro": "Descrição e instrutor_id são obrigatórios"}), 400
+        mensagem = "Descrição e instrutor_id são obrigatórios"
+        return jsonify({"erro": mensagem}), 400
     item = PlanejamentoBDItem(descricao=descricao, instrutor_id=instrutor_id)
     db.session.add(item)
     db.session.commit()
@@ -51,7 +62,7 @@ def get_itens_genericos(tipo):
     model = MODELOS.get(tipo)
     if not model:
         return jsonify({"erro": "Tipo inválido"}), 404
-
+    ensure_table_exists(model)
     itens = model.query.order_by(model.nome).all()
     return jsonify([item.to_dict() for item in itens])
 
@@ -62,7 +73,7 @@ def create_item_generico(tipo):
     model = MODELOS.get(tipo)
     if not model:
         return jsonify({"erro": "Tipo inválido"}), 404
-
+    ensure_table_exists(model)
     data = request.json or {}
     nome = data.get("nome")
     if not nome:
@@ -84,7 +95,7 @@ def update_item_generico(tipo, item_id):
     model = MODELOS.get(tipo)
     if not model:
         return jsonify({"erro": "Tipo inválido"}), 404
-
+    ensure_table_exists(model)
     item = db.session.get(model, item_id)
     if not item:
         return jsonify({"erro": "Item não encontrado"}), 404
@@ -105,7 +116,7 @@ def delete_item_generico(tipo, item_id):
     model = MODELOS.get(tipo)
     if not model:
         return jsonify({"erro": "Tipo inválido"}), 404
-
+    ensure_table_exists(model)
     item = db.session.get(model, item_id)
     if not item:
         return jsonify({"erro": "Item não encontrado"}), 404
@@ -113,4 +124,3 @@ def delete_item_generico(tipo, item_id):
     db.session.delete(item)
     db.session.commit()
     return jsonify({"mensagem": "Item excluído com sucesso"}), 200
-

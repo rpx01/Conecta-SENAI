@@ -41,7 +41,7 @@ def test_criar_usuario_sem_csrf(client):
         json=create_payload(nome='CSRF', email='csrf@example.com', senha='Senha@123'),
         environ_base={'REMOTE_ADDR': '1.1.1.16'}
     )
-    assert resp.status_code == 400
+    assert resp.status_code == 403
 
 
 def test_criar_usuario_senha_invalida(client):

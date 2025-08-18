@@ -55,13 +55,16 @@ async function executarComLoading(acao) {
 let csrfToken = null;
 
 /**
- * Busca o token CSRF da API e o armazena globalmente.
- * @returns {Promise<string>} O token CSRF.
+ * Obtém o token CSRF da API. O token é armazenado em memória para
+ * reutilização e renovado quando explicitamente solicitado.
+ * @param {boolean} force - Quando true, força a renovação do token
+ * @returns {Promise<string>} Token CSRF válido
  */
-async function getCsrfToken() {
-    if (csrfToken) {
-        return csrfToken; // Retorna o token se já foi buscado
+async function obterCSRFToken(force = false) {
+    if (csrfToken && !force) {
+        return csrfToken;
     }
+
     try {
         const resp = await fetch(`${API_URL}/csrf-token`, {
             credentials: 'include'
@@ -70,12 +73,12 @@ async function getCsrfToken() {
             throw new Error('Falha ao obter o token CSRF.');
         }
         const data = await resp.json();
-        csrfToken = data.csrf_token; // Armazena o token na variável global
+        csrfToken = data.csrf_token;
         return csrfToken;
     } catch (err) {
         console.error(err);
         showToast('Erro de segurança. Não foi possível carregar o token CSRF.', 'danger');
-        throw err; // Propaga o erro
+        throw err;
     }
 }
 
@@ -160,50 +163,23 @@ function redirecionarAposLogin(usuario) {
  */
 async function realizarLogin(email, senha, recaptchaToken = '') {
     try {
-        const csrfToken = await getCsrfToken();
-        const response = await fetch(`${API_URL}/login`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify({ email, senha, recaptcha_token: recaptchaToken })
+        const data = await chamarAPI('/login', 'POST', {
+            email,
+            senha,
+            recaptcha_token: recaptchaToken
         });
-        const contentType = response.headers.get('Content-Type');
-        if (contentType && contentType.includes('application/json')) {
-            const data = await response.json().catch(() => null);
 
-            console.log('Login response JSON:', response.status, data);
-
-            if (response.ok && data) {
-                // Armazena os dados do usuário no localStorage
-                localStorage.setItem('usuario', JSON.stringify(data.usuario));
-                localStorage.setItem('isAdmin', data.usuario.tipo === 'admin');
-
-                // Após o login, redireciona conforme módulos disponíveis
-                redirecionarAposLogin(data.usuario);
-                return data;
-            }
-
-            if (!response.ok) {
-                if (response.status >= 500) {
-                    throw new Error('Servidor temporariamente indisponível');
-                }
-                const msg = data?.erro || data?.error || data?.message || 'Usuário ou senha inválidos';
-                throw new Error(msg);
-            }
-
-            throw new Error('Resposta inesperada do servidor');
+        if (data && data.usuario) {
+            localStorage.setItem('usuario', JSON.stringify(data.usuario));
+            localStorage.setItem('isAdmin', data.usuario.tipo === 'admin');
+            redirecionarAposLogin(data.usuario);
+            return data;
         }
 
-        const texto = await response.text();
-        console.error('Login response text:', response.status, texto);
-        throw new Error('Erro interno no servidor. Tente mais tarde.');
+        throw new Error('Resposta inesperada do servidor');
     } catch (error) {
         console.error('Erro no login:', error);
         if (error.name === 'TypeError') {
-            // Erro de rede ou CORS
             throw new Error('Erro de conexão com o servidor');
         }
         throw error;
@@ -213,17 +189,12 @@ async function realizarLogin(email, senha, recaptchaToken = '') {
 /**
  * Realiza o logout do usuário
  */
-function realizarLogout() {
-    getCsrfToken().then(csrfToken => {
-        fetch(`${API_URL}/logout`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            }
-        }).catch(() => {});
-    });
+async function realizarLogout() {
+    try {
+        await chamarAPI('/logout', 'POST', {});
+    } catch (_) {
+        // Ignora erros de logout
+    }
     localStorage.removeItem('usuario');
     window.location.href = '/admin/login.html';
 }
@@ -358,76 +329,54 @@ async function verificarPermissaoAdmin() {
  * @param {Object} body - Corpo da requisição (opcional)
  * @returns {Promise} - Promise com o resultado da chamada
  */
-async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = true) {
-    const headers = {
-        'Content-Type': 'application/json'
-    };
-
-    // Garante que o token CSRF seja obtido para métodos que alteram dados
-    if (method !== 'GET') {
-        try {
-            const token = await getCsrfToken();
-            headers['X-CSRFToken'] = token;
-        } catch (error) {
-            return Promise.reject('Ação cancelada devido a um erro de segurança.');
-        }
-    }
-    
-    // Garante que o endpoint comece com /
+async function chamarAPI(endpoint, method = 'GET', body = null) {
     const endpointFormatado = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const url = `${API_URL}${endpointFormatado}`;
-
-    const options = {
+    const opts = {
         method,
-        headers,
-        credentials: 'include'
+        credentials: 'include',
+        headers: {}
     };
 
-    if (body && (method === 'POST' || method === 'PUT' || method === 'DELETE')) { // Adicionado DELETE aqui
-        options.body = JSON.stringify(body);
-    }
-    
-    return await executarComLoading(async () => {
-        try {
-            let response = await fetch(url, options);
-
-            // Verifica se a resposta indica falta de autorização e redireciona imediatamente
-            if (response.status === 401) {
-                localStorage.removeItem('usuario');
-                window.location.href = '/admin/login.html';
-                throw new Error('Sessão expirada');
-            }
-
-            if (!response.ok) {
-                let mensagemErro = `Erro ${response.status}`;
-
-                const data = await response.json().catch(() => ({}));
-                const detalhe = data.erro || data.detail;
-
-                // Verifica se o detalhe do erro é uma lista (padrão de erros de validação)
-                if (Array.isArray(detalhe)) {
-                    // Mapeia a lista de objetos de erro para uma única string legível
-                    mensagemErro = detalhe
-                        .map(e => {
-                            if (e.loc && e.msg) {
-                                return `${e.loc.join(' → ')}: ${e.msg}`;
-                            }
-                            return JSON.stringify(e);
-                        })
-                        .join('; ');
-                } else if (detalhe) {
-                    mensagemErro = detalhe;
-                }
-
-                throw new Error(mensagemErro);
-            }
-
-            const data = await response.json().catch(() => ({}));
-            return data;
-        } catch (error) {
-            console.error(`Erro na chamada à API ${url}:`, error);
-            throw error;
+    const mutativo = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase());
+    if (mutativo) {
+        const token = await obterCSRFToken();
+        opts.headers['Content-Type'] = 'application/json';
+        opts.headers['X-CSRF-Token'] = token;
+        if (body !== null) {
+            opts.body = JSON.stringify(body);
         }
+    } else if (body !== null) {
+        opts.headers['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(body);
+    }
+
+    return await executarComLoading(async () => {
+        let response = await fetch(url, opts);
+        if (mutativo && (response.status === 403 || response.status === 419)) {
+            const novoToken = await obterCSRFToken(true);
+            opts.headers['X-CSRF-Token'] = novoToken;
+            response = await fetch(url, opts);
+        }
+
+        if (response.status === 401) {
+            localStorage.removeItem('usuario');
+            window.location.href = '/admin/login.html';
+            throw new Error('Sessão expirada');
+        }
+
+        if (!response.ok) {
+            let json = null;
+            try { json = await response.json(); } catch (_) {}
+            const mensagem = json?.erro || json?.message || response.statusText;
+            throw new Error(mensagem);
+        }
+
+        const contentType = response.headers.get('Content-Type') || '';
+        if (contentType.includes('application/json')) {
+            return await response.json();
+        }
+        return null;
     });
 }
 

@@ -48,11 +48,11 @@ RECAPTCHA_THRESHOLD = float(os.getenv("RECAPTCHA_THRESHOLD", "0.5"))
 def verificar_csrf():
     if request.method in {"POST", "PUT", "DELETE"} and request.endpoint != "user.get_csrf_token":
         token_cookie = request.cookies.get("csrf_token")
-        token_header = request.headers.get("X-CSRFToken")
+        token_header = request.headers.get("X-CSRF-Token") or request.headers.get("X-CSRFToken")
         if not token_cookie or not token_header or not hmac.compare_digest(
             token_cookie, token_header
         ):
-            return jsonify({"erro": "CSRF token inválido"}), 400
+            return jsonify({"erro": "CSRF token inválido"}), 403
 
 
 @user_bp.route("/csrf-token", methods=["GET"])

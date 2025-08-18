@@ -1,8 +1,38 @@
-/* global bootstrap, showToast, chamarAPI, escapeHTML, verificarAutenticacao */
+/* global bootstrap, showToast, chamarAPI, escapeHTML, executarAcaoComFeedback */
 
-document.addEventListener('DOMContentLoaded', async () => {
-    if (!(await verificarAutenticacao())) return;
-    // Objeto principal para encapsular a lógica da página
+// Utilitários de conversão e validação
+function toISODate(valor, campo = 'Data') {
+    if (!valor) throw new Error(`${campo} obrigatória`);
+    if (valor instanceof Date) {
+        if (isNaN(valor)) throw new Error(`${campo} inválida`);
+        return valor.toISOString().split('T')[0];
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+        return valor;
+    }
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(valor)) {
+        const [d, m, y] = valor.split('/');
+        return `${y}-${m}-${d}`;
+    }
+    throw new Error(`${campo} inválida: ${valor}`);
+}
+
+function toHHMM(valor) {
+    if (!/^\d{2}:\d{2}$/.test(valor)) {
+        throw new Error(`Horário inválido: ${valor}`);
+    }
+    return valor;
+}
+
+function toNumber(valor, campo = 'Valor') {
+    const num = Number(valor);
+    if (Number.isNaN(num)) {
+        throw new Error(`${campo} inválido`);
+    }
+    return num;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
     const gerenciadorPlanejamento = {
         // --- SELETORES E ESTADO ---
         tabelaBody: document.getElementById('tabela-planejamento-trimestral').querySelector('tbody'),
@@ -53,8 +83,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     modalidade: dadosBase.modalidade || [],
                     local: dadosBase.local || [],
                     publico_alvo: dadosBase.publico_alvo || [],
-                    treinamento: treinamentos.map(t => t.nome) || [],
-                    instrutor: instrutores.map(i => i.nome) || []
+                    treinamentos: treinamentos || [],
+                    instrutores: instrutores || []
                 };
                 return this.cacheOpcoes;
             } catch (error) {
@@ -81,8 +111,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             this.popularSelect(this.form.horario, dados.horario, 'Selecione...');
             this.popularSelect(this.form.carga_horaria, dados.carga_horaria, 'Selecione...');
             this.popularSelect(this.form.modalidade, dados.modalidade, 'Selecione...');
-            this.popularSelect(this.form.treinamento, dados.treinamento, 'Selecione...');
-            this.popularSelect(this.form.instrutor, dados.instrutor, 'Selecione...');
+            this.popularSelect(this.form.treinamento, dados.treinamentos.map(t => t.nome), 'Selecione...');
+            this.popularSelect(this.form.instrutor, dados.instrutores.map(i => i.nome), 'Selecione...');
             this.popularSelect(this.form.local, dados.local, 'Selecione...');
             this.popularSelect(this.form.cmd, dados.publico_alvo, 'Nenhum');
             this.popularSelect(this.form.sjb, dados.publico_alvo, 'Nenhum');
@@ -179,50 +209,62 @@ document.addEventListener('DOMContentLoaded', async () => {
         async salvar(event) {
             event.preventDefault();
             if (!this.validarFormulario()) return;
+            const btn = this.form.querySelector('button[type="submit"]');
+            await executarAcaoComFeedback(btn, async () => {
+                const modo = this.modalEl.dataset.mode;
+                if (modo === 'edit') {
+                    await this.executarEdicao();
+                } else {
+                    await this.executarAdicao();
+                }
+            });
+        },
 
-            const modo = this.modalEl.dataset.mode;
-            if (modo === 'edit') {
-                await this.executarEdicao();
-            } else {
-                await this.executarAdicao();
-            }
+        mapTreinamentoToId(nome) {
+            const t = this.cacheOpcoes?.treinamentos?.find(tr => tr.nome === nome);
+            return t ? t.id : null;
+        },
+
+        mapInstrutorToId(nome) {
+            const i = this.cacheOpcoes?.instrutores?.find(ins => ins.nome === nome);
+            return i ? i.id : null;
         },
 
         async executarAdicao() {
             const dadosForm = Object.fromEntries(new FormData(this.form).entries());
-            const dataInicio = new Date(`${dadosForm.inicio}T12:00:00Z`);
-            const dataFim = new Date(`${dadosForm.fim}T12:00:00Z`);
-            const loteId = this.gerarUUID();
-
-            const novosItens = [];
-            for (let d = new Date(dataInicio); d <= dataFim; d.setDate(d.getDate() + 1)) {
-                const dataAtual = new Date(d);
-                const novoItem = {
-                    rowId: this.gerarUUID(),
-                    loteId: loteId,
-                    data: dataAtual.toISOString().split('T')[0],
-                    semana: this.getDiaSemana(dataAtual),
-                    horario: dadosForm.horario,
-                    cargaHoraria: dadosForm.carga_horaria,
-                    modalidade: dadosForm.modalidade,
-                    treinamento: dadosForm.treinamento,
-                    cmd: dadosForm.cmd,
-                    sjb: dadosForm.sjb,
-                    sagTombos: dadosForm.sag_tombos,
-                    instrutor: dadosForm.instrutor,
-                    local: dadosForm.local,
-                    observacao: dadosForm.observacao
-                };
-                this.planejamentos.push(novoItem);
-                novosItens.push(novoItem);
-            }
             try {
-                await Promise.all(novosItens.map(item => chamarAPI('/planejamento', 'POST', item)));
-                showToast('Lote de planejamento adicionado com sucesso!', 'success');
+                const dataInicio = new Date(`${dadosForm.inicio}T00:00:00`);
+                const dataFim = new Date(`${dadosForm.fim}T00:00:00`);
+
+                const linhas = [];
+                for (let d = new Date(dataInicio); d <= dataFim; d.setDate(d.getDate() + 1)) {
+                    const dia = new Date(d);
+                    linhas.push({
+                        inicio: toISODate(dia, 'Data inicial'),
+                        fim: toISODate(dia, 'Data final'),
+                        semana: this.getDiaSemana(dia),
+                        horario: toHHMM(dadosForm.horario),
+                        carga_horaria: toNumber(dadosForm.carga_horaria, 'Carga horária'),
+                        modalidade: dadosForm.modalidade,
+                        treinamento_id: this.mapTreinamentoToId(dadosForm.treinamento),
+                        polos: {
+                            cmd: Boolean(dadosForm.cmd),
+                            sjb: Boolean(dadosForm.sjb),
+                            sag_tombos: Boolean(dadosForm.sag_tombos)
+                        },
+                        instrutor_id: this.mapInstrutorToId(dadosForm.instrutor),
+                        local: dadosForm.local || '',
+                        observacao: dadosForm.observacao || ''
+                    });
+                }
+
+                const resp = await chamarAPI('/planejamento', 'POST', { registros: linhas });
+                showToast(`Planejamento salvo (${resp.quantidade} linhas)`, 'success');
+                await this.carregarPlanejamentos();
+                this.finalizarAcao();
             } catch (error) {
-                showToast('Erro ao salvar planejamento.', 'danger');
+                showToast(error.message, 'danger');
             }
-            this.finalizarAcao();
         },
 
         async executarEdicao() {

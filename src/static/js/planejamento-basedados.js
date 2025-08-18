@@ -33,6 +33,31 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     };
 
+    const STORAGE_KEY = 'planejamentoBaseDados';
+
+    function carregarDoLocalStorage() {
+        try {
+            const dados = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            if (dados) {
+                Object.keys(mockData).forEach(tipo => {
+                    if (Array.isArray(dados[tipo])) {
+                        mockData[tipo] = dados[tipo];
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('Erro ao carregar dados do localStorage:', e);
+        }
+    }
+
+    function salvarNoLocalStorage() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(mockData));
+        } catch (e) {
+            console.error('Erro ao salvar dados no localStorage:', e);
+        }
+    }
+
     // --- VARIÁVEIS GLOBAIS ---
     const geralModal = new bootstrap.Modal(document.getElementById('geralModal'));
     const instrutorModal = new bootstrap.Modal(document.getElementById('instrutorModal'));
@@ -237,6 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         renderizarTabelaGenerica(type);
+        salvarNoLocalStorage();
         geralModal.hide();
     }
 
@@ -262,6 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const index = mockData[type].findIndex(i => i.id === id);
             if (index > -1) mockData[type].splice(index, 1);
             renderizarTabelaGenerica(type);
+            salvarNoLocalStorage();
         }
         
         confirmacaoModal.hide();
@@ -273,6 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnSalvarInstrutor').addEventListener('click', salvarInstrutor);
     document.getElementById('btnConfirmarExclusao').addEventListener('click', excluirItem);
 
+    carregarDoLocalStorage();
     carregarInstrutoresDaAPI();
     renderizarTabelaGenerica('treinamento');
     renderizarTabelaGenerica('local');

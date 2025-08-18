@@ -226,7 +226,7 @@ def create_app():
     app.register_blueprint(ocupacao_bp, url_prefix='/api')
     app.register_blueprint(rateio_bp, url_prefix='/api')
     app.register_blueprint(treinamento_bp, url_prefix='/api')
-    app.register_blueprint(basedados_bp, url_prefix='/api')
+    app.register_blueprint(basedados_bp, url_prefix='/api/planejamento-basedados')
     app.register_blueprint(planejamento_bp, url_prefix='/api')
     app.register_blueprint(auth_reset_bp)
     app.register_blueprint(auth_bp)

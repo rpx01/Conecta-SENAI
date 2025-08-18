@@ -11,8 +11,7 @@ from src.models.planejamento import (
 
 basedados_bp = Blueprint(
     "planejamento_basedados",
-    __name__,
-    url_prefix="/planejamento-basedados",
+    __name__
 )
 
 # Mapeamento corrigido para corresponder aos tipos usados no frontend

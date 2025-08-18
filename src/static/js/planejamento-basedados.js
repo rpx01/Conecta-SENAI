@@ -1,33 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- DADOS DE EXEMPLO (MOCK) ---
-    // Mantemos os dados que não vêm da API, pois são mais simples.
-    const mockData = {
-        local: [
-            { id: 1, nome: 'ONLINE/HOME OFFICE' },
-            { id: 2, nome: 'CMD' },
-            { id: 3, nome: 'TRANSMISSÃO ONLINE' }
-        ],
-        modalidade: [
-            { id: 1, nome: 'Semipresencial' },
-            { id: 2, nome: 'Presencial' },
-            { id: 3, nome: 'Online' }
-        ],
-        horario: [
-            { id: 1, nome: '08:00 - 12:00' },
-            { id: 2, nome: '13:00 - 17:00' },
-            { id: 3, nome: '18:00 - 22:00' }
-        ],
-        cargahoraria: [
-            { id: 1, nome: '4 horas' },
-            { id: 2, nome: '8 horas' },
-            { id: 3, nome: '16 horas' }
-        ],
-        'publico-alvo': [
-            { id: 1, nome: 'Empregados Anglo American' },
-            { id: 2, nome: 'Comunidade' }
-        ]
-    };
-
+   
     const STORAGE_KEY = 'planejamentoBaseDados';
 
     function carregarDoLocalStorage() {
@@ -65,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
     async function carregarTreinamentosDaAPI() {
         try {
-            const treinamentos = await chamarAPI('/treinamentos/catalogo');
             const tbody = document.getElementById('tabela-treinamento');
             tbody.innerHTML = '';
 

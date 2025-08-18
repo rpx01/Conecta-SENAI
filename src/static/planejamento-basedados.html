@@ -69,12 +69,28 @@
                 <div class="page-header">
                     <h1 class="mb-0">Base de Dados</h1>
                 </div>
+                <form id="formBaseDados" class="row g-2 align-items-end mb-4">
+                    <div class="col-md-6">
+                        <input id="inputDescricao" name="descricao" class="form-control" placeholder="Descrição" required>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="selectInstrutor" name="instrutor_id" class="form-select" required></select>
+                    </div>
+                    <div class="col-md-2">
+                        <button id="btnAdicionarItem" type="submit" class="btn btn-primary w-100" disabled>
+                            <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                            <span class="btn-text">Adicionar</span>
+                        </button>
+                    </div>
+                </form>
+
+                <ul id="listaBaseDados" class="list-group mb-4"></ul>
 
                 <div class="row">
                     <div class="col-md-6 mb-4">
                         <div class="card h-100">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h2 class="card-title mb-0"><i class="bi bi-journal-text me-2"></i>Planejamento de Treinamentos</h2>
+                                <h2 class="card-title mb-0"><i class="bi bi-journal-text me-2"></i>Treinamentos</h2>
                                 <button class="btn btn-primary btn-sm" onclick="abrirModal('treinamento')"><i class="bi bi-plus-circle me-1"></i> Adicionar</button>
                             </div>
                             <div class="card-body p-0">
@@ -105,7 +121,89 @@
                         </div>
                     </div>
 
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h2 class="card-title mb-0"><i class="bi bi-people-fill me-2"></i>Publico alvo</h2>
+                                <button class="btn btn-primary btn-sm" onclick="abrirModal('publico-alvo')"><i class="bi bi-plus-circle me-1"></i> Adicionar</button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover mb-0">
+                                        <thead><tr><th>Nome</th><th class="text-end">Ações</th></tr></thead>
+                                        <tbody id="tabela-publico-alvo"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h2 class="card-title mb-0"><i class="bi bi-geo-alt-fill me-2"></i>Locais</h2>
+                                <button class="btn btn-primary btn-sm" onclick="abrirModal('local')"><i class="bi bi-plus-circle me-1"></i> Adicionar</button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover mb-0">
+                                        <thead><tr><th>Nome</th><th class="text-end">Ações</th></tr></thead>
+                                        <tbody id="tabela-local"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h2 class="card-title mb-0"><i class="bi bi-display me-2"></i>Modalidades</h2>
+                                <button class="btn btn-primary btn-sm" onclick="abrirModal('modalidade')"><i class="bi bi-plus-circle me-1"></i> Adicionar</button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover mb-0">
+                                        <thead><tr><th>Nome</th><th class="text-end">Ações</th></tr></thead>
+                                        <tbody id="tabela-modalidade"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h2 class="card-title mb-0"><i class="bi bi-clock-fill me-2"></i>Horário</h2>
+                                <button class="btn btn-primary btn-sm" onclick="abrirModal('horario')"><i class="bi bi-plus-circle me-1"></i> Adicionar</button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover mb-0">
+                                        <thead><tr><th>Nome</th><th class="text-end">Ações</th></tr></thead>
+                                        <tbody id="tabela-horario"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h2 class="card-title mb-0"><i class="bi bi-hourglass-split me-2"></i>Carga Horária</h2>
+                                <button class="btn btn-primary btn-sm" onclick="abrirModal('cargahoraria')"><i class="bi bi-plus-circle me-1"></i> Adicionar</button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover mb-0">
+                                        <thead><tr><th>Nome</th><th class="text-end">Ações</th></tr></thead>
+                                        <tbody id="tabela-cargahoraria"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </main>
         </div>
     </div>
@@ -125,9 +223,9 @@
                             <label for="itemName" class="form-label">Nome</label>
                             <input type="text" class="form-control" id="itemName" required>
                         </div>
-                        <div class="mb-3" id="cargaHorariaContainer" style="display: none;">
+                        <div class="mb-3 d-none" id="cargaHorariaGroup">
                             <label for="itemCargaHoraria" class="form-label">Carga Horária</label>
-                            <input type="number" class="form-control" id="itemCargaHoraria">
+                            <input type="number" class="form-control" id="itemCargaHoraria" min="0">
                         </div>
                     </form>
                 </div>
@@ -138,7 +236,98 @@
             </div>
         </div>
     </div>
-    
+
+    <div class="modal fade" id="instrutorModal" tabindex="-1" aria-labelledby="instrutorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="instrutorModalLabel">Novo Instrutor</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formInstrutor">
+                        <input type="hidden" id="instrutorId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="instrutorNome" class="form-label">Nome *</label>
+                                    <input type="text" class="form-control" id="instrutorNome" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="instrutorEmail" class="form-label">E-mail *</label>
+                                    <input type="email" class="form-control" id="instrutorEmail" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="instrutorArea" class="form-label">Área de Atuação *</label>
+                                    <select class="form-select" id="instrutorArea" required></select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="instrutorStatus" class="form-label">Status</label>
+                                    <select class="form-select" id="instrutorStatus">
+                                        <option value="ativo">Ativo</option>
+                                        <option value="inativo">Inativo</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="instrutorObservacoes" class="form-label">Observações</label>
+                            <textarea class="form-control" id="instrutorObservacoes" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Disponibilidade</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="dispManha" value="manha">
+                                <label class="form-check-label" for="dispManha">Manhã</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="dispTarde" value="tarde">
+                                <label class="form-check-label" for="dispTarde">Tarde</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="dispNoite" value="noite">
+                                <label class="form-check-label" for="dispNoite">Noite</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnSalvarInstrutor">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        <span class="btn-text">Salvar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmacaoModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Confirmar Exclusão</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarExclusao">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/app.js"></script>
     <script src="/js/planejamento-basedados.js"></script>

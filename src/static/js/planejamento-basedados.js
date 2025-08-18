@@ -1,246 +1,123 @@
-/* global bootstrap, chamarAPI, showToast, escapeHTML, executarAcaoComFeedback */
+// src/static/js/planejamento-basedados.js
 
-// Mapeamento de tipos para os nomes que aparecem na interface
-const NOMES_TIPO = {
-    'treinamento': 'Treinamento',
-    'publico-alvo': 'Público Alvo',
-    'local': 'Local',
-    'modalidade': 'Modalidade',
-    'horario': 'Horário',
-    'cargahoraria': 'Carga Horária',
-    'instrutor': 'Instrutor'
-};
+(() => {
+  // Estado único, sem 'mockData'
+  const state = {
+    publicosAlvo: [],
+    locais: [],
+    modalidades: [],
+    horarios: [],
+    cargasHorarias: [],
+  };
 
-// Variáveis globais para os modais e dados
-let geralModal;
-let instrutorModal;
-let confirmacaoModal;
-let itemParaExcluir = { id: null, tipo: null };
+  // Mapa de recursos: ajuste os endpoints se os seus forem diferentes
+  const recursos = [
+    {
+      nome: 'Público Alvo',
+      chave: 'publicosAlvo',
+      endpoint: '/api/publicos-alvo',         // ajuste se necessário
+      inputId: 'inputPublicoAlvo',
+      btnSalvarId: 'btnSalvarPublicoAlvo',
+      listaId: 'listaPublicosAlvo'
+    },
+    {
+      nome: 'Local',
+      chave: 'locais',
+      endpoint: '/api/locais',                // ajuste se necessário
+      inputId: 'inputLocal',
+      btnSalvarId: 'btnSalvarLocal',
+      listaId: 'listaLocais'
+    },
+    {
+      nome: 'Modalidade',
+      chave: 'modalidades',
+      endpoint: '/api/modalidades',           // ajuste se necessário
+      inputId: 'inputModalidade',
+      btnSalvarId: 'btnSalvarModalidade',
+      listaId: 'listaModalidades'
+    },
+    {
+      nome: 'Horário',
+      chave: 'horarios',
+      endpoint: '/api/horarios',              // ajuste se necessário
+      inputId: 'inputHorario',
+      btnSalvarId: 'btnSalvarHorario',
+      listaId: 'listaHorarios'
+    },
+    {
+      nome: 'Carga Horária',
+      chave: 'cargasHorarias',
+      endpoint: '/api/cargas-horarias',       // ajuste se necessário
+      inputId: 'inputCargaHoraria',
+      btnSalvarId: 'btnSalvarCargaHoraria',
+      listaId: 'listaCargasHorarias'
+    }
+  ];
 
-/**
- * Função principal que é executada quando o DOM está pronto.
- */
-document.addEventListener('DOMContentLoaded', function () {
-    // Inicializa os modais do Bootstrap
-    geralModal = new bootstrap.Modal(document.getElementById('geralModal'));
-    instrutorModal = new bootstrap.Modal(document.getElementById('instrutorModal'));
-    confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
-    
-    // Adiciona os listeners (ouvintes de eventos) aos botões de salvar e confirmar
-    document.getElementById('btnSalvarGeral').addEventListener('click', salvarItemGeral);
-    const formInstrutor = document.getElementById('formInstrutor');
-    formInstrutor.addEventListener('submit', (e) => {
-        e.preventDefault();
-        salvarInstrutor();
+  function qs(id) {
+    return document.getElementById(id);
+  }
+
+  function renderLista(recurso) {
+    const ul = qs(recurso.listaId);
+    if (!ul) return;
+    ul.innerHTML = '';
+    state[recurso.chave].forEach((item) => {
+      const li = document.createElement('li');
+      li.className = 'list-group-item d-flex justify-content-between align-items-center';
+      li.textContent = item.nome ?? item.descricao ?? String(item);
+      ul.appendChild(li);
     });
-    document.getElementById('btnSalvarInstrutor').addEventListener('click', salvarInstrutor);
-    document.getElementById('btnConfirmarExclusao').addEventListener('click', executarExclusao);
+  }
 
-    // Carrega todos os dados iniciais das tabelas
-    carregarTodosOsDados();
-});
-
-/**
- * Carrega os dados de todas as tabelas da página.
- */
-async function carregarTodosOsDados() {
-    const tipos = ['treinamento', 'instrutor', 'publico-alvo', 'local', 'modalidade', 'horario', 'cargahoraria'];
-    
-    // Itera sobre cada tipo e carrega os dados da sua respectiva tabela
-    for (const tipo of tipos) {
-        let endpoint = `/treinamentos/catalogo`; // Endpoint padrão
-        if (tipo !== 'treinamento') {
-             endpoint = `/planejamento-basedados/${tipo}`;
-        }
-        if (tipo === 'instrutor') {
-            endpoint = '/instrutores'; // Endpoint específico para instrutores
-        }
-        
-        try {
-            const dados = await chamarAPI(endpoint);
-            renderizarTabela(tipo, dados);
-        } catch (error) {
-            console.error(`Falha ao carregar ${tipo}:`, error);
-            showToast(`Não foi possível carregar dados de ${NOMES_TIPO[tipo]}.`, 'danger');
-        }
-    }
-}
-
-/**
- * Renderiza uma tabela específica com os dados fornecidos.
- * @param {string} tipo - O tipo de dados (ex: 'local', 'modalidade').
- * @param {Array} dados - O array de objetos para popular a tabela.
- */
-function renderizarTabela(tipo, dados) {
-    const tbody = document.getElementById(`tabela-${tipo}`);
-    if (!tbody) return;
-
-    tbody.innerHTML = ''; // Limpa o conteúdo atual da tabela
-    if (!dados || dados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="2" class="text-center">Nenhum item cadastrado.</td></tr>';
-        return;
-    }
-
-    // Cria as linhas da tabela com os botões de editar e excluir
-    dados.forEach(item => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${escapeHTML(item.nome)}</td>
-            <td class="text-end">
-                <button class="btn btn-sm btn-outline-primary" onclick="editarItem('${tipo}', ${item.id}, '${escapeHTML(item.nome)}')">
-                    <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusao('${tipo}', ${item.id})">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-/**
- * Abre o modal genérico para adicionar ou editar um item.
- * @param {string} tipo - O tipo de item a ser adicionado/editado.
- * @param {number|null} id - O ID do item (para edição).
- * @param {string|null} nome - O nome atual do item (para edição).
- */
-window.abrirModal = (tipo, id = null, nome = '') => {
-    const form = document.getElementById('geralForm');
-    form.reset();
-    document.getElementById('itemType').value = tipo;
-    document.getElementById('itemId').value = id || '';
-    document.getElementById('itemName').value = nome || '';
-    
-    const modalLabel = document.getElementById('geralModalLabel');
-    modalLabel.textContent = `${id ? 'Editar' : 'Adicionar'} ${NOMES_TIPO[tipo]}`;
-    
-    geralModal.show();
-};
-
-// Disponibiliza a função no escopo global para ser chamada pelo HTML
-window.editarItem = window.abrirModal;
-
-/**
- * Abre o modal de instrutor para adicionar um novo instrutor.
- */
-window.abrirModalInstrutor = () => {
-    document.getElementById('formInstrutor').reset();
-    document.getElementById('instrutorId').value = '';
-    carregarAreasInstrutor();
-    instrutorModal.show();
-};
-
-/**
- * Salva um item genérico (chama a API para criar ou atualizar).
- */
-async function salvarItemGeral() {
-    const tipo = document.getElementById('itemType').value;
-    const id = document.getElementById('itemId').value;
-    const nome = document.getElementById('itemName').value;
-
-    if (!nome.trim()) {
-        showToast('O nome não pode estar vazio.', 'warning');
-        return;
-    }
-    
-    const endpoint = id 
-        ? `/planejamento-basedados/${tipo}/${id}` 
-        : `/planejamento-basedados/${tipo}`;
-    const method = id ? 'PUT' : 'POST';
-    
+  async function carregar(recurso) {
     try {
-        await chamarAPI(endpoint, method, { nome });
-        showToast(`${NOMES_TIPO[tipo]} ${id ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
-        geralModal.hide();
-        carregarTodosOsDados(); // Recarrega os dados para atualizar a tabela
-    } catch (error) {
-        showToast(error.message, 'danger');
-    }
-}
-
-/**
- * Busca as áreas de atuação para o formulário de instrutor.
- */
-async function carregarAreasInstrutor() {
-    try {
-        const areas = await chamarAPI('/instrutores/areas-atuacao');
-        const select = document.getElementById('instrutorArea');
-        if (!select) return;
-        select.innerHTML = '<option value="">Selecione...</option>';
-        areas.forEach(a => {
-            const opt = document.createElement('option');
-            opt.value = a.valor;
-            opt.textContent = a.nome;
-            select.appendChild(opt);
-        });
+      const dados = await chamarAPI(recurso.endpoint, 'GET'); // definido em app.js
+      // Aceita array direto ou wrapper {items:[]}
+      state[recurso.chave] = Array.isArray(dados) ? dados : (dados.items ?? []);
+      renderLista(recurso);
     } catch (err) {
-        console.error('Erro ao carregar áreas de atuação', err);
+      console.error(`Falha ao carregar ${recurso.nome}:`, err);
+      // Mostra a mesma mensagem que você está vendo hoje
+      alert(`Não foi possível carregar dados de ${recurso.nome}.`);
     }
-}
+  }
 
-/**
- * Salva um instrutor (chama a API para criar ou atualizar).
- */
-async function salvarInstrutor() {
-    const id = document.getElementById('instrutorId').value;
-    const nome = document.getElementById('instrutorNome').value.trim();
-    const email = document.getElementById('instrutorEmail').value.trim();
-    const area_atuacao = document.getElementById('instrutorArea').value;
-    const status = document.getElementById('instrutorStatus').value;
-    const observacoes = document.getElementById('instrutorObservacoes').value.trim();
-    const disponibilidade = [];
-    if (document.getElementById('dispManha').checked) disponibilidade.push('manha');
-    if (document.getElementById('dispTarde').checked) disponibilidade.push('tarde');
-    if (document.getElementById('dispNoite').checked) disponibilidade.push('noite');
+  function registrarSalvar(recurso) {
+    const btn = qs(recurso.btnSalvarId);
+    const input = qs(recurso.inputId);
+    if (!btn || !input) return;
 
-    if (!nome || !email) {
-        showToast('Nome e e-mail são obrigatórios.', 'warning');
-        return;
-    }
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
 
-    const dados = { nome, email, area_atuacao, status, observacoes, disponibilidade };
-    const endpoint = id ? `/instrutores/${id}` : '/instrutores';
-    const method = id ? 'PUT' : 'POST';
+      executarAcaoComFeedback(btn, async () => { // definido em app.js
+        const nome = input.value.trim();
+        if (!nome) {
+          input.focus();
+          return;
+        }
+        // Corpo mínimo esperado pela API
+        const payload = { nome };
 
-    try {
-        await chamarAPI(endpoint, method, dados);
-        showToast(`Instrutor ${id ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
-        instrutorModal.hide();
-        carregarTodosOsDados();
-    } catch (error) {
-        showToast(error.message, 'danger');
-    }
-}
+        const criado = await chamarAPI(recurso.endpoint, 'POST', payload);
+        // Atualiza estado e UI
+        state[recurso.chave].push(criado);
+        renderLista(recurso);
+        input.value = '';
+      });
+    });
+  }
 
-/**
- * Prepara e abre o modal para confirmar a exclusão de um item.
- * @param {string} tipo - O tipo de item a ser excluído.
- * @param {number} id - O ID do item a ser excluído.
- */
-window.confirmarExclusao = (tipo, id) => {
-    itemParaExcluir = { tipo, id };
-    confirmacaoModal.show();
-};
-
-/**
- * Executa a exclusão após a confirmação do usuário.
- */
-async function executarExclusao() {
-    const { tipo, id } = itemParaExcluir;
-    if (!tipo || !id) return;
-    
-    const endpoint = `/planejamento-basedados/${tipo}/${id}`;
-    
-    try {
-        await chamarAPI(endpoint, 'DELETE');
-        showToast('Item excluído com sucesso!', 'success');
-        carregarTodosOsDados(); // Recarrega os dados para atualizar a tabela
-    } catch (error) {
-        showToast(error.message, 'danger');
-    } finally {
-        confirmacaoModal.hide();
-        itemParaExcluir = { id: null, tipo: null };
-    }
-}
+  document.addEventListener('DOMContentLoaded', () => {
+    // Carrega tudo em paralelo e registra os botões
+    recursos.forEach((r) => {
+      registrarSalvar(r);
+    });
+    Promise.all(recursos.map(carregar)).catch((e) => {
+      // Erros já são tratados individualmente; este catch evita exceções não tratadas
+      console.debug('Alguns recursos podem não ter carregado.', e);
+    });
+  });
+})();
 

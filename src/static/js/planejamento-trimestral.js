@@ -56,12 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
             this.confirmacaoModal = new bootstrap.Modal(this.confirmacaoModalEl);
 
             document.getElementById('btn-adicionar-planejamento').addEventListener('click', () => this.abrirModal());
-            this.form.addEventListener('submit', (e) => this.salvar(e));
             this.tabelaBody.addEventListener('click', (e) => this.handleTabelaClick(e));
             document.getElementById('btn-confirmar-exclusao').addEventListener('click', () => this.executarExclusao());
 
-            this.form.inicio.addEventListener('change', () => this.atualizarContadorLinhas());
-            this.form.fim.addEventListener('change', () => this.atualizarContadorLinhas());
+            this.form.dataInicio.addEventListener('change', () => this.atualizarContadorLinhas());
+            this.form.dataTermino.addEventListener('change', () => this.atualizarContadorLinhas());
 
             this.popularFormulario(); // Pré-carrega os selects
             this.carregarPlanejamentos();
@@ -109,14 +108,26 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!dados) return;
 
             this.popularSelect(this.form.horario, dados.horario, 'Selecione...');
-            this.popularSelect(this.form.carga_horaria, dados.carga_horaria, 'Selecione...');
+            this.popularSelect(this.form.ch, dados.carga_horaria, 'Selecione...');
             this.popularSelect(this.form.modalidade, dados.modalidade, 'Selecione...');
-            this.popularSelect(this.form.treinamento, dados.treinamentos.map(t => t.nome), 'Selecione...');
-            this.popularSelect(this.form.instrutor, dados.instrutores.map(i => i.nome), 'Selecione...');
+            this.form.treinamentoId.innerHTML = '<option value="">Selecione...</option>';
+            dados.treinamentos.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = escapeHTML(t.nome);
+                this.form.treinamentoId.appendChild(opt);
+            });
+            this.form.instrutorId.innerHTML = '<option value="">Selecione...</option>';
+            dados.instrutores.forEach(i => {
+                const opt = document.createElement('option');
+                opt.value = i.id;
+                opt.textContent = escapeHTML(i.nome);
+                this.form.instrutorId.appendChild(opt);
+            });
             this.popularSelect(this.form.local, dados.local, 'Selecione...');
             this.popularSelect(this.form.cmd, dados.publico_alvo, 'Nenhum');
             this.popularSelect(this.form.sjb, dados.publico_alvo, 'Nenhum');
-            this.popularSelect(this.form.sag_tombos, dados.publico_alvo, 'Nenhum');
+            this.popularSelect(this.form.sag, dados.publico_alvo, 'Nenhum');
         },
 
         async carregarPlanejamentos() {
@@ -189,8 +200,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                     // Ajusta nomes de campo
-                    this.form.carga_horaria.value = item.cargaHoraria;
-                    this.form.sag_tombos.value = item.sagTombos;
+                    this.form.ch.value = item.cargaHoraria;
+                    this.form.sag.value = item.sagTombos;
                     // Lida com as datas
                     dataInicioInput.value = item.data;
                     dataFimInput.value = item.data;
@@ -223,8 +234,8 @@ document.addEventListener('DOMContentLoaded', () => {
         async executarAdicao() {
             const dadosForm = Object.fromEntries(new FormData(this.form).entries());
             try {
-                const dataInicio = new Date(`${dadosForm.inicio}T00:00:00`);
-                const dataFim = new Date(`${dadosForm.fim}T00:00:00`);
+                const dataInicio = new Date(`${dadosForm.dataInicio}T00:00:00`);
+                const dataFim = new Date(`${dadosForm.dataTermino}T00:00:00`);
 
                 const linhas = [];
                 for (let d = new Date(dataInicio); d <= dataFim; d.setDate(d.getDate() + 1)) {
@@ -234,15 +245,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         fim: toISODate(dia, 'Data final'),
                         semana: this.getDiaSemana(dia),
                         horario: toHHMM(dadosForm.horario),
-                        carga_horaria: toNumber(dadosForm.carga_horaria, 'Carga horária'),
+                        carga_horaria: toNumber(dadosForm.ch, 'Carga horária'),
                         modalidade: dadosForm.modalidade,
-                        treinamento: dadosForm.treinamento,
+                        treinamento_id: toNumber(dadosForm.treinamentoId, 'Treinamento'),
                         polos: {
                             cmd: Boolean(dadosForm.cmd),
                             sjb: Boolean(dadosForm.sjb),
-                            sag_tombos: Boolean(dadosForm.sag_tombos)
+                            sag_tombos: Boolean(dadosForm.sag)
                         },
-                        instrutor: dadosForm.instrutor,
+                        instrutor_id: dadosForm.instrutorId ? toNumber(dadosForm.instrutorId) : null,
                         local: dadosForm.local || '',
                         observacao: dadosForm.observacao || ''
                     });
@@ -262,8 +273,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const itemIndex = this.planejamentos.findIndex(p => p.rowId === rowId);
 
             if (itemIndex > -1) {
-                const dadosForm = Object.fromEntries(new FormData(this.form).entries());
-                const dataAtualizada = new Date(`${dadosForm.inicio}T12:00:00Z`);
+            const dadosForm = Object.fromEntries(new FormData(this.form).entries());
+            const dataAtualizada = new Date(`${dadosForm.dataInicio}T12:00:00Z`);
 
                 // Atualiza os dados do objeto no array
                 this.planejamentos[itemIndex] = {
@@ -271,13 +282,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     data: dataAtualizada.toISOString().split('T')[0],
                     semana: this.getDiaSemana(dataAtualizada),
                     horario: dadosForm.horario,
-                    cargaHoraria: dadosForm.carga_horaria,
+                    cargaHoraria: dadosForm.ch,
                     modalidade: dadosForm.modalidade,
-                    treinamento: dadosForm.treinamento,
+                    treinamento: dadosForm.treinamentoId,
                     cmd: dadosForm.cmd,
                     sjb: dadosForm.sjb,
-                    sagTombos: dadosForm.sag_tombos,
-                    instrutor: dadosForm.instrutor,
+                    sagTombos: dadosForm.sag,
+                    instrutor: dadosForm.instrutorId,
                     local: dadosForm.local,
                     observacao: dadosForm.observacao
                 };
@@ -343,8 +354,8 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         atualizarContadorLinhas() {
-            const inicio = this.form.inicio.valueAsDate;
-            const fim = this.form.fim.valueAsDate;
+            const inicio = this.form.dataInicio.valueAsDate;
+            const fim = this.form.dataTermino.valueAsDate;
             if (inicio && fim && fim >= inicio) {
                 const diffTime = Math.abs(fim - inicio);
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
@@ -379,5 +390,125 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Inicia a aplicação
     gerenciadorPlanejamento.init();
+    // expõe para outras funções
+    window.gerenciadorPlanejamento = gerenciadorPlanejamento;
 });
+
+// Delegação para o botão do modal (caso o modal seja injetado depois)
+document.addEventListener('click', async (ev) => {
+    const btn = ev.target.closest('#btnSalvarPlanejamento');
+    if (!btn) return;
+    ev.preventDefault();
+    await salvarPlanejamento(btn);
+});
+
+function parseDateISO(v) {
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) throw new Error('Data inválida');
+    d.setHours(0,0,0,0);
+    return d;
+}
+
+function eachDayInclusive(start, end) {
+    const days = [];
+    const cur = new Date(start);
+    while (cur.getTime() <= end.getTime()) {
+        days.push(new Date(cur));
+        cur.setDate(cur.getDate() + 1);
+    }
+    return days;
+}
+
+async function salvarPlanejamento(btn) {
+    try {
+        btn.disabled = true;
+
+        const dataInicio = document.querySelector('#dataInicio')?.value;
+        const dataTermino = document.querySelector('#dataTermino')?.value;
+        const horario = document.querySelector('#horario')?.value || '';
+        const ch = document.querySelector('#ch')?.value || '';
+        const modalidade = document.querySelector('#modalidade')?.value || '';
+        const treinamentoId = document.querySelector('#treinamentoId')?.value;
+        const cmd = document.querySelector('#cmd')?.checked || false;
+        const sjb = document.querySelector('#sjb')?.checked || false;
+        const sag = document.querySelector('#sag')?.checked || false;
+        const instrutorId = document.querySelector('#instrutorId')?.value;
+        const local = document.querySelector('#local')?.value || '';
+        const observacao = document.querySelector('#observacao')?.value || '';
+
+        if (!dataInicio || !dataTermino) throw new Error('Informe início e término.');
+        if (!treinamentoId) throw new Error('Selecione o treinamento.');
+        if (!cmd && !sjb && !sag) throw new Error('Selecione ao menos um polo (CMD, SJB, SAG/TOMBOS).');
+
+        const di = parseDateISO(dataInicio);
+        const df = parseDateISO(dataTermino);
+        if (df < di) throw new Error('Data de término não pode ser anterior ao início.');
+
+        const dias = eachDayInclusive(di, df);
+
+        const itens = dias.map(d => ({
+            data: d.toISOString().slice(0,10),
+            horario,
+            carga_horaria: ch,
+            modalidade,
+            treinamento_id: Number(treinamentoId),
+            polos: { CMD: !!cmd, SJB: !!sjb, SAG_TOMBOS: !!sag },
+            instrutor_id: instrutorId ? Number(instrutorId) : null,
+            local,
+            observacao
+        }));
+
+        const body = { itens };
+
+        let token = '';
+        try { token = await getCsrfToken(); } catch (e) {}
+
+        const resp = await fetch('/api/planejamento', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { 'X-CSRFToken': token } : {})
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(body)
+        });
+
+        if (resp.status === 403) {
+            token = await getCsrfToken(true);
+            const retry = await fetch('/api/planejamento', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': token },
+                credentials: 'same-origin',
+                body: JSON.stringify(body)
+            });
+            if (!retry.ok) {
+                const err = await safeJson(retry);
+                throw new Error(err?.erro || 'Falha ao salvar (CSRF).');
+            }
+        } else if (!resp.ok) {
+            const err = await safeJson(resp);
+            throw new Error(err?.erro || 'Falha ao salvar.');
+        }
+
+        toastOk('Planejamento salvo com sucesso.');
+        fecharModalPlanejamento();
+        if (window.gerenciadorPlanejamento) {
+            await window.gerenciadorPlanejamento.carregarPlanejamentos();
+        }
+    } catch (err) {
+        console.error('[Salvar Planejamento] ', err);
+        toastErro(err.message || 'Erro ao salvar planejamento.');
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function safeJson(r) { try { return await r.json(); } catch { return null; } }
+function toastOk(msg){ showToast(msg, 'success'); }
+function toastErro(msg){ showToast(msg, 'danger'); }
+function fecharModalPlanejamento(){
+    const modalEl = document.getElementById('modal-planejamento');
+    const m = bootstrap.Modal.getInstance(modalEl);
+    if (m) m.hide();
+}
 

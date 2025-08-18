@@ -26,6 +26,7 @@ from .planejamento import (  # noqa: E402
     Horario,
     CargaHoraria,
     PublicoAlvo,
+    PlanejamentoTreinamento,
 )
 
 __all__ = [
@@ -52,4 +53,5 @@ __all__ = [
     "Horario",
     "CargaHoraria",
     "PublicoAlvo",
+    "PlanejamentoTreinamento",
 ]

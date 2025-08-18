@@ -55,38 +55,31 @@ async function executarComLoading(acao) {
 let csrfToken = null;
 
 /**
- * Tenta obter o token CSRF de meta tag ou cookie e, se não encontrar,
- * consulta a API. O token é armazenado em memória para reutilização.
+ * Obtém o token CSRF da API. O token é armazenado em memória para
+ * reutilização e renovado quando explicitamente solicitado.
  * @param {boolean} force - Quando true, força a renovação do token
- * @returns {Promise<string>} Token CSRF
+ * @returns {Promise<string>} Token CSRF válido
  */
-async function getCsrfToken(force = false) {
+async function obterCSRFToken(force = false) {
     if (csrfToken && !force) {
         return csrfToken;
     }
 
-    const meta = document.querySelector('meta[name="csrf-token"]');
-    if (meta?.content && !force) {
-        csrfToken = meta.content;
-        return csrfToken;
-    }
-
     try {
-        const resp = await fetch(`${API_URL}/csrf-token`, { credentials: 'same-origin' });
-        if (!resp.ok) throw new Error('Falha ao obter o token CSRF.');
+        const resp = await fetch(`${API_URL}/csrf-token`, {
+            credentials: 'include'
+        });
+        if (!resp.ok) {
+            throw new Error('Falha ao obter o token CSRF.');
+        }
         const data = await resp.json();
-        csrfToken = data.csrf_token || data.token || data.csrf || '';
+        csrfToken = data.csrf_token;
         return csrfToken;
     } catch (err) {
         console.error(err);
         showToast('Erro de segurança. Não foi possível carregar o token CSRF.', 'danger');
         throw err;
     }
-}
-
-// Compatibilidade com código existente
-async function obterCSRFToken(force = false) {
-    return getCsrfToken(force);
 }
 
 /**

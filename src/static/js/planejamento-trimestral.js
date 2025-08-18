@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         fim: toISODate(dia, 'Data final'),
                         semana: this.getDiaSemana(dia),
                         horario: toHHMM(dadosForm.horario),
-                        carga_horaria: toNumber(dadosForm.carga_horaria, 'Carga horária'),
+                        carga_horaria: parseInt(dadosForm.carga_horaria, 10),
                         modalidade: dadosForm.modalidade,
                         treinamento: dadosForm.treinamento,
                         polos: {

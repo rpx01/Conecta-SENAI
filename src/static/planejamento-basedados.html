@@ -96,7 +96,7 @@
                             <div class="card-body p-0">
                                 <div class="table-responsive">
                                     <table class="table table-striped table-hover mb-0">
-                                        <thead><tr><th>Nome</th><th class="text-end">Ações</th></tr></thead>
+                                        <thead><tr><th>Nome</th><th>Carga Horária</th><th class="text-end">Ações</th></tr></thead>
                                         <tbody id="tabela-treinamento"></tbody>
                                     </table>
                                 </div>
@@ -222,6 +222,10 @@
                         <div class="mb-3">
                             <label for="itemName" class="form-label">Nome</label>
                             <input type="text" class="form-control" id="itemName" required>
+                        </div>
+                        <div class="mb-3 d-none" id="cargaHorariaGroup">
+                            <label for="itemCargaHoraria" class="form-label">Carga Horária</label>
+                            <input type="number" class="form-control" id="itemCargaHoraria" min="0">
                         </div>
                     </form>
                 </div>

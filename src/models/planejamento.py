@@ -86,6 +86,16 @@ class PublicoAlvo(PlanejamentoBase):
     __tablename__ = "planejamento_publicos_alvo"
 
 
+class PlanejamentoTreinamento(PlanejamentoBase):
+    __tablename__ = "planejamento_treinamentos"
+    carga_horaria = db.Column(db.Integer)
+
+    def to_dict(self):
+        dados = super().to_dict()
+        dados["carga_horaria"] = self.carga_horaria
+        return dados
+
+
 class PlanejamentoBDItem(db.Model):
     """Simple item used by the planejamento base de dados page."""
 

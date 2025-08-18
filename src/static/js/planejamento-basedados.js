@@ -45,13 +45,10 @@ document.addEventListener('DOMContentLoaded', function () {
  */
 async function carregarTodosOsDados() {
     const tipos = ['treinamento', 'instrutor', 'publico-alvo', 'local', 'modalidade', 'horario', 'cargahoraria'];
-    
+
     // Itera sobre cada tipo e carrega os dados da sua respectiva tabela
     for (const tipo of tipos) {
-        let endpoint = `/treinamentos/catalogo`; // Endpoint padrão
-        if (tipo !== 'treinamento') {
-             endpoint = `/planejamento-basedados/${tipo}`;
-        }
+        let endpoint = `/planejamento-basedados/${tipo}`;
         if (tipo === 'instrutor') {
             endpoint = '/instrutores'; // Endpoint específico para instrutores
         }
@@ -77,24 +74,40 @@ function renderizarTabela(tipo, dados) {
 
     tbody.innerHTML = ''; // Limpa o conteúdo atual da tabela
     if (!dados || dados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="2" class="text-center">Nenhum item cadastrado.</td></tr>';
+        const colSpan = tipo === 'treinamento' ? 3 : 2;
+        tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center">Nenhum item cadastrado.</td></tr>`;
         return;
     }
 
     // Cria as linhas da tabela com os botões de editar e excluir
     dados.forEach(item => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${escapeHTML(item.nome)}</td>
-            <td class="text-end">
-                <button class="btn btn-sm btn-outline-primary" onclick="editarItem('${tipo}', ${item.id}, '${escapeHTML(item.nome)}')">
-                    <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusao('${tipo}', ${item.id})">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </td>
-        `;
+        if (tipo === 'treinamento') {
+            tr.innerHTML = `
+                <td>${escapeHTML(item.nome)}</td>
+                <td>${item.carga_horaria ?? ''}</td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary" onclick="editarItem('${tipo}', ${item.id}, '${escapeHTML(item.nome)}', ${item.carga_horaria ?? 'null'})">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusao('${tipo}', ${item.id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+        } else {
+            tr.innerHTML = `
+                <td>${escapeHTML(item.nome)}</td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary" onclick="editarItem('${tipo}', ${item.id}, '${escapeHTML(item.nome)}')">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusao('${tipo}', ${item.id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+        }
         tbody.appendChild(tr);
     });
 }
@@ -105,12 +118,22 @@ function renderizarTabela(tipo, dados) {
  * @param {number|null} id - O ID do item (para edição).
  * @param {string|null} nome - O nome atual do item (para edição).
  */
-window.abrirModal = (tipo, id = null, nome = '') => {
+window.abrirModal = (tipo, id = null, nome = '', carga = '') => {
     const form = document.getElementById('geralForm');
     form.reset();
     document.getElementById('itemType').value = tipo;
     document.getElementById('itemId').value = id || '';
     document.getElementById('itemName').value = nome || '';
+
+    const cargaGroup = document.getElementById('cargaHorariaGroup');
+    const cargaInput = document.getElementById('itemCargaHoraria');
+    if (tipo === 'treinamento') {
+        cargaGroup.classList.remove('d-none');
+        cargaInput.value = carga || '';
+    } else {
+        cargaGroup.classList.add('d-none');
+        cargaInput.value = '';
+    }
     
     const modalLabel = document.getElementById('geralModalLabel');
     modalLabel.textContent = `${id ? 'Editar' : 'Adicionar'} ${NOMES_TIPO[tipo]}`;
@@ -138,6 +161,7 @@ async function salvarItemGeral() {
     const tipo = document.getElementById('itemType').value;
     const id = document.getElementById('itemId').value;
     const nome = document.getElementById('itemName').value;
+    const cargaHoraria = document.getElementById('itemCargaHoraria').value;
 
     if (!nome.trim()) {
         showToast('O nome não pode estar vazio.', 'warning');
@@ -149,8 +173,13 @@ async function salvarItemGeral() {
         : `/planejamento-basedados/${tipo}`;
     const method = id ? 'PUT' : 'POST';
     
+    const payload = { nome };
+    if (tipo === 'treinamento' && cargaHoraria) {
+        payload.carga_horaria = parseInt(cargaHoraria, 10);
+    }
+
     try {
-        await chamarAPI(endpoint, method, { nome });
+        await chamarAPI(endpoint, method, payload);
         showToast(`${NOMES_TIPO[tipo]} ${id ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
         geralModal.hide();
         carregarTodosOsDados(); // Recarrega os dados para atualizar a tabela
@@ -233,8 +262,6 @@ async function executarExclusao() {
     let endpoint = `/planejamento-basedados/${tipo}/${id}`;
     if (tipo === 'instrutor') {
         endpoint = `/instrutores/${id}`;
-    } else if (tipo === 'treinamento') {
-        endpoint = `/treinamentos/catalogo/${id}`;
     }
 
     try {

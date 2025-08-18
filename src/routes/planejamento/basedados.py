@@ -8,6 +8,7 @@ from src.models.planejamento import (
     Horario,
     CargaHoraria,
     PublicoAlvo,
+    PlanejamentoTreinamento,
 )
 
 basedados_bp = Blueprint(
@@ -17,6 +18,7 @@ basedados_bp = Blueprint(
 
 # Mapeamento corrigido para corresponder aos tipos usados no frontend
 MODELOS = {
+    "treinamento": PlanejamentoTreinamento,
     "local": Local,
     "modalidade": Modalidade,
     "horario": Horario,
@@ -83,7 +85,10 @@ def create_item_generico(tipo):
     if model.query.filter_by(nome=nome).first():
         return jsonify({"erro": f"O item '{nome}' já existe."}), 409
 
-    item = model(nome=nome)
+    if tipo == "treinamento":
+        item = model(nome=nome, carga_horaria=data.get("carga_horaria"))
+    else:
+        item = model(nome=nome)
     db.session.add(item)
     db.session.commit()
     return jsonify(item.to_dict()), 201
@@ -106,6 +111,8 @@ def update_item_generico(tipo, item_id):
         return jsonify({"erro": "O campo 'nome' é obrigatório"}), 400
 
     item.nome = nome
+    if tipo == "treinamento":
+        item.carga_horaria = data.get("carga_horaria")
     db.session.commit()
     return jsonify(item.to_dict())
 

@@ -72,34 +72,18 @@ document.addEventListener('DOMContentLoaded', () => {
         async carregarOpcoesDaAPI() {
             if (this.cacheOpcoes) return this.cacheOpcoes;
             try {
-                const [dadosBase, treinamentosApi, instrutores] = await Promise.all([
+                const [dadosBase, treinamentos, instrutores] = await Promise.all([
                     chamarAPI('/planejamento/basedados'),
-                    chamarAPI('/treinamentos/catalogo').catch(() => []),
+                    chamarAPI('/treinamentos/catalogo'),
                     chamarAPI('/instrutores')
                 ]);
-
-                let treinamentos = Array.isArray(treinamentosApi) && treinamentosApi.length
-                    ? treinamentosApi.map(t => t.nome)
-                    : [];
-
-                if (!treinamentos.length) {
-                    try {
-                        const storage = JSON.parse(localStorage.getItem('planejamentoBaseDados'));
-                        if (storage && Array.isArray(storage.treinamento)) {
-                            treinamentos = storage.treinamento.map(t => t.nome);
-                        }
-                    } catch (e) {
-                        console.error('Erro ao carregar treinamentos do localStorage:', e);
-                    }
-                }
-
                 this.cacheOpcoes = {
                     horario: dadosBase.horario || [],
                     carga_horaria: dadosBase.carga_horaria || [],
                     modalidade: dadosBase.modalidade || [],
                     local: dadosBase.local || [],
                     publico_alvo: dadosBase.publico_alvo || [],
-                    treinamentos,
+                    treinamentos: treinamentos || [],
                     instrutores: instrutores || []
                 };
                 return this.cacheOpcoes;
@@ -127,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.popularSelect(this.form.horario, dados.horario, 'Selecione...');
             this.popularSelect(this.form.carga_horaria, dados.carga_horaria, 'Selecione...');
             this.popularSelect(this.form.modalidade, dados.modalidade, 'Selecione...');
-            this.popularSelect(this.form.treinamento, dados.treinamentos, 'Selecione...');
+            this.popularSelect(this.form.treinamento, dados.treinamentos.map(t => t.nome), 'Selecione...');
             this.popularSelect(this.form.instrutor, dados.instrutores.map(i => i.nome), 'Selecione...');
             this.popularSelect(this.form.local, dados.local, 'Selecione...');
             this.popularSelect(this.form.cmd, dados.publico_alvo, 'Nenhum');

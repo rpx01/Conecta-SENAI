@@ -72,9 +72,9 @@ document.addEventListener('DOMContentLoaded', () => {
         async carregarOpcoesDaAPI() {
             if (this.cacheOpcoes) return this.cacheOpcoes;
             try {
-                const [dadosBase, treinamentos, instrutores] = await Promise.all([
+                const [dadosBase, respTreinamentos, instrutores] = await Promise.all([
                     chamarAPI('/planejamento/basedados'),
-                    chamarAPI('/treinamentos/catalogo'),
+                    chamarAPI('/treinamentos_planejamento'),
                     chamarAPI('/instrutores')
                 ]);
                 this.cacheOpcoes = {
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     modalidade: dadosBase.modalidade || [],
                     local: dadosBase.local || [],
                     publico_alvo: dadosBase.publico_alvo || [],
-                    treinamentos: treinamentos || [],
+                    treinamentos: respTreinamentos?.itens || [],
                     instrutores: instrutores || []
                 };
                 return this.cacheOpcoes;
@@ -312,11 +312,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         async executarExclusao() {
             if (this.loteParaExcluir) {
+                const btn = document.getElementById('btn-confirmar-exclusao');
                 try {
-                    await chamarAPI(`/planejamento/lote/${this.loteParaExcluir}`, 'DELETE');
-                    this.planejamentos = this.planejamentos.filter(p => p.loteId !== this.loteParaExcluir);
-                    this.renderizarTabela();
-                    showToast('Lote de planejamento excluído com sucesso!', 'info');
+                    await executarAcaoComFeedback(btn, async () => {
+                        await chamarAPI(`/planejamento/lote/${this.loteParaExcluir}`, 'DELETE');
+                        this.planejamentos = this.planejamentos.filter(p => p.loteId !== this.loteParaExcluir);
+                        this.renderizarTabela();
+                        showToast('Lote de planejamento excluído com sucesso!', 'info');
+                    });
                 } catch (error) {
                     showToast('Erro ao excluir lote.', 'danger');
                 }

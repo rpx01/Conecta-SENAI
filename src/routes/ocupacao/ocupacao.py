@@ -91,7 +91,7 @@ def listar_ocupacoes():
     # Ordena por data e horário
     ocupacoes = query.order_by(Ocupacao.data, Ocupacao.horario_inicio).all()
 
-    return jsonify([ocupacao.to_dict() for ocupacao in ocupacoes])
+    return jsonify([o.to_dict() for o in ocupacoes]), 200
 
 
 @ocupacao_bp.route('/ocupacoes/export', methods=['GET'])
@@ -179,7 +179,7 @@ def obter_ocupacao(id):
     dados['data_inicio'] = data_inicio.isoformat()
     dados['data_fim'] = data_fim.isoformat()
 
-    return jsonify(dados)
+    return jsonify(dados), 200
 
 @ocupacao_bp.route('/ocupacoes', methods=['POST'])
 @admin_required

@@ -1,6 +1,8 @@
 """Modelo de ocupacao de sala."""
-from src.models import db
 from datetime import datetime, date, time, timedelta
+
+from src.models import db
+from .mixins import SerializerMixin
 
 # Mapeamento padrão de turnos utilizado em diversos pontos do sistema
 TURNOS_PADRAO = {
@@ -9,7 +11,7 @@ TURNOS_PADRAO = {
     'Noite': (time.fromisoformat('18:30'), time.fromisoformat('22:30')),
 }
 
-class Ocupacao(db.Model):
+class Ocupacao(SerializerMixin, db.Model):
     """
     Modelo para representar as ocupações/agendamentos das salas de aula.
     """
@@ -134,50 +136,40 @@ class Ocupacao(db.Model):
         return cores.get(self.tipo_ocupacao, '#888888')  # Cinza como padrão
     
     def to_dict(self, include_relations=True):
+        """Converte a ocupação para dicionário serializável.
+
+        Args:
+            include_relations: inclui dados relacionados (sala, instrutor, usuário).
         """
-        Converte o objeto para dicionário.
-        
-        Parâmetros:
-            include_relations: Se deve incluir dados relacionados (sala, instrutor, usuário)
-        """
-        result = {
-            'id': self.id,
-            'sala_id': self.sala_id,
-            'instrutor_id': self.instrutor_id,
-            'usuario_id': self.usuario_id,
-            'curso_evento': self.curso_evento,
-            'data': self.data.isoformat() if self.data else None,
-            'horario_inicio': self.horario_inicio.strftime('%H:%M') if self.horario_inicio else None,
-            'horario_fim': self.horario_fim.strftime('%H:%M') if self.horario_fim else None,
-            'grupo_ocupacao_id': self.grupo_ocupacao_id,
-            'tipo_ocupacao': self.tipo_ocupacao,
-            'recorrencia': self.recorrencia,
-            'status': self.status,
-            'observacoes': self.observacoes,
-            'duracao_minutos': self.get_duracao_minutos(),
-            'dia_semana': self.get_dia_semana(),
-            'turno': self.get_turno(),
-            'cor_tipo': self.get_cor_tipo(),
-            'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,
-            'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None
-        }
-        
+        result = super().to_dict()
+        result.update(
+            {
+                "duracao_minutos": self.get_duracao_minutos(),
+                "dia_semana": self.get_dia_semana(),
+                "turno": self.get_turno(),
+                "cor_tipo": self.get_cor_tipo(),
+            }
+        )
+
         if include_relations:
-            # Inclui dados da sala
             if self.sala:
-                result['sala_nome'] = self.sala.nome
-                result['sala_capacidade'] = self.sala.capacidade
-                result['sala_localizacao'] = self.sala.localizacao
-            
-            # Inclui dados do instrutor
+                result.update(
+                    {
+                        "sala_nome": self.sala.nome,
+                        "sala_capacidade": self.sala.capacidade,
+                        "sala_localizacao": self.sala.localizacao,
+                    }
+                )
             if self.instrutor:
-                result['instrutor_nome'] = self.instrutor.nome
-                result['instrutor_email'] = self.instrutor.email
-            
-            # Inclui dados do usuário que criou
+                result.update(
+                    {
+                        "instrutor_nome": self.instrutor.nome,
+                        "instrutor_email": self.instrutor.email,
+                    }
+                )
             if self.usuario:
-                result['usuario_nome'] = self.usuario.nome
-        
+                result["usuario_nome"] = self.usuario.nome
+
         return result
     
     @staticmethod

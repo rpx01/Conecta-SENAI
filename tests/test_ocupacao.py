@@ -43,6 +43,38 @@ def client(app):
     return app.test_client()
 
 
+def test_listar_ocupacoes_retorna_json(client, app):
+    with app.app_context():
+        user = User.query.first()
+        sala = Sala.query.first()
+    token = jwt.encode(
+        {
+            "user_id": user.id,
+            "nome": user.nome,
+            "perfil": user.tipo,
+            "exp": datetime.utcnow() + timedelta(hours=1),
+        },
+        app.config["SECRET_KEY"],
+        algorithm="HS256",
+    )
+    client.post(
+        "/api/ocupacoes",
+        json={
+            "sala_id": sala.id,
+            "curso_evento": "Teste",
+            "data_inicio": date.today().isoformat(),
+            "data_fim": date.today().isoformat(),
+            "turno": "Manhã",
+        },
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    resp = client.get("/api/ocupacoes", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 200
+    dados = resp.get_json()
+    assert isinstance(dados, list)
+    assert all(isinstance(item, dict) for item in dados)
+
+
 def test_verificar_disponibilidade(client, app):
     with app.app_context():
         user = User.query.first()

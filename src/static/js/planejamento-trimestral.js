@@ -55,7 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
             this.modal = new bootstrap.Modal(this.modalEl);
             this.confirmacaoModal = new bootstrap.Modal(this.confirmacaoModalEl);
 
-            document.getElementById('btnAdicionarPlanejamento').addEventListener('click', () => this.abrirModal());
+            document.getElementById('btn-adicionar-planejamento').addEventListener('click', () => this.abrirModal());
+            this.form.addEventListener('submit', (e) => this.salvar(e));
             this.tabelaBody.addEventListener('click', (e) => this.handleTabelaClick(e));
             document.getElementById('btn-confirmar-exclusao').addEventListener('click', () => this.executarExclusao());
 
@@ -205,6 +206,20 @@ document.addEventListener('DOMContentLoaded', () => {
             this.modal.show();
         },
 
+        async salvar(event) {
+            event.preventDefault();
+            if (!this.validarFormulario()) return;
+            const btn = this.form.querySelector('button[type="submit"]');
+            await executarAcaoComFeedback(btn, async () => {
+                const modo = this.modalEl.dataset.mode;
+                if (modo === 'edit') {
+                    await this.executarEdicao();
+                } else {
+                    await this.executarAdicao();
+                }
+            });
+        },
+
         mapTreinamentoToId(nome) {
             const t = this.cacheOpcoes?.treinamentos?.find(tr => tr.nome === nome);
             return t ? t.id : null;
@@ -213,6 +228,43 @@ document.addEventListener('DOMContentLoaded', () => {
         mapInstrutorToId(nome) {
             const i = this.cacheOpcoes?.instrutores?.find(ins => ins.nome === nome);
             return i ? i.id : null;
+        },
+
+        async executarAdicao() {
+            const dadosForm = Object.fromEntries(new FormData(this.form).entries());
+            try {
+                const dataInicio = new Date(`${dadosForm.inicio}T00:00:00`);
+                const dataFim = new Date(`${dadosForm.fim}T00:00:00`);
+
+                const linhas = [];
+                for (let d = new Date(dataInicio); d <= dataFim; d.setDate(d.getDate() + 1)) {
+                    const dia = new Date(d);
+                    linhas.push({
+                        inicio: toISODate(dia, 'Data inicial'),
+                        fim: toISODate(dia, 'Data final'),
+                        semana: this.getDiaSemana(dia),
+                        horario: toHHMM(dadosForm.horario),
+                        carga_horaria: toNumber(dadosForm.carga_horaria, 'Carga horária'),
+                        modalidade: dadosForm.modalidade,
+                        treinamento_id: this.mapTreinamentoToId(dadosForm.treinamento),
+                        polos: {
+                            cmd: Boolean(dadosForm.cmd),
+                            sjb: Boolean(dadosForm.sjb),
+                            sag_tombos: Boolean(dadosForm.sag_tombos)
+                        },
+                        instrutor_id: this.mapInstrutorToId(dadosForm.instrutor),
+                        local: dadosForm.local || '',
+                        observacao: dadosForm.observacao || ''
+                    });
+                }
+
+                const resp = await chamarAPI('/planejamento', 'POST', { registros: linhas });
+                showToast(`Planejamento salvo (${resp.quantidade} linhas)`, 'success');
+                await this.carregarPlanejamentos();
+                this.finalizarAcao();
+            } catch (error) {
+                showToast(error.message, 'danger');
+            }
         },
 
         async executarEdicao() {
@@ -334,101 +386,6 @@ document.addEventListener('DOMContentLoaded', () => {
             );
         }
     };
-    // Funções auxiliares para o salvamento ---------------------------------
-    function coletarDadosDoModal() {
-        return Object.fromEntries(new FormData(gerenciadorPlanejamento.form).entries());
-    }
-
-    function validarDadosPlanejamento(dados) {
-        const erros = [];
-        const form = gerenciadorPlanejamento.form;
-        form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-
-        if (!dados.inicio) { erros.push('Data de início obrigatória'); form.inicio.classList.add('is-invalid'); }
-        if (!dados.fim) { erros.push('Data de término obrigatória'); form.fim.classList.add('is-invalid'); }
-        if (dados.inicio && dados.fim && dados.fim < dados.inicio) {
-            erros.push('Data de término deve ser posterior à inicial');
-            form.fim.classList.add('is-invalid');
-        }
-        if (!dados.horario) { erros.push('Horário obrigatório'); form.horario.classList.add('is-invalid'); }
-        if (!dados.carga_horaria) { erros.push('Carga horária obrigatória'); form.carga_horaria.classList.add('is-invalid'); }
-
-        const treinamentoId = gerenciadorPlanejamento.mapTreinamentoToId(dados.treinamento);
-        if (!treinamentoId) { erros.push('Treinamento inválido'); form.treinamento.classList.add('is-invalid'); }
-        const instrutorId = gerenciadorPlanejamento.mapInstrutorToId(dados.instrutor);
-        if (!instrutorId) { erros.push('Instrutor inválido'); form.instrutor.classList.add('is-invalid'); }
-
-        return { erros, treinamentoId, instrutorId };
-    }
-
-    function montarPayloadPlanejamento(dados, treinamentoId, instrutorId) {
-        const dataInicio = new Date(`${dados.inicio}T00:00:00`);
-        const dataFim = new Date(`${dados.fim}T00:00:00`);
-        const registros = [];
-        for (let d = new Date(dataInicio); d <= dataFim; d.setDate(d.getDate() + 1)) {
-            const dia = new Date(d);
-            registros.push({
-                inicio: toISODate(dia, 'Data inicial'),
-                fim: toISODate(dia, 'Data final'),
-                semana: gerenciadorPlanejamento.getDiaSemana(dia),
-                horario: toHHMM(dados.horario),
-                carga_horaria: toNumber(dados.carga_horaria, 'Carga horária'),
-                modalidade: dados.modalidade,
-                treinamento_id: treinamentoId,
-                polos: {
-                    cmd: Boolean(dados.cmd),
-                    sjb: Boolean(dados.sjb),
-                    sag_tombos: Boolean(dados.sag_tombos)
-                },
-                instrutor_id: instrutorId,
-                local: dados.local || '',
-                observacao: dados.observacao || ''
-            });
-        }
-        return { registros };
-    }
-
-    async function salvarItemPlanejamento(btn) {
-        console.log('Salvar planejamento: iniciando...');
-        await executarAcaoComFeedback(btn, async () => {
-            try {
-                const modo = gerenciadorPlanejamento.modalEl.dataset.mode;
-                if (modo === 'edit') {
-                    console.log('Salvar planejamento: enviado (edição)');
-                    await gerenciadorPlanejamento.executarEdicao();
-                    console.log('Salvar planejamento: sucesso');
-                    return;
-                }
-
-                const dados = coletarDadosDoModal();
-                const { erros, treinamentoId, instrutorId } = validarDadosPlanejamento(dados);
-                if (erros.length) {
-                    console.warn('Salvar planejamento: validação falhou', erros);
-                    showToast('Falha ao salvar', 'danger');
-                    throw new Error('Validação falhou: ' + erros.join(', '));
-                }
-
-                const payload = montarPayloadPlanejamento(dados, treinamentoId, instrutorId);
-                console.log('Salvar planejamento: enviado', payload);
-                const resp = await chamarAPI('/planejamento', 'POST', payload);
-                console.log('Salvar planejamento: sucesso', resp);
-                showToast(`Planejamento salvo (${resp.quantidade || payload.registros.length} linhas)`, 'success');
-                await gerenciadorPlanejamento.carregarPlanejamentos();
-                gerenciadorPlanejamento.finalizarAcao();
-            } catch (err) {
-                console.error('Salvar planejamento: erro', err);
-                showToast('Falha ao salvar planejamento', 'danger');
-            }
-        });
-        console.log('Salvar planejamento: fim');
-    }
-
-    document.addEventListener('click', (e) => {
-        const btn = e.target.closest('#btnSalvarPlanejamento');
-        if (!btn) return;
-        e.preventDefault();
-        salvarItemPlanejamento(btn);
-    });
 
     // Inicia a aplicação
     gerenciadorPlanejamento.init();

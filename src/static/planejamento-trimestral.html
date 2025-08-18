@@ -125,13 +125,13 @@
                     <form id="form-planejamento" novalidate>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="dataInicio" class="form-label">Data de início</label>
-                                <input type="date" class="form-control" id="dataInicio" name="dataInicio" required>
+                                <label for="inicio" class="form-label">Data de início</label>
+                                <input type="date" class="form-control" id="inicio" name="inicio" required>
                                 <div class="invalid-feedback">A data de início é obrigatória.</div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="dataTermino" class="form-label">Data de término</label>
-                                <input type="date" class="form-control" id="dataTermino" name="dataTermino" required>
+                                <label for="fim" class="form-label">Data de término</label>
+                                <input type="date" class="form-control" id="fim" name="fim" required>
                                 <div class="invalid-feedback">A data de término deve ser igual ou posterior à data de início.</div>
                             </div>
                         </div>
@@ -142,8 +142,8 @@
                                 <select class="form-select" id="horario" name="horario" required></select>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="ch" class="form-label">C.H. (Carga Horária)</label>
-                                <select class="form-select" id="ch" name="ch" required></select>
+                                <label for="carga_horaria" class="form-label">C.H. (Carga Horária)</label>
+                                <select class="form-select" id="carga_horaria" name="carga_horaria" required></select>
                             </div>
                         </div>
                         <div class="row">
@@ -152,8 +152,8 @@
                                 <select class="form-select" id="modalidade" name="modalidade" required></select>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="treinamentoId" class="form-label">Treinamentos</label>
-                                <select class="form-select" id="treinamentoId" name="treinamentoId" required></select>
+                                <label for="treinamento" class="form-label">Treinamentos</label>
+                                <select class="form-select" id="treinamento" name="treinamento" required></select>
                             </div>
                         </div>
                         <div class="row">
@@ -166,14 +166,14 @@
                                 <select class="form-select" id="sjb" name="sjb"></select>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label for="sag" class="form-label">SAG/TOMBOS</label>
-                                <select class="form-select" id="sag" name="sag"></select>
+                                <label for="sag_tombos" class="form-label">SAG/TOMBOS</label>
+                                <select class="form-select" id="sag_tombos" name="sag_tombos"></select>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="instrutorId" class="form-label">Instrutor</label>
-                                <select class="form-select" id="instrutorId" name="instrutorId" required></select>
+                                <label for="instrutor" class="form-label">Instrutor</label>
+                                <select class="form-select" id="instrutor" name="instrutor" required></select>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="local" class="form-label">Local</label>
@@ -188,7 +188,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="btnSalvarPlanejamento">
+                    <button type="submit" form="form-planejamento" class="btn btn-primary" id="btn-salvar-planejamento">
                         <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                         <span class="btn-text">Salvar</span>
                     </button>

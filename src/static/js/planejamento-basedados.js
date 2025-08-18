@@ -33,6 +33,42 @@ document.addEventListener('DOMContentLoaded', () => {
     let areasDeAtuacao = [];
 
     // ===================================================================
+    // FORMULÁRIO PRINCIPAL - ADIÇÃO DE ITENS
+    // ===================================================================
+    const formBaseDados = document.getElementById('formBaseDados');
+    if (formBaseDados) {
+        const btnAdicionarItem = document.getElementById('btnAdicionarItem');
+        const selectInstrutor = document.getElementById('selectInstrutor');
+        const listaBaseDados = document.getElementById('listaBaseDados');
+
+        (async () => {
+            try {
+                const instrutores = await chamarAPI('/instrutores');
+                selectInstrutor.innerHTML = '<option value="">Selecione…</option>' +
+                    instrutores.map(i => `<option value="${i.id}">${escapeHTML(i.nome)}</option>`).join('');
+                btnAdicionarItem.disabled = false;
+            } catch (e) {
+                console.error('Falha ao carregar instrutores', e);
+                btnAdicionarItem.disabled = true;
+            }
+        })();
+
+        formBaseDados.addEventListener('submit', (e) => {
+            e.preventDefault();
+            executarAcaoComFeedback(btnAdicionarItem, async () => {
+                const dados = Object.fromEntries(new FormData(formBaseDados).entries());
+                const criado = await chamarAPI('/planejamento-basedados/itens', 'POST', dados);
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.textContent = `${escapeHTML(criado.descricao)} — instrutor #${escapeHTML(criado.instrutor_id)}`;
+                listaBaseDados.prepend(li);
+                formBaseDados.reset();
+                selectInstrutor.value = '';
+            });
+        });
+    }
+
+    // ===================================================================
     // LÓGICA PARA TREINAMENTOS (AGORA COM API)
     // ===================================================================
     async function carregarTreinamentosDaAPI() {

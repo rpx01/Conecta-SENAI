@@ -8,6 +8,11 @@ from .recurso import Recurso  # noqa: E402
 from .audit_log import AuditLog  # noqa: E402
 from .rateio import RateioConfig, LancamentoRateio  # noqa: E402
 from .log_rateio import LogLancamentoRateio  # noqa: E402
+from .user import User  # noqa: E402
+from .sala import Sala  # noqa: E402
+from .agendamento import Agendamento, Notificacao  # noqa: E402
+from .instrutor import Instrutor  # noqa: E402
+from .ocupacao import Ocupacao  # noqa: E402
 from .treinamento import (  # noqa: E402
     Treinamento,
     TurmaTreinamento,
@@ -31,6 +36,12 @@ __all__ = [
     "RateioConfig",
     "LancamentoRateio",
     "LogLancamentoRateio",
+    "User",
+    "Sala",
+    "Agendamento",
+    "Notificacao",
+    "Instrutor",
+    "Ocupacao",
     "Treinamento",
     "TurmaTreinamento",
     "InscricaoTreinamento",

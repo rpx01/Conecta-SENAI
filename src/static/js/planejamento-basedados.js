@@ -1,12 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- DADOS DE EXEMPLO (MOCK) ---
-    // Mantemos os dados que não vêm da API.
+    // Mantemos os dados que não vêm da API, pois são mais simples.
     const mockData = {
-        treinamento: [
-            { id: 1, nome: 'Gerenciamento de Risco' },
-            { id: 2, nome: 'ALFI Básico' },
-            { id: 3, nome: 'Aperfeiçoamento Prof Seg Trafego Mina FM' }
-        ],
         local: [
             { id: 1, nome: 'ONLINE/HOME OFFICE' },
             { id: 2, nome: 'CMD' },
@@ -66,12 +61,41 @@ document.addEventListener('DOMContentLoaded', () => {
     let areasDeAtuacao = [];
 
     // ===================================================================
+    // LÓGICA PARA TREINAMENTOS (AGORA COM API)
+    // ===================================================================
+    async function carregarTreinamentosDaAPI() {
+        try {
+            const treinamentos = await chamarAPI('/treinamentos/catalogo');
+            const tbody = document.getElementById('tabela-treinamento');
+            tbody.innerHTML = '';
+
+            if (treinamentos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" class="text-center text-muted">Nenhum treinamento cadastrado.</td></tr>`;
+                return;
+            }
+
+            treinamentos.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${escapeHTML(item.nome)}</td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModal('treinamento', ${item.id})"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusao('treinamento', ${item.id})"><i class="bi bi-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (error) {
+            console.error('Falha ao carregar treinamentos:', error);
+            showToast('Não foi possível carregar a lista de treinamentos.', 'danger');
+        }
+    }
+
+
+    // ===================================================================
     // LÓGICA PARA INSTRUTORES (MODAL COMPLETO)
     // ===================================================================
 
-    /**
-     * Carrega as áreas de atuação da API para popular o select do modal.
-     */
     async function carregarAreasParaModal() {
         if (areasDeAtuacao.length > 0) return;
         try {
@@ -87,9 +111,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /**
-     * Carrega os instrutores da API e renderiza a tabela.
-     */
     async function carregarInstrutoresDaAPI() {
         try {
             const instrutores = await chamarAPI('/instrutores');
@@ -118,10 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /**
-     * Abre o modal completo para adicionar ou editar um instrutor.
-     * @param {number|null} id - O ID do instrutor para edição.
-     */
     window.abrirModalInstrutor = async (id = null) => {
         await carregarAreasParaModal();
         const form = document.getElementById('formInstrutor');
@@ -141,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const el = document.getElementById(`disp${d.charAt(0).toUpperCase() + d.slice(1)}`);
                     if (el) el.checked = true;
                 });
-            } catch(e) {
+            } catch (e) {
                 showToast(`Erro ao carregar dados do instrutor: ${e.message}`, 'danger');
                 return;
             }
@@ -149,9 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
         instrutorModal.show();
     };
 
-    /**
-     * Coleta os dados do formulário de instrutor e salva (cria ou atualiza).
-     */
     async function salvarInstrutor() {
         const id = document.getElementById('instrutorId').value;
         const disponibilidade = [];
@@ -180,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast(`Instrutor ${id ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
             instrutorModal.hide();
             carregarInstrutoresDaAPI();
-        } catch(e) {
+        } catch (e) {
             showToast(`Erro ao salvar instrutor: ${e.message}`, 'danger');
         }
     }
@@ -218,10 +232,10 @@ document.addEventListener('DOMContentLoaded', () => {
     window.abrirModal = (type, id = null) => {
         const form = document.getElementById('geralForm');
         form.reset();
-        
+
         document.getElementById('itemType').value = type;
         const modalLabel = document.getElementById('geralModalLabel');
-        
+
         const titulos = {
             treinamento: 'Treinamento', local: 'Local', modalidade: 'Modalidade',
             horario: 'Horário', cargahoraria: 'Carga Horária', 'publico-alvo': 'Público Alvo'
@@ -230,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (id) {
             modalLabel.textContent = `Editar ${titulo}`;
-            const item = mockData[type].find(i => i.id === id);
+            const item = (mockData[type] || []).find(i => i.id === id);
             if (item) {
                 document.getElementById('itemId').value = id;
                 document.getElementById('itemName').value = item.nome;
@@ -239,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
             modalLabel.textContent = `Adicionar Novo ${titulo}`;
             document.getElementById('itemId').value = '';
         }
-        
+
         geralModal.show();
     };
 
@@ -252,15 +266,16 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('O nome não pode estar vazio.');
             return;
         }
-        
+
         if (id) {
-            const index = mockData[type].findIndex(i => i.id == id);
+            const index = (mockData[type] || []).findIndex(i => i.id == id);
             if (index > -1) mockData[type][index].nome = name;
         } else {
-            const newId = (mockData[type].length > 0) ? Math.max(...mockData[type].map(i => i.id)) + 1 : 1;
+            const newId = (mockData[type] && mockData[type].length > 0) ? Math.max(...mockData[type].map(i => i.id)) + 1 : 1;
+            if (!mockData[type]) mockData[type] = [];
             mockData[type].push({ id: newId, nome: name });
         }
-        
+
         renderizarTabelaGenerica(type);
         salvarNoLocalStorage();
         geralModal.hide();
@@ -274,23 +289,23 @@ document.addEventListener('DOMContentLoaded', () => {
     async function excluirItem() {
         const { type, id } = itemParaExcluir;
         if (!type || !id) return;
-        
+
         if (type === 'instrutor') {
             try {
                 await chamarAPI(`/instrutores/${id}`, 'DELETE');
                 showToast('Instrutor excluído com sucesso!', 'success');
                 carregarInstrutoresDaAPI();
-            } catch(error) {
+            } catch (error) {
                 showToast(`Erro ao excluir: ${error.message}`, 'danger');
             }
         } else {
             // Lógica antiga para os dados mockados
-            const index = mockData[type].findIndex(i => i.id === id);
+            const index = (mockData[type] || []).findIndex(i => i.id === id);
             if (index > -1) mockData[type].splice(index, 1);
             renderizarTabelaGenerica(type);
             salvarNoLocalStorage();
         }
-        
+
         confirmacaoModal.hide();
         itemParaExcluir = { type: null, id: null };
     }
@@ -301,8 +316,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnConfirmarExclusao').addEventListener('click', excluirItem);
 
     carregarDoLocalStorage();
+    carregarTreinamentosDaAPI(); // Alterado para carregar da API
     carregarInstrutoresDaAPI();
-    renderizarTabelaGenerica('treinamento');
     renderizarTabelaGenerica('local');
     renderizarTabelaGenerica('modalidade');
     renderizarTabelaGenerica('horario');

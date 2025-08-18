@@ -52,3 +52,54 @@ class PlanejamentoItem(db.Model):
                 self.atualizado_em.isoformat() if self.atualizado_em else None
             ),
         }
+
+
+class PlanejamentoBase(db.Model):
+    """Base model for simple lookup tables in planejamento."""
+
+    __abstract__ = True
+
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(120), nullable=False, unique=True)
+
+    def to_dict(self):
+        return {"id": self.id, "nome": self.nome}
+
+
+class Local(PlanejamentoBase):
+    __tablename__ = "planejamento_locais"
+
+
+class Modalidade(PlanejamentoBase):
+    __tablename__ = "planejamento_modalidades"
+
+
+class Horario(PlanejamentoBase):
+    __tablename__ = "planejamento_horarios"
+
+
+class CargaHoraria(PlanejamentoBase):
+    __tablename__ = "planejamento_cargas_horarias"
+
+
+class PublicoAlvo(PlanejamentoBase):
+    __tablename__ = "planejamento_publicos_alvo"
+
+
+class PlanejamentoBDItem(db.Model):
+    """Simple item used by the planejamento base de dados page."""
+
+    __tablename__ = "planejamento_bd_itens"
+
+    id = db.Column(db.Integer, primary_key=True)
+    descricao = db.Column(db.String, nullable=False)
+    instrutor_id = db.Column(db.Integer, db.ForeignKey("instrutores.id"))
+
+    instrutor = db.relationship("Instrutor", backref="planejamento_bd_itens")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "descricao": self.descricao,
+            "instrutor_id": self.instrutor_id,
+        }

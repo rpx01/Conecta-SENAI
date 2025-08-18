@@ -1,29 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-   
-    const STORAGE_KEY = 'planejamentoBaseDados';
-
-    function carregarDoLocalStorage() {
-        try {
-            const dados = JSON.parse(localStorage.getItem(STORAGE_KEY));
-            if (dados) {
-                Object.keys(mockData).forEach(tipo => {
-                    if (Array.isArray(dados[tipo])) {
-                        mockData[tipo] = dados[tipo];
-                    }
-                });
-            }
-        } catch (e) {
-            console.error('Erro ao carregar dados do localStorage:', e);
-        }
-    }
-
-    function salvarNoLocalStorage() {
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(mockData));
-        } catch (e) {
-            console.error('Erro ao salvar dados no localStorage:', e);
-        }
-    }
 
     // --- VARIÁVEIS GLOBAIS ---
     const geralModal = new bootstrap.Modal(document.getElementById('geralModal'));
@@ -208,35 +183,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ===================================================================
-    // LÓGICA PARA ITENS GENÉRICOS (MODAL SIMPLES)
+    // LÓGICA PARA ITENS GENÉRICOS (AGORA COM API)
     // ===================================================================
 
-    function renderizarTabelaGenerica(type) {
+    async function renderizarTabelaGenerica(type) {
         const tbody = document.getElementById(`tabela-${type}`);
         if (!tbody) return;
 
-        tbody.innerHTML = '';
-        const dados = mockData[type] || [];
+        try {
+            const dados = await chamarAPI(`/planejamento-basedados/${type}`);
+            tbody.innerHTML = '';
 
-        if (dados.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="2" class="text-center text-muted">Nenhum item cadastrado.</td></tr>`;
-            return;
+            if (dados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" class="text-center text-muted">Nenhum item cadastrado.</td></tr>`;
+                return;
+            }
+
+            dados.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${escapeHTML(item.nome)}</td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModal('${type}', ${item.id}, '${escapeHTML(item.nome)}')"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusao('${type}', ${item.id})"><i class="bi bi-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (error) {
+            console.error(`Falha ao carregar ${type}:`, error);
+            showToast(`Não foi possível carregar a lista de ${type}.`, 'danger');
+            tbody.innerHTML = `<tr><td colspan="2" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
         }
-
-        dados.forEach(item => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${escapeHTML(item.nome)}</td>
-                <td class="text-end">
-                    <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModal('${type}', ${item.id})"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusao('${type}', ${item.id})"><i class="bi bi-trash"></i></button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
     }
 
-    window.abrirModal = (type, id = null) => {
+    window.abrirModal = (type, id = null, nome = '') => {
         const form = document.getElementById('geralForm');
         form.reset();
 
@@ -251,11 +232,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (id) {
             modalLabel.textContent = `Editar ${titulo}`;
-            const item = (mockData[type] || []).find(i => i.id === id);
-            if (item) {
-                document.getElementById('itemId').value = id;
-                document.getElementById('itemName').value = item.nome;
-            }
+            document.getElementById('itemId').value = id;
+            document.getElementById('itemName').value = nome;
         } else {
             modalLabel.textContent = `Adicionar Novo ${titulo}`;
             document.getElementById('itemId').value = '';
@@ -264,28 +242,27 @@ document.addEventListener('DOMContentLoaded', () => {
         geralModal.show();
     };
 
-    function salvarItem() {
+    async function salvarItem() {
         const id = document.getElementById('itemId').value;
         const type = document.getElementById('itemType').value;
         const name = document.getElementById('itemName').value;
 
         if (!name.trim()) {
-            alert('O nome não pode estar vazio.');
+            showToast('O nome não pode estar vazio.', 'warning');
             return;
         }
 
-        if (id) {
-            const index = (mockData[type] || []).findIndex(i => i.id == id);
-            if (index > -1) mockData[type][index].nome = name;
-        } else {
-            const newId = (mockData[type] && mockData[type].length > 0) ? Math.max(...mockData[type].map(i => i.id)) + 1 : 1;
-            if (!mockData[type]) mockData[type] = [];
-            mockData[type].push({ id: newId, nome: name });
-        }
+        const endpoint = id ? `/planejamento-basedados/${type}/${id}` : `/planejamento-basedados/${type}`;
+        const method = id ? 'PUT' : 'POST';
 
-        renderizarTabelaGenerica(type);
-        salvarNoLocalStorage();
-        geralModal.hide();
+        try {
+            await chamarAPI(endpoint, method, { nome: name });
+            showToast(`Item ${id ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
+            renderizarTabelaGenerica(type);
+            geralModal.hide();
+        } catch (e) {
+            showToast(`Erro ao salvar item: ${e.message}`, 'danger');
+        }
     }
 
     window.confirmarExclusao = (type, id) => {
@@ -297,20 +274,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const { type, id } = itemParaExcluir;
         if (!type || !id) return;
 
+        let endpoint;
+        let callback;
+
         if (type === 'instrutor') {
-            try {
-                await chamarAPI(`/instrutores/${id}`, 'DELETE');
-                showToast('Instrutor excluído com sucesso!', 'success');
-                carregarInstrutoresDaAPI();
-            } catch (error) {
-                showToast(`Erro ao excluir: ${error.message}`, 'danger');
-            }
+            endpoint = `/instrutores/${id}`;
+            callback = carregarInstrutoresDaAPI;
+        } else if (type === 'treinamento') {
+            console.warn('Exclusão de treinamento ainda não implementada com API');
+            return;
         } else {
-            // Lógica antiga para os dados mockados
-            const index = (mockData[type] || []).findIndex(i => i.id === id);
-            if (index > -1) mockData[type].splice(index, 1);
-            renderizarTabelaGenerica(type);
-            salvarNoLocalStorage();
+            endpoint = `/planejamento-basedados/${type}/${id}`;
+            callback = () => renderizarTabelaGenerica(type);
+        }
+
+        try {
+            await chamarAPI(endpoint, 'DELETE');
+            showToast('Item excluído com sucesso!', 'success');
+            if (callback) callback();
+        } catch (error) {
+            showToast(`Erro ao excluir: ${error.message}`, 'danger');
         }
 
         confirmacaoModal.hide();
@@ -322,7 +305,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnSalvarInstrutor').addEventListener('click', salvarInstrutor);
     document.getElementById('btnConfirmarExclusao').addEventListener('click', excluirItem);
 
-    carregarDoLocalStorage();
     carregarTreinamentosDaAPI(); // Alterado para carregar da API
     carregarInstrutoresDaAPI();
     renderizarTabelaGenerica('local');

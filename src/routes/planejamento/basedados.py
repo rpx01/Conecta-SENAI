@@ -15,6 +15,7 @@ basedados_bp = Blueprint(
     url_prefix="/planejamento-basedados",
 )
 
+# Mapeamento corrigido para corresponder aos tipos usados no frontend
 MODELOS = {
     "local": Local,
     "modalidade": Modalidade,
@@ -26,12 +27,14 @@ MODELOS = {
 
 @basedados_bp.route("/itens", methods=["GET"])
 def get_planejamento_itens():
+    """Busca os itens principais da base de dados."""
     itens = PlanejamentoBDItem.query.all()
     return jsonify([item.to_dict() for item in itens])
 
 
 @basedados_bp.route("/itens", methods=["POST"])
 def create_planejamento_item():
+    """Cria um novo item principal na base de dados."""
     data = request.json or {}
     descricao = data.get("descricao")
     instrutor_id = data.get("instrutor_id")
@@ -45,6 +48,7 @@ def create_planejamento_item():
 
 @basedados_bp.route("/<tipo>", methods=["GET"])
 def get_itens_genericos(tipo):
+    """Busca todos os itens de um tipo específico (Local, Modalidade, etc.)."""
     model = MODELOS.get(tipo)
     if not model:
         return jsonify({"erro": "Tipo inválido"}), 404
@@ -55,6 +59,7 @@ def get_itens_genericos(tipo):
 
 @basedados_bp.route("/<tipo>", methods=["POST"])
 def create_item_generico(tipo):
+    """Cria um novo item de um tipo específico."""
     model = MODELOS.get(tipo)
     if not model:
         return jsonify({"erro": "Tipo inválido"}), 404
@@ -62,7 +67,11 @@ def create_item_generico(tipo):
     data = request.json or {}
     nome = data.get("nome")
     if not nome:
-        return jsonify({"erro": "Nome é obrigatório"}), 400
+        return jsonify({"erro": "O campo 'nome' é obrigatório"}), 400
+
+    # Verifica se já existe um item com o mesmo nome
+    if model.query.filter_by(nome=nome).first():
+        return jsonify({"erro": f"O item '{nome}' já existe."}), 409
 
     item = model(nome=nome)
     db.session.add(item)
@@ -72,15 +81,19 @@ def create_item_generico(tipo):
 
 @basedados_bp.route("/<tipo>/<int:item_id>", methods=["PUT"])
 def update_item_generico(tipo, item_id):
+    """Atualiza um item de um tipo específico."""
     model = MODELOS.get(tipo)
     if not model:
         return jsonify({"erro": "Tipo inválido"}), 404
 
-    item = model.query.get_or_404(item_id)
+    item = db.session.get(model, item_id)
+    if not item:
+        return jsonify({"erro": "Item não encontrado"}), 404
+
     data = request.json or {}
     nome = data.get("nome")
     if not nome:
-        return jsonify({"erro": "Nome é obrigatório"}), 400
+        return jsonify({"erro": "O campo 'nome' é obrigatório"}), 400
 
     item.nome = nome
     db.session.commit()
@@ -89,12 +102,16 @@ def update_item_generico(tipo, item_id):
 
 @basedados_bp.route("/<tipo>/<int:item_id>", methods=["DELETE"])
 def delete_item_generico(tipo, item_id):
+    """Exclui um item de um tipo específico."""
     model = MODELOS.get(tipo)
     if not model:
         return jsonify({"erro": "Tipo inválido"}), 404
 
-    item = model.query.get_or_404(item_id)
+    item = db.session.get(model, item_id)
+    if not item:
+        return jsonify({"erro": "Item não encontrado"}), 404
+
     db.session.delete(item)
     db.session.commit()
-    return "", 204
+    return jsonify({"mensagem": "Item excluído com sucesso"}), 200
 

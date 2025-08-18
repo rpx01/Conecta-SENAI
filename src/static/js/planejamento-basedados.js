@@ -230,8 +230,13 @@ async function executarExclusao() {
     const { tipo, id } = itemParaExcluir;
     if (!tipo || !id) return;
     
-    const endpoint = `/planejamento-basedados/${tipo}/${id}`;
-    
+    let endpoint = `/planejamento-basedados/${tipo}/${id}`;
+    if (tipo === 'instrutor') {
+        endpoint = `/instrutores/${id}`;
+    } else if (tipo === 'treinamento') {
+        endpoint = `/treinamentos/catalogo/${id}`;
+    }
+
     try {
         await chamarAPI(endpoint, 'DELETE');
         showToast('Item excluído com sucesso!', 'success');

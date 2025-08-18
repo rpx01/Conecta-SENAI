@@ -220,16 +220,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         },
 
-        mapTreinamentoToId(nome) {
-            const t = this.cacheOpcoes?.treinamentos?.find(tr => tr.nome === nome);
-            return t ? t.id : null;
-        },
-
-        mapInstrutorToId(nome) {
-            const i = this.cacheOpcoes?.instrutores?.find(ins => ins.nome === nome);
-            return i ? i.id : null;
-        },
-
         async executarAdicao() {
             const dadosForm = Object.fromEntries(new FormData(this.form).entries());
             try {
@@ -246,13 +236,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         horario: toHHMM(dadosForm.horario),
                         carga_horaria: toNumber(dadosForm.carga_horaria, 'Carga horária'),
                         modalidade: dadosForm.modalidade,
-                        treinamento_id: this.mapTreinamentoToId(dadosForm.treinamento),
+                        treinamento: dadosForm.treinamento,
                         polos: {
                             cmd: Boolean(dadosForm.cmd),
                             sjb: Boolean(dadosForm.sjb),
                             sag_tombos: Boolean(dadosForm.sag_tombos)
                         },
-                        instrutor_id: this.mapInstrutorToId(dadosForm.instrutor),
+                        instrutor: dadosForm.instrutor,
                         local: dadosForm.local || '',
                         observacao: dadosForm.observacao || ''
                     });

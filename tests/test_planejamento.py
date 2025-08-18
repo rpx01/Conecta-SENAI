@@ -12,7 +12,7 @@ def setup_dados(app):
         i = Instrutor(nome='Instrutor 1')
         db.session.add_all([t, i])
         db.session.commit()
-        return t.id, i.id
+        return t.nome, i.nome
 
 
 def auth_headers(client, login_admin, csrf_token):
@@ -23,8 +23,8 @@ def auth_headers(client, login_admin, csrf_token):
     }
 
 
-def test_422_sem_treinamento_id(client, setup_dados, login_admin, csrf_token):
-    _, instrutor_id = setup_dados
+def test_422_sem_treinamento(client, setup_dados, login_admin, csrf_token):
+    _, instrutor_nome = setup_dados
     payload = {
         'registros': [{
             'inicio': '2024-01-01',
@@ -34,7 +34,7 @@ def test_422_sem_treinamento_id(client, setup_dados, login_admin, csrf_token):
             'carga_horaria': 8,
             'modalidade': 'P',
             'polos': {'cmd': True, 'sjb': False, 'sag_tombos': False},
-            'instrutor_id': instrutor_id,
+            'instrutor': instrutor_nome,
             'local': '',
             'observacao': ''
         }]
@@ -43,11 +43,11 @@ def test_422_sem_treinamento_id(client, setup_dados, login_admin, csrf_token):
     resp = client.post('/api/planejamento', json=payload, headers=headers)
     assert resp.status_code == 422
     data = resp.get_json()
-    assert 'treinamento_id' in data['detalhes']
+    assert 'treinamento' in data['detalhes']
 
 
 def test_422_inicio_maior_que_fim(client, setup_dados, login_admin, csrf_token):
-    treinamento_id, instrutor_id = setup_dados
+    treinamento_nome, instrutor_nome = setup_dados
     payload = {
         'registros': [{
             'inicio': '2024-02-10',
@@ -56,9 +56,9 @@ def test_422_inicio_maior_que_fim(client, setup_dados, login_admin, csrf_token):
             'horario': '08:00',
             'carga_horaria': 8,
             'modalidade': 'P',
-            'treinamento_id': treinamento_id,
+            'treinamento': treinamento_nome,
             'polos': {'cmd': True, 'sjb': False, 'sag_tombos': False},
-            'instrutor_id': instrutor_id,
+            'instrutor': instrutor_nome,
             'local': '',
             'observacao': ''
         }]
@@ -69,7 +69,7 @@ def test_422_inicio_maior_que_fim(client, setup_dados, login_admin, csrf_token):
 
 
 def test_201_tres_registros_validos(client, setup_dados, login_admin, csrf_token):
-    treinamento_id, instrutor_id = setup_dados
+    treinamento_nome, instrutor_nome = setup_dados
     registros = []
     for dia in range(1, 4):
         registros.append({
@@ -79,9 +79,9 @@ def test_201_tres_registros_validos(client, setup_dados, login_admin, csrf_token
             'horario': '08:00',
             'carga_horaria': 8,
             'modalidade': 'P',
-            'treinamento_id': treinamento_id,
+            'treinamento': treinamento_nome,
             'polos': {'cmd': True, 'sjb': False, 'sag_tombos': False},
-            'instrutor_id': instrutor_id,
+            'instrutor': instrutor_nome,
             'local': '',
             'observacao': ''
         })
@@ -94,7 +94,7 @@ def test_201_tres_registros_validos(client, setup_dados, login_admin, csrf_token
 
 
 def test_sem_csrf_retorna_403(client, setup_dados, login_admin):
-    treinamento_id, instrutor_id = setup_dados
+    treinamento_nome, instrutor_nome = setup_dados
     payload = {
         'registros': [{
             'inicio': '2024-01-01',
@@ -103,9 +103,9 @@ def test_sem_csrf_retorna_403(client, setup_dados, login_admin):
             'horario': '08:00',
             'carga_horaria': 8,
             'modalidade': 'P',
-            'treinamento_id': treinamento_id,
+            'treinamento': treinamento_nome,
             'polos': {'cmd': True, 'sjb': False, 'sag_tombos': False},
-            'instrutor_id': instrutor_id,
+            'instrutor': instrutor_nome,
             'local': '',
             'observacao': ''
         }]

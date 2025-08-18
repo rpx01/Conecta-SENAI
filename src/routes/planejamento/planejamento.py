@@ -73,10 +73,10 @@ def criar_planejamento():
     detalhes = {}
 
     for registro in dados.registros:
-        if not Treinamento.query.get(registro.treinamento_id):
-            detalhes.setdefault('treinamento_id', 'Treinamento não encontrado')
-        if not Instrutor.query.get(registro.instrutor_id):
-            detalhes.setdefault('instrutor_id', 'Instrutor não encontrado')
+        if not Treinamento.query.filter_by(nome=registro.treinamento).first():
+            detalhes.setdefault('treinamento', 'Treinamento não encontrado')
+        if not Instrutor.query.filter_by(nome=registro.instrutor).first():
+            detalhes.setdefault('instrutor', 'Instrutor não encontrado')
 
     if detalhes:
         return jsonify({'erro': 'Dados inválidos', 'detalhes': detalhes}), 422
@@ -90,11 +90,11 @@ def criar_planejamento():
             horario=registro.horario,
             carga_horaria=str(registro.carga_horaria),
             modalidade=registro.modalidade,
-            treinamento=str(registro.treinamento_id),
+            treinamento=registro.treinamento,
             cmd=str(registro.polos.cmd),
             sjb=str(registro.polos.sjb),
             sag_tombos=str(registro.polos.sag_tombos),
-            instrutor=str(registro.instrutor_id),
+            instrutor=registro.instrutor,
             local=registro.local,
             observacao=registro.observacao,
         )

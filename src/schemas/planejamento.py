@@ -16,9 +16,9 @@ class RegistroPlanejamentoSchema(BaseModel):
     horario: str
     carga_horaria: int = Field(..., alias="carga_horaria")
     modalidade: Optional[str] = None
-    treinamento_id: int
+    treinamento: str
     polos: PolosSchema
-    instrutor_id: int
+    instrutor: str
     local: Optional[str] = ""
     observacao: Optional[str] = ""
 

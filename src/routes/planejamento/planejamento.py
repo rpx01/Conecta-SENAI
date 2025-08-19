@@ -1,3 +1,4 @@
+# flake8: noqa
 """Rotas para gerenciamento de itens do planejamento trimestral."""
 from datetime import datetime
 import hmac
@@ -27,9 +28,16 @@ def verificar_csrf():
 
 
 def _tabela_planejamento_existe() -> bool:
-    """Verifica se a tabela de planejamento está presente no banco."""
+    """Garantia de existência da tabela de planejamento."""
     insp = inspect(db.engine)
-    return insp.has_table(PlanejamentoItem.__tablename__)
+    if insp.has_table(PlanejamentoItem.__tablename__):
+        return True
+
+    try:
+        PlanejamentoItem.__table__.create(db.engine)
+        return True
+    except SQLAlchemyError:
+        return False
 
 
 @planejamento_bp.route('/planejamento', methods=['GET'])

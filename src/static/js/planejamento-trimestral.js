@@ -68,7 +68,7 @@ function showDeleteConfirm(message) {
         const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
         const btn = document.getElementById('deleteConfirmBtn');
 
-        const onConfirm = () => { cleanup(); resolve(true); };
+        const onConfirm = () => { modal.hide(); cleanup(); resolve(true); };
         const onHidden = () => { cleanup(); resolve(false); };
 
         function cleanup() {
@@ -417,11 +417,10 @@ async function salvarPlanejamento() {
     try {
         await executarAcaoComFeedback(btnSalvar, async () => {
             if (edicaoId) {
-                await chamarAPI(`/planejamento/lote/${edicaoId}`, 'PUT', registros);
-            } else {
-                const promessas = registros.map(reg => chamarAPI('/planejamento/itens', 'POST', reg));
-                await Promise.all(promessas);
+                await chamarAPI(`/planejamento/lote/${edicaoId}`, 'DELETE');
             }
+            const promessas = registros.map(reg => chamarAPI('/planejamento/itens', 'POST', reg));
+            await Promise.all(promessas);
         });
         showToast('Item salvo com sucesso!', 'success');
         itemModal.hide();

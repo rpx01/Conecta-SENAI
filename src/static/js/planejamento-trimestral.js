@@ -83,59 +83,30 @@ function popularSelect(selectId, dados) {
     });
 }
 
-/**
- * Converte uma data no formato brasileiro (dd/mm/yyyy) para ISO (yyyy-mm-dd).
- * @param {string} dataBr - Data no padrão brasileiro
- * @returns {string} Data no formato ISO
- */
-function brToIsoDate(dataBr) {
-    if (!dataBr) return '';
-    const [dia, mes, ano] = dataBr.split('/');
-    if (!dia || !mes || !ano) return '';
-    return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
-}
+function montarRegistrosPlanejamento() {
+    const dataInicio = document.getElementById('itemDataInicio').value;
+    const dataFim = document.getElementById('itemDataFim').value;
 
-/**
- * Monta o payload esperado pela API de planejamento.
- * Realiza a validação dos campos obrigatórios.
- * @returns {object|null} Payload válido ou null se houver campos ausentes
- */
-function montarPayloadPlanejamento() {
-    const campos = {
-        data_inicial: brToIsoDate(document.getElementById('itemDataInicio').value) || document.getElementById('itemDataInicio').value,
-        data_final: brToIsoDate(document.getElementById('itemDataFim').value) || document.getElementById('itemDataFim').value,
-        horario_id: Number(document.getElementById('itemHorario').value),
-        carga_horaria_id: Number(document.getElementById('itemCargaHoraria').value),
-        modalidade_id: Number(document.getElementById('itemModalidade').value),
-        treinamento_id: Number(document.getElementById('itemTreinamento').value),
-        instrutor_id: Number(document.getElementById('itemInstrutor').value),
-        local_id: Number(document.getElementById('itemLocal').value),
-        cmd_id: Number(document.getElementById('itemCmd').value),
-        sjb_id: Number(document.getElementById('itemSjb').value),
-        sag_tombos_id: Number(document.getElementById('itemSagTombos').value)
-    };
+    const selectsObrigatorios = ['itemHorario', 'itemCargaHoraria', 'itemModalidade', 'itemTreinamento', 'itemCmd', 'itemSjb', 'itemSagTombos', 'itemInstrutor', 'itemLocal'];
+    const campos = { dataInicio, dataFim };
+    selectsObrigatorios.forEach(id => { campos[id] = document.getElementById(id).value; });
 
     const nomesCampos = {
-        data_inicial: 'Data Inicial',
-        data_final: 'Data Final',
-        horario_id: 'Horário',
-        carga_horaria_id: 'Carga Horária',
-        modalidade_id: 'Modalidade',
-        treinamento_id: 'Treinamento',
-        instrutor_id: 'Instrutor',
-        local_id: 'Local',
-        cmd_id: 'CMD',
-        sjb_id: 'SJB',
-        sag_tombos_id: 'SAG/TOMBOS'
+        dataInicio: 'Data Inicial',
+        dataFim: 'Data Final',
+        itemHorario: 'Horário',
+        itemCargaHoraria: 'Carga Horária',
+        itemModalidade: 'Modalidade',
+        itemTreinamento: 'Treinamento',
+        itemCmd: 'CMD',
+        itemSjb: 'SJB',
+        itemSagTombos: 'SAG/TOMBOS',
+        itemInstrutor: 'Instrutor',
+        itemLocal: 'Local'
     };
 
     const faltantes = Object.entries(campos)
-        .filter(([chave, valor]) => {
-            if (chave === 'data_inicial' || chave === 'data_final') {
-                return !valor;
-            }
-            return Number.isNaN(valor);
-        })
+        .filter(([_, valor]) => !valor)
         .map(([chave]) => nomesCampos[chave]);
 
     if (faltantes.length) {
@@ -143,7 +114,50 @@ function montarPayloadPlanejamento() {
         return null;
     }
 
-    return campos;
+    const inicioDate = new Date(dataInicio);
+    const fimDate = new Date(dataFim);
+    if (fimDate < inicioDate) {
+        showToast('Data final deve ser maior que a inicial', 'warning');
+        return null;
+    }
+
+    const horario = document.getElementById('itemHorario').selectedOptions[0].textContent;
+    const cargaHoraria = document.getElementById('itemCargaHoraria').selectedOptions[0].textContent;
+    const modalidade = document.getElementById('itemModalidade').selectedOptions[0].textContent;
+    const treinamento = document.getElementById('itemTreinamento').selectedOptions[0].textContent;
+    const cmd = document.getElementById('itemCmd').selectedOptions[0].textContent;
+    const sjb = document.getElementById('itemSjb').selectedOptions[0].textContent;
+    const sagTombos = document.getElementById('itemSagTombos').selectedOptions[0].textContent;
+    const instrutor = document.getElementById('itemInstrutor').selectedOptions[0].textContent;
+    const local = document.getElementById('itemLocal').selectedOptions[0].textContent;
+    const observacao = document.getElementById('itemObservacao').value;
+
+    const loteIdInput = document.getElementById('loteId');
+    const loteId = loteIdInput.value || crypto.randomUUID();
+    loteIdInput.value = loteId;
+
+    const registros = [];
+    for (let d = new Date(inicioDate); d <= fimDate; d.setDate(d.getDate() + 1)) {
+        const iso = d.toISOString().split('T')[0];
+        const diaSemana = d.toLocaleDateString('pt-BR', { weekday: 'long' });
+        registros.push({
+            data: iso,
+            loteId,
+            semana: diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1),
+            horario,
+            carga_horaria: cargaHoraria,
+            modalidade,
+            treinamento,
+            cmd,
+            sjb,
+            sag_tombos: sagTombos,
+            instrutor,
+            local,
+            observacao
+        });
+    }
+
+    return registros;
 }
 
 /**
@@ -152,11 +166,9 @@ function montarPayloadPlanejamento() {
 function calcularSemana() {
     const dataInput = document.getElementById('itemDataInicio').value;
     if (dataInput) {
-        const data = new Date(dataInput + "T00:00:00");
-        const primeiroDiaDoAno = new Date(data.getFullYear(), 0, 1);
-        const diasPassados = Math.floor((data - primeiroDiaDoAno) / (24 * 60 * 60 * 1000));
-        const semana = Math.ceil((data.getDay() + 1 + diasPassados) / 7);
-        document.getElementById('itemSemana').value = `SEMANA ${semana}`;
+        const data = new Date(dataInput + 'T00:00:00');
+        const diaSemana = data.toLocaleDateString('pt-BR', { weekday: 'long' });
+        document.getElementById('itemSemana').value = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
     }
 }
 
@@ -176,21 +188,26 @@ window.abrirModalParaAdicionar = (loteId = '') => {
  */
 window.abrirModalParaEditar = (item) => {
     document.getElementById('itemForm').reset();
-    
+
     document.getElementById('itemId').value = item.id;
     document.getElementById('loteId').value = item.loteId;
     document.getElementById('itemDataInicio').value = item.data;
     document.getElementById('itemDataFim').value = item.data;
     document.getElementById('itemSemana').value = item.semana;
-    document.getElementById('itemHorario').value = item.horario;
-    document.getElementById('itemCargaHoraria').value = item.cargaHoraria;
-    document.getElementById('itemModalidade').value = item.modalidade;
-    document.getElementById('itemTreinamento').value = item.treinamento;
-    document.getElementById('itemCmd').value = item.cmd;
-    document.getElementById('itemSjb').value = item.sjb;
-    document.getElementById('itemSagTombos').value = item.sagTombos;
-    document.getElementById('itemInstrutor').value = item.instrutor;
-    document.getElementById('itemLocal').value = item.local;
+    const selecionar = (id, texto) => {
+        const select = document.getElementById(id);
+        const opt = Array.from(select.options).find(o => o.textContent === texto);
+        if (opt) select.value = opt.value;
+    };
+    selecionar('itemHorario', item.horario);
+    selecionar('itemCargaHoraria', item.cargaHoraria);
+    selecionar('itemModalidade', item.modalidade);
+    selecionar('itemTreinamento', item.treinamento);
+    selecionar('itemCmd', item.cmd);
+    selecionar('itemSjb', item.sjb);
+    selecionar('itemSagTombos', item.sagTombos);
+    selecionar('itemInstrutor', item.instrutor);
+    selecionar('itemLocal', item.local);
     document.getElementById('itemObservacao').value = item.observacao;
 
     document.getElementById('itemModalLabel').textContent = 'Editar Item do Planejamento';
@@ -201,34 +218,17 @@ window.abrirModalParaEditar = (item) => {
  * Envia o planejamento para a API.
  */
 async function salvarPlanejamento() {
-    const payload = montarPayloadPlanejamento();
-    if (!payload) return;
+    const registros = montarRegistrosPlanejamento();
+    if (!registros) return;
 
     try {
-        const token = await obterCSRFToken();
-        const resp = await fetch('/api/planejamentos', {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': token
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (!resp.ok) {
-            let data = null;
-            try { data = await resp.json(); } catch (_) {}
-            const mensagem = data?.detail || (data?.errors && Object.values(data.errors).join(', ')) || 'Dados inválidos';
-            showToast(mensagem, 'danger');
-            return;
-        }
-
+        const promessas = registros.map(reg => chamarAPI('/planejamento/itens', 'POST', reg));
+        await Promise.all(promessas);
         showToast('Item salvo com sucesso!', 'success');
         itemModal.hide();
         await carregarItens();
     } catch (error) {
-        showToast('Dados inválidos', 'danger');
+        showToast(error.message || 'Dados inválidos', 'danger');
     }
 }
 
@@ -266,10 +266,7 @@ function renderizarLotes(itens) {
 
     for (const loteId in lotes) {
         const itensDoLote = lotes[loteId];
-        const primeiroItem = itensDoLote[0];
-        const data = new Date(primeiroItem.data + 'T00:00:00');
-        const ano = data.getFullYear();
-        const trimestre = Math.floor(data.getMonth() / 3) + 1;
+        const dataFinal = itensDoLote.reduce((max, item) => item.data > max ? item.data : max, itensDoLote[0].data);
 
         const loteCard = document.createElement('div');
         loteCard.className = 'card mb-4';
@@ -279,7 +276,7 @@ function renderizarLotes(itens) {
                     <table class="table table-striped table-hover mb-0">
                         ${criarCabecalhoTabela()}
                         <tbody>
-                            ${itensDoLote.map(item => criarLinhaItem(item)).join('')}
+                            ${itensDoLote.map(item => criarLinhaItem(item, dataFinal)).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -306,7 +303,7 @@ function criarCabecalhoTabela() {
     return `
         <thead>
             <tr>
-                <th>Data</th><th>Semana</th><th>Horário</th><th>C.H.</th>
+                <th>Data Inicial</th><th>Data Final</th><th>Semana</th><th>Horário</th><th>C.H.</th>
                 <th>Modalidade</th><th>Treinamento</th><th>CMD</th><th>SJB</th>
                 <th>SAG/TOMBOS</th><th>Instrutor</th><th>Local</th><th>Obs.</th>
                 <th class="text-end">Ações</th>
@@ -318,13 +315,17 @@ function criarCabecalhoTabela() {
 /**
  * Cria uma linha <tr> da tabela para um item do planejamento.
  */
-function criarLinhaItem(item) {
-    const dataFormatada = new Date(item.data + 'T00:00:00').toLocaleDateString('pt-BR');
+function criarLinhaItem(item, dataFinal) {
+    const dataObj = new Date(item.data + 'T00:00:00');
+    const dataInicialFormatada = dataObj.toLocaleDateString('pt-BR');
+    const dataFinalFormatada = new Date(dataFinal + 'T00:00:00').toLocaleDateString('pt-BR');
+    const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'long' });
     const itemJsonString = JSON.stringify(item).replace(/'/g, "\\'");
     return `
         <tr>
-            <td>${dataFormatada}</td>
-            <td>${escapeHTML(item.semana || '')}</td>
+            <td>${dataInicialFormatada}</td>
+            <td>${dataFinalFormatada}</td>
+            <td>${diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1)}</td>
             <td>${escapeHTML(item.horario || '')}</td>
             <td>${escapeHTML(item.cargaHoraria || '')}</td>
             <td>${escapeHTML(item.modalidade || '')}</td>

@@ -210,7 +210,22 @@ function renderizarLotes(itens) {
     const lotes = agruparItensPorLote(itens);
 
     if (Object.keys(lotes).length === 0) {
-        mainContainer.innerHTML += '<div class="card"><div class="card-body text-center">Nenhum item de planejamento encontrado.</div></div>';
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        ${criarCabecalhoTabela()}
+                        <tbody>
+                            <tr>
+                                <td colspan="13" class="text-center">Nenhum item de planejamento encontrado.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+        mainContainer.appendChild(card);
         return;
     }
 

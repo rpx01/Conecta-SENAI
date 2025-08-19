@@ -230,7 +230,7 @@ small, .small {
 }
 
 .table thead th {
-  background-color: rgba(13, 110, 253, 0.1);
+  background-color: #004383 !important;
   color: #fff;
   border-color: #003366 !important;
   font-weight: 600;

@@ -226,8 +226,53 @@ class GerenciadorInstrutores {
     }
 }
 
+function loadUsers() {
+    fetch('/api/ocupacao/users')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.getElementById('corpo-docente-tbody');
+            tbody.innerHTML = '';
+            const users = data.users;
+
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.name}</td>
+                    <td>${user.email || ''}</td>
+                `;
+                const actionsCell = document.createElement('td');
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                deleteBtn.classList.add('btn', 'btn-danger', 'btn-sm');
+                deleteBtn.onclick = function() {
+                    if (confirm(`Tem certeza que deseja excluir todas as ocupações de ${user.name}?`)) {
+                        fetch(`/api/ocupacao/${user.id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+                            }
+                        }).then(response => {
+                            if (response.ok) {
+                                alert('Ocupações excluídas com sucesso!');
+                                loadUsers();
+                            } else {
+                                alert('Falha ao excluir as ocupações.');
+                            }
+                        });
+                    }
+                };
+
+                actionsCell.appendChild(deleteBtn);
+                row.appendChild(actionsCell);
+                tbody.appendChild(row);
+            });
+        });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     verificarAutenticacao();
     verificarPermissaoAdmin();
     window.gerenciadorInstrutores = new GerenciadorInstrutores();
+    loadUsers();
 });

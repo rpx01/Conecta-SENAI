@@ -77,10 +77,73 @@ function popularSelect(selectId, dados) {
 
     dados.forEach(item => {
         const option = document.createElement('option');
-        option.value = escapeHTML(item.nome);
-        option.textContent = escapeHTML(item.nome);
+        option.value = item.id;
+        option.textContent = escapeHTML(item.nome ?? item.descricao ?? '');
         select.appendChild(option);
     });
+}
+
+/**
+ * Converte uma data no formato brasileiro (dd/mm/yyyy) para ISO (yyyy-mm-dd).
+ * @param {string} dataBr - Data no padrão brasileiro
+ * @returns {string} Data no formato ISO
+ */
+function brToIsoDate(dataBr) {
+    if (!dataBr) return '';
+    const [dia, mes, ano] = dataBr.split('/');
+    if (!dia || !mes || !ano) return '';
+    return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+}
+
+/**
+ * Monta o payload esperado pela API de planejamento.
+ * Realiza a validação dos campos obrigatórios.
+ * @returns {object|null} Payload válido ou null se houver campos ausentes
+ */
+function montarPayloadPlanejamento() {
+    const campos = {
+        data_inicial: brToIsoDate(document.getElementById('itemDataInicio').value) || document.getElementById('itemDataInicio').value,
+        data_final: brToIsoDate(document.getElementById('itemDataFim').value) || document.getElementById('itemDataFim').value,
+        horario_id: Number(document.getElementById('itemHorario').value),
+        carga_horaria_id: Number(document.getElementById('itemCargaHoraria').value),
+        modalidade_id: Number(document.getElementById('itemModalidade').value),
+        treinamento_id: Number(document.getElementById('itemTreinamento').value),
+        instrutor_id: Number(document.getElementById('itemInstrutor').value),
+        local_id: Number(document.getElementById('itemLocal').value),
+        cmd_id: Number(document.getElementById('itemCmd').value),
+        sjb_id: Number(document.getElementById('itemSjb').value),
+        sag_tombos_id: Number(document.getElementById('itemSagTombos').value)
+    };
+
+    const nomesCampos = {
+        data_inicial: 'Data Inicial',
+        data_final: 'Data Final',
+        horario_id: 'Horário',
+        carga_horaria_id: 'Carga Horária',
+        modalidade_id: 'Modalidade',
+        treinamento_id: 'Treinamento',
+        instrutor_id: 'Instrutor',
+        local_id: 'Local',
+        cmd_id: 'CMD',
+        sjb_id: 'SJB',
+        sag_tombos_id: 'SAG/TOMBOS'
+    };
+
+    const faltantes = Object.entries(campos)
+        .filter(([chave, valor]) => {
+            if (chave === 'data_inicial' || chave === 'data_final') {
+                return !valor;
+            }
+            return Number.isNaN(valor);
+        })
+        .map(([chave]) => nomesCampos[chave]);
+
+    if (faltantes.length) {
+        showToast(`Preencha os campos: ${faltantes.join(', ')}`, 'warning');
+        return null;
+    }
+
+    return campos;
 }
 
 /**
@@ -135,44 +198,37 @@ window.abrirModalParaEditar = (item) => {
 };
 
 /**
- * Salva um item (cria um novo ou atualiza um existente).
+ * Envia o planejamento para a API.
  */
-async function salvarItem() {
-    const id = document.getElementById('itemId').value;
-    const loteId = document.getElementById('loteId').value;
-    
-    const dados = {
-        loteId: loteId,
-        data: document.getElementById('itemDataInicio').value,
-        data_fim: document.getElementById('itemDataFim').value,
-        semana: document.getElementById('itemSemana').value,
-        horario: document.getElementById('itemHorario').value,
-        carga_horaria: document.getElementById('itemCargaHoraria').value,
-        modalidade: document.getElementById('itemModalidade').value,
-        treinamento: document.getElementById('itemTreinamento').value,
-        cmd: document.getElementById('itemCmd').value,
-        sjb: document.getElementById('itemSjb').value,
-        sag_tombos: document.getElementById('itemSagTombos').value,
-        instrutor: document.getElementById('itemInstrutor').value,
-        local: document.getElementById('itemLocal').value,
-        observacao: document.getElementById('itemObservacao').value,
-    };
-
-    if (!dados.data || !dados.horario || !dados.treinamento) {
-        showToast('Preencha todos os campos obrigatórios.', 'warning');
-        return;
-    }
-    
-    const endpoint = id ? `/planejamento/itens/${id}` : '/planejamento/itens';
-    const method = id ? 'PUT' : 'POST';
+async function salvarPlanejamento() {
+    const payload = montarPayloadPlanejamento();
+    if (!payload) return;
 
     try {
-        await chamarAPI(endpoint, method, dados);
-        showToast(`Item ${id ? 'atualizado' : 'salvo'} com sucesso!`, 'success');
+        const token = await obterCSRFToken();
+        const resp = await fetch('/api/planejamentos', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': token
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!resp.ok) {
+            let data = null;
+            try { data = await resp.json(); } catch (_) {}
+            const mensagem = data?.detail || (data?.errors && Object.values(data.errors).join(', ')) || 'Dados inválidos';
+            showToast(mensagem, 'danger');
+            return;
+        }
+
+        showToast('Item salvo com sucesso!', 'success');
         itemModal.hide();
         await carregarItens();
     } catch (error) {
-        showToast(error.message, 'danger');
+        showToast('Dados inválidos', 'danger');
     }
 }
 

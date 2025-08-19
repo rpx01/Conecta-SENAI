@@ -26,7 +26,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('itemData').addEventListener('change', calcularSemana);
     document.getElementById('btnConfirmarExclusao').addEventListener('click', executarExclusao);
-    
+
+    document.getElementById('btn-adicionar-planejamento').addEventListener('click', () => abrirModalParaAdicionar());
+
     await inicializarPagina();
 });
 

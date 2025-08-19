@@ -426,9 +426,9 @@ def excluir_lote(lote_id):
         )
 
     try:
-        PlanejamentoItem.query.filter_by(lote_id=lote_id).delete()
+        PlanejamentoItem.query.filter_by(lote_id=lote_id).delete(synchronize_session=False)
         db.session.commit()
-        return jsonify({'mensagem': 'Lote excluído com sucesso'})
+        return '', 204
     except SQLAlchemyError as e:
         db.session.rollback()
         return handle_internal_error(e)

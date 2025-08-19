@@ -1,4 +1,4 @@
-/* global bootstrap, chamarAPI, showToast, escapeHTML */
+/* global bootstrap, chamarAPI, showToast, escapeHTML, executarAcaoComFeedback */
 
 // Mapeamento dos endpoints da API para os IDs dos selects no HTML
 const mapeamentoSelects = {
@@ -14,20 +14,35 @@ const mapeamentoSelects = {
 };
 
 let itemModal;
-let confirmacaoModal;
-let itemParaExcluirId = null;
 
 /**
  * Função executada quando o DOM está totalmente carregado.
  */
 document.addEventListener('DOMContentLoaded', async () => {
     itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
-    confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
 
     document.getElementById('itemDataInicio').addEventListener('change', calcularSemana);
-    document.getElementById('btnConfirmarExclusao').addEventListener('click', executarExclusao);
-
     document.getElementById('btn-adicionar-planejamento').addEventListener('click', () => abrirModalParaAdicionar());
+
+    const tabelaContainer = document.getElementById('planejamento-container');
+    tabelaContainer.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.btn-excluir');
+        if (!btn) return;
+
+        const itemId = btn.getAttribute('data-item-id');
+        if (!itemId) return;
+
+        await executarAcaoComFeedback(btn, async () => {
+            try {
+                await chamarAPI(`/planejamento/lote/${itemId}`, 'DELETE');
+                document.querySelectorAll(`[data-item-id="${itemId}"]`).forEach(tr => tr.remove());
+                showToast('Item excluído com sucesso!', 'success');
+            } catch (error) {
+                showToast(error.message || 'Falha ao excluir item', 'danger');
+                throw error;
+            }
+        });
+    });
 
     await inicializarPagina();
 });
@@ -254,7 +269,7 @@ function renderizarItens(itens) {
         <div class="card mb-4">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover mb-0">
+                    <table id="tabela-planejamento" class="table table-striped table-hover mb-0">
                         ${criarCabecalhoTabela()}
                         <tbody id="planejamento-tbody"></tbody>
                     </table>
@@ -308,7 +323,7 @@ function criarLinhaItem(item, dataFinal) {
     const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'long' });
     const itemJsonString = JSON.stringify(item).replace(/'/g, "\\'");
     return `
-        <tr>
+        <tr data-item-id="${item.loteId}">
             <td>${dataInicialFormatada}</td>
             <td>${dataFinalFormatada}</td>
             <td>${diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1)}</td>
@@ -326,38 +341,12 @@ function criarLinhaItem(item, dataFinal) {
                 <button class="btn btn-sm btn-outline-primary" onclick='abrirModalParaEditar(${itemJsonString})'>
                     <i class="bi bi-pencil"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusao(${item.id})">
+                <button class="btn btn-sm btn-outline-danger btn-excluir" data-item-id="${item.loteId}">
                     <i class="bi bi-trash"></i>
                 </button>
             </td>
         </tr>
     `;
-}
-
-/**
- * Abre o modal de confirmação para excluir um item.
- */
-window.confirmarExclusao = (id) => {
-    itemParaExcluirId = id;
-    confirmacaoModal.show();
-};
-
-/**
- * Executa a exclusão do item após a confirmação.
- */
-async function executarExclusao() {
-    if (!itemParaExcluirId) return;
-
-    try {
-        await chamarAPI(`/planejamento/itens/${itemParaExcluirId}`, 'DELETE');
-        showToast('Item excluído com sucesso!', 'success');
-        await carregarItens();
-    } catch (error) {
-        showToast(error.message, 'danger');
-    } finally {
-        itemParaExcluirId = null;
-        confirmacaoModal.hide();
-    }
 }
 
 /**

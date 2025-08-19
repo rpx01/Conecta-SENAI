@@ -15,7 +15,9 @@ const mapeamentoSelects = {
 
 let itemModal;
 let edicaoId = null;
+let edicaoLinhaId = null;
 const itensCache = {};
+const itensPorLote = {};
 
 function formatarDataPtBr(iso) {
     if (!iso) return '';
@@ -191,15 +193,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('itemDataInicio').addEventListener('change', calcularSemana);
     document.getElementById('btn-adicionar-planejamento').addEventListener('click', () => abrirModalParaAdicionar());
     document.getElementById('btnSalvarItem').addEventListener('click', salvarPlanejamento);
-    document.getElementById('btnCancelarItem').addEventListener('click', () => { edicaoId = null; });
-    document.getElementById('itemModal').addEventListener('hidden.bs.modal', () => { edicaoId = null; });
+    document.getElementById('btnCancelarItem').addEventListener('click', () => { edicaoId = null; edicaoLinhaId = null; });
+    document.getElementById('itemModal').addEventListener('hidden.bs.modal', () => { edicaoId = null; edicaoLinhaId = null; });
 
     const tabelaContainer = document.getElementById('planejamento-container');
     tabelaContainer.addEventListener('click', async (e) => {
         const btnEditar = e.target.closest('.btn-editar');
         if (btnEditar) {
             const idItem = btnEditar.dataset.itemId;
-            await abrirModalParaEditar(idItem);
+            const rowId = btnEditar.dataset.rowId;
+            await abrirModalParaEditar(idItem, rowId);
             return;
         }
 
@@ -394,13 +397,21 @@ window.abrirModalParaAdicionar = (loteId = '') => {
 /**
  * Abre o modal para editar um item existente.
  */
-window.abrirModalParaEditar = async (idItem) => {
+window.abrirModalParaEditar = async (idItem, rowId) => {
     const item = await obterItemPorId(idItem);
     edicaoId = idItem;
+    edicaoLinhaId = rowId;
 
     await Promise.all([carregarCmd(), carregarSjb(), carregarSagTombos()]);
 
+    const lista = itensPorLote[idItem] || [];
+    const linha = lista.find(it => String(it.id) === String(rowId));
+    if (linha) {
+        item.instrutor = linha.instrutor;
+    }
+
     preencherFormulario(item);
+    document.getElementById('itemId').value = rowId || '';
 
     document.getElementById('itemModalLabel').textContent = 'Editar Item do Planejamento';
     bootstrap.Modal.getOrCreateInstance(document.getElementById('itemModal')).show();
@@ -417,14 +428,25 @@ async function salvarPlanejamento() {
     try {
         await executarAcaoComFeedback(btnSalvar, async () => {
             if (edicaoId) {
-                await chamarAPI(`/planejamento/lote/${edicaoId}`, 'DELETE');
+                const itensOriginais = itensPorLote[edicaoId] || [];
+                const promessas = itensOriginais.map((orig, idx) => {
+                    const base = registros[idx] || registros[registros.length - 1];
+                    const payload = { ...base };
+                    if (String(orig.id) !== String(edicaoLinhaId)) {
+                        payload.instrutor = orig.instrutor;
+                    }
+                    return chamarAPI(`/planejamento/itens/${orig.id}`, 'PUT', payload);
+                });
+                await Promise.all(promessas);
+            } else {
+                const promessas = registros.map(reg => chamarAPI('/planejamento/itens', 'POST', reg));
+                await Promise.all(promessas);
             }
-            const promessas = registros.map(reg => chamarAPI('/planejamento/itens', 'POST', reg));
-            await Promise.all(promessas);
         });
         showToast('Item salvo com sucesso!', 'success');
         itemModal.hide();
         edicaoId = null;
+        edicaoLinhaId = null;
         await carregarItens();
     } catch (error) {
         showToast(error.message || 'Dados inválidos', 'danger');
@@ -440,6 +462,7 @@ async function carregarItens() {
         adicionarSufixoDias(itens);
 
         Object.keys(itensCache).forEach(k => delete itensCache[k]);
+        Object.keys(itensPorLote).forEach(k => delete itensPorLote[k]);
         itens.forEach(it => {
             const id = it.loteId;
             if (!itensCache[id]) {
@@ -448,6 +471,8 @@ async function carregarItens() {
                 if (it.data < itensCache[id].data_inicial) itensCache[id].data_inicial = it.data;
                 if (it.data > itensCache[id].data_final) itensCache[id].data_final = it.data;
             }
+            if (!itensPorLote[id]) itensPorLote[id] = [];
+            itensPorLote[id].push(it);
         });
 
         renderizarItens(itens);
@@ -535,7 +560,7 @@ function criarLinhaItem(item, dataFinal) {
             <td>${escapeHTML(item.local || '')}</td>
             <td>${escapeHTML(item.observacao || '')}</td>
             <td class="text-end">
-                <button class="btn btn-sm btn-outline-primary btn-editar" data-item-id="${item.loteId}" data-data-inicial="${item.data}" data-data-final="${dataFinal}">
+                <button class="btn btn-sm btn-outline-primary btn-editar" data-item-id="${item.loteId}" data-row-id="${item.id}" data-data-inicial="${item.data}" data-data-final="${dataFinal}">
                     <i class="bi bi-pencil"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-danger btn-excluir" data-item-id="${item.loteId}" data-titulo="${escapeHTML(item.treinamento || '')}" data-data-inicial-formatada="${dataInicialFormatada}" data-data-final-formatada="${dataFinalFormatada}">

@@ -170,7 +170,7 @@ async function salvarItem() {
         return;
     }
 
-    const endpoint = id ? `/planejamento/${id}` : '/planejamento';
+    const endpoint = id ? `/planejamento/itens/${id}` : '/planejamento/itens';
     const method = id ? 'PUT' : 'POST';
 
     try {
@@ -190,7 +190,7 @@ async function carregarItens() {
     // Esta função deve conter a sua lógica já existente para buscar e renderizar a tabela de planejamento.
     // Exemplo:
     try {
-        const data = await chamarAPI('/planejamento');
+        const data = await chamarAPI('/planejamento/itens');
         // Renderizar os lotes e itens...
     } catch (error) {
         showToast('Não foi possível carregar o planejamento.', 'danger');

@@ -230,8 +230,9 @@ small, .small {
 }
 
 .table thead th {
-  background-color: var(--brand-primary)!important;
+  background-color: #004383 !important;
   color: #fff;
+  border-color: #003366 !important;
   font-weight: 600;
 }
 

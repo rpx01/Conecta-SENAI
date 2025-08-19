@@ -274,12 +274,6 @@ function renderizarLotes(itens) {
         const loteCard = document.createElement('div');
         loteCard.className = 'card mb-4';
         loteCard.innerHTML = `
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h2 class="h5 mb-0">${trimestre}º Trimestre de ${ano}</h2>
-                <button class="btn btn-primary btn-sm" onclick="abrirModalParaAdicionar('${loteId}')">
-                    <i class="bi bi-plus-circle me-1"></i> Adicionar Item
-                </button>
-            </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-striped table-hover mb-0">

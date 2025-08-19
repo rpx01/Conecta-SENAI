@@ -77,81 +77,102 @@
             <main class="col-lg-9 col-md-12">
                 <div class="page-header">
                     <h1 class="mb-0">Planejamento Trimestral</h1>
-                    <button id="btn-adicionar-planejamento" class="btn btn-primary">
+                    <button id="btn-adicionar-planejamento" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
                         <i class="bi bi-plus-circle me-2"></i>Adicionar
                     </button>
                 </div>
 
-                <div id="planejamento-container" class="mt-4">
-                    </div>
+                <div class="table-responsive mt-4">
+                    <table class="table table-bordered table-striped" id="tabela-planejamento">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Data Inicial</th>
+                                <th>Data Final</th>
+                                <th>Semana</th>
+                                <th>Horário</th>
+                                <th>C.H.</th>
+                                <th>Modalidade</th>
+                                <th>Treinamento</th>
+                                <th>CMD</th>
+                                <th>SJB</th>
+                                <th>SAG/TOMBOS</th>
+                                <th>Instrutor</th>
+                                <th>Local</th>
+                                <th>Obs.</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </main>
         </div>
     </div>
 
-    <div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="itemModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="itemModalLabel">Adicionar Item ao Planejamento</h5>
+                    <h5 class="modal-title" id="addItemModalLabel">Adicionar Item ao Planejamento</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <form id="itemForm">
-                        <input type="hidden" id="itemId">
-                        <input type="hidden" id="loteId">
+                <form id="addItemForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="itemId" name="id">
+                        <input type="hidden" id="loteId" name="loteId">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="itemDataInicio" class="form-label">Data Inicial</label>
-                                <input type="date" class="form-control" id="itemDataInicio" required>
+                                <input type="date" class="form-control" id="itemDataInicio" name="data_inicial" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="itemDataFim" class="form-label">Data Final</label>
-                                <input type="date" class="form-control" id="itemDataFim" required>
+                                <input type="date" class="form-control" id="itemDataFim" name="data_final" required>
                             </div>
                         </div>
-                        <input type="hidden" id="itemSemana">
+                        <input type="hidden" id="itemSemana" name="semana">
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label for="itemHorario" class="form-label">Horário</label>
-                                <select class="form-select" id="itemHorario" required>
+                                <select class="form-select" id="itemHorario" name="horario" required>
                                     <option value="" selected disabled>Selecione...</option>
                                 </select>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label for="itemCargaHoraria" class="form-label">C.H. (Carga Horária)</label>
-                                <select class="form-select" id="itemCargaHoraria" required>
+                                <select class="form-select" id="itemCargaHoraria" name="carga_horaria" required>
                                     <option value="" selected disabled>Selecione...</option>
                                 </select>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label for="itemModalidade" class="form-label">Modalidade</label>
-                                <select class="form-select" id="itemModalidade" required>
+                                <select class="form-select" id="itemModalidade" name="modalidade" required>
                                     <option value="" selected disabled>Selecione...</option>
                                 </select>
                             </div>
                         </div>
                         <div class="mb-3">
                             <label for="itemTreinamento" class="form-label">Treinamento</label>
-                            <select class="form-select" id="itemTreinamento" required>
+                            <select class="form-select" id="itemTreinamento" name="treinamento_nome" required>
                                 <option value="" selected disabled>Selecione...</option>
                             </select>
                         </div>
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label for="itemCmd" class="form-label">CMD</label>
-                                <select class="form-select" id="itemCmd" required>
+                                <select class="form-select" id="itemCmd" name="cmd" required>
                                     <option value="" selected disabled>Selecione...</option>
                                 </select>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label for="itemSjb" class="form-label">SJB</label>
-                                <select class="form-select" id="itemSjb" required>
+                                <select class="form-select" id="itemSjb" name="sjb" required>
                                     <option value="" selected disabled>Selecione...</option>
                                 </select>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label for="itemSagTombos" class="form-label">SAG/TOMBOS</label>
-                                <select class="form-select" id="itemSagTombos" required>
+                                <select class="form-select" id="itemSagTombos" name="sag_tombos" required>
                                     <option value="" selected disabled>Selecione...</option>
                                 </select>
                             </div>
@@ -159,27 +180,27 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="itemInstrutor" class="form-label">Instrutor</label>
-                                <select class="form-select" id="itemInstrutor" required>
+                                <select class="form-select" id="itemInstrutor" name="instrutor_nome" required>
                                     <option value="" selected disabled>Selecione...</option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="itemLocal" class="form-label">Local</label>
-                                <select class="form-select" id="itemLocal" required>
+                                <select class="form-select" id="itemLocal" name="local" required>
                                     <option value="" selected disabled>Selecione...</option>
                                 </select>
                             </div>
                         </div>
                         <div class="mb-3">
                             <label for="itemObservacao" class="form-label">Observação</label>
-                            <textarea class="form-control" id="itemObservacao" rows="2"></textarea>
+                            <textarea class="form-control" id="itemObservacao" name="observacao" rows="2"></textarea>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" onclick="salvarPlanejamento()">Salvar</button>
-                </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

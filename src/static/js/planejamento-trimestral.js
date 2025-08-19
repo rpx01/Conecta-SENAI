@@ -1,146 +1,434 @@
-// Função para buscar e renderizar os dados do planejamento
-async function fetchAndRenderPlanejamento() {
-    try {
-        const response = await fetch('/api/planejamento/all');
-        if (!response.ok) {
-            throw new Error('Erro ao buscar dados do planejamento');
-        }
-        const data = await response.json();
-        renderPlanejamento(data); // Chama a função para renderizar a tabela
-    } catch (error) {
-        console.error('Erro:', error);
-        Swal.fire('Erro!', 'Não foi possível carregar os dados do planejamento.', 'error');
-    }
-}
+/* global bootstrap, chamarAPI, showToast, escapeHTML */
 
-// Função para renderizar a tabela de planejamento
-function renderPlanejamento(planejamentos) {
-    const tabelaPlanejamento = document.getElementById('tabela-planejamento');
-    const tbody = tabelaPlanejamento.querySelector('tbody');
+// Mapeamento dos endpoints da API para os IDs dos selects no HTML
+const mapeamentoSelects = {
+    'itemHorario': '/planejamento-basedados/horario',
+    'itemCargaHoraria': '/planejamento-basedados/cargahoraria',
+    'itemModalidade': '/planejamento-basedados/modalidade',
+    'itemTreinamento': '/planejamento-basedados/treinamento',
+    'itemCmd': '/planejamento-basedados/publico-alvo',
+    'itemSjb': '/planejamento-basedados/publico-alvo',
+    'itemSagTombos': '/planejamento-basedados/publico-alvo',
+    'itemInstrutor': '/instrutores',
+    'itemLocal': '/planejamento-basedados/local',
+};
 
-    // 1. Limpa o corpo da tabela antes de adicionar novas linhas
-    tbody.innerHTML = '';
+let itemModal;
+let confirmacaoModal;
+let itemParaExcluirId = null;
 
-    // 2. Itera sobre os itens do planejamento e cria uma linha para cada um
-    planejamentos.forEach(item => {
-        const tr = document.createElement('tr');
+/**
+ * Função executada quando o DOM está totalmente carregado.
+ */
+document.addEventListener('DOMContentLoaded', async () => {
+    itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
+    confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
 
-        // Formata as datas para o formato DD/MM/AAAA
-        const dataInicial = item.data_inicial ? new Date(item.data_inicial).toLocaleDateString('pt-BR') : 'N/A';
-        const dataFinal = item.data_final ? new Date(item.data_final).toLocaleDateString('pt-BR') : 'N/A';
+    document.getElementById('itemDataInicio').addEventListener('change', calcularSemana);
+    document.getElementById('btnConfirmarExclusao').addEventListener('click', executarExclusao);
 
-        tr.innerHTML = `
-            <td>${dataInicial}</td>
-            <td>${dataFinal}</td>
-            <td>${item.semana || 'N/A'}</td>
-            <td>${item.horario || 'N/A'}</td>
-            <td>${item.carga_horaria || 'N/A'}</td>
-            <td>${item.modalidade || 'N/A'}</td>
-            <td>${item.treinamento_nome || 'N/A'}</td>
-            <td>${item.cmd || 'N/A'}</td>
-            <td>${item.sjb || 'N/A'}</td>
-            <td>${item.sag_tombos || 'N/A'}</td>
-            <td>${item.instrutor_nome || 'N/A'}</td>
-            <td>${item.local || 'N/A'}</td>
-            <td>${item.observacao || ''}</td>
-            <td>
-                <button class="btn btn-sm btn-primary" onclick="editarItem(${item.id})">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn btn-sm btn-danger" onclick="excluirItem(${item.id})">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
+    document.getElementById('btn-adicionar-planejamento').addEventListener('click', () => abrirModalParaAdicionar());
 
-
-// A função handleFormSubmit agora apenas salva e depois recarrega os dados
-async function handleFormSubmit(event) {
-    event.preventDefault();
-    const form = event.target;
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
-
-    // Converte os valores para os tipos corretos se necessário
-    data.carga_horaria = parseInt(data.carga_horaria, 10) || null;
-    data.cmd = parseInt(data.cmd, 10) || null;
-    data.sjb = parseInt(data.sjb, 10) || null;
-    data.sag_tombos = parseInt(data.sag_tombos, 10) || null;
-
-    try {
-        const response = await fetch('/api/planejamento/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Erro ao salvar o item');
-        }
-
-        Swal.fire('Sucesso!', 'Item salvo com sucesso.', 'success');
-        $('#addItemModal').modal('hide'); // Fecha o modal
-        form.reset(); // Limpa o formulário
-        fetchAndRenderPlanejamento(); // Recarrega e renderiza a tabela inteira
-
-    } catch (error) {
-        console.error('Erro ao salvar:', error);
-        Swal.fire('Erro!', error.message, 'error');
-    }
-}
-
-// ... (Restante do seu código JS, como as funções de editar, excluir e carregar dados nos modais)
-
-// Carrega os dados iniciais quando a página é carregada
-document.addEventListener('DOMContentLoaded', () => {
-    fetchAndRenderPlanejamento();
-
-    // Adiciona o listener para o formulário
-    const addItemForm = document.getElementById('addItemForm');
-    if (addItemForm) {
-        addItemForm.addEventListener('submit', handleFormSubmit);
-    }
-
-    // ... (outros listeners que você possa ter)
+    await inicializarPagina();
 });
 
-// Suas funções editarItem, excluirItem, loadTreinamentos, loadInstrutores permanecem as mesmas.
-// Apenas garanta que após uma exclusão, você chame fetchAndRenderPlanejamento() também.
-
-async function excluirItem(id) {
-    const result = await Swal.fire({
-        title: 'Você tem certeza?',
-        text: "Você não poderá reverter isso!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sim, excluir!',
-        cancelButtonText: 'Cancelar'
-    });
-
-    if (result.isConfirmed) {
-        try {
-            const response = await fetch(`/api/planejamento/${id}`, {
-                method: 'DELETE',
-            });
-
-            if (!response.ok) {
-                throw new Error('Erro ao excluir o item.');
-            }
-
-            Swal.fire('Excluído!', 'O item foi excluído.', 'success');
-            fetchAndRenderPlanejamento(); // Recarrega os dados
-        } catch (error) {
-            console.error('Erro ao excluir:', error);
-            Swal.fire('Erro!', 'Não foi possível excluir o item.', 'error');
-        }
+/**
+ * Orquestra o carregamento inicial dos dados da página.
+ */
+async function inicializarPagina() {
+    try {
+        await Promise.all([
+            carregarOpcoesDosSelects(),
+            carregarItens()
+        ]);
+    } catch (error) {
+        console.error("Erro ao inicializar a página:", error);
+        showToast("Falha ao carregar dados iniciais da página.", 'danger');
     }
 }
 
+/**
+ * Busca os dados da API e popula todos os campos de seleção do modal.
+ */
+async function carregarOpcoesDosSelects() {
+    const promessas = Object.entries(mapeamentoSelects).map(async ([selectId, endpoint]) => {
+        try {
+            const dados = await chamarAPI(endpoint);
+            popularSelect(selectId, dados);
+        } catch (error) {
+            console.error(`Falha ao carregar opções para ${selectId}:`, error);
+            showToast(`Erro ao carregar dados para ${selectId.replace('item', '')}.`, 'warning');
+        }
+    });
+    
+    await Promise.all(promessas);
+}
+
+/**
+ * Popula um elemento <select> com os dados fornecidos.
+ */
+function popularSelect(selectId, dados) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    const placeholder = select.options[0];
+    select.innerHTML = '';
+    select.appendChild(placeholder);
+
+    dados.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = escapeHTML(item.nome ?? item.descricao ?? '');
+        select.appendChild(option);
+    });
+}
+
+function montarRegistrosPlanejamento() {
+    const dataInicio = document.getElementById('itemDataInicio').value;
+    const dataFim = document.getElementById('itemDataFim').value;
+
+    const selectsObrigatorios = ['itemHorario', 'itemCargaHoraria', 'itemModalidade', 'itemTreinamento', 'itemCmd', 'itemSjb', 'itemSagTombos', 'itemInstrutor', 'itemLocal'];
+    const campos = { dataInicio, dataFim };
+    selectsObrigatorios.forEach(id => { campos[id] = document.getElementById(id).value; });
+
+    const nomesCampos = {
+        dataInicio: 'Data Inicial',
+        dataFim: 'Data Final',
+        itemHorario: 'Horário',
+        itemCargaHoraria: 'Carga Horária',
+        itemModalidade: 'Modalidade',
+        itemTreinamento: 'Treinamento',
+        itemCmd: 'CMD',
+        itemSjb: 'SJB',
+        itemSagTombos: 'SAG/TOMBOS',
+        itemInstrutor: 'Instrutor',
+        itemLocal: 'Local'
+    };
+
+    const faltantes = Object.entries(campos)
+        .filter(([_, valor]) => !valor)
+        .map(([chave]) => nomesCampos[chave]);
+
+    if (faltantes.length) {
+        showToast(`Preencha os campos: ${faltantes.join(', ')}`, 'warning');
+        return null;
+    }
+
+    const inicioDate = new Date(dataInicio);
+    const fimDate = new Date(dataFim);
+    if (fimDate < inicioDate) {
+        showToast('Data final deve ser maior que a inicial', 'warning');
+        return null;
+    }
+
+    const horario = document.getElementById('itemHorario').selectedOptions[0].textContent;
+    const cargaHoraria = document.getElementById('itemCargaHoraria').selectedOptions[0].textContent;
+    const modalidade = document.getElementById('itemModalidade').selectedOptions[0].textContent;
+    const treinamento = document.getElementById('itemTreinamento').selectedOptions[0].textContent;
+    const cmd = document.getElementById('itemCmd').selectedOptions[0].textContent;
+    const sjb = document.getElementById('itemSjb').selectedOptions[0].textContent;
+    const sagTombos = document.getElementById('itemSagTombos').selectedOptions[0].textContent;
+    const instrutor = document.getElementById('itemInstrutor').selectedOptions[0].textContent;
+    const local = document.getElementById('itemLocal').selectedOptions[0].textContent;
+    const observacao = document.getElementById('itemObservacao').value;
+
+    const loteIdInput = document.getElementById('loteId');
+    const loteId = loteIdInput.value || crypto.randomUUID();
+    loteIdInput.value = loteId;
+
+    const registros = [];
+    for (let d = new Date(inicioDate); d <= fimDate; d.setDate(d.getDate() + 1)) {
+        const iso = d.toISOString().split('T')[0];
+        const diaSemana = d.toLocaleDateString('pt-BR', { weekday: 'long' });
+        registros.push({
+            data: iso,
+            loteId,
+            semana: diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1),
+            horario,
+            carga_horaria: cargaHoraria,
+            modalidade,
+            treinamento,
+            cmd,
+            sjb,
+            sag_tombos: sagTombos,
+            instrutor,
+            local,
+            observacao
+        });
+    }
+
+    return registros;
+}
+
+/**
+ * Calcula o número da semana com base na data selecionada.
+ */
+function calcularSemana() {
+    const dataInput = document.getElementById('itemDataInicio').value;
+    if (dataInput) {
+        const data = new Date(dataInput + 'T00:00:00');
+        const diaSemana = data.toLocaleDateString('pt-BR', { weekday: 'long' });
+        document.getElementById('itemSemana').value = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
+    }
+}
+
+/**
+ * Abre o modal para adicionar um novo item.
+ */
+window.abrirModalParaAdicionar = (loteId = '') => {
+    document.getElementById('itemForm').reset();
+    document.getElementById('itemId').value = '';
+    document.getElementById('loteId').value = loteId;
+    document.getElementById('itemModalLabel').textContent = 'Adicionar Item ao Planejamento';
+    itemModal.show();
+};
+
+/**
+ * Abre o modal para editar um item existente.
+ */
+window.abrirModalParaEditar = (item) => {
+    document.getElementById('itemForm').reset();
+
+    document.getElementById('itemId').value = item.id;
+    document.getElementById('loteId').value = item.loteId;
+    document.getElementById('itemDataInicio').value = item.data;
+    document.getElementById('itemDataFim').value = item.data;
+    document.getElementById('itemSemana').value = item.semana;
+    const selecionar = (id, texto) => {
+        const select = document.getElementById(id);
+        const opt = Array.from(select.options).find(o => o.textContent === texto);
+        if (opt) select.value = opt.value;
+    };
+    selecionar('itemHorario', item.horario);
+    selecionar('itemCargaHoraria', item.cargaHoraria);
+    selecionar('itemModalidade', item.modalidade);
+    selecionar('itemTreinamento', item.treinamento);
+    selecionar('itemCmd', item.cmd);
+    selecionar('itemSjb', item.sjb);
+    selecionar('itemSagTombos', item.sagTombos);
+    selecionar('itemInstrutor', item.instrutor);
+    selecionar('itemLocal', item.local);
+    document.getElementById('itemObservacao').value = item.observacao;
+
+    document.getElementById('itemModalLabel').textContent = 'Editar Item do Planejamento';
+    itemModal.show();
+};
+
+/**
+ * Envia o planejamento para a API.
+ */
+async function salvarPlanejamento() {
+    const registros = montarRegistrosPlanejamento();
+    if (!registros) return;
+
+    try {
+        const promessas = registros.map(reg => chamarAPI('/planejamento/itens', 'POST', reg));
+        await Promise.all(promessas);
+        showToast('Item salvo com sucesso!', 'success');
+        itemModal.hide();
+        await carregarItens();
+    } catch (error) {
+        showToast(error.message || 'Dados inválidos', 'danger');
+    }
+}
+
+/**
+ * Carrega e renderiza todos os itens do planejamento.
+ */
+async function carregarItens() {
+    try {
+        const itens = await chamarAPI('/planejamento/itens');
+        renderizarLotes(itens);
+    } catch (error) {
+        showToast('Não foi possível carregar o planejamento.', 'danger');
+    }
+}
+
+/**
+ * Renderiza os lotes e os itens do planejamento na página.
+ */
+function renderizarLotes(itens) {
+    const container = document.getElementById('planejamento-container');
+    container.innerHTML = ''; // Limpa apenas o container específico
+
+    const lotes = agruparItensPorLote(itens);
+
+    if (Object.keys(lotes).length === 0) {
+        container.innerHTML = `
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h2 class="card-title mb-0">Planejamentos</h2>
+                </div>
+                <div class="card-body text-center">Nenhum item de planejamento encontrado.</div>
+            </div>`;
+        return;
+    }
+
+    for (const loteId in lotes) {
+        const itensDoLote = lotes[loteId];
+        const dataFinal = itensDoLote.reduce((max, item) => item.data > max ? item.data : max, itensDoLote[0].data);
+
+        const loteCard = document.createElement('div');
+        loteCard.className = 'card mb-4';
+        loteCard.innerHTML = `
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        ${criarCabecalhoTabela()}
+                        <tbody>
+                            ${itensDoLote.map(item => criarLinhaItem(item, dataFinal)).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        container.appendChild(loteCard);
+    }
+}
+
+/**
+ * Agrupa os itens por lote (trimestre).
+ */
+function agruparItensPorLote(itens) {
+    return itens.reduce((acc, item) => {
+        (acc[item.loteId] = acc[item.loteId] || []).push(item);
+        return acc;
+    }, {});
+}
+
+/**
+ * Cria o cabeçalho da tabela de itens.
+ */
+function criarCabecalhoTabela() {
+    return `
+        <thead>
+            <tr>
+                <th>Data Inicial</th><th>Data Final</th><th>Semana</th><th>Horário</th><th>C.H.</th>
+                <th>Modalidade</th><th>Treinamento</th><th>CMD</th><th>SJB</th>
+                <th>SAG/TOMBOS</th><th>Instrutor</th><th>Local</th><th>Obs.</th>
+                <th class="text-end">Ações</th>
+            </tr>
+        </thead>
+    `;
+}
+
+/**
+ * Cria uma linha <tr> da tabela para um item do planejamento.
+ */
+function criarLinhaItem(item, dataFinal) {
+    const dataObj = new Date(item.data + 'T00:00:00');
+    const dataInicialFormatada = dataObj.toLocaleDateString('pt-BR');
+    const dataFinalFormatada = new Date(dataFinal + 'T00:00:00').toLocaleDateString('pt-BR');
+    const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'long' });
+    const itemJsonString = JSON.stringify(item).replace(/'/g, "\\'");
+    return `
+        <tr>
+            <td>${dataInicialFormatada}</td>
+            <td>${dataFinalFormatada}</td>
+            <td>${diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1)}</td>
+            <td>${escapeHTML(item.horario || '')}</td>
+            <td>${escapeHTML(item.cargaHoraria || '')}</td>
+            <td>${escapeHTML(item.modalidade || '')}</td>
+            <td>${escapeHTML(item.treinamento || '')}</td>
+            <td>${escapeHTML(item.cmd || '')}</td>
+            <td>${escapeHTML(item.sjb || '')}</td>
+            <td>${escapeHTML(item.sagTombos || '')}</td>
+            <td>${escapeHTML(item.instrutor || '')}</td>
+            <td>${escapeHTML(item.local || '')}</td>
+            <td>${escapeHTML(item.observacao || '')}</td>
+            <td class="text-end">
+                <button class="btn btn-sm btn-outline-primary" onclick='abrirModalParaEditar(${itemJsonString})'>
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusao(${item.id})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `;
+}
+
+/**
+ * Abre o modal de confirmação para excluir um item.
+ */
+window.confirmarExclusao = (id) => {
+    itemParaExcluirId = id;
+    confirmacaoModal.show();
+};
+
+/**
+ * Executa a exclusão do item após a confirmação.
+ */
+async function executarExclusao() {
+    if (!itemParaExcluirId) return;
+
+    try {
+        await chamarAPI(`/planejamento/itens/${itemParaExcluirId}`, 'DELETE');
+        showToast('Item excluído com sucesso!', 'success');
+        await carregarItens();
+    } catch (error) {
+        showToast(error.message, 'danger');
+    } finally {
+        itemParaExcluirId = null;
+        confirmacaoModal.hide();
+    }
+}
+
+/**
+ * Renderiza uma linha de planejamento no DOM sem recriar toda a tabela.
+ *
+ * @param {Array} planejamento - Lista de itens do planejamento onde o
+ *   último elemento é o item recentemente adicionado.
+ */
+function renderPlanejamento(planejamento) {
+    const planejamentoList = document.getElementById('planejamento-list');
+    let table = planejamentoList.querySelector('table');
+
+    // Cria a estrutura da tabela caso ainda não exista
+    if (!table) {
+        table = document.createElement('table');
+        table.className = 'table';
+        planejamentoList.appendChild(table);
+
+        const thead = document.createElement('thead');
+        table.appendChild(thead);
+
+        thead.innerHTML = `
+            <tr>
+                <th>Treinamento</th>
+                <th>Carga Horária</th>
+                <th>Tipo</th>
+                <th>Categoria</th>
+                <th>Data de Início</th>
+                <th>Data de Término</th>
+                <th>Ações</th>
+            </tr>
+        `;
+
+        const tbody = document.createElement('tbody');
+        tbody.id = 'planejamento-tbody';
+        table.appendChild(tbody);
+    }
+
+    const tbody = document.getElementById('planejamento-tbody');
+
+    // Caso a função seja usada para renderizar toda a lista, descomente a linha abaixo
+    // tbody.innerHTML = '';
+
+    const item = planejamento[planejamento.length - 1];
+    const row = document.createElement('tr');
+    row.dataset.id = item.id;
+    row.innerHTML = `
+        <td>${item.treinamento_nome}</td>
+        <td>${item.carga_horaria}</td>
+        <td>${item.tipo}</td>
+        <td>${item.categoria}</td>
+        <td>${new Date(item.data_inicio).toLocaleDateString()}</td>
+        <td>${new Date(item.data_termino).toLocaleDateString()}</td>
+        <td>
+            <button class="btn btn-sm btn-info" onclick="editPlanejamento('${item.id}')">Editar</button>
+            <button class="btn btn-sm btn-danger" onclick="deletePlanejamento('${item.id}')">Excluir</button>
+        </td>
+    `;
+    tbody.appendChild(row);
+}

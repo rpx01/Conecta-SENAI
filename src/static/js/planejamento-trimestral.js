@@ -81,10 +81,18 @@ function showDeleteConfirm(message) {
     });
 }
 
-function selecionarValor($select, value) {
-    if (value == null || value === '') return;
-    $select.value = String(value);
-    if (window.$) window.$($select).trigger('change');
+function selecionarValor(selectEl, value) {
+    if (value === undefined || value === null || value === '') return;
+    selectEl.value = String(value);
+
+    if (typeof $ !== 'undefined' && $(selectEl).trigger) {
+        $(selectEl).trigger('change', { silent: true });
+    }
+
+    if (selectEl.value === '' || selectEl.value === 'undefined') {
+        const opt = [...selectEl.options].find(o => o.textContent.trim() === String(value));
+        if (opt) selectEl.value = opt.value;
+    }
 }
 
 function toInputDate(yyyy_mm_dd) {
@@ -100,16 +108,19 @@ function toDisplayDate(yyyy_mm_dd) {
     return `${d}/${m}/${y}`;
 }
 
-function carregarCmd() {
-    return chamarAPI('/planejamento-basedados/publico-alvo').then(dados => popularSelect('itemCmd', dados));
+async function carregarCmd() {
+    const dados = await chamarAPI('/planejamento-basedados/publico-alvo');
+    popularSelect('itemCmd', dados);
 }
 
-function carregarSjb() {
-    return chamarAPI('/planejamento-basedados/publico-alvo').then(dados => popularSelect('itemSjb', dados));
+async function carregarSjb() {
+    const dados = await chamarAPI('/planejamento-basedados/publico-alvo');
+    popularSelect('itemSjb', dados);
 }
 
-function carregarSagTombos() {
-    return chamarAPI('/planejamento-basedados/publico-alvo').then(dados => popularSelect('itemSagTombos', dados));
+async function carregarSagTombos() {
+    const dados = await chamarAPI('/planejamento-basedados/publico-alvo');
+    popularSelect('itemSagTombos', dados);
 }
 
 async function obterItemPorId(idItem) {
@@ -216,7 +227,7 @@ function popularSelect(selectId, dados) {
 
     dados.forEach(item => {
         const option = document.createElement('option');
-        option.value = item.id;
+        option.value = String(item.id);
         option.textContent = escapeHTML(item.nome ?? item.descricao ?? '');
         select.appendChild(option);
     });
@@ -353,15 +364,26 @@ window.abrirModalParaEditar = async (idItem) => {
     selecionarTexto('itemLocal', item.local);
 
     await Promise.all([carregarCmd(), carregarSjb(), carregarSagTombos()]);
-    selecionarValor(document.getElementById('itemCmd'), item.cmd_id);
-    selecionarValor(document.getElementById('itemSjb'), item.sjb_id);
-    selecionarValor(document.getElementById('itemSagTombos'), item.sagtombos_id);
+
+    selecionarValor(
+        document.getElementById('itemCmd'),
+        item.cmd_id ?? item.cmd?.id,
+    );
+    selecionarValor(
+        document.getElementById('itemSjb'),
+        item.sjb_id ?? item.sjb?.id,
+    );
+    selecionarValor(
+        document.getElementById('itemSagTombos'),
+        item.sag_tombos_id ?? item.sag_tombos?.id,
+    );
 
     document.getElementById('itemObservacao').value = item.observacao || '';
 
     document.getElementById('itemModalLabel').textContent = 'Editar Item do Planejamento';
-    itemModal.show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('itemModal')).show();
 };
+
 
 /**
  * Envia o planejamento para a API.

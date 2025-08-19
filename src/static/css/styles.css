@@ -253,6 +253,12 @@ small, .small {
   cursor: pointer;
 }
 
+.table-container table th {
+  background-color: #004383 !important; /* Cor de fundo azul da barra superior */
+  color: #ffffff !important;             /* Cor do texto branca para melhor contraste */
+  border-color: #003366 !important;     /* Um tom de azul mais escuro para as bordas */
+}
+
 .btn-group .btn {
   border-radius: 4px !important;
 }

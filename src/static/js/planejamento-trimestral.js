@@ -133,7 +133,7 @@ function preencherFormulario(item) {
     const form = document.getElementById('itemForm');
     form.reset();
 
-    document.getElementById('itemId').value = item.id || '';
+    document.getElementById('rowId').value = item.rowId || '';
     document.getElementById('loteId').value = item.loteId || '';
 
     const dtIni = toInputDate(item.data_inicial || item.data);
@@ -384,7 +384,7 @@ function calcularSemana() {
  */
 window.abrirModalParaAdicionar = (loteId = '') => {
     document.getElementById('itemForm').reset();
-    document.getElementById('itemId').value = '';
+    document.getElementById('rowId').value = '';
     document.getElementById('loteId').value = loteId;
     document.getElementById('itemModalLabel').textContent = 'Adicionar Item ao Planejamento';
     edicaoId = null;
@@ -520,7 +520,7 @@ function criarLinhaItem(item, dataFinal) {
     const dataFinalFormatada = new Date(dataFinal + 'T00:00:00').toLocaleDateString('pt-BR');
     const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'long' });
     return `
-        <tr data-item-id="${item.loteId}">
+        <tr data-row-id="${item.rowId}" data-lote-id="${item.loteId}" data-item-id="${item.loteId}">
             <td>${dataInicialFormatada}</td>
             <td>${dataFinalFormatada}</td>
             <td>${diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1)}</td>

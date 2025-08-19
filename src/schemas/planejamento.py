@@ -52,3 +52,37 @@ class PlanejamentoCreateSchema(BaseModel):
 
     class Config:
         populate_by_name = True
+
+
+class PlanejamentoUpdateInstrutorSchema(BaseModel):
+    instrutor_id: int
+
+
+class PlanejamentoUpdateLoteSchema(BaseModel):
+    horario: str | None = None
+    carga_horaria: int | None = Field(None, alias="carga_horaria")
+    modalidade: str | None = None
+    treinamento_id: int | None = None
+    polos: PolosSchema | None = None
+    local: str | None = ""
+    observacao: str | None = ""
+
+    @field_validator("horario")
+    @classmethod
+    def validar_horario(cls, v):
+        if v is None:
+            return v
+        datetime.strptime(v, "%H:%M")
+        return v
+
+    @field_validator("carga_horaria")
+    @classmethod
+    def validar_ch(cls, v):
+        if v is None:
+            return v
+        if v <= 0:
+            raise ValueError("Carga horária deve ser maior que zero")
+        return v
+
+    class Config:
+        populate_by_name = True

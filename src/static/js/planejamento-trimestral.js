@@ -26,15 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('itemData').addEventListener('change', calcularSemana);
     document.getElementById('btnConfirmarExclusao').addEventListener('click', executarExclusao);
-    // O botão "Adicionar" no cabeçalho da página não possuía um listener,
-    // portanto nada acontecia ao clicar nele. Agora o clique abre o modal de
-    // inclusão de itens, permitindo criar um novo planejamento mesmo quando
-    // não há lotes exibidos na página.
-    const btnAdicionarPlanejamento = document.getElementById('btn-adicionar-planejamento');
-    if (btnAdicionarPlanejamento) {
-        btnAdicionarPlanejamento.addEventListener('click', () => abrirModalParaAdicionar());
-    }
-
+    
     await inicializarPagina();
 });
 

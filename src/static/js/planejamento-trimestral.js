@@ -100,7 +100,7 @@ function calcularSemana() {
 /**
  * Abre o modal para adicionar um novo item.
  */
-window.abrirModalParaAdicionar = (loteId) => {
+window.abrirModalParaAdicionar = (loteId = '') => {
     document.getElementById('itemForm').reset();
     document.getElementById('itemId').value = '';
     document.getElementById('loteId').value = loteId;
@@ -190,27 +190,19 @@ async function carregarItens() {
  * Renderiza os lotes e os itens do planejamento na página.
  */
 function renderizarLotes(itens) {
-    const mainContainer = document.querySelector('main.col-lg-9');
-    // The header containing the "Adicionar" button uses the CSS class
-    // `page-header`. Previously, this code attempted to retrieve the
-    // header using a combination of Bootstrap classes
-    // `.d-flex.justify-content-between`, which no longer exist on the
-    // element. As a result, the header (and consequently the add button)
-    // was removed from the DOM when the main container was cleared,
-    // leaving only the "Nenhum item de planejamento encontrado." message.
-    //
-    // To ensure the header is preserved regardless of styling changes,
-    // we query it directly by its semantic `page-header` class.
-    const header = mainContainer.querySelector('.page-header');
-    mainContainer.innerHTML = ''; // Limpa o conteúdo
-    if (header) {
-        mainContainer.appendChild(header); // Readiciona o cabeçalho
-    }
+    const container = document.getElementById('planejamento-container');
+    container.innerHTML = ''; // Limpa apenas o container específico
 
     const lotes = agruparItensPorLote(itens);
 
     if (Object.keys(lotes).length === 0) {
-        mainContainer.innerHTML += '<div class="card"><div class="card-body text-center">Nenhum item de planejamento encontrado.</div></div>';
+        container.innerHTML = `
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h2 class="card-title mb-0">Planejamentos</h2>
+                </div>
+                <div class="card-body text-center">Nenhum item de planejamento encontrado.</div>
+            </div>`;
         return;
     }
 
@@ -241,7 +233,7 @@ function renderizarLotes(itens) {
                 </div>
             </div>
         `;
-        mainContainer.appendChild(loteCard);
+        container.appendChild(loteCard);
     }
 }
 
@@ -328,4 +320,3 @@ async function executarExclusao() {
         confirmacaoModal.hide();
     }
 }
-

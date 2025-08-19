@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
     confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
 
-    document.getElementById('itemData').addEventListener('change', calcularSemana);
+    document.getElementById('itemDataInicio').addEventListener('change', calcularSemana);
     document.getElementById('btnConfirmarExclusao').addEventListener('click', executarExclusao);
 
     document.getElementById('btn-adicionar-planejamento').addEventListener('click', () => abrirModalParaAdicionar());
@@ -87,7 +87,7 @@ function popularSelect(selectId, dados) {
  * Calcula o número da semana com base na data selecionada.
  */
 function calcularSemana() {
-    const dataInput = document.getElementById('itemData').value;
+    const dataInput = document.getElementById('itemDataInicio').value;
     if (dataInput) {
         const data = new Date(dataInput + "T00:00:00");
         const primeiroDiaDoAno = new Date(data.getFullYear(), 0, 1);
@@ -116,7 +116,8 @@ window.abrirModalParaEditar = (item) => {
     
     document.getElementById('itemId').value = item.id;
     document.getElementById('loteId').value = item.loteId;
-    document.getElementById('itemData').value = item.data;
+    document.getElementById('itemDataInicio').value = item.data;
+    document.getElementById('itemDataFim').value = item.data;
     document.getElementById('itemSemana').value = item.semana;
     document.getElementById('itemHorario').value = item.horario;
     document.getElementById('itemCargaHoraria').value = item.cargaHoraria;
@@ -142,7 +143,8 @@ async function salvarItem() {
     
     const dados = {
         loteId: loteId,
-        data: document.getElementById('itemData').value,
+        data: document.getElementById('itemDataInicio').value,
+        data_fim: document.getElementById('itemDataFim').value,
         semana: document.getElementById('itemSemana').value,
         horario: document.getElementById('itemHorario').value,
         carga_horaria: document.getElementById('itemCargaHoraria').value,

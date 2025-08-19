@@ -238,62 +238,48 @@ async function salvarPlanejamento() {
 async function carregarItens() {
     try {
         const itens = await chamarAPI('/planejamento/itens');
-        renderizarLotes(itens);
+        renderizarItens(itens);
     } catch (error) {
         showToast('Não foi possível carregar o planejamento.', 'danger');
     }
 }
 
 /**
- * Renderiza os lotes e os itens do planejamento na página.
+ * Renderiza todos os itens do planejamento em uma única tabela.
  */
-function renderizarLotes(itens) {
+function renderizarItens(itens) {
     const container = document.getElementById('planejamento-container');
-    container.innerHTML = ''; // Limpa apenas o container específico
 
-    const lotes = agruparItensPorLote(itens);
-
-    if (Object.keys(lotes).length === 0) {
-        container.innerHTML = `
-            <div class="card">
-                <div class="card-header bg-secondary text-white">
-                    <h2 class="card-title mb-0">Planejamentos</h2>
-                </div>
-                <div class="card-body text-center">Nenhum item de planejamento encontrado.</div>
-            </div>`;
-        return;
-    }
-
-    for (const loteId in lotes) {
-        const itensDoLote = lotes[loteId];
-        const dataFinal = itensDoLote.reduce((max, item) => item.data > max ? item.data : max, itensDoLote[0].data);
-
-        const loteCard = document.createElement('div');
-        loteCard.className = 'card mb-4';
-        loteCard.innerHTML = `
+    container.innerHTML = `
+        <div class="card mb-4">
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-striped table-hover mb-0">
                         ${criarCabecalhoTabela()}
-                        <tbody>
-                            ${itensDoLote.map(item => criarLinhaItem(item, dataFinal)).join('')}
-                        </tbody>
+                        <tbody id="planejamento-tbody"></tbody>
                     </table>
                 </div>
             </div>
-        `;
-        container.appendChild(loteCard);
-    }
-}
+        </div>`;
 
-/**
- * Agrupa os itens por lote (trimestre).
- */
-function agruparItensPorLote(itens) {
-    return itens.reduce((acc, item) => {
-        (acc[item.loteId] = acc[item.loteId] || []).push(item);
-        return acc;
-    }, {});
+    const tbody = document.getElementById('planejamento-tbody');
+
+    if (itens.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="14" class="text-center">Nenhum item de planejamento encontrado.</td></tr>';
+        return;
+    }
+
+    // Calcula a data final para cada lote
+    const dataFinalPorLote = {};
+    itens.forEach(item => {
+        const atual = dataFinalPorLote[item.loteId];
+        dataFinalPorLote[item.loteId] = atual && atual > item.data ? atual : item.data;
+    });
+
+    itens.forEach(item => {
+        const dataFinal = dataFinalPorLote[item.loteId];
+        tbody.insertAdjacentHTML('beforeend', criarLinhaItem(item, dataFinal));
+    });
 }
 
 /**

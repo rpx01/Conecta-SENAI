@@ -373,3 +373,62 @@ async function executarExclusao() {
         confirmacaoModal.hide();
     }
 }
+
+/**
+ * Renderiza uma linha de planejamento no DOM sem recriar toda a tabela.
+ *
+ * @param {Array} planejamento - Lista de itens do planejamento onde o
+ *   último elemento é o item recentemente adicionado.
+ */
+function renderPlanejamento(planejamento) {
+    const planejamentoList = document.getElementById('planejamento-list');
+    let table = planejamentoList.querySelector('table');
+
+    // Cria a estrutura da tabela caso ainda não exista
+    if (!table) {
+        table = document.createElement('table');
+        table.className = 'table';
+        planejamentoList.appendChild(table);
+
+        const thead = document.createElement('thead');
+        table.appendChild(thead);
+
+        thead.innerHTML = `
+            <tr>
+                <th>Treinamento</th>
+                <th>Carga Horária</th>
+                <th>Tipo</th>
+                <th>Categoria</th>
+                <th>Data de Início</th>
+                <th>Data de Término</th>
+                <th>Ações</th>
+            </tr>
+        `;
+
+        const tbody = document.createElement('tbody');
+        tbody.id = 'planejamento-tbody';
+        table.appendChild(tbody);
+    }
+
+    const tbody = document.getElementById('planejamento-tbody');
+
+    // Caso a função seja usada para renderizar toda a lista, descomente a linha abaixo
+    // tbody.innerHTML = '';
+
+    const item = planejamento[planejamento.length - 1];
+    const row = document.createElement('tr');
+    row.dataset.id = item.id;
+    row.innerHTML = `
+        <td>${item.treinamento_nome}</td>
+        <td>${item.carga_horaria}</td>
+        <td>${item.tipo}</td>
+        <td>${item.categoria}</td>
+        <td>${new Date(item.data_inicio).toLocaleDateString()}</td>
+        <td>${new Date(item.data_termino).toLocaleDateString()}</td>
+        <td>
+            <button class="btn btn-sm btn-info" onclick="editPlanejamento('${item.id}')">Editar</button>
+            <button class="btn btn-sm btn-danger" onclick="deletePlanejamento('${item.id}')">Excluir</button>
+        </td>
+    `;
+    tbody.appendChild(row);
+}

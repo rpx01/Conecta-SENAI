@@ -21,11 +21,7 @@ from src.models.instrutor import Instrutor
 from src.routes.user import verificar_autenticacao
 from src.utils.error_handler import handle_internal_error
 from pydantic import ValidationError
-from src.schemas.planejamento import (
-    PlanejamentoCreateSchema,
-    PlanejamentoUpdateInstrutorSchema,
-    PlanejamentoUpdateLoteSchema,
-)
+from src.schemas.planejamento import PlanejamentoCreateSchema
 
 planejamento_bp = Blueprint('planejamento', __name__)
 
@@ -294,96 +290,6 @@ def criar_planejamento_ids():
         db.session.add(item)
         db.session.commit()
         return jsonify({'id': item.id}), 201
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return handle_internal_error(e)
-
-
-@planejamento_bp.route('/planejamento/lote/<lote_id>', methods=['PATCH'])
-def atualizar_lote(lote_id):
-    """Atualiza campos comuns para todas as linhas de um lote."""
-    autenticado, _ = verificar_autenticacao(request)
-    if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
-
-    if not _tabela_planejamento_existe():
-        return (
-            jsonify({'erro': 'Tabela planejamento_itens não existe; execute as migrações.'}),
-            500,
-        )
-
-    payload = request.get_json() or {}
-    try:
-        dados = PlanejamentoUpdateLoteSchema(**payload)
-    except ValidationError as exc:
-        detalhes = {err['loc'][-1]: err['msg'] for err in exc.errors()}
-        return jsonify({'erro': 'Dados inválidos', 'detalhes': detalhes}), 422
-
-    updates: dict[str, object] = {}
-    if dados.horario is not None:
-        updates['horario'] = dados.horario
-    if dados.carga_horaria is not None:
-        updates['carga_horaria'] = str(dados.carga_horaria)
-    if dados.modalidade is not None:
-        updates['modalidade'] = dados.modalidade
-    if dados.treinamento_id is not None:
-        treinamento = Treinamento.query.get(dados.treinamento_id)
-        if not treinamento:
-            return jsonify({'erro': 'Treinamento não encontrado'}), 404
-        updates['treinamento'] = treinamento.nome
-    if dados.polos is not None:
-        updates['cmd'] = str(dados.polos.cmd)
-        updates['sjb'] = str(dados.polos.sjb)
-        updates['sag_tombos'] = str(dados.polos.sag_tombos)
-    if dados.local is not None:
-        updates['local'] = dados.local
-    if dados.observacao is not None:
-        updates['observacao'] = dados.observacao
-
-    try:
-        itens = PlanejamentoItem.query.filter_by(lote_id=lote_id).all()
-        for item in itens:
-            for campo, valor in updates.items():
-                setattr(item, campo, valor)
-        db.session.commit()
-        return jsonify({'mensagem': 'Lote atualizado', 'quantidade': len(itens)})
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return handle_internal_error(e)
-
-
-@planejamento_bp.route('/planejamento/<row_id>', methods=['PATCH'])
-def atualizar_linha(row_id):
-    """Atualiza apenas o instrutor de uma linha especifica."""
-    autenticado, _ = verificar_autenticacao(request)
-    if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
-
-    if not _tabela_planejamento_existe():
-        return (
-            jsonify({'erro': 'Tabela planejamento_itens não existe; execute as migrações.'}),
-            500,
-        )
-
-    item = PlanejamentoItem.query.filter_by(row_id=row_id).first()
-    if not item:
-        return jsonify({'erro': 'Item não encontrado'}), 404
-
-    payload = request.get_json() or {}
-    try:
-        dados = PlanejamentoUpdateInstrutorSchema(**payload)
-    except ValidationError as exc:
-        detalhes = {err['loc'][-1]: err['msg'] for err in exc.errors()}
-        return jsonify({'erro': 'Dados inválidos', 'detalhes': detalhes}), 422
-
-    instrutor = Instrutor.query.get(dados.instrutor_id)
-    if not instrutor:
-        return jsonify({'erro': 'Instrutor não encontrado'}), 404
-
-    try:
-        item.instrutor = str(dados.instrutor_id)
-        db.session.commit()
-        return jsonify({'mensagem': 'Linha atualizada'})
     except SQLAlchemyError as e:
         db.session.rollback()
         return handle_internal_error(e)

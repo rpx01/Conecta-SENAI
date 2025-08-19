@@ -308,7 +308,7 @@ function criarLinhaItem(item, dataFinal) {
     const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'long' });
     const itemJsonString = JSON.stringify(item).replace(/'/g, "\\'");
     return `
-        <tr data-group-id="${item.loteId}">
+        <tr>
             <td>${dataInicialFormatada}</td>
             <td>${dataFinalFormatada}</td>
             <td>${diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1)}</td>
@@ -326,7 +326,7 @@ function criarLinhaItem(item, dataFinal) {
                 <button class="btn btn-sm btn-outline-primary" onclick='abrirModalParaEditar(${itemJsonString})'>
                     <i class="bi bi-pencil"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger" onclick="removerLinha(this)">
+                <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusao(${item.id})">
                     <i class="bi bi-trash"></i>
                 </button>
             </td>
@@ -359,27 +359,6 @@ async function executarExclusao() {
         confirmacaoModal.hide();
     }
 }
-
-/**
- * Remove todas as linhas da tabela que pertencem ao mesmo grupo
- * do botão de exclusão clicado. Os grupos são identificados pelo
- * atributo `data-group-id` presente nas linhas da tabela.
- *
- * @param {HTMLElement} botao - O botão de exclusão acionado.
- */
-window.removerLinha = (botao) => {
-    const linha = botao.closest('tr');
-    if (!linha) return;
-
-    const groupId = linha.dataset.groupId;
-    if (groupId) {
-        document
-            .querySelectorAll(`tr[data-group-id="${groupId}"]`)
-            .forEach((tr) => tr.remove());
-    } else {
-        linha.remove();
-    }
-};
 
 /**
  * Renderiza uma linha de planejamento no DOM sem recriar toda a tabela.

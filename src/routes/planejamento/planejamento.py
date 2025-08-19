@@ -151,10 +151,27 @@ def criar_item():
 
     treinamento_nome = payload.get('treinamento')
     instrutor_nome = payload.get('instrutor')
-    if treinamento_nome and not Treinamento.query.filter_by(nome=treinamento_nome).first():
-        detalhes['treinamento'] = 'Treinamento não encontrado'
+
+    # Os dados exibidos na interface de planejamento são carregados a partir
+    # das tabelas "planejamento" (como PlanejamentoTreinamento) e nem sempre
+    # correspondem aos registros reais de Treinamento. A validação anterior
+    # verificava apenas na tabela de treinamentos, o que resultava em erros de
+    # "Dados inválidos" ao salvar itens que existiam apenas na base de dados do
+    # planejamento. Agora verificamos se o treinamento existe em qualquer uma das
+    # tabelas conhecidas (Treinamento ou PlanejamentoTreinamento), permitindo que
+    # o usuário cadastre itens válidos mesmo que o treinamento não esteja na
+    # tabela principal de treinamentos.
+    if treinamento_nome:
+        treinamento_existe = (
+            Treinamento.query.filter_by(nome=treinamento_nome).first()
+            or PlanejamentoTreinamento.query.filter_by(nome=treinamento_nome).first()
+        )
+        if not treinamento_existe:
+            detalhes['treinamento'] = 'Treinamento não encontrado'
+
     if instrutor_nome and not Instrutor.query.filter_by(nome=instrutor_nome).first():
         detalhes['instrutor'] = 'Instrutor não encontrado'
+
     if detalhes:
         return jsonify({'erro': 'Dados inválidos', 'detalhes': detalhes}), 422
 

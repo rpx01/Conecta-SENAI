@@ -189,7 +189,17 @@ async function carregarItens() {
  */
 function renderizarLotes(itens) {
     const mainContainer = document.querySelector('main.col-lg-9');
-    const header = mainContainer.querySelector('.d-flex.justify-content-between');
+    // The header containing the "Adicionar" button uses the CSS class
+    // `page-header`. Previously, this code attempted to retrieve the
+    // header using a combination of Bootstrap classes
+    // `.d-flex.justify-content-between`, which no longer exist on the
+    // element. As a result, the header (and consequently the add button)
+    // was removed from the DOM when the main container was cleared,
+    // leaving only the "Nenhum item de planejamento encontrado." message.
+    //
+    // To ensure the header is preserved regardless of styling changes,
+    // we query it directly by its semantic `page-header` class.
+    const header = mainContainer.querySelector('.page-header');
     mainContainer.innerHTML = ''; // Limpa o conteúdo
     if (header) {
         mainContainer.appendChild(header); // Readiciona o cabeçalho

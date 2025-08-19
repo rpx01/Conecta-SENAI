@@ -14,6 +14,7 @@ const mapeamentoSelects = {
 };
 
 let itemModal;
+let edicaoId = null;
 const itensCache = {};
 
 function formatarDataPtBr(iso) {
@@ -108,6 +109,52 @@ function toDisplayDate(yyyy_mm_dd) {
     return `${d}/${m}/${y}`;
 }
 
+function selecionarValorOuCriar(selectEl, valor, textoFallback) {
+    if (valor == null || valor === '') {
+        if (textoFallback) selecionarPorTexto(selectEl, textoFallback);
+        return;
+    }
+    let opt = Array.from(selectEl.options).find(o => o.value == valor);
+    if (!opt && textoFallback) {
+        opt = new Option(textoFallback, valor, true, true);
+        selectEl.add(opt);
+    } else if (opt) {
+        opt.selected = true;
+    }
+}
+
+function selecionarPorTexto(selectEl, texto) {
+    if (!texto) return;
+    const opt = Array.from(selectEl.options).find(o => o.text.trim() === texto.trim());
+    if (opt) opt.selected = true;
+}
+
+function preencherFormulario(item) {
+    const form = document.getElementById('itemForm');
+    form.reset();
+
+    document.getElementById('itemId').value = item.id || '';
+    document.getElementById('loteId').value = item.loteId || '';
+
+    const dtIni = toInputDate(item.data_inicial || item.data);
+    const dtFim = toInputDate(item.data_final || item.data);
+    document.getElementById('itemDataInicio').value = dtIni;
+    document.getElementById('itemDataFim').value = dtFim;
+    document.getElementById('itemSemana').value = new Date(dtIni + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long' }).replace(/^./, c => c.toUpperCase());
+
+    selecionarPorTexto(document.getElementById('itemHorario'), item.horario);
+    selecionarPorTexto(document.getElementById('itemCargaHoraria'), item.cargaHoraria);
+    selecionarPorTexto(document.getElementById('itemModalidade'), item.modalidade);
+    selecionarPorTexto(document.getElementById('itemTreinamento'), item.treinamento);
+    selecionarValorOuCriar(document.getElementById('itemCmd'), item.cmd_id, item.cmd);
+    selecionarValorOuCriar(document.getElementById('itemSjb'), item.sjb_id, item.sjb);
+    selecionarValorOuCriar(document.getElementById('itemSagTombos'), item.sag_tombos_id, item.sagTombos || item.sag_tombos);
+    selecionarPorTexto(document.getElementById('itemInstrutor'), item.instrutor);
+    selecionarPorTexto(document.getElementById('itemLocal'), item.local);
+
+    document.getElementById('itemObservacao').value = item.observacao || '';
+}
+
 async function carregarCmd() {
     const dados = await chamarAPI('/planejamento-basedados/publico-alvo');
     popularSelect('itemCmd', dados);
@@ -143,23 +190,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('itemDataInicio').addEventListener('change', calcularSemana);
     document.getElementById('btn-adicionar-planejamento').addEventListener('click', () => abrirModalParaAdicionar());
+    document.getElementById('btnSalvarItem').addEventListener('click', salvarPlanejamento);
+    document.getElementById('btnCancelarItem').addEventListener('click', () => { edicaoId = null; });
+    document.getElementById('itemModal').addEventListener('hidden.bs.modal', () => { edicaoId = null; });
 
     const tabelaContainer = document.getElementById('planejamento-container');
     tabelaContainer.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.btn-excluir');
-        if (!btn) return;
+        const btnEditar = e.target.closest('.btn-editar');
+        if (btnEditar) {
+            const idItem = btnEditar.dataset.itemId;
+            await abrirModalParaEditar(idItem);
+            return;
+        }
 
-        const idItem = btn.dataset.itemId;
-        const titulo = btn.dataset.titulo || 'Treinamento';
-        const dataIni = btn.dataset.dataInicialFormatada;
-        const dataFim = btn.dataset.dataFinalFormatada;
+        const btnExcluir = e.target.closest('.btn-excluir');
+        if (!btnExcluir) return;
+
+        const idItem = btnExcluir.dataset.itemId;
+        const titulo = btnExcluir.dataset.titulo || 'Treinamento';
+        const dataIni = btnExcluir.dataset.dataInicialFormatada;
+        const dataFim = btnExcluir.dataset.dataFinalFormatada;
 
         const ok = await showDeleteConfirm(
             `Confirma a exclusão?\n${titulo}\nPeríodo: ${dataIni} a ${dataFim}`
         );
         if (!ok) return;
 
-        await executarAcaoComFeedback(btn, async () => {
+        await executarAcaoComFeedback(btnExcluir, async () => {
             try {
                 await chamarAPI(`/planejamento/lote/${idItem}`, 'DELETE');
                 document.querySelectorAll(`[data-item-id="${idItem}"]`).forEach(tr => tr.remove());
@@ -330,6 +387,7 @@ window.abrirModalParaAdicionar = (loteId = '') => {
     document.getElementById('itemId').value = '';
     document.getElementById('loteId').value = loteId;
     document.getElementById('itemModalLabel').textContent = 'Adicionar Item ao Planejamento';
+    edicaoId = null;
     itemModal.show();
 };
 
@@ -337,48 +395,12 @@ window.abrirModalParaAdicionar = (loteId = '') => {
  * Abre o modal para editar um item existente.
  */
 window.abrirModalParaEditar = async (idItem) => {
-    document.getElementById('itemForm').reset();
-
     const item = await obterItemPorId(idItem);
-
-    document.getElementById('itemId').value = item.id;
-    document.getElementById('loteId').value = idItem;
-
-    const dtIni = toInputDate(item.data_inicial || item.data);
-    const dtFim = toInputDate(item.data_final || item.data);
-    document.getElementById('itemDataInicio').value = dtIni;
-    document.getElementById('itemDataFim').value = dtFim;
-    document.getElementById('itemSemana').value = new Date(dtIni + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long' }).replace(/^./, c => c.toUpperCase());
-
-    const selecionarTexto = (id, texto) => {
-        const select = document.getElementById(id);
-        const opt = Array.from(select.options).find(o => o.textContent === texto);
-        if (opt) select.value = opt.value;
-    };
-
-    selecionarTexto('itemHorario', item.horario);
-    selecionarTexto('itemCargaHoraria', item.cargaHoraria);
-    selecionarTexto('itemModalidade', item.modalidade);
-    selecionarTexto('itemTreinamento', item.treinamento);
-    selecionarTexto('itemInstrutor', item.instrutor);
-    selecionarTexto('itemLocal', item.local);
+    edicaoId = idItem;
 
     await Promise.all([carregarCmd(), carregarSjb(), carregarSagTombos()]);
 
-    selecionarValor(
-        document.getElementById('itemCmd'),
-        item.cmd_id ?? item.cmd?.id,
-    );
-    selecionarValor(
-        document.getElementById('itemSjb'),
-        item.sjb_id ?? item.sjb?.id,
-    );
-    selecionarValor(
-        document.getElementById('itemSagTombos'),
-        item.sag_tombos_id ?? item.sag_tombos?.id,
-    );
-
-    document.getElementById('itemObservacao').value = item.observacao || '';
+    preencherFormulario(item);
 
     document.getElementById('itemModalLabel').textContent = 'Editar Item do Planejamento';
     bootstrap.Modal.getOrCreateInstance(document.getElementById('itemModal')).show();
@@ -391,12 +413,19 @@ window.abrirModalParaEditar = async (idItem) => {
 async function salvarPlanejamento() {
     const registros = montarRegistrosPlanejamento();
     if (!registros) return;
-
+    const btnSalvar = document.getElementById('btnSalvarItem');
     try {
-        const promessas = registros.map(reg => chamarAPI('/planejamento/itens', 'POST', reg));
-        await Promise.all(promessas);
+        await executarAcaoComFeedback(btnSalvar, async () => {
+            if (edicaoId) {
+                await chamarAPI(`/planejamento/lote/${edicaoId}`, 'PUT', registros);
+            } else {
+                const promessas = registros.map(reg => chamarAPI('/planejamento/itens', 'POST', reg));
+                await Promise.all(promessas);
+            }
+        });
         showToast('Item salvo com sucesso!', 'success');
         itemModal.hide();
+        edicaoId = null;
         await carregarItens();
     } catch (error) {
         showToast(error.message || 'Dados inválidos', 'danger');
@@ -447,6 +476,7 @@ function renderizarItens(itens) {
         </div>`;
 
     const tbody = document.getElementById('planejamento-tbody');
+    tbody.innerHTML = '';
 
     if (itens.length === 0) {
         tbody.innerHTML = '<tr><td colspan="14" class="text-center">Nenhum item de planejamento encontrado.</td></tr>';
@@ -506,7 +536,7 @@ function criarLinhaItem(item, dataFinal) {
             <td>${escapeHTML(item.local || '')}</td>
             <td>${escapeHTML(item.observacao || '')}</td>
             <td class="text-end">
-                <button class="btn btn-sm btn-outline-primary btn-editar" data-item-id="${item.loteId}" data-data-inicial="${item.data}" data-data-final="${dataFinal}" onclick="abrirModalParaEditar('${item.loteId}')">
+                <button class="btn btn-sm btn-outline-primary btn-editar" data-item-id="${item.loteId}" data-data-inicial="${item.data}" data-data-final="${dataFinal}">
                     <i class="bi bi-pencil"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-danger btn-excluir" data-item-id="${item.loteId}" data-titulo="${escapeHTML(item.treinamento || '')}" data-data-inicial-formatada="${dataInicialFormatada}" data-data-final-formatada="${dataFinalFormatada}">

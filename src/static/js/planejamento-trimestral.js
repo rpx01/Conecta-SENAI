@@ -15,8 +15,6 @@ const mapeamentoSelects = {
 
 let itemModal;
 let edicaoId = null;
-// Armazena o ID do registro específico que está sendo editado dentro de um lote
-let edicaoRegistroId = null;
 const itensCache = {};
 
 function formatarDataPtBr(iso) {
@@ -193,22 +191,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('itemDataInicio').addEventListener('change', calcularSemana);
     document.getElementById('btn-adicionar-planejamento').addEventListener('click', () => abrirModalParaAdicionar());
     document.getElementById('btnSalvarItem').addEventListener('click', salvarPlanejamento);
-    document.getElementById('btnCancelarItem').addEventListener('click', () => {
-        edicaoId = null;
-        edicaoRegistroId = null;
-    });
-    document.getElementById('itemModal').addEventListener('hidden.bs.modal', () => {
-        edicaoId = null;
-        edicaoRegistroId = null;
-    });
+    document.getElementById('btnCancelarItem').addEventListener('click', () => { edicaoId = null; });
+    document.getElementById('itemModal').addEventListener('hidden.bs.modal', () => { edicaoId = null; });
 
     const tabelaContainer = document.getElementById('planejamento-container');
     tabelaContainer.addEventListener('click', async (e) => {
         const btnEditar = e.target.closest('.btn-editar');
         if (btnEditar) {
-            const loteId = btnEditar.dataset.itemId;
-            const registroId = btnEditar.dataset.registroId;
-            await abrirModalParaEditar(loteId, registroId);
+            const idItem = btnEditar.dataset.itemId;
+            await abrirModalParaEditar(idItem);
             return;
         }
 
@@ -397,32 +388,15 @@ window.abrirModalParaAdicionar = (loteId = '') => {
     document.getElementById('loteId').value = loteId;
     document.getElementById('itemModalLabel').textContent = 'Adicionar Item ao Planejamento';
     edicaoId = null;
-    edicaoRegistroId = null;
     itemModal.show();
 };
 
 /**
  * Abre o modal para editar um item existente.
- *
- * @param {string} loteId      Identificador do lote ao qual o registro pertence
- * @param {string} registroId  Identificador específico do registro que foi clicado
  */
-window.abrirModalParaEditar = async (loteId, registroId) => {
-    // Busca todos os registros do lote para que possamos preservar
-    // o instrutor de cada linha individualmente
-    const loteCompleto = await chamarAPI(`/planejamento/lote/${loteId}`);
-
-    // Determina a menor e a maior data dentro do lote
-    const datas = loteCompleto.map(r => r.data).sort();
-    const dataInicial = datas[0];
-    const dataFinal = datas[datas.length - 1];
-
-    // Seleciona o registro específico que o usuário deseja editar
-    const registro = loteCompleto.find(r => String(r.id) === String(registroId)) || loteCompleto[0];
-    const item = { ...registro, data_inicial: dataInicial, data_final: dataFinal };
-
-    edicaoId = loteId;
-    edicaoRegistroId = registroId;
+window.abrirModalParaEditar = async (idItem) => {
+    const item = await obterItemPorId(idItem);
+    edicaoId = idItem;
 
     await Promise.all([carregarCmd(), carregarSjb(), carregarSagTombos()]);
 
@@ -443,33 +417,14 @@ async function salvarPlanejamento() {
     try {
         await executarAcaoComFeedback(btnSalvar, async () => {
             if (edicaoId) {
-                // Busca o lote original para preservar o instrutor das linhas
-                const loteAntigo = await chamarAPI(`/planejamento/lote/${edicaoId}`);
-                const instrutorEditado = document.getElementById('itemInstrutor').selectedOptions[0].textContent;
-
-                const antigoOrdenado = [...loteAntigo].sort((a, b) => a.data.localeCompare(b.data));
-                const novosOrdenados = [...registros].sort((a, b) => a.data.localeCompare(b.data));
-
-                novosOrdenados.forEach((reg, idx) => {
-                    const antigo = antigoOrdenado[idx];
-                    if (!antigo) return;
-                    reg.instrutor = String(antigo.id) === String(edicaoRegistroId)
-                        ? instrutorEditado
-                        : antigo.instrutor;
-                });
-
                 await chamarAPI(`/planejamento/lote/${edicaoId}`, 'DELETE');
-                const promessas = novosOrdenados.map(reg => chamarAPI('/planejamento/itens', 'POST', reg));
-                await Promise.all(promessas);
-            } else {
-                const promessas = registros.map(reg => chamarAPI('/planejamento/itens', 'POST', reg));
-                await Promise.all(promessas);
             }
+            const promessas = registros.map(reg => chamarAPI('/planejamento/itens', 'POST', reg));
+            await Promise.all(promessas);
         });
         showToast('Item salvo com sucesso!', 'success');
         itemModal.hide();
         edicaoId = null;
-        edicaoRegistroId = null;
         await carregarItens();
     } catch (error) {
         showToast(error.message || 'Dados inválidos', 'danger');
@@ -565,7 +520,7 @@ function criarLinhaItem(item, dataFinal) {
     const dataFinalFormatada = new Date(dataFinal + 'T00:00:00').toLocaleDateString('pt-BR');
     const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'long' });
     return `
-        <tr data-item-id="${item.loteId}" data-registro-id="${item.id}">
+        <tr data-item-id="${item.loteId}">
             <td>${dataInicialFormatada}</td>
             <td>${dataFinalFormatada}</td>
             <td>${diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1)}</td>
@@ -580,7 +535,7 @@ function criarLinhaItem(item, dataFinal) {
             <td>${escapeHTML(item.local || '')}</td>
             <td>${escapeHTML(item.observacao || '')}</td>
             <td class="text-end">
-                <button class="btn btn-sm btn-outline-primary btn-editar" data-item-id="${item.loteId}" data-registro-id="${item.id}" data-data-inicial="${item.data}" data-data-final="${dataFinal}">
+                <button class="btn btn-sm btn-outline-primary btn-editar" data-item-id="${item.loteId}" data-data-inicial="${item.data}" data-data-final="${dataFinal}">
                     <i class="bi bi-pencil"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-danger btn-excluir" data-item-id="${item.loteId}" data-titulo="${escapeHTML(item.treinamento || '')}" data-data-inicial-formatada="${dataInicialFormatada}" data-data-final-formatada="${dataFinalFormatada}">

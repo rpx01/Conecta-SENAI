@@ -1,13 +1,21 @@
 # flake8: noqa
 """Rotas para gerenciamento de itens do planejamento trimestral."""
-from datetime import datetime
+from datetime import datetime, date
 import hmac
 from uuid import uuid4
 from flask import Blueprint, request, jsonify, current_app
 from sqlalchemy import inspect
 from sqlalchemy.exc import SQLAlchemyError
 from src.models import db
-from src.models.planejamento import PlanejamentoItem
+from src.models.planejamento import (
+    PlanejamentoItem,
+    Horario,
+    CargaHoraria,
+    Modalidade,
+    PlanejamentoTreinamento,
+    Local,
+    PublicoAlvo,
+)
 from src.models.treinamento import Treinamento
 from src.models.instrutor import Instrutor
 from src.routes.user import verificar_autenticacao
@@ -176,6 +184,95 @@ def criar_item():
         db.session.add(item)
         db.session.commit()
         return jsonify(item.to_dict()), 201
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return handle_internal_error(e)
+
+
+@planejamento_bp.route('/planejamentos', methods=['POST'])
+def criar_planejamento_ids():
+    """Cria um item de planejamento utilizando os IDs das tabelas base."""
+    autenticado, _ = verificar_autenticacao(request)
+    if not autenticado:
+        return jsonify({'erro': 'Não autenticado'}), 401
+
+    if not _tabela_planejamento_existe():
+        return (
+            jsonify({'erro': 'Tabela planejamento_itens não existe; execute as migrações.'}),
+            500,
+        )
+
+    payload = request.get_json() or {}
+
+    campos_obrigatorios = [
+        'data_inicial', 'data_final', 'horario_id', 'carga_horaria_id',
+        'modalidade_id', 'treinamento_id', 'instrutor_id', 'local_id',
+        'cmd_id', 'sjb_id', 'sag_tombos_id'
+    ]
+    erros = {}
+
+    for campo in campos_obrigatorios:
+        if payload.get(campo) in (None, ''):
+            erros[campo] = 'Campo obrigatório'
+
+    try:
+        data_inicial = date.fromisoformat(payload.get('data_inicial', ''))
+        date.fromisoformat(payload.get('data_final', ''))
+    except Exception:
+        erros['data'] = 'Datas inválidas'
+
+    def obter_modelo(modelo, campo):
+        valor = payload.get(campo)
+        if not isinstance(valor, int):
+            erros[campo] = 'Deve ser inteiro'
+            return None
+        obj = modelo.query.get(valor)
+        if not obj:
+            erros[campo] = 'Não encontrado'
+        return obj
+
+    horario = obter_modelo(Horario, 'horario_id')
+    carga = obter_modelo(CargaHoraria, 'carga_horaria_id')
+    modalidade = obter_modelo(Modalidade, 'modalidade_id')
+    treinamento = obter_modelo(PlanejamentoTreinamento, 'treinamento_id')
+    instrutor = obter_modelo(Instrutor, 'instrutor_id')
+    local = obter_modelo(Local, 'local_id')
+    cmd = obter_modelo(PublicoAlvo, 'cmd_id')
+    sjb = obter_modelo(PublicoAlvo, 'sjb_id')
+    sag = obter_modelo(PublicoAlvo, 'sag_tombos_id')
+
+    if erros:
+        return jsonify({'erro': 'Dados inválidos', 'errors': erros}), 422
+
+    semana = None
+    try:
+        primeiro_dia = date(data_inicial.year, 1, 1)
+        dias_passados = (data_inicial - primeiro_dia).days
+        semana = f"SEMANA {((data_inicial.weekday() + 1 + dias_passados) // 7) + 1}"
+    except Exception:
+        semana = None
+
+    item = PlanejamentoItem(
+        row_id=str(uuid4()),
+        lote_id=str(uuid4()),
+        data=data_inicial,
+        semana=semana,
+        horario=horario.nome,
+        carga_horaria=carga.nome,
+        modalidade=modalidade.nome,
+        treinamento=treinamento.nome,
+        cmd=cmd.nome,
+        sjb=sjb.nome,
+        sag_tombos=sag.nome,
+        instrutor=instrutor.nome,
+        local=local.nome,
+        observacao=payload.get('observacao', ''),
+    )
+
+    try:
+        db.session.add(item)
+        db.session.commit()
+        return jsonify({'id': item.id}), 201
     except SQLAlchemyError as e:
         db.session.rollback()
         return handle_internal_error(e)

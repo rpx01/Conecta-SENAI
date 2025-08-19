@@ -177,7 +177,7 @@ async function salvarItem() {
  */
 async function carregarItens() {
     try {
-        const itens = await chamarAPI('/planejamento/itens');
+        const itens = await chamarAPI('/api/planejamento');
         renderizarLotes(itens);
     } catch (error) {
         showToast('Não foi possível carregar o planejamento.', 'danger');

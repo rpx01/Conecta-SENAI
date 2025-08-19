@@ -465,29 +465,6 @@ def remover_ocupacao(id):
         db.session.rollback()
         return handle_internal_error(e)
 
-
-@ocupacao_bp.route('/<int:user_id>', methods=['DELETE'])
-@admin_required
-def delete_ocupacao(user_id):
-    """Exclui todas as ocupações de um usuário específico."""
-    autenticado, user = verificar_autenticacao(request)
-    if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
-
-    try:
-        ocupacoes = Ocupacao.query.filter_by(user_id=user_id).all()
-        if not ocupacoes:
-            return jsonify({'mensagem': 'Nenhuma ocupação encontrada para este usuário.'}), 404
-
-        for ocupacao in ocupacoes:
-            db.session.delete(ocupacao)
-
-        db.session.commit()
-        return jsonify({'mensagem': 'Todas as ocupações do usuário foram excluídas com sucesso.'}), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
-
 @ocupacao_bp.route('/ocupacoes/verificar-disponibilidade', methods=['GET'])
 def verificar_disponibilidade():
     """

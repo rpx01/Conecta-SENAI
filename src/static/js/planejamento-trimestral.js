@@ -15,6 +15,49 @@ const mapeamentoSelects = {
 
 let itemModal;
 
+function formatarDataPtBr(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+}
+
+function getGroupKey(item) {
+    if (item.grupo_id != null) return `g:${item.grupo_id}`;
+    if (item.id_planejamento_grupo != null) return `g:${item.id_planejamento_grupo}`;
+    if (item.loteId != null) return `g:${item.loteId}`;
+    const nome = item.treinamento || item.nome_treinamento || item.nome || '';
+    const dataFinal = item.data_final || '';
+    const horario = item.horario || '';
+    const modalidade = item.modalidade || '';
+    const instrutor = item.instrutor_id || item.instrutor || '';
+    const local = item.local || '';
+    return [nome, dataFinal, horario, modalidade, instrutor, local].join('|');
+}
+
+function toDate(v) {
+    return v ? new Date(v) : null;
+}
+
+function adicionarSufixoDias(lista) {
+    const grupos = new Map();
+    for (const it of lista) {
+        const k = getGroupKey(it);
+        if (!grupos.has(k)) grupos.set(k, []);
+        grupos.get(k).push(it);
+    }
+    for (const arr of grupos.values()) {
+        arr.sort((a, b) => toDate(a.data_inicial || a.data) - toDate(b.data_inicial || b.data));
+        if (arr.length > 1) {
+            arr.forEach((it, idx) => { it.__sufixoDia = ` - ${idx + 1}° dia`; });
+        } else {
+            arr[0].__sufixoDia = '';
+        }
+    }
+}
+
 /**
  * Função executada quando o DOM está totalmente carregado.
  */
@@ -26,16 +69,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const tabelaContainer = document.getElementById('planejamento-container');
     tabelaContainer.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.btn-excluir');
+        const btn = e.target.closest('[data-action="delete"]');
         if (!btn) return;
 
-        const itemId = btn.getAttribute('data-item-id');
-        if (!itemId) return;
+        const { id, nome, datainicial } = btn.dataset;
+        if (!id) return;
+
+        const dataFmt = datainicial ? formatarDataPtBr(datainicial) : '';
+        const mensagem = dataFmt ? `Confirma a exclusão?\n${nome}\nData inicial: ${dataFmt}`
+                                 : `Confirma a exclusão?\n${nome}`;
+        const ok = window.confirm(mensagem);
+        if (!ok) return;
 
         await executarAcaoComFeedback(btn, async () => {
             try {
-                await chamarAPI(`/planejamento/lote/${itemId}`, 'DELETE');
-                document.querySelectorAll(`[data-item-id="${itemId}"]`).forEach(tr => tr.remove());
+                await chamarAPI(`/planejamento/lote/${id}`, 'DELETE');
+                document.querySelectorAll(`[data-item-id="${id}"]`).forEach(tr => tr.remove());
                 showToast('Item excluído com sucesso!', 'success');
             } catch (error) {
                 showToast(error.message || 'Falha ao excluir item', 'danger');
@@ -253,6 +302,7 @@ async function salvarPlanejamento() {
 async function carregarItens() {
     try {
         const itens = await chamarAPI('/planejamento/itens');
+        adicionarSufixoDias(itens);
         renderizarItens(itens);
     } catch (error) {
         showToast('Não foi possível carregar o planejamento.', 'danger');
@@ -330,7 +380,7 @@ function criarLinhaItem(item, dataFinal) {
             <td>${escapeHTML(item.horario || '')}</td>
             <td>${escapeHTML(item.cargaHoraria || '')}</td>
             <td>${escapeHTML(item.modalidade || '')}</td>
-            <td>${escapeHTML(item.treinamento || '')}</td>
+            <td>${escapeHTML((item.treinamento || '') + (item.__sufixoDia || ''))}</td>
             <td>${escapeHTML(item.cmd || '')}</td>
             <td>${escapeHTML(item.sjb || '')}</td>
             <td>${escapeHTML(item.sagTombos || '')}</td>
@@ -341,7 +391,7 @@ function criarLinhaItem(item, dataFinal) {
                 <button class="btn btn-sm btn-outline-primary" onclick='abrirModalParaEditar(${itemJsonString})'>
                     <i class="bi bi-pencil"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger btn-excluir" data-item-id="${item.loteId}">
+                <button class="btn btn-sm btn-outline-danger btn-excluir" data-action="delete" data-id="${item.loteId}" data-nome="${escapeHTML(item.treinamento || '')}" data-datainicial="${item.data}">
                     <i class="bi bi-trash"></i>
                 </button>
             </td>

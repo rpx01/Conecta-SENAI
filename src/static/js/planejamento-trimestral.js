@@ -14,6 +14,7 @@ const mapeamentoSelects = {
 };
 
 let itemModal;
+const itensCache = {};
 
 function formatarDataPtBr(iso) {
     if (!iso) return '';
@@ -58,6 +59,71 @@ function adicionarSufixoDias(lista) {
     }
 }
 
+function showDeleteConfirm(message) {
+    return new Promise((resolve) => {
+        const modalEl = document.getElementById('deleteConfirmModal');
+        document.getElementById('deleteConfirmMessage').textContent = message;
+
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        const btn = document.getElementById('deleteConfirmBtn');
+
+        const onConfirm = () => { cleanup(); resolve(true); };
+        const onHidden = () => { cleanup(); resolve(false); };
+
+        function cleanup() {
+            btn.removeEventListener('click', onConfirm);
+            modalEl.removeEventListener('hidden.bs.modal', onHidden);
+        }
+
+        btn.addEventListener('click', onConfirm);
+        modalEl.addEventListener('hidden.bs.modal', onHidden);
+        modal.show();
+    });
+}
+
+function selecionarValor($select, value) {
+    if (value == null || value === '') return;
+    $select.value = String(value);
+    if (window.$) window.$($select).trigger('change');
+}
+
+function toInputDate(yyyy_mm_dd) {
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(yyyy_mm_dd)) {
+        const [d, m, y] = yyyy_mm_dd.split('/');
+        return `${y}-${m}-${d}`;
+    }
+    return yyyy_mm_dd;
+}
+
+function toDisplayDate(yyyy_mm_dd) {
+    const [y, m, d] = yyyy_mm_dd.split('-');
+    return `${d}/${m}/${y}`;
+}
+
+function carregarCmd() {
+    return chamarAPI('/planejamento-basedados/publico-alvo').then(dados => popularSelect('itemCmd', dados));
+}
+
+function carregarSjb() {
+    return chamarAPI('/planejamento-basedados/publico-alvo').then(dados => popularSelect('itemSjb', dados));
+}
+
+function carregarSagTombos() {
+    return chamarAPI('/planejamento-basedados/publico-alvo').then(dados => popularSelect('itemSagTombos', dados));
+}
+
+async function obterItemPorId(idItem) {
+    if (itensCache[idItem]) return itensCache[idItem];
+    try {
+        const item = await chamarAPI(`/planejamento/lote/${idItem}`);
+        itensCache[idItem] = item;
+        return item;
+    } catch (error) {
+        showToast('Falha ao obter item para edição', 'danger');
+        throw error;
+    }
+}
+
 /**
  * Função executada quando o DOM está totalmente carregado.
  */
@@ -69,22 +135,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const tabelaContainer = document.getElementById('planejamento-container');
     tabelaContainer.addEventListener('click', async (e) => {
-        const btn = e.target.closest('[data-action="delete"]');
+        const btn = e.target.closest('.btn-excluir');
         if (!btn) return;
 
-        const { id, nome, datainicial } = btn.dataset;
-        if (!id) return;
+        const idItem = btn.dataset.itemId;
+        const titulo = btn.dataset.titulo || 'Treinamento';
+        const dataIni = btn.dataset.dataInicialFormatada;
+        const dataFim = btn.dataset.dataFinalFormatada;
 
-        const dataFmt = datainicial ? formatarDataPtBr(datainicial) : '';
-        const mensagem = dataFmt ? `Confirma a exclusão?\n${nome}\nData inicial: ${dataFmt}`
-                                 : `Confirma a exclusão?\n${nome}`;
-        const ok = window.confirm(mensagem);
+        const ok = await showDeleteConfirm(
+            `Confirma a exclusão?\n${titulo}\nPeríodo: ${dataIni} a ${dataFim}`
+        );
         if (!ok) return;
 
         await executarAcaoComFeedback(btn, async () => {
             try {
-                await chamarAPI(`/planejamento/lote/${id}`, 'DELETE');
-                document.querySelectorAll(`[data-item-id="${id}"]`).forEach(tr => tr.remove());
+                await chamarAPI(`/planejamento/lote/${idItem}`, 'DELETE');
+                document.querySelectorAll(`[data-item-id="${idItem}"]`).forEach(tr => tr.remove());
                 showToast('Item excluído com sucesso!', 'success');
             } catch (error) {
                 showToast(error.message || 'Falha ao excluir item', 'danger');
@@ -115,16 +182,24 @@ async function inicializarPagina() {
  * Busca os dados da API e popula todos os campos de seleção do modal.
  */
 async function carregarOpcoesDosSelects() {
-    const promessas = Object.entries(mapeamentoSelects).map(async ([selectId, endpoint]) => {
-        try {
-            const dados = await chamarAPI(endpoint);
-            popularSelect(selectId, dados);
-        } catch (error) {
-            console.error(`Falha ao carregar opções para ${selectId}:`, error);
-            showToast(`Erro ao carregar dados para ${selectId.replace('item', '')}.`, 'warning');
-        }
+    const promessas = [carregarCmd(), carregarSjb(), carregarSagTombos()];
+
+    const restante = { ...mapeamentoSelects };
+    delete restante.itemCmd;
+    delete restante.itemSjb;
+    delete restante.itemSagTombos;
+
+    Object.entries(restante).forEach(([selectId, endpoint]) => {
+        promessas.push(
+            chamarAPI(endpoint)
+                .then(dados => popularSelect(selectId, dados))
+                .catch(error => {
+                    console.error(`Falha ao carregar opções para ${selectId}:`, error);
+                    showToast(`Erro ao carregar dados para ${selectId.replace('item', '')}.`, 'warning');
+                })
+        );
     });
-    
+
     await Promise.all(promessas);
 }
 
@@ -250,29 +325,39 @@ window.abrirModalParaAdicionar = (loteId = '') => {
 /**
  * Abre o modal para editar um item existente.
  */
-window.abrirModalParaEditar = (item) => {
+window.abrirModalParaEditar = async (idItem) => {
     document.getElementById('itemForm').reset();
 
+    const item = await obterItemPorId(idItem);
+
     document.getElementById('itemId').value = item.id;
-    document.getElementById('loteId').value = item.loteId;
-    document.getElementById('itemDataInicio').value = item.data;
-    document.getElementById('itemDataFim').value = item.data;
-    document.getElementById('itemSemana').value = item.semana;
-    const selecionar = (id, texto) => {
+    document.getElementById('loteId').value = idItem;
+
+    const dtIni = toInputDate(item.data_inicial || item.data);
+    const dtFim = toInputDate(item.data_final || item.data);
+    document.getElementById('itemDataInicio').value = dtIni;
+    document.getElementById('itemDataFim').value = dtFim;
+    document.getElementById('itemSemana').value = new Date(dtIni + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long' }).replace(/^./, c => c.toUpperCase());
+
+    const selecionarTexto = (id, texto) => {
         const select = document.getElementById(id);
         const opt = Array.from(select.options).find(o => o.textContent === texto);
         if (opt) select.value = opt.value;
     };
-    selecionar('itemHorario', item.horario);
-    selecionar('itemCargaHoraria', item.cargaHoraria);
-    selecionar('itemModalidade', item.modalidade);
-    selecionar('itemTreinamento', item.treinamento);
-    selecionar('itemCmd', item.cmd);
-    selecionar('itemSjb', item.sjb);
-    selecionar('itemSagTombos', item.sagTombos);
-    selecionar('itemInstrutor', item.instrutor);
-    selecionar('itemLocal', item.local);
-    document.getElementById('itemObservacao').value = item.observacao;
+
+    selecionarTexto('itemHorario', item.horario);
+    selecionarTexto('itemCargaHoraria', item.cargaHoraria);
+    selecionarTexto('itemModalidade', item.modalidade);
+    selecionarTexto('itemTreinamento', item.treinamento);
+    selecionarTexto('itemInstrutor', item.instrutor);
+    selecionarTexto('itemLocal', item.local);
+
+    await Promise.all([carregarCmd(), carregarSjb(), carregarSagTombos()]);
+    selecionarValor(document.getElementById('itemCmd'), item.cmd_id);
+    selecionarValor(document.getElementById('itemSjb'), item.sjb_id);
+    selecionarValor(document.getElementById('itemSagTombos'), item.sagtombos_id);
+
+    document.getElementById('itemObservacao').value = item.observacao || '';
 
     document.getElementById('itemModalLabel').textContent = 'Editar Item do Planejamento';
     itemModal.show();
@@ -303,6 +388,18 @@ async function carregarItens() {
     try {
         const itens = await chamarAPI('/planejamento/itens');
         adicionarSufixoDias(itens);
+
+        Object.keys(itensCache).forEach(k => delete itensCache[k]);
+        itens.forEach(it => {
+            const id = it.loteId;
+            if (!itensCache[id]) {
+                itensCache[id] = { ...it, data_inicial: it.data, data_final: it.data };
+            } else {
+                if (it.data < itensCache[id].data_inicial) itensCache[id].data_inicial = it.data;
+                if (it.data > itensCache[id].data_final) itensCache[id].data_final = it.data;
+            }
+        });
+
         renderizarItens(itens);
     } catch (error) {
         showToast('Não foi possível carregar o planejamento.', 'danger');
@@ -371,7 +468,6 @@ function criarLinhaItem(item, dataFinal) {
     const dataInicialFormatada = dataObj.toLocaleDateString('pt-BR');
     const dataFinalFormatada = new Date(dataFinal + 'T00:00:00').toLocaleDateString('pt-BR');
     const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'long' });
-    const itemJsonString = JSON.stringify(item).replace(/'/g, "\\'");
     return `
         <tr data-item-id="${item.loteId}">
             <td>${dataInicialFormatada}</td>
@@ -388,10 +484,10 @@ function criarLinhaItem(item, dataFinal) {
             <td>${escapeHTML(item.local || '')}</td>
             <td>${escapeHTML(item.observacao || '')}</td>
             <td class="text-end">
-                <button class="btn btn-sm btn-outline-primary" onclick='abrirModalParaEditar(${itemJsonString})'>
+                <button class="btn btn-sm btn-outline-primary btn-editar" data-item-id="${item.loteId}" data-data-inicial="${item.data}" data-data-final="${dataFinal}" onclick="abrirModalParaEditar('${item.loteId}')">
                     <i class="bi bi-pencil"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger btn-excluir" data-action="delete" data-id="${item.loteId}" data-nome="${escapeHTML(item.treinamento || '')}" data-datainicial="${item.data}">
+                <button class="btn btn-sm btn-outline-danger btn-excluir" data-item-id="${item.loteId}" data-titulo="${escapeHTML(item.treinamento || '')}" data-data-inicial-formatada="${dataInicialFormatada}" data-data-final-formatada="${dataFinalFormatada}">
                     <i class="bi bi-trash"></i>
                 </button>
             </td>

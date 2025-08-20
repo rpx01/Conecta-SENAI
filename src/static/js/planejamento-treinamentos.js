@@ -73,6 +73,8 @@ function renderizarItens(itens, feriadosSet) {
     for (const { primeiro, dataFinal } of ordenados) {
         tbody.insertAdjacentHTML('beforeend', criarLinhaItem(primeiro, dataFinal, feriadosSet));
     }
+
+    configurarDelegacaoEventos();
 }
 
 /**
@@ -127,7 +129,7 @@ function criarLinhaItem(item, dataFinal, feriadosSet) {
     }
 
     return `
-        <tr>
+        <tr data-id="${item.id || ''}">
             <td>${dataInicialFormatada}</td>
             <td>${dataFinalFormatada}</td>
             <td>${diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1)}</td>
@@ -139,29 +141,71 @@ function criarLinhaItem(item, dataFinal, feriadosSet) {
             <td>${limiteInscricaoHTML}</td>
             <td>
                 <label class="sge-switch" title="Ativar SGE">
-                    <input type="checkbox" class="sge-toggle" data-id="${item.id || ''}" ${item.sge_link ? 'checked' : ''}>
+                    <input type="checkbox" class="sge-toggle" ${item.sge ? 'checked' : ''}>
                     <span class="sge-slider" aria-hidden="true"></span>
                 </label>
             </td>
-            <td class="link-col">${item.sge_link ? `<input type="url" class="form-control form-control-sm sge-link-input" placeholder="https://..." value="${escapeHTML(item.sge_link)}">` : ''}</td>
+            <td class="link-col">${item.sge ? `<input type="url" class="form-control form-control-sm sge-link-input" placeholder="https://..." value="${escapeHTML(item.link_sge || '')}">` : ''}</td>
         </tr>
     `;
 }
 
-document.addEventListener('change', (ev) => {
+function onSgeChange(ev) {
     const el = ev.target;
     if (!el.classList.contains('sge-toggle')) return;
 
     const row = el.closest('tr');
     const linkCell = row ? row.querySelector('td.link-col') : null;
-    if (!linkCell) return;
+    if (!row || !linkCell) return;
 
     if (el.checked) {
         linkCell.innerHTML = `
-            <input type="url" class="form-control form-control-sm sge-link-input" placeholder="https://...">
+            <input type="url" class="form-control form-control-sm sge-link-input" placeholder="https://..." value="">
         `;
     } else {
         linkCell.innerHTML = '';
     }
-});
+
+    const id = row.dataset.id;
+    atualizarPlanejamento(id, { sge: el.checked });
+}
+
+function onLinkBlur(ev) {
+    const el = ev.target;
+    if (!el.classList.contains('sge-link-input')) return;
+    const row = el.closest('tr');
+    if (!row) return;
+    const id = row.dataset.id;
+    atualizarPlanejamento(id, { link_sge: el.value });
+}
+
+function configurarDelegacaoEventos() {
+    const tbody = document.getElementById('planejamento-tbody');
+    if (!tbody) return;
+    tbody.addEventListener('change', onSgeChange);
+    tbody.addEventListener('blur', onLinkBlur, true);
+}
+
+async function atualizarPlanejamento(id, dados) {
+    try {
+        const token = await obterCSRFToken();
+        const resp = await fetch(`${API_URL}/planejamento/treinamentos/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': token
+            },
+            credentials: 'include',
+            body: JSON.stringify(dados)
+        });
+        if (!resp.ok) {
+            throw new Error('Falha na atualização');
+        }
+        showToast('Guardado!', 'success');
+    } catch (err) {
+        console.error(err);
+        showToast('Erro ao guardar', 'danger');
+    }
+}
+
 

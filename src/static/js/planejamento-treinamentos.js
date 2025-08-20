@@ -139,29 +139,40 @@ function criarLinhaItem(item, dataFinal, feriadosSet) {
             <td>${limiteInscricaoHTML}</td>
             <td>
                 <label class="sge-switch" title="Ativar SGE">
-                    <input type="checkbox" class="sge-toggle" data-id="${item.id || ''}" ${item.sge_link ? 'checked' : ''}>
+                    <input type="checkbox" class="sge-toggle" data-id="${item.id || ''}" ${item.sge_ativo ? 'checked' : ''}>
                     <span class="sge-slider" aria-hidden="true"></span>
                 </label>
             </td>
-            <td class="link-col">${item.sge_link ? `<input type="url" class="form-control form-control-sm sge-link-input" placeholder="https://..." value="${escapeHTML(item.sge_link)}">` : ''}</td>
+            <td class="link-col">${item.sge_ativo ? `<input type="url" class="form-control form-control-sm sge-link-input" placeholder="https://..." value="${escapeHTML(item.sge_link || '')}">` : ''}</td>
         </tr>
     `;
 }
 
 document.addEventListener('change', (ev) => {
     const el = ev.target;
-    if (!el.classList.contains('sge-toggle')) return;
+    if (el.classList.contains('sge-toggle')) {
+        const row = el.closest('tr');
+        const linkCell = row ? row.querySelector('td.link-col') : null;
+        if (!linkCell) return;
 
-    const row = el.closest('tr');
-    const linkCell = row ? row.querySelector('td.link-col') : null;
-    if (!linkCell) return;
+        if (el.checked) {
+            linkCell.innerHTML = `
+                <input type="url" class="form-control form-control-sm sge-link-input" placeholder="https://...">
+            `;
+        } else {
+            linkCell.innerHTML = '';
+        }
 
-    if (el.checked) {
-        linkCell.innerHTML = `
-            <input type="url" class="form-control form-control-sm sge-link-input" placeholder="https://...">
-        `;
-    } else {
-        linkCell.innerHTML = '';
+        const payload = { sge_ativo: el.checked, sge_link: el.checked ? '' : null };
+        chamarAPI(`/planejamento/itens/${el.dataset.id}`, 'PUT', payload)
+            .catch(() => showToast('Não foi possível salvar o status SGE.', 'danger'));
+    } else if (el.classList.contains('sge-link-input')) {
+        const row = el.closest('tr');
+        const toggle = row ? row.querySelector('.sge-toggle') : null;
+        if (!toggle) return;
+        const payload = { sge_ativo: true, sge_link: el.value.trim() };
+        chamarAPI(`/planejamento/itens/${toggle.dataset.id}`, 'PUT', payload)
+            .catch(() => showToast('Não foi possível salvar o link SGE.', 'danger'));
     }
 });
 

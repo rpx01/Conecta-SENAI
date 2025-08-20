@@ -195,6 +195,8 @@ def criar_item():
         instrutor=instrutor_nome,
         local=payload.get('local'),
         observacao=payload.get('observacao'),
+        sge_ativo=payload.get('sge_ativo', False),
+        sge_link=payload.get('sge_link'),
     )
 
     try:
@@ -358,23 +360,26 @@ def atualizar_item(item_id):
         return jsonify({'erro': 'Item não encontrado'}), 404
 
     data = request.json or {}
-    try:
-        item.data = datetime.fromisoformat(data.get('data', '')).date()
-    except Exception:
-        return jsonify({'erro': 'Data inválida'}), 400
+    if 'data' in data:
+        try:
+            item.data = datetime.fromisoformat(data['data']).date()
+        except Exception:
+            return jsonify({'erro': 'Data inválida'}), 400
 
     item.lote_id = data.get('loteId', item.lote_id)
-    item.semana = data.get('semana')
-    item.horario = data.get('horario')
-    item.carga_horaria = data.get('carga_horaria')
-    item.modalidade = data.get('modalidade')
-    item.treinamento = data.get('treinamento')
-    item.cmd = data.get('cmd')
-    item.sjb = data.get('sjb')
-    item.sag_tombos = data.get('sag_tombos')
-    item.instrutor = data.get('instrutor')
-    item.local = data.get('local')
-    item.observacao = data.get('observacao')
+    item.semana = data.get('semana', item.semana)
+    item.horario = data.get('horario', item.horario)
+    item.carga_horaria = data.get('carga_horaria', item.carga_horaria)
+    item.modalidade = data.get('modalidade', item.modalidade)
+    item.treinamento = data.get('treinamento', item.treinamento)
+    item.cmd = data.get('cmd', item.cmd)
+    item.sjb = data.get('sjb', item.sjb)
+    item.sag_tombos = data.get('sag_tombos', item.sag_tombos)
+    item.instrutor = data.get('instrutor', item.instrutor)
+    item.local = data.get('local', item.local)
+    item.observacao = data.get('observacao', item.observacao)
+    item.sge_ativo = data.get('sge_ativo', item.sge_ativo)
+    item.sge_link = data.get('sge_link', item.sge_link)
 
     try:
         db.session.commit()

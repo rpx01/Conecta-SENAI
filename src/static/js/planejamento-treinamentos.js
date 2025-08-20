@@ -92,6 +92,7 @@ function criarCabecalhoTabela() {
                 <th>TREINAMENTO</th>
                 <th>LOCAL</th>
                 <th>LIMITE DE INSCRIÇÃO</th>
+                <th>SGE</th>
                 <th>LINK</th>
             </tr>
         </thead>
@@ -136,8 +137,31 @@ function criarLinhaItem(item, dataFinal, feriadosSet) {
             <td>${escapeHTML(item.treinamento || '')}</td>
             <td>${escapeHTML(item.local || '')}</td>
             <td>${limiteInscricaoHTML}</td>
-            <td></td>
+            <td>
+                <label class="sge-switch" title="Ativar SGE">
+                    <input type="checkbox" class="sge-toggle" data-id="${item.id || ''}" ${item.sge_link ? 'checked' : ''}>
+                    <span class="sge-slider" aria-hidden="true"></span>
+                </label>
+            </td>
+            <td class="link-col">${item.sge_link ? `<input type="url" class="form-control form-control-sm sge-link-input" placeholder="https://..." value="${escapeHTML(item.sge_link)}">` : ''}</td>
         </tr>
     `;
 }
+
+document.addEventListener('change', (ev) => {
+    const el = ev.target;
+    if (!el.classList.contains('sge-toggle')) return;
+
+    const row = el.closest('tr');
+    const linkCell = row ? row.querySelector('td.link-col') : null;
+    if (!linkCell) return;
+
+    if (el.checked) {
+        linkCell.innerHTML = `
+            <input type="url" class="form-control form-control-sm sge-link-input" placeholder="https://...">
+        `;
+    } else {
+        linkCell.innerHTML = '';
+    }
+});
 

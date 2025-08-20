@@ -1251,3 +1251,110 @@ input, select, textarea {
   color: var(--brand-primary)!important;
   font-weight: 600;
 }
+/* =============================================== */
+/* === ESTILOS PARA O MENU LATERAL SUSPENSO ====== */
+/* =============================================== */
+
+/* Documentação:
+ * O seletor '.sidebar' é usado para identificar o menu lateral.
+ * Se o seu menu usar uma classe ou id diferente, ajuste o seletor.
+ * A propriedade 'transform' é usada para mover o menu para fora da tela.
+ * A propriedade 'transition' cria a animação suave de entrada e saída.
+ */
+
+.sidebar {
+    /* Define a posição inicial do menu, escondido à esquerda */
+    position: fixed; /* Posição fixa para ficar sempre visível na rolagem */
+    top: 0;
+    left: 0;
+    height: 100vh; /* Ocupa 100% da altura da tela */
+    width: 250px; /* Largura do menu */
+    z-index: 1000; /* Garante que o menu fique acima de outros elementos */
+    
+    /* Move o menu para fora da tela */
+    transform: translateX(-100%);
+    
+    /* Adiciona uma transição suave para a propriedade 'transform' */
+    transition: transform 0.3s ease-in-out;
+
+    /* Estilização baseada no Guia de Marcas FIEMG */
+    background-color: #004f76; /* FIEMG Azul - Cor principal */
+    color: #ffffff; /* Cor de texto para contraste */
+}
+
+/* Documentação:
+ * Este é o "gatilho" que faz o menu aparecer.
+ * Usamos a pseudo-classe ':hover' no elemento 'body'. Quando o mouse
+ * se aproxima da borda esquerda, o menu é acionado.
+ * A pseudo-classe ':has()' verifica se o mouse está sobre uma área
+ * específica antes de aplicar o estilo ao .sidebar.
+ */
+
+/* Criamos uma "zona de hover" sutil no lado esquerdo da página */
+body:has(> .sidebar-trigger:hover) .sidebar {
+    /* Move o menu de volta para sua posição visível */
+    transform: translateX(0);
+}
+
+/* Documentação:
+ * O '.sidebar-trigger' é um elemento invisível que colocaremos no HTML.
+ * Ele serve como a área de ativação do menu, tornando a experiência mais controlada.
+ * Ocupa uma pequena faixa na esquerda da tela.
+ */
+.sidebar-trigger {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 20px; /* Largura da área de ativação (ajuste se necessário) */
+    height: 100vh; /* Altura total da tela */
+    z-index: 999; /* Fica abaixo do menu, mas acima do resto */
+}
+
+
+/* --- Estilos Adicionais para os Itens do Menu (Baseado no Guia de Marcas) --- */
+
+/* Garante que os links dentro do menu usem as cores certas */
+.sidebar a, .sidebar a:hover, .sidebar a:focus {
+    color: inherit;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.sidebar ul.components {
+    padding: 20px 0;
+}
+
+.sidebar ul p {
+    color: #fff;
+    padding: 10px;
+}
+
+.sidebar ul li a {
+    padding: 15px 20px;
+    font-size: 1.1em;
+    display: block;
+    font-family: 'Roboto', sans-serif; /* Tipografia principal */
+}
+
+/* Efeito hover nos links do menu */
+.sidebar ul li a:hover {
+    color: #004f76; /* FIEMG Azul */
+    background: #ffffff; /* Fundo branco */
+}
+
+/* Estilo para o item ativo do menu */
+.sidebar ul li.active > a, a[aria-expanded="true"] {
+    color: #fff;
+    background: #80b642; /* CIEMG Verde - Cor de destaque */
+}
+
+/* Ajuste para o conteúdo principal da página */
+/* Impede que o menu sobreponha o conteúdo quando estiver aberto */
+#content {
+    width: 100%;
+    transition: all 0.3s;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+

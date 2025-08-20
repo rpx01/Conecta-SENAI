@@ -4,8 +4,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     await carregarItens();
 });
 
-const API_BASE = '/planejamentos-treinamentos';
-
+/**
+ * Carrega os itens de planejamento da API.
+ */
 async function carregarItens() {
     try {
         const agora = new Date();
@@ -15,10 +16,15 @@ async function carregarItens() {
         const itens = await chamarAPI('/planejamento/itens');
         renderizarItens(itens, feriadosSet);
     } catch (error) {
+        // A função showToast é chamada para notificar o usuário em caso de erro.
         showToast('Não foi possível carregar o planejamento.', 'danger');
     }
 }
 
+/**
+ * Renderiza os itens do planejamento na página.
+ * @param {Array} itens - A lista de itens de planejamento.
+ */
 function renderizarItens(itens, feriadosSet) {
     const container = document.getElementById('planejamento-container');
     container.innerHTML = `
@@ -42,7 +48,8 @@ function renderizarItens(itens, feriadosSet) {
         return;
     }
 
-    const grupos = new Map();
+    // Agrupa por loteId, guardando o item representativo (o de menor data) e o maior fim
+    const grupos = new Map(); // loteId -> { primeiro, dataInicial, dataFinal }
     for (const it of itens) {
         const d = it.data;
         if (!grupos.has(it.loteId)) {
@@ -51,23 +58,27 @@ function renderizarItens(itens, feriadosSet) {
             const g = grupos.get(it.loteId);
             if (d < g.dataInicial) {
                 g.dataInicial = d;
-                g.primeiro = it;
+                g.primeiro = it; // usar este item como referência para campos textuais
             }
             if (d > g.dataFinal) g.dataFinal = d;
         }
     }
 
+    // Ordena por data inicial do lote (opcional, melhora leitura)
     const ordenados = [...grupos.values()].sort((a, b) =>
         String(a.dataInicial).localeCompare(String(b.dataInicial))
     );
 
+    // 1 linha por lote: usar o item "primeiro" + dataFinal agregada
     for (const { primeiro, dataFinal } of ordenados) {
         tbody.insertAdjacentHTML('beforeend', criarLinhaItem(primeiro, dataFinal, feriadosSet));
-        const tr = tbody.lastElementChild;
-        hydrateSgeUi(tr, primeiro);
     }
 }
 
+/**
+ * Cria o cabeçalho da tabela.
+ * @returns {string} O HTML do cabeçalho da tabela.
+ */
 function criarCabecalhoTabela() {
     return `
         <thead>
@@ -88,6 +99,12 @@ function criarCabecalhoTabela() {
     `;
 }
 
+/**
+ * Cria uma linha da tabela para um item de planejamento.
+ * @param {object} item - O item de planejamento.
+ * @param {string} dataFinal - A data final do lote do item.
+ * @returns {string} O HTML da linha da tabela.
+ */
 function criarLinhaItem(item, dataFinal, feriadosSet) {
     const dataObj = new Date(item.data + 'T00:00:00');
     const dataInicialFormatada = dataObj.toLocaleDateString('pt-BR');
@@ -122,92 +139,29 @@ function criarLinhaItem(item, dataFinal, feriadosSet) {
             <td>${limiteInscricaoHTML}</td>
             <td>
                 <label class="sge-switch" title="Ativar SGE">
-                    <input type="checkbox" data-role="sge-toggle">
+                    <input type="checkbox" class="sge-toggle" data-id="${item.id || ''}" ${item.sge_link ? 'checked' : ''}>
                     <span class="sge-slider" aria-hidden="true"></span>
                 </label>
             </td>
-            <td><input type="url" class="form-control form-control-sm" data-role="sge-link" placeholder="https://..."></td>
+            <td class="link-col">${item.sge_link ? `<input type="url" class="form-control form-control-sm sge-link-input" placeholder="https://..." value="${escapeHTML(item.sge_link)}">` : ''}</td>
         </tr>
     `;
 }
 
-function saveSGE(id, sgeAtivo, sgeLink) {
-    return chamarAPI(`${API_BASE}/${id}/sge`, 'PATCH', {
-        sge_ativo: !!sgeAtivo,
-        sge_link: sgeAtivo ? (sgeLink && sgeLink.trim() ? sgeLink.trim() : null) : null
-    });
-}
+document.addEventListener('change', (ev) => {
+    const el = ev.target;
+    if (!el.classList.contains('sge-toggle')) return;
 
-function onToggleChange(ev) {
-    const toggle = ev.currentTarget;
-    const id = toggle.dataset.id;
-    const checked = toggle.checked;
-    const row = toggle.closest('tr');
-    const linkInput = row.querySelector(`input[data-role="sge-link"][data-id="${id}"]`);
+    const row = el.closest('tr');
+    const linkCell = row ? row.querySelector('td.link-col') : null;
+    if (!linkCell) return;
 
-    if (checked) {
-        linkInput.removeAttribute('disabled');
-        linkInput.parentElement.style.display = '';
+    if (el.checked) {
+        linkCell.innerHTML = `
+            <input type="url" class="form-control form-control-sm sge-link-input" placeholder="https://...">
+        `;
     } else {
-        linkInput.value = '';
-        linkInput.setAttribute('disabled', 'disabled');
-        linkInput.parentElement.style.display = 'none';
+        linkCell.innerHTML = '';
     }
+});
 
-    saveSGE(id, checked, linkInput.value).catch(err => {
-        toggle.checked = !checked;
-        if (!toggle.checked) {
-            linkInput.value = '';
-            linkInput.setAttribute('disabled', 'disabled');
-            linkInput.parentElement.style.display = 'none';
-        }
-        console.error(err);
-        alert('Não foi possível salvar SGE/LINK.');
-    });
-}
-
-function onLinkCommit(ev) {
-    const input = ev.currentTarget;
-    const id = input.dataset.id;
-    const row = input.closest('tr');
-    const toggle = row.querySelector(`input[type="checkbox"][data-role="sge-toggle"][data-id="${id}"]`);
-    saveSGE(id, toggle.checked, input.value).catch(err => {
-        console.error(err);
-        alert('Não foi possível salvar o LINK.');
-    });
-}
-
-function onKeyDownCommit(e) {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        e.currentTarget.blur();
-    }
-}
-
-function hydrateSgeUi(rowElement, item) {
-    const toggle = rowElement.querySelector('input[type="checkbox"][data-role="sge-toggle"]');
-    const input = rowElement.querySelector('input[data-role="sge-link"]');
-
-    toggle.dataset.id = item.id;
-    input.dataset.id = item.id;
-
-    toggle.checked = !!item.sge_ativo;
-    input.value = item.sge_link || '';
-
-    if (toggle.checked) {
-        input.removeAttribute('disabled');
-        input.parentElement.style.display = '';
-    } else {
-        input.setAttribute('disabled', 'disabled');
-        input.parentElement.style.display = 'none';
-    }
-
-    toggle.removeEventListener('change', onToggleChange);
-    toggle.addEventListener('change', onToggleChange);
-
-    input.removeEventListener('blur', onLinkCommit);
-    input.addEventListener('blur', onLinkCommit);
-
-    input.removeEventListener('keydown', onKeyDownCommit);
-    input.addEventListener('keydown', onKeyDownCommit);
-}

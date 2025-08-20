@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from typing import List, Optional
-from pydantic import BaseModel, Field, ValidationError, field_validator, constr
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 
 class PolosSchema(BaseModel):
@@ -49,36 +49,6 @@ class RegistroPlanejamentoSchema(BaseModel):
 
 class PlanejamentoCreateSchema(BaseModel):
     registros: List[RegistroPlanejamentoSchema]
-
-    class Config:
-        populate_by_name = True
-
-
-class SGEUpdateSchema(BaseModel):
-    sge_ativo: bool
-    sge_link: Optional[constr(strip_whitespace=True, max_length=512)] = None
-
-
-class PlanejamentoItemSchema(BaseModel):
-    id: int
-    rowId: str
-    loteId: str
-    data: date
-    semana: Optional[str] = None
-    horario: Optional[str] = None
-    cargaHoraria: Optional[str] = None
-    modalidade: Optional[str] = None
-    treinamento: Optional[str] = None
-    cmd: Optional[str] = None
-    sjb: Optional[str] = None
-    sagTombos: Optional[str] = None
-    instrutor: Optional[str] = None
-    local: Optional[str] = None
-    observacao: Optional[str] = None
-    criadoEm: Optional[datetime] = None
-    atualizadoEm: Optional[datetime] = None
-    sge_ativo: bool
-    sge_link: Optional[str] = None
 
     class Config:
         populate_by_name = True

@@ -1,6 +1,5 @@
 """Model for storing planning items."""
 from datetime import datetime
-from sqlalchemy import Boolean, String
 from src.models import db
 
 
@@ -23,8 +22,6 @@ class PlanejamentoItem(db.Model):
     instrutor = db.Column(db.String(100))
     local = db.Column(db.String(100))
     observacao = db.Column(db.String(255))
-    sge_ativo = db.Column(Boolean, nullable=False, default=False)
-    sge_link = db.Column(String(512), nullable=True)
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
     atualizado_em = db.Column(
         db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
@@ -48,8 +45,6 @@ class PlanejamentoItem(db.Model):
             "instrutor": self.instrutor,
             "local": self.local,
             "observacao": self.observacao,
-            "sge_ativo": bool(self.sge_ativo),
-            "sge_link": self.sge_link,
             "criadoEm": (
                 self.criado_em.isoformat() if self.criado_em else None
             ),

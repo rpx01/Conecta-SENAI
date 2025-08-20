@@ -1,5 +1,5 @@
 # Estágio 1: Builder - Instala as dependências
-FROM python:3.13.7-slim AS builder
+FROM python:3.12-slim AS builder
 
 # Define variáveis de ambiente para otimizar a execução
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -23,7 +23,7 @@ RUN poetry config virtualenvs.create false \
     && poetry install --without dev --no-interaction --no-ansi
 
 # Estágio 2: Runtime - Cria a imagem final e mais leve
-FROM python:3.13.7-slim AS runtime
+FROM python:3.12-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1

@@ -1,31 +1,33 @@
-"""Add SGE fields to planejamento_itens
-
-Revision ID: a3e4f5d6c7b8
-Revises: 1faac30c7383
-Create Date: 2025-08-21 00:00:00.000000
-"""
+"""add sge fields to planejamento_itens"""
 
 from alembic import op
 import sqlalchemy as sa
 
+
 # revision identifiers, used by Alembic.
-revision = 'a3e4f5d6c7b8'
-down_revision = '1faac30c7383'
+revision = "a3e4f5d6c7b8"
+down_revision = "1faac30c7383"
 branch_labels = None
 depends_on = None
 
 
 def upgrade() -> None:
     op.add_column(
-        'planejamento_itens',
-        sa.Column('sge_ativo', sa.Boolean(), server_default=sa.text('false')),
+        "planejamento_itens",
+        sa.Column(
+            "sge_ativo",
+            sa.Boolean(),
+            nullable=False,
+            server_default=sa.false(),
+        ),
     )
     op.add_column(
-        'planejamento_itens',
-        sa.Column('sge_link', sa.String(length=255), nullable=True),
+        "planejamento_itens",
+        sa.Column("sge_link", sa.String(length=512), nullable=True),
     )
+    op.alter_column("planejamento_itens", "sge_ativo", server_default=None)
 
 
 def downgrade() -> None:
-    op.drop_column('planejamento_itens', 'sge_link')
-    op.drop_column('planejamento_itens', 'sge_ativo')
+    op.drop_column("planejamento_itens", "sge_link")
+    op.drop_column("planejamento_itens", "sge_ativo")

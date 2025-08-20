@@ -22,6 +22,8 @@ class PlanejamentoItem(db.Model):
     instrutor = db.Column(db.String(100))
     local = db.Column(db.String(100))
     observacao = db.Column(db.String(255))
+    sge_ativo = db.Column(db.Boolean, default=False)
+    sge_link = db.Column(db.String(255))
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
     atualizado_em = db.Column(
         db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
@@ -45,6 +47,8 @@ class PlanejamentoItem(db.Model):
             "instrutor": self.instrutor,
             "local": self.local,
             "observacao": self.observacao,
+            "sge_ativo": self.sge_ativo,
+            "sge_link": self.sge_link,
             "criadoEm": (
                 self.criado_em.isoformat() if self.criado_em else None
             ),

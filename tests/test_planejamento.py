@@ -150,3 +150,32 @@ def test_cria_tabela_quando_ausente(
         '/api/planejamento/itens', json=payload, headers=headers
     )
     assert resp.status_code == 201
+
+
+def test_atualiza_sge_link(client, setup_dados, login_admin, csrf_token):
+    treinamento_nome, instrutor_nome = setup_dados
+    headers = auth_headers(client, login_admin, csrf_token)
+    payload = {
+        'data': '2024-05-01',
+        'semana': '1',
+        'horario': '08:00',
+        'carga_horaria': '8',
+        'modalidade': 'P',
+        'treinamento': treinamento_nome,
+        'cmd': True,
+        'sjb': False,
+        'sag_tombos': False,
+        'instrutor': instrutor_nome,
+        'local': '',
+        'observacao': ''
+    }
+    resp = client.post('/api/planejamento/itens', json=payload, headers=headers)
+    assert resp.status_code == 201
+    item_id = resp.get_json()['id']
+
+    update = {'sge_ativo': True, 'sge_link': 'https://exemplo.com'}
+    resp = client.put(f'/api/planejamento/itens/{item_id}', json=update, headers=headers)
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['sge_ativo'] is True
+    assert data['sge_link'] == 'https://exemplo.com'

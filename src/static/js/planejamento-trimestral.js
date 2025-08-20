@@ -293,7 +293,7 @@ function popularSelect(selectId, dados) {
     });
 }
 
-function montarRegistrosPlanejamento() {
+async function montarRegistrosPlanejamento() {
     const dataInicio = document.getElementById('itemDataInicio').value;
     const dataFim = document.getElementById('itemDataFim').value;
 
@@ -324,8 +324,8 @@ function montarRegistrosPlanejamento() {
         return null;
     }
 
-    const inicioDate = new Date(dataInicio);
-    const fimDate = new Date(dataFim);
+    const inicioDate = parseISODateToLocal(dataInicio);
+    const fimDate = parseISODateToLocal(dataFim);
     if (fimDate < inicioDate) {
         showToast('Data final deve ser maior que a inicial', 'warning');
         return null;
@@ -347,8 +347,9 @@ function montarRegistrosPlanejamento() {
     loteIdInput.value = loteId;
 
     const registros = [];
-    for (let d = new Date(inicioDate); d <= fimDate; d.setDate(d.getDate() + 1)) {
-        const iso = d.toISOString().split('T')[0];
+    const feriadosSet = await loadCMDHolidaysBetween(inicioDate, fimDate);
+    for (const d of eachBusinessDay(inicioDate, fimDate, feriadosSet)) {
+        const iso = toISODateLocal(d);
         const diaSemana = d.toLocaleDateString('pt-BR', { weekday: 'long' });
         registros.push({
             data: iso,
@@ -422,7 +423,7 @@ window.abrirModalParaEditar = async (idItem, rowId) => {
  * Envia o planejamento para a API.
  */
 async function salvarPlanejamento() {
-    const registros = montarRegistrosPlanejamento();
+    const registros = await montarRegistrosPlanejamento();
     if (!registros) return;
     const btnSalvar = document.getElementById('btnSalvarItem');
     try {

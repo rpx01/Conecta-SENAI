@@ -119,6 +119,8 @@ def criar_planejamento():
             instrutor=registro.instrutor,
             local=registro.local,
             observacao=registro.observacao,
+            sge_ativo=registro.sge_ativo,
+            sge_link=registro.sge_link,
         )
         itens.append(item)
 
@@ -286,6 +288,8 @@ def criar_planejamento_ids():
         instrutor=instrutor.nome,
         local=local.nome,
         observacao=payload.get('observacao', ''),
+        sge_ativo=payload.get('sge_ativo', False),
+        sge_link=payload.get('sge_link'),
     )
 
     try:
@@ -333,6 +337,8 @@ def atualizar_planejamento(row_id):
     item.instrutor = data.get('instrutor')
     item.local = data.get('local')
     item.observacao = data.get('observacao')
+    item.sge_ativo = data.get('sge_ativo', item.sge_ativo)
+    item.sge_link = data.get('sge_link', item.sge_link)
 
     try:
         db.session.commit()

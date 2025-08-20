@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from typing import List, Optional
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class PolosSchema(BaseModel):
@@ -21,6 +21,8 @@ class RegistroPlanejamentoSchema(BaseModel):
     instrutor: str
     local: Optional[str] = ""
     observacao: Optional[str] = ""
+    sge_ativo: bool = False
+    sge_link: Optional[str] = None
 
     @field_validator("fim")
     @classmethod

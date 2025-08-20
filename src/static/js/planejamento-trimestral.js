@@ -531,6 +531,7 @@ function criarCabecalhoTabela() {
                 <th>Data Inicial</th><th>Data Final</th><th>Semana</th><th>Horário</th><th>C.H.</th>
                 <th>Modalidade</th><th>Treinamento</th><th>CMD</th><th>SJB</th>
                 <th>SAG/TOMBOS</th><th>Instrutor</th><th>Local</th><th>Obs.</th>
+                <th>SGE</th><th>LINK</th>
                 <th class="text-end">Ações</th>
             </tr>
         </thead>
@@ -560,6 +561,13 @@ function criarLinhaItem(item, dataFinal) {
             <td>${escapeHTML(item.instrutor || '')}</td>
             <td>${escapeHTML(item.local || '')}</td>
             <td>${escapeHTML(item.observacao || '')}</td>
+            <td>
+                <label class="sge-switch" title="Ativar SGE">
+                    <input type="checkbox" class="sge-toggle" data-id="${item.id || ''}" ${item.sge_ativo ? 'checked' : ''}>
+                    <span class="sge-slider" aria-hidden="true"></span>
+                </label>
+            </td>
+            <td class="link-col">${item.sge_ativo ? `<input type='url' class='form-control form-control-sm sge-link-input' placeholder='https://...' value='${escapeHTML(item.sge_link || '')}'>` : ''}</td>
             <td class="text-end">
                 <button class="btn btn-sm btn-outline-primary btn-editar" data-item-id="${item.loteId}" data-row-id="${item.id}" data-data-inicial="${item.data}" data-data-final="${dataFinal}">
                     <i class="bi bi-pencil"></i>
@@ -630,3 +638,29 @@ function renderPlanejamento(planejamento) {
     `;
     tbody.appendChild(row);
 }
+
+document.addEventListener('change', (ev) => {
+    const el = ev.target;
+    if (el.classList.contains('sge-toggle')) {
+        const row = el.closest('tr');
+        const linkCell = row ? row.querySelector('td.link-col') : null;
+        if (!linkCell) return;
+        if (el.checked) {
+            linkCell.innerHTML = `
+                <input type="url" class="form-control form-control-sm sge-link-input" placeholder="https://...">
+            `;
+        } else {
+            linkCell.innerHTML = '';
+        }
+        const payload = { sge_ativo: el.checked, sge_link: el.checked ? '' : null };
+        chamarAPI(`/planejamento/itens/${el.dataset.id}`, 'PUT', payload)
+            .catch(() => showToast('Não foi possível salvar o status SGE.', 'danger'));
+    } else if (el.classList.contains('sge-link-input')) {
+        const row = el.closest('tr');
+        const toggle = row ? row.querySelector('.sge-toggle') : null;
+        if (!toggle) return;
+        const payload = { sge_ativo: true, sge_link: el.value.trim() };
+        chamarAPI(`/planejamento/itens/${toggle.dataset.id}`, 'PUT', payload)
+            .catch(() => showToast('Não foi possível salvar o link SGE.', 'danger'));
+    }
+});

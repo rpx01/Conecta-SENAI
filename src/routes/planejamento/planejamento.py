@@ -4,7 +4,7 @@ from datetime import datetime, date
 import hmac
 from uuid import uuid4
 from flask import Blueprint, request, jsonify, current_app
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 from sqlalchemy.exc import SQLAlchemyError
 from src.models import db
 from src.models.planejamento import (
@@ -36,16 +36,38 @@ def verificar_csrf():
 
 
 def _tabela_planejamento_existe() -> bool:
-    """Garantia de existência da tabela de planejamento."""
+    """Garantia de existência da tabela e colunas necessárias."""
+    tabela = PlanejamentoItem.__tablename__
     insp = inspect(db.engine)
-    if insp.has_table(PlanejamentoItem.__tablename__):
-        return True
 
+    if not insp.has_table(tabela):
+        try:
+            PlanejamentoItem.__table__.create(db.engine)
+            insp = inspect(db.engine)
+        except SQLAlchemyError:
+            return False
+
+    colunas = {col["name"] for col in insp.get_columns(tabela)}
     try:
-        PlanejamentoItem.__table__.create(db.engine)
-        return True
+        with db.engine.begin() as conn:
+            if "sge_ativo" not in colunas:
+                conn.execute(
+                    text(
+                        f"ALTER TABLE {tabela} "
+                        "ADD COLUMN sge_ativo BOOLEAN DEFAULT FALSE"
+                    )
+                )
+            if "sge_link" not in colunas:
+                conn.execute(
+                    text(
+                        f"ALTER TABLE {tabela} "
+                        "ADD COLUMN sge_link VARCHAR(512)"
+                    )
+                )
     except SQLAlchemyError:
         return False
+
+    return True
 
 
 @planejamento_bp.route('/planejamento', methods=['GET'])

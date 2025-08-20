@@ -23,7 +23,7 @@ class PlanejamentoItem(db.Model):
     local = db.Column(db.String(100))
     observacao = db.Column(db.String(255))
     sge_ativo = db.Column(db.Boolean, default=False)
-    sge_link = db.Column(db.String(255))
+    sge_link = db.Column(db.String(512))
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
     atualizado_em = db.Column(
         db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow

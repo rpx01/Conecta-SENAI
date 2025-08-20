@@ -1,4 +1,5 @@
 import pytest
+import sqlalchemy as sa
 from src.models import db
 from src.models.treinamento import Treinamento
 from src.models.instrutor import Instrutor
@@ -179,3 +180,44 @@ def test_atualiza_sge_link(client, setup_dados, login_admin, csrf_token):
     data = resp.get_json()
     assert data['sge_ativo'] is True
     assert data['sge_link'] == 'https://exemplo.com'
+
+
+def test_adiciona_colunas_sge_quando_ausentes(
+    client, setup_dados, login_admin, csrf_token
+):
+    headers = auth_headers(client, login_admin, csrf_token)
+
+    with client.application.app_context():
+        db.session.execute(sa.text('DROP TABLE IF EXISTS planejamento_itens'))
+        db.session.execute(
+            sa.text(
+                'CREATE TABLE planejamento_itens ('
+                'id INTEGER PRIMARY KEY, '
+                'row_id VARCHAR(36) UNIQUE NOT NULL, '
+                'lote_id VARCHAR(36) NOT NULL, '
+                'data DATE NOT NULL, '
+                'semana VARCHAR(20), '
+                'horario VARCHAR(50), '
+                'carga_horaria VARCHAR(50), '
+                'modalidade VARCHAR(50), '
+                'treinamento VARCHAR(100), '
+                'cmd VARCHAR(100), '
+                'sjb VARCHAR(100), '
+                'sag_tombos VARCHAR(100), '
+                'instrutor VARCHAR(100), '
+                'local VARCHAR(100), '
+                'observacao VARCHAR(255), '
+                'criado_em DATETIME, '
+                'atualizado_em DATETIME'
+                ')'
+            )
+        )
+
+    resp = client.get('/api/planejamento/itens', headers=headers)
+    assert resp.status_code == 200
+
+    with client.application.app_context():
+        insp = sa.inspect(db.engine)
+        cols = {c['name'] for c in insp.get_columns('planejamento_itens')}
+        assert 'sge_ativo' in cols
+        assert 'sge_link' in cols

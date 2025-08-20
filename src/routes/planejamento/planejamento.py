@@ -21,7 +21,7 @@ from src.models.instrutor import Instrutor
 from src.routes.user import verificar_autenticacao
 from src.utils.error_handler import handle_internal_error
 from pydantic import ValidationError
-from src.schemas.planejamento import PlanejamentoCreateSchema
+from src.schemas.planejamento import PlanejamentoCreateSchema, SGEUpdateSchema
 
 planejamento_bp = Blueprint('planejamento', __name__)
 
@@ -408,6 +408,18 @@ def excluir_item(item_id):
     except SQLAlchemyError as e:
         db.session.rollback()
         return handle_internal_error(e)
+
+
+@planejamento_bp.patch('/planejamentos-treinamentos/<int:item_id>/sge')
+def patch_sge(item_id: int):
+    payload = SGEUpdateSchema(**request.get_json(force=True))
+    item = PlanejamentoItem.query.get_or_404(item_id)
+
+    item.sge_ativo = payload.sge_ativo
+    item.sge_link = payload.sge_link if payload.sge_ativo and payload.sge_link else None
+
+    db.session.commit()
+    return jsonify(item.to_dict()), 200
 
 
 @planejamento_bp.route(

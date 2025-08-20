@@ -19,39 +19,6 @@ let edicaoLinhaId = null;
 const itensCache = {};
 const itensPorLote = {};
 
-// Lista de feriados de Conceição do Mato Dentro - MG para 2024.
-// Para outros anos basta atualizar/expandir as datas abaixo no formato 'YYYY-MM-DD'.
-const feriadosCMD = [
-    '2024-01-01', // Confraternização Universal
-    '2024-02-12', // Carnaval
-    '2024-02-13', // Carnaval
-    '2024-02-14', // Quarta-feira de Cinzas
-    '2024-03-29', // Paixão de Cristo
-    '2024-04-21', // Tiradentes
-    '2024-05-01', // Dia do Trabalho
-    '2024-05-30', // Corpus Christi
-    '2024-06-24', // São João Batista
-    '2024-08-15', // Assunção de Nossa Senhora
-    '2024-09-07', // Independência do Brasil
-    '2024-10-12', // Nossa Senhora Aparecida
-    '2024-11-02', // Finados
-    '2024-11-15', // Proclamação da República
-    '2024-12-08', // Imaculada Conceição
-    '2024-12-25', // Natal
-];
-
-/**
- * Verifica se a data fornecida é um dia útil (não é sábado, domingo ou feriado).
- * @param {Date} data - Objeto Date a ser verificado
- * @returns {boolean} true se for dia útil, false caso contrário
- */
-function isDiaUtil(data) {
-    const diaSemana = data.getDay();
-    if (diaSemana === 0 || diaSemana === 6) return false; // Domingo=0, Sábado=6
-    const iso = data.toISOString().split('T')[0];
-    return !feriadosCMD.includes(iso);
-}
-
 function formatarDataPtBr(iso) {
     if (!iso) return '';
     const d = new Date(iso);
@@ -381,7 +348,6 @@ function montarRegistrosPlanejamento() {
 
     const registros = [];
     for (let d = new Date(inicioDate); d <= fimDate; d.setDate(d.getDate() + 1)) {
-        if (!isDiaUtil(d)) continue;
         const iso = d.toISOString().split('T')[0];
         const diaSemana = d.toLocaleDateString('pt-BR', { weekday: 'long' });
         registros.push({

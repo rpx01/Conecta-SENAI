@@ -340,31 +340,6 @@ def atualizar_planejamento(row_id):
         return handle_internal_error(e)
 
 
-@planejamento_bp.route('/planejamento/treinamentos/<int:item_id>', methods=['PUT'])
-def atualizar_planejamento_treinamento(item_id):
-    """Atualiza os campos SGE e link do planejamento de treinamentos."""
-    autenticado, _ = verificar_autenticacao(request)
-    if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
-
-    item = PlanejamentoTreinamento.query.get(item_id)
-    if not item:
-        return jsonify({'erro': 'Item não encontrado'}), 404
-
-    data = request.get_json() or {}
-    if 'sge' in data:
-        item.sge = bool(data['sge'])
-    if 'link_sge' in data:
-        item.link_sge = data['link_sge']
-
-    try:
-        db.session.commit()
-        return jsonify({'message': 'Atualizado com sucesso'})
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return handle_internal_error(e)
-
-
 @planejamento_bp.route('/planejamento/itens/<int:item_id>', methods=['PUT'])
 def atualizar_item(item_id):
     """Atualiza um item existente de planejamento."""

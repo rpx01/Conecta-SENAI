@@ -23,7 +23,6 @@ async function carregarItens() {
  */
 function renderizarItens(itens) {
     const container = document.getElementById('planejamento-container');
-
     container.innerHTML = `
         <div class="card mb-4">
             <div class="card-body p-0">
@@ -34,27 +33,42 @@ function renderizarItens(itens) {
                     </table>
                 </div>
             </div>
-        </div>`;
+        </div>
+    `;
 
     const tbody = document.getElementById('planejamento-tbody');
     tbody.innerHTML = '';
 
-    if (itens.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" class="text-center">Nenhum item de planejamento encontrado.</td></tr>';
+    if (!Array.isArray(itens) || itens.length === 0) {
+        tbody.innerHTML = 'Nenhum item de planejamento encontrado.';
         return;
     }
 
-    // Agrupa os itens por lote para encontrar a data final correta de cada treinamento.
-    const dataFinalPorLote = {};
-    itens.forEach(item => {
-        const atual = dataFinalPorLote[item.loteId];
-        dataFinalPorLote[item.loteId] = (atual && atual > item.data) ? atual : item.data;
-    });
+    // Agrupa por loteId, guardando o item representativo (o de menor data) e o maior fim
+    const grupos = new Map(); // loteId -> { primeiro, dataInicial, dataFinal }
+    for (const it of itens) {
+        const d = it.data;
+        if (!grupos.has(it.loteId)) {
+            grupos.set(it.loteId, { primeiro: it, dataInicial: d, dataFinal: d });
+        } else {
+            const g = grupos.get(it.loteId);
+            if (d < g.dataInicial) {
+                g.dataInicial = d;
+                g.primeiro = it; // usar este item como referência para campos textuais
+            }
+            if (d > g.dataFinal) g.dataFinal = d;
+        }
+    }
 
-    itens.forEach(item => {
-        const dataFinal = dataFinalPorLote[item.loteId];
-        tbody.insertAdjacentHTML('beforeend', criarLinhaItem(item, dataFinal));
-    });
+    // Ordena por data inicial do lote (opcional, melhora leitura)
+    const ordenados = [...grupos.values()].sort((a, b) =>
+        String(a.dataInicial).localeCompare(String(b.dataInicial))
+    );
+
+    // 1 linha por lote: usar o item "primeiro" + dataFinal agregada
+    for (const { primeiro, dataFinal } of ordenados) {
+        tbody.insertAdjacentHTML('beforeend', criarLinhaItem(primeiro, dataFinal));
+    }
 }
 
 /**

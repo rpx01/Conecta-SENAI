@@ -1,4 +1,4 @@
-/* global chamarAPI, showToast, escapeHTML */
+/* global chamarAPI, showToast, escapeHTML, parseISODateToLocal, loadCMDHolidaysBetween, isBusinessDay, toISODateLocal */
 
 document.addEventListener('DOMContentLoaded', async () => {
     await carregarItens();
@@ -9,8 +9,12 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 async function carregarItens() {
     try {
+        const agora = new Date();
+        const inicio = new Date(agora.getFullYear(), 0, 1);
+        const fim = new Date(agora.getFullYear() + 1, 11, 31);
+        const feriadosSet = await loadCMDHolidaysBetween(inicio, fim);
         const itens = await chamarAPI('/planejamento/itens');
-        renderizarItens(itens);
+        renderizarItens(itens, feriadosSet);
     } catch (error) {
         // A função showToast é chamada para notificar o usuário em caso de erro.
         showToast('Não foi possível carregar o planejamento.', 'danger');
@@ -21,7 +25,7 @@ async function carregarItens() {
  * Renderiza os itens do planejamento na página.
  * @param {Array} itens - A lista de itens de planejamento.
  */
-function renderizarItens(itens) {
+function renderizarItens(itens, feriadosSet) {
     const container = document.getElementById('planejamento-container');
     container.innerHTML = `
         <div class="card mb-4">
@@ -67,7 +71,7 @@ function renderizarItens(itens) {
 
     // 1 linha por lote: usar o item "primeiro" + dataFinal agregada
     for (const { primeiro, dataFinal } of ordenados) {
-        tbody.insertAdjacentHTML('beforeend', criarLinhaItem(primeiro, dataFinal));
+        tbody.insertAdjacentHTML('beforeend', criarLinhaItem(primeiro, dataFinal, feriadosSet));
     }
 }
 
@@ -100,14 +104,27 @@ function criarCabecalhoTabela() {
  * @param {string} dataFinal - A data final do lote do item.
  * @returns {string} O HTML da linha da tabela.
  */
-function criarLinhaItem(item, dataFinal) {
+function criarLinhaItem(item, dataFinal, feriadosSet) {
     const dataObj = new Date(item.data + 'T00:00:00');
     const dataInicialFormatada = dataObj.toLocaleDateString('pt-BR');
     const dataFinalFormatada = new Date(dataFinal + 'T00:00:00').toLocaleDateString('pt-BR');
     const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'long' });
 
-    // As colunas 'LIMITE DE INSCRIÇÃO' e 'LINK' são deixadas em branco
-    // pois não há dados correspondentes no objeto 'item'.
+    let limiteInscricaoHTML = '';
+    if (item.treinamento !== 'NR 22 SEGURANCA E SAUDE OCUPACIONAL NA MINERACAO - AMBIENTACAO') {
+        const inicio = parseISODateToLocal(item.data);
+        const limite = new Date(inicio);
+        let dias = 0;
+        while (dias < 2) {
+            limite.setDate(limite.getDate() - 1);
+            if (isBusinessDay(limite, feriadosSet)) {
+                dias++;
+            }
+        }
+        const limiteFormatada = limite.toLocaleDateString('pt-BR');
+        limiteInscricaoHTML = `O cadastro deve ser realizado até as 12H00 do dia ${limiteFormatada}`;
+    }
+
     return `
         <tr>
             <td>${dataInicialFormatada}</td>
@@ -118,7 +135,7 @@ function criarLinhaItem(item, dataFinal) {
             <td>${escapeHTML(item.modalidade || '')}</td>
             <td>${escapeHTML(item.treinamento || '')}</td>
             <td>${escapeHTML(item.local || '')}</td>
-            <td></td>
+            <td>${limiteInscricaoHTML}</td>
             <td></td>
         </tr>
     `;

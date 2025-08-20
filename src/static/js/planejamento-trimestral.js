@@ -331,12 +331,6 @@ function montarRegistrosPlanejamento() {
         return null;
     }
 
-    const diasUteis = window.DatasUtils.listarDiasUteis(dataInicio, dataFim);
-    if (diasUteis.length === 0) {
-        showToast('Não há dias úteis no intervalo selecionado', 'warning');
-        return null;
-    }
-
     const horario = document.getElementById('itemHorario').selectedOptions[0].textContent;
     const cargaHoraria = document.getElementById('itemCargaHoraria').selectedOptions[0].textContent;
     const modalidade = document.getElementById('itemModalidade').selectedOptions[0].textContent;
@@ -352,10 +346,11 @@ function montarRegistrosPlanejamento() {
     const loteId = loteIdInput.value || crypto.randomUUID();
     loteIdInput.value = loteId;
 
-    const registros = diasUteis.map((iso) => {
-        const d = new Date(`${iso}T00:00:00`);
+    const registros = [];
+    for (let d = new Date(inicioDate); d <= fimDate; d.setDate(d.getDate() + 1)) {
+        const iso = d.toISOString().split('T')[0];
         const diaSemana = d.toLocaleDateString('pt-BR', { weekday: 'long' });
-        return {
+        registros.push({
             data: iso,
             loteId,
             semana: diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1),
@@ -368,9 +363,9 @@ function montarRegistrosPlanejamento() {
             sag_tombos: sagTombos,
             instrutor,
             local,
-            observacao,
-        };
-    });
+            observacao
+        });
+    }
 
     return registros;
 }

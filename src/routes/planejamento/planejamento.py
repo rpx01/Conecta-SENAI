@@ -22,7 +22,6 @@ from src.routes.user import verificar_autenticacao
 from src.utils.error_handler import handle_internal_error
 from pydantic import ValidationError
 from src.schemas.planejamento import PlanejamentoCreateSchema
-from src.services.utils_datas import dias_uteis
 
 planejamento_bp = Blueprint('planejamento', __name__)
 
@@ -180,9 +179,6 @@ def criar_item():
         data_obj = datetime.fromisoformat(payload.get('data', '')).date()
     except Exception:
         return jsonify({'erro': 'Data inválida'}), 400
-
-    if not dias_uteis(data_obj, data_obj):
-        return jsonify({'erro': 'Data não é dia útil'}), 400
 
     item = PlanejamentoItem(
         row_id=str(uuid4()),

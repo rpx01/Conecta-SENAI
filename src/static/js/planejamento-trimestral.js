@@ -1,4 +1,4 @@
-/* global bootstrap, chamarAPI, showToast, escapeHTML, executarAcaoComFeedback */
+/* global bootstrap, chamarAPI, showToast, escapeHTML, executarAcaoComFeedback, Holidays */
 
 // Mapeamento dos endpoints da API para os IDs dos selects no HTML
 const mapeamentoSelects = {
@@ -18,6 +18,7 @@ let edicaoId = null;
 let edicaoLinhaId = null;
 const itensCache = {};
 const itensPorLote = {};
+const holidays = new Holidays('BR', 'mg', 'conceicao-do-mato-dentro');
 
 function formatarDataPtBr(iso) {
     if (!iso) return '';
@@ -331,6 +332,18 @@ function montarRegistrosPlanejamento() {
         return null;
     }
 
+    const feriados = new Set();
+    for (let ano = inicioDate.getFullYear(); ano <= fimDate.getFullYear(); ano++) {
+        holidays.getHolidays(ano).forEach(h => {
+            if (!['public', 'optional'].includes(h.type)) return;
+            const start = new Date(h.start);
+            const end = new Date(h.end);
+            for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+                feriados.add(d.toISOString().split('T')[0]);
+            }
+        });
+    }
+
     const horario = document.getElementById('itemHorario').selectedOptions[0].textContent;
     const cargaHoraria = document.getElementById('itemCargaHoraria').selectedOptions[0].textContent;
     const modalidade = document.getElementById('itemModalidade').selectedOptions[0].textContent;
@@ -349,6 +362,10 @@ function montarRegistrosPlanejamento() {
     const registros = [];
     for (let d = new Date(inicioDate); d <= fimDate; d.setDate(d.getDate() + 1)) {
         const iso = d.toISOString().split('T')[0];
+        const diaSemanaNum = d.getDay();
+        if (diaSemanaNum === 0 || diaSemanaNum === 6 || feriados.has(iso)) {
+            continue;
+        }
         const diaSemana = d.toLocaleDateString('pt-BR', { weekday: 'long' });
         registros.push({
             data: iso,
@@ -365,6 +382,11 @@ function montarRegistrosPlanejamento() {
             local,
             observacao
         });
+    }
+
+    if (registros.length === 0) {
+        showToast('Nenhum dia útil no intervalo selecionado', 'warning');
+        return null;
     }
 
     return registros;

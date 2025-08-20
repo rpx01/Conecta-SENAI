@@ -68,12 +68,225 @@
                 <div class="page-header">
                     <h1 class="mb-0">Treinamentos Disponíveis</h1>
                 </div>
+
+                <section class="container-fluid mt-3">
+                  <h2 class="h5 mb-3">Planejamento de Treinamentos — Visão de Turmas</h2>
+
+                  <div class="table-responsive">
+                    <table id="tabela-treinamentos-sintetica"
+                           class="table table-sm table-striped table-hover align-middle">
+                      <thead class="table-light">
+                        <tr>
+                          <th>DATA INICIO</th>
+                          <th>DATA TERMINO</th>
+                          <th>SEMANA</th>
+                          <th>HORÁRIO</th>
+                          <th>CARGA HORÁRIA</th>
+                          <th>MODALIDADE</th>
+                          <th>TREINAMENTO</th>
+                          <th>LOCAL</th>
+                          <th>LIMITE DE INSCRIÇÃO</th>
+                          <th>LINK</th>
+                        </tr>
+                      </thead>
+                      <tbody id="tbody-treinamentos-sintetica"></tbody>
+                    </table>
+                  </div>
+                </section>
             </main>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/app.js"></script>
+    <script>
+      // === CONFIG ===
+      // ATENÇÃO: Ajuste a URL abaixo para A MESMA rota usada em /planejamento-trimestral.html.
+      // Ex.: '/api/planejamento-trimestral' ou '/api/ocupacoes?tipo=treinamentos'
+      const API_PLANEJAMENTO_TRIMESTRAL = '/planejamento/itens';
+
+      document.addEventListener('DOMContentLoaded', () => {
+        montarTabelaTreinamentos();
+      });
+
+      async function montarTabelaTreinamentos() {
+        try {
+          const dados = await obterDadosPlanejamentoTrimestral();
+          const linhas = normalizarLinhas(dados);
+
+          // Se a origem for "por dia" (com repetição), deduplica por (treinamento, início, término, local, horário)
+          const linhasDedup = dedupPorChave(linhas, l =>
+            [l.treinamento, l.data_inicio, l.data_termino, l.local, l.horario].join('|')
+          );
+
+          renderTabela(linhasDedup);
+        } catch (err) {
+          console.error('Falha ao carregar os treinamentos:', err);
+          // Opcional: se você usa toasts na app, chame aqui.
+          // mostrarToast('Não foi possível carregar os treinamentos', 'danger');
+        }
+      }
+
+      // 1) Tenta reutilizar os dados já carregados pela página trimestral (se existirem em global)
+      // 2) Caso contrário, chama a mesma API usada lá (ajuste a constante de URL acima).
+      async function obterDadosPlanejamentoTrimestral() {
+        if (Array.isArray(window.PLANEJAMENTO_TRIMESTRAL)) {
+          return window.PLANEJAMENTO_TRIMESTRAL;
+        }
+        // usar helper existente no projeto (conforme README) para manter padrão de fetch/erros
+        // Exemplo de uso desses helpers é mostrado no README do repositório.
+        const res = await chamarAPI(API_PLANEJAMENTO_TRIMESTRAL, 'GET');
+        return Array.isArray(res) ? res : (res?.itens || res?.dados || []);
+      }
+
+      // Converte qualquer shape vindo da página trimestral para as 10 colunas pedidas aqui.
+      function normalizarLinhas(itens) {
+        if (!Array.isArray(itens)) return [];
+        return itens.map(item => {
+          const diRaw = item.data_inicio || item.dataInicial || item.inicio || item.data || null;
+          const dtRaw = item.data_termino || item.dataFinal || item.fim || item.data || null;
+
+          // Horário (início-fim) se houver
+          const hiRaw = item.hora_inicio || item.horarioInicio || (item.horario && (item.horario.inicio || item.horario[0]));
+          const hfRaw = item.hora_termino || item.horarioFim || (item.horario && (item.horario.fim || item.horario[1]));
+
+          const treinamento =
+            (item.treinamento && (item.treinamento.nome || item.treinamento.titulo)) ||
+            item.titulo || item.nome || '';
+
+          const local =
+            (item.local && (item.local.nome || item.local)) ||
+            (item.sala && (item.sala.nome || item.sala)) || '';
+
+          const modalidade =
+            item.modalidade || (item.ead ? 'EAD' : (item.presencial ? 'Presencial' : (item.hibrido ? 'Híbrido' : '')));
+
+          const limite = item.limite_inscricao || item.limiteInscricao || item.vagas || '';
+          const link = item.link || item.url || '';
+
+          const horario = (hiRaw && hfRaw) ? `${fmtHora(hiRaw)}–${fmtHora(hfRaw)}` : (item.horarioTexto || item.horario || '');
+          const carga = item.carga_horaria || item.cargaHoraria || estimarCarga(diRaw, dtRaw, hiRaw, hfRaw);
+
+          return {
+            data_inicio: fmtData(diRaw),
+            data_termino: fmtData(dtRaw),
+            semana: semanaISO(diRaw),
+            horario: horario,
+            carga_horaria: carga ?? '',
+            modalidade,
+            treinamento: escapeHtml(treinamento),
+            local: escapeHtml(local),
+            limite_inscricao: limite ?? '',
+            link
+          };
+        }).filter(l => l.data_inicio && l.data_termino);
+      }
+
+      function renderTabela(linhas) {
+        const tbody = document.getElementById('tbody-treinamentos-sintetica');
+        tbody.innerHTML = '';
+        for (const l of linhas) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${l.data_inicio}</td>
+            <td>${l.data_termino}</td>
+            <td>${l.semana}</td>
+            <td>${l.horario}</td>
+            <td>${l.carga_horaria}</td>
+            <td>${l.modalidade}</td>
+            <td>${l.treinamento}</td>
+            <td>${l.local}</td>
+            <td>${l.limite_inscricao}</td>
+            <td>${l.link ? `<a href="${l.link}" target="_blank" rel="noopener">Link</a>` : ''}</td>
+          `;
+          tbody.appendChild(tr);
+        }
+      }
+
+      // === Helpers ===
+      function dedupPorChave(arr, keyFn) {
+        const seen = new Set();
+        const out = [];
+        for (const it of arr) {
+          const k = keyFn(it);
+          if (!seen.has(k)) { seen.add(k); out.push(it); }
+        }
+        return out;
+      }
+
+      function fmtData(raw) {
+        const d = parseDate(raw);
+        if (!d) return '';
+        const dd = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+        return dd;
+      }
+
+      function fmtHora(raw) {
+        const h = parseHour(raw);
+        return h ? `${String(h.h).padStart(2,'0')}:${String(h.m).padStart(2,'0')}` : '';
+        }
+
+      function semanaISO(rawDate) {
+        const d = parseDate(rawDate);
+        if (!d) return '';
+        // ISO week (segunda=1 .. domingo=7)
+        const target = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        const dayNr = (target.getUTCDay() || 7);
+        target.setUTCDate(target.getUTCDate() + 4 - dayNr);
+        const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));
+        const weekNo = Math.ceil((((target - yearStart) / 86400000) + 1) / 7);
+        return `S${String(weekNo).padStart(2,'0')}`;
+      }
+
+      function estimarCarga(diRaw, dtRaw, hiRaw, hfRaw) {
+        // Melhor esforço: mesma data + horário => horas no dia; intervalos maiores: manter vazio
+        const di = parseDate(diRaw); const dt = parseDate(dtRaw);
+        const hi = parseHour(hiRaw); const hf = parseHour(hfRaw);
+        if (!di || !dt || !hi || !hf) return '';
+        const mesmoDia = di.toDateString() === dt.toDateString();
+        if (!mesmoDia) return '';
+        const startMin = hi.h * 60 + hi.m;
+        const endMin = hf.h * 60 + hf.m;
+        if (endMin <= startMin) return '';
+        const horas = (endMin - startMin) / 60;
+        return `${horas} h`;
+      }
+
+      function parseDate(v) {
+        if (!v) return null;
+        if (v instanceof Date) return v;
+        // aceitamos 'YYYY-MM-DD', 'YYYY-MM-DDTHH:mm', 'DD/MM/YYYY'
+        if (/^\d{4}-\d{2}-\d{2}/.test(v)) {
+          const d = new Date(v);
+          return isNaN(d) ? null : d;
+        }
+        const m = String(v).match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if (m) {
+          const d = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+          return isNaN(d) ? null : d;
+        }
+        const d = new Date(v);
+        return isNaN(d) ? null : d;
+      }
+
+      function parseHour(v) {
+        if (!v) return null;
+        const m = String(v).match(/^(\d{1,2}):(\d{2})$/);
+        if (!m) return null;
+        const h = Number(m[1]), mm = Number(m[2]);
+        if (isNaN(h) || isNaN(mm)) return null;
+        return { h, m: mm };
+      }
+
+      function escapeHtml(s) {
+        return String(s ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+    </script>
 </body>
 </html>
 

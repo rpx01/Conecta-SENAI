@@ -331,6 +331,12 @@ function montarRegistrosPlanejamento() {
         return null;
     }
 
+    const diasUteis = window.DatasUtils.listarDiasUteis(dataInicio, dataFim);
+    if (diasUteis.length === 0) {
+        showToast('Não há dias úteis no intervalo selecionado', 'warning');
+        return null;
+    }
+
     const horario = document.getElementById('itemHorario').selectedOptions[0].textContent;
     const cargaHoraria = document.getElementById('itemCargaHoraria').selectedOptions[0].textContent;
     const modalidade = document.getElementById('itemModalidade').selectedOptions[0].textContent;
@@ -347,8 +353,8 @@ function montarRegistrosPlanejamento() {
     loteIdInput.value = loteId;
 
     const registros = [];
-    for (let d = new Date(inicioDate); d <= fimDate; d.setDate(d.getDate() + 1)) {
-        const iso = d.toISOString().split('T')[0];
+    for (const iso of diasUteis) {
+        const d = new Date(iso + 'T00:00:00');
         const diaSemana = d.toLocaleDateString('pt-BR', { weekday: 'long' });
         registros.push({
             data: iso,

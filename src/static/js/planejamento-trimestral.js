@@ -531,7 +531,7 @@ function criarCabecalhoTabela() {
                 <th>Data Inicial</th><th>Data Final</th><th>Semana</th><th>Horário</th><th>C.H.</th>
                 <th>Modalidade</th><th>Treinamento</th><th>CMD</th><th>SJB</th>
                 <th>SAG/TOMBOS</th><th>Instrutor</th><th>Local</th><th>Obs.</th>
-                <th>SGE</th><th>LINK</th>
+                <th class="hidden-col" style="display: none;">SGE</th><th class="hidden-col" style="display: none;">LINK</th>
                 <th class="text-end">Ações</th>
             </tr>
         </thead>
@@ -561,6 +561,7 @@ function criarLinhaItem(item, dataFinal) {
             <td>${escapeHTML(item.instrutor || '')}</td>
             <td>${escapeHTML(item.local || '')}</td>
             <td>${escapeHTML(item.observacao || '')}</td>
+            <!--
             <td>
                 <label class="sge-switch" title="Ativar SGE">
                     <input type="checkbox" class="sge-toggle" data-id="${item.id || ''}" ${item.sge_ativo ? 'checked' : ''}>
@@ -568,6 +569,7 @@ function criarLinhaItem(item, dataFinal) {
                 </label>
             </td>
             <td class="link-col">${item.sge_ativo ? `<input type='url' class='form-control form-control-sm sge-link-input' placeholder='https://...' value='${escapeHTML(item.sge_link || '')}'>` : ''}</td>
+            -->
             <td class="text-end">
                 <button class="btn btn-sm btn-outline-primary btn-editar" data-item-id="${item.loteId}" data-row-id="${item.id}" data-data-inicial="${item.data}" data-data-final="${dataFinal}">
                     <i class="bi bi-pencil"></i>

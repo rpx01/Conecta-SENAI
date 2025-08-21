@@ -18,6 +18,9 @@ from .treinamento import (  # noqa: E402
     TurmaTreinamento,
     InscricaoTreinamento,
 )
+from .inscricao_treinamento import (  # noqa: E402
+    InscricaoTreinamento as InscricaoTreinamentoPlanejamento,
+)
 from .planejamento import (  # noqa: E402
     PlanejamentoItem,
     PlanejamentoBDItem,
@@ -46,6 +49,7 @@ __all__ = [
     "Treinamento",
     "TurmaTreinamento",
     "InscricaoTreinamento",
+    "InscricaoTreinamentoPlanejamento",
     "PlanejamentoItem",
     "PlanejamentoBDItem",
     "Local",

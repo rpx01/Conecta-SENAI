@@ -4,6 +4,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     await carregarItens();
 });
 
+// Mapa para acesso rápido aos itens por id
+const itensMap = new Map();
+
+/**
+ * Renderiza a célula da coluna de link de acordo com o estado do SGE.
+ * @param {object} item - Dados do item de planejamento.
+ * @returns {string} HTML da célula de link.
+ */
+function renderLinkCell(item) {
+    if (!item.sge_ativo) {
+        const url = `/inscricao_treinamento.html?treinamentoId=${encodeURIComponent(item.id)}&nome=${encodeURIComponent(item.treinamento)}`;
+        return `<a class="btn btn-outline-primary btn-sm" href="${url}" rel="noopener">Inscrever-se</a>`;
+    }
+    const value = item.sge_link || '';
+    return `
+      <input type="text" class="form-control form-control-sm link-input" data-id="${item.id}" value="${escapeHTML(value)}" placeholder="https://..." />
+    `;
+}
+
 /**
  * Carrega os itens de planejamento da API.
  */
@@ -70,7 +89,9 @@ function renderizarItens(itens, feriadosSet) {
     );
 
     // 1 linha por lote: usar o item "primeiro" + dataFinal agregada
+    itensMap.clear();
     for (const { primeiro, dataFinal } of ordenados) {
+        itensMap.set(primeiro.id, primeiro);
         tbody.insertAdjacentHTML('beforeend', criarLinhaItem(primeiro, dataFinal, feriadosSet));
     }
 }
@@ -143,7 +164,7 @@ function criarLinhaItem(item, dataFinal, feriadosSet) {
                     <span class="sge-slider" aria-hidden="true"></span>
                 </label>
             </td>
-            <td class="link-col">${item.sge_ativo ? `<input type="url" class="form-control form-control-sm sge-link-input" placeholder="https://..." value="${escapeHTML(item.sge_link || '')}">` : ''}</td>
+            <td class="link-col">${renderLinkCell(item)}</td>
         </tr>
     `;
 }
@@ -151,28 +172,41 @@ function criarLinhaItem(item, dataFinal, feriadosSet) {
 document.addEventListener('change', (ev) => {
     const el = ev.target;
     if (el.classList.contains('sge-toggle')) {
+        const id = Number(el.dataset.id);
+        const item = itensMap.get(id);
+        if (!item) return;
+        item.sge_ativo = el.checked;
+        if (!el.checked) item.sge_link = null;
+
+        const payload = { sge_ativo: item.sge_ativo };
+        if (item.sge_ativo) payload.sge_link = item.sge_link || '';
+
+        chamarAPI(`/planejamento/itens/${id}`, 'PUT', payload)
+            .catch(() => showToast('Não foi possível salvar o status SGE.', 'danger'));
+
         const row = el.closest('tr');
         const linkCell = row ? row.querySelector('td.link-col') : null;
-        if (!linkCell) return;
-
-        if (el.checked) {
-            linkCell.innerHTML = `
-                <input type="url" class="form-control form-control-sm sge-link-input" placeholder="https://...">
-            `;
-        } else {
-            linkCell.innerHTML = '';
-        }
-
-        const payload = { sge_ativo: el.checked, sge_link: el.checked ? '' : null };
-        chamarAPI(`/planejamento/itens/${el.dataset.id}`, 'PUT', payload)
-            .catch(() => showToast('Não foi possível salvar o status SGE.', 'danger'));
-    } else if (el.classList.contains('sge-link-input')) {
-        const row = el.closest('tr');
-        const toggle = row ? row.querySelector('.sge-toggle') : null;
-        if (!toggle) return;
-        const payload = { sge_ativo: true, sge_link: el.value.trim() };
-        chamarAPI(`/planejamento/itens/${toggle.dataset.id}`, 'PUT', payload)
-            .catch(() => showToast('Não foi possível salvar o link SGE.', 'danger'));
+        if (linkCell) linkCell.innerHTML = renderLinkCell(item);
     }
 });
+
+// Persistência do link SGE com validação básica
+document.addEventListener('focusout', (ev) => {
+    const el = ev.target;
+    if (!el.classList.contains('link-input')) return;
+    const id = Number(el.dataset.id);
+    const item = itensMap.get(id);
+    if (!item) return;
+
+    const value = el.value.trim();
+    if (value && !value.startsWith('http')) {
+        showToast('Link inválido. Deve começar com http.', 'danger');
+        return;
+    }
+
+    item.sge_link = value;
+    const payload = { sge_ativo: true, sge_link: item.sge_link };
+    chamarAPI(`/planejamento/itens/${id}`, 'PUT', payload)
+        .catch(() => showToast('Não foi possível salvar o link SGE.', 'danger'));
+}, true);
 

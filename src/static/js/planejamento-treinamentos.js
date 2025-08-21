@@ -183,6 +183,14 @@ function criarLinhaItem(item, dataFinal, feriadosSet) {
 document.addEventListener('change', async (ev) => {
     const el = ev.target;
     if (el.classList.contains('sge-toggle')) {
+        if (!el.checked) {
+            const confirmacao = confirm('Tem certeza que deseja desativar o SGE para este treinamento?');
+            if (!confirmacao) {
+                el.checked = true;
+                return;
+            }
+        }
+
         const row = el.closest('tr');
         const linkCell = row ? row.querySelector('td.link-col') : null;
         if (!linkCell) return;

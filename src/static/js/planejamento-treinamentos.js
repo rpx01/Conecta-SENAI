@@ -99,6 +99,18 @@ function criarCabecalhoTabela() {
     `;
 }
 
+function renderLinkCell(item) {
+    if (!item.sge_ativo) {
+        const url = `/inscricao_treinamento.html?treinamentoId=${encodeURIComponent(item.id)}&nome=${encodeURIComponent(item.treinamento)}`;
+        return `<a class="btn btn-outline-primary btn-sm" href="${url}" rel="noopener">Inscrever-se</a>`;
+    }
+    const value = item.sge_link || '';
+    return `
+        <input type="text" class="form-control form-control-sm sge-link-input"
+               data-id="${item.id}" value="${escapeHTML(value)}" placeholder="https://..." />
+    `;
+}
+
 /**
  * Cria uma linha da tabela para um item de planejamento.
  * @param {object} item - O item de planejamento.
@@ -143,36 +155,55 @@ function criarLinhaItem(item, dataFinal, feriadosSet) {
                     <span class="sge-slider" aria-hidden="true"></span>
                 </label>
             </td>
-            <td class="link-col">${item.sge_ativo ? `<input type="url" class="form-control form-control-sm sge-link-input" placeholder="https://..." value="${escapeHTML(item.sge_link || '')}">` : ''}</td>
+            <td class="link-col">${renderLinkCell(item)}</td>
         </tr>
     `;
 }
 
-document.addEventListener('change', (ev) => {
+document.addEventListener('change', async (ev) => {
     const el = ev.target;
     if (el.classList.contains('sge-toggle')) {
         const row = el.closest('tr');
         const linkCell = row ? row.querySelector('td.link-col') : null;
         if (!linkCell) return;
 
-        if (el.checked) {
-            linkCell.innerHTML = `
-                <input type="url" class="form-control form-control-sm sge-link-input" placeholder="https://...">
-            `;
-        } else {
-            linkCell.innerHTML = '';
-        }
+        const treinamentoNome = row ? row.querySelector('td:nth-child(7)')?.textContent.trim() : '';
+        const itemAtualizado = {
+            id: el.dataset.id,
+            treinamento: treinamentoNome,
+            sge_ativo: el.checked,
+            sge_link: ''
+        };
+        linkCell.innerHTML = renderLinkCell(itemAtualizado);
 
         const payload = { sge_ativo: el.checked, sge_link: el.checked ? '' : null };
-        chamarAPI(`/planejamento/itens/${el.dataset.id}`, 'PUT', payload)
-            .catch(() => showToast('Não foi possível salvar o status SGE.', 'danger'));
+        try {
+            await chamarAPI(`/planejamento/itens/${el.dataset.id}`, 'PUT', payload);
+        } catch (e) {
+            showToast('Não foi possível salvar o status SGE.', 'danger');
+        }
     } else if (el.classList.contains('sge-link-input')) {
+        const value = el.value.trim();
+        if (value && !value.startsWith('http')) {
+            showToast('Link inválido. Deve começar com http.', 'warning');
+            return;
+        }
         const row = el.closest('tr');
         const toggle = row ? row.querySelector('.sge-toggle') : null;
         if (!toggle) return;
-        const payload = { sge_ativo: true, sge_link: el.value.trim() };
+        const payload = { sge_ativo: true, sge_link: value };
         chamarAPI(`/planejamento/itens/${toggle.dataset.id}`, 'PUT', payload)
             .catch(() => showToast('Não foi possível salvar o link SGE.', 'danger'));
     }
 });
+
+document.addEventListener('blur', (ev) => {
+    const el = ev.target;
+    if (el.classList.contains('sge-link-input')) {
+        const value = el.value.trim();
+        if (value && !value.startsWith('http')) {
+            showToast('Link inválido. Deve começar com http.', 'warning');
+        }
+    }
+}, true);
 

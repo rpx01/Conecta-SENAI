@@ -143,7 +143,18 @@ function criarLinhaItem(item, dataFinal, feriadosSet) {
                     <span class="sge-slider" aria-hidden="true"></span>
                 </label>
             </td>
-            <td class="link-col">${item.sge_ativo ? `<input type="url" class="form-control form-control-sm sge-link-input" placeholder="https://..." value="${escapeHTML(item.sge_link || '')}">` : ''}</td>
+            <td class="link-col">${(() => {
+                let linkHtml;
+                if (!item.sge_id && !item.sge_ativo) {
+                    const trainingName = item.treinamento || item.nome || '';
+                    const nomeTreinamentoEncoded = encodeURIComponent(trainingName);
+                    linkHtml = `<a href="inscricao_planejamento.html?treinamento=${nomeTreinamentoEncoded}">Inscrever</a>`;
+                } else {
+                    const link = item.link || item.sge_link;
+                    linkHtml = link ? `<a href="${escapeHTML(link)}" target="_blank">Acessar</a>` : 'N/A';
+                }
+                return linkHtml;
+            })()}</td>
         </tr>
     `;
 }

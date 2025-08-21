@@ -3,7 +3,17 @@ from sqlalchemy import Column, Integer, String, Date, DateTime
 from src.models import db
 
 
-class InscricaoTreinamento(db.Model):
+class InscricaoTreinamentoFormulario(db.Model):
+    """Dados enviados pelo formulário público de inscrição em treinamentos.
+
+    Essa classe coexistia com ``InscricaoTreinamento`` definida em
+    ``treinamento.py``. Ambas compartilham o mesmo nome de classe e,
+    consequentemente, o mesmo identificador dentro do registro do
+    SQLAlchemy, o que causava o erro ``Multiple classes found for path`` ao
+    inicializar os mapeamentos. Renomear a classe elimina o conflito e
+    permite que os dois modelos representem tabelas distintas.
+    """
+
     __tablename__ = 'inscricoes_treinamento_portal'
     id = Column(Integer, primary_key=True)
     treinamento_id = Column(Integer, nullable=True)

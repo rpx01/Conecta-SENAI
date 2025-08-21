@@ -18,7 +18,9 @@ from .treinamento import (  # noqa: E402
     TurmaTreinamento,
     InscricaoTreinamento,
 )
-from .inscricao_treinamento import InscricaoTreinamento as InscricaoTreinamentoFormulario  # noqa: E402
+from .inscricao_treinamento import (
+    InscricaoTreinamentoFormulario,
+)  # noqa: E402
 from .planejamento import (  # noqa: E402
     PlanejamentoItem,
     PlanejamentoBDItem,

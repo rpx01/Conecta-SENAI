@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
 from src.models import db
-from src.models.inscricao_treinamento import InscricaoTreinamento
+from src.models.inscricao_treinamento import (
+    InscricaoTreinamentoFormulario,
+)
 from src.schemas.inscricao_treinamento import InscricaoTreinamentoCreate
 
 bp = Blueprint('inscricoes_treinamento', __name__, url_prefix='/api/inscricoes-treinamento')
@@ -11,7 +13,7 @@ def criar():
     data = request.get_json() or {}
     payload = InscricaoTreinamentoCreate(**data)
 
-    ent = InscricaoTreinamento(
+    ent = InscricaoTreinamentoFormulario(
         treinamento_id=payload.treinamento_id,
         nome_treinamento=payload.nome_treinamento,
         matricula=payload.matricula,

@@ -1,5 +1,24 @@
 /* global chamarAPI, showToast, escapeHTML, parseISODateToLocal, loadCMDHolidaysBetween, isBusinessDay, toISODateLocal */
 
+// Função para copiar o link de inscrição e dar feedback visual ao usuário
+function copiarLink(event, link) {
+    event.preventDefault();
+    navigator.clipboard.writeText(link).then(() => {
+        const button = event.target;
+        button.textContent = 'Copiado!';
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-success');
+        setTimeout(() => {
+            button.textContent = 'Copiar Link';
+            button.classList.remove('btn-success');
+            button.classList.add('btn-primary');
+        }, 2000);
+    }).catch(err => {
+        console.error('Erro ao copiar o link: ', err);
+        alert('Não foi possível copiar o link.');
+    });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     await carregarItens();
 });
@@ -99,10 +118,11 @@ function criarCabecalhoTabela() {
     `;
 }
 
+// Gera o botão de cópia do link de inscrição ou o campo de URL do SGE
 function renderLinkCell(item) {
     if (!item.sge_ativo) {
-        const url = `/inscricao_treinamento.html?treinamentoId=${encodeURIComponent(item.id)}&nome=${encodeURIComponent(item.treinamento)}`;
-        return `<a class="btn btn-outline-primary btn-sm" href="${url}" rel="noopener">Inscrever-se</a>`;
+        const url = `${window.location.origin}/inscricao_treinamento.html?treinamentoId=${encodeURIComponent(item.id)}&nome=${encodeURIComponent(item.treinamento)}`;
+        return `<button class="btn btn-primary btn-sm" onclick="copiarLink(event, '${url}')">Copiar Link</button>`;
     }
     const value = item.sge_link || '';
     return `

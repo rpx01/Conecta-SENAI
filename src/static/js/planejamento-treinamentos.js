@@ -235,3 +235,13 @@ document.addEventListener('blur', (ev) => {
     }
 }, true);
 
+document.addEventListener('DOMContentLoaded', function () {
+    const addItemModalEl = document.getElementById('addItemModal');
+    if (addItemModalEl) {
+        addItemModalEl.addEventListener('show.bs.modal', function () {
+            loadUsers();
+            loadTreinamentos();
+        });
+    }
+});
+

@@ -978,3 +978,50 @@ async function preencherTabela(idTabela, endpoint, funcaoRenderizarLinha) {
         return [];
     }
 }
+
+// ==== Menu lateral suspenso global ====
+async function carregarSidebarGlobal() {
+  try {
+    // Evita duplicar
+    if (document.querySelector('#sidebar')) return;
+
+    // Garante o CSS do menu
+    if (!document.querySelector('link[href$="menu-suspenso.css"]')) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = '/css/menu-suspenso.css';
+      document.head.appendChild(link);
+    }
+
+    // Cria a "borda" que ativa o hover
+    const edge = document.createElement('div');
+    edge.className = 'sidebar-edge';
+    document.body.prepend(edge);
+
+    // Busca o parcial e injeta no topo do <body>
+    const resp = await fetch('/partials/sidebar.html', { cache: 'no-store' });
+    if (!resp.ok) throw new Error('Falha ao carregar sidebar.html');
+    const html = await resp.text();
+    const wrap = document.createElement('div');
+    wrap.innerHTML = html.trim();
+    const sidebar = wrap.firstElementChild;
+    document.body.prepend(sidebar);
+
+    // Marca link ativo
+    const path = location.pathname.replace(/\/$/, '');
+    sidebar.querySelectorAll('a[href]').forEach(a => {
+      const href = a.getAttribute('href').replace(/\/$/, '');
+      if (href === path) a.setAttribute('aria-current', 'page');
+    });
+
+    // Acessibilidade / comportamento
+    edge.addEventListener('mouseenter', () => document.body.classList.add('show-sidebar'));
+    sidebar.addEventListener('mouseleave', () => document.body.classList.remove('show-sidebar'));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') document.body.classList.remove('show-sidebar');
+    });
+  } catch (err) {
+    console.error('Erro ao inicializar o menu lateral:', err);
+  }
+}
+document.addEventListener('DOMContentLoaded', carregarSidebarGlobal);

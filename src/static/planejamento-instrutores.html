@@ -9,6 +9,34 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="/css/styles.css" rel="stylesheet">
     <link rel="stylesheet" href="css/menu-suspenso.css">
+    <style>
+        #tabela-por-instrutor thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #fff;
+        }
+        #tabela-por-instrutor tbody th.dia-col {
+            position: sticky;
+            left: 0;
+            z-index: 1;
+            background: #fff;
+            white-space: nowrap;
+        }
+        #tabela-por-instrutor td {
+            vertical-align: top;
+        }
+        .cell-treinamento {
+            display: block;
+            font-size: .9rem;
+            line-height: 1.25;
+        }
+        .cell-treinamento + .cell-treinamento {
+            margin-top: .25rem;
+            padding-top: .25rem;
+            border-top: 1px dashed #ddd;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
@@ -71,13 +99,23 @@
     </aside>
 
     <main class="container-fluid py-4">
-        <div class="page-header">
-            <h1 class="mb-0">Planejamento por Instrutores</h1>
+        <div class="container-fluid mt-3">
+            <h4>Planejamento por Instrutores</h4>
+
+            <div id="filtros-wrapper" class="mb-3"></div>
+
+            <div class="table-responsive" id="tabela-por-instrutor-wrapper">
+                <table id="tabela-por-instrutor" class="table table-bordered table-sm table-hover align-middle">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/app.js"></script>
+    <script src="js/planejamento-instrutores.js"></script>
     <script src="js/menu-suspenso.js"></script>
 </body>
 </html>

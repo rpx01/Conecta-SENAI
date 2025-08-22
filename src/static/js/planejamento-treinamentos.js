@@ -19,16 +19,7 @@ function copiarLink(event, link) {
     });
 }
 
-let itemModal;
-
 document.addEventListener('DOMContentLoaded', async () => {
-    itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
-    document.getElementById('btn-adicionar-planejamento')
-        .addEventListener('click', () => {
-            document.getElementById('itemForm').reset();
-            itemModal.show();
-        });
-
     await carregarItens();
 });
 

@@ -1,0 +1,95 @@
+<div class="modal fade" id="modalAdicionarPlanejamento" tabindex="-1" aria-labelledby="modalAdicionarPlanejamentoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAdicionarPlanejamentoLabel">Adicionar Item ao Planejamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="itemForm">
+                    <input type="hidden" id="itemId">
+                    <input type="hidden" id="loteId">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="data-inicial" class="form-label">Data Inicial</label>
+                            <input type="date" class="form-control" id="data-inicial" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="data-final" class="form-label">Data Final</label>
+                            <input type="date" class="form-control" id="data-final" required>
+                        </div>
+                    </div>
+                    <input type="hidden" id="semana">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="select-horario" class="form-label">Horário</label>
+                            <select class="form-select" id="select-horario" required>
+                                <option value="" selected disabled>Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="select-ch" class="form-label">C.H. (Carga Horária)</label>
+                            <select class="form-select" id="select-ch" required>
+                                <option value="" selected disabled>Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="select-modalidade" class="form-label">Modalidade</label>
+                            <select class="form-select" id="select-modalidade" required>
+                                <option value="" selected disabled>Selecione...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="select-treinamento" class="form-label">Treinamento</label>
+                        <select class="form-select" id="select-treinamento" required>
+                            <option value="" selected disabled>Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="select-cmd" class="form-label">CMD</label>
+                            <select class="form-select" id="select-cmd" required>
+                                <option value="" selected disabled>Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="select-sjb" class="form-label">SJB</label>
+                            <select class="form-select" id="select-sjb" required>
+                                <option value="" selected disabled>Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="select-sag_tombos" class="form-label">SAG/TOMBOS</label>
+                            <select class="form-select" id="select-sag_tombos" required>
+                                <option value="" selected disabled>Selecione...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="select-instrutor" class="form-label">Instrutor</label>
+                            <select class="form-select" id="select-instrutor" required>
+                                <option value="" selected disabled>Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="select-local" class="form-label">Local</label>
+                            <select class="form-select" id="select-local" required>
+                                <option value="" selected disabled>Selecione...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="observacao" class="form-label">Observação</label>
+                        <textarea class="form-control" id="observacao" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btnCancelarItem">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnSalvarItem">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,8 +1,23 @@
 /* global bootstrap, chamarAPI, showToast, escapeHTML, executarAcaoComFeedback */
 
+// Mapeamento dos endpoints da API para os IDs dos selects no HTML
+const mapeamentoSelects = {
+    'itemHorario': '/planejamento-basedados/horario',
+    'itemCargaHoraria': '/planejamento-basedados/cargahoraria',
+    'itemModalidade': '/planejamento-basedados/modalidade',
+    'itemTreinamento': '/planejamento-basedados/treinamento',
+    'itemCmd': '/planejamento-basedados/publico-alvo',
+    'itemSjb': '/planejamento-basedados/publico-alvo',
+    'itemSagTombos': '/planejamento-basedados/publico-alvo',
+    'itemInstrutor': '/instrutores',
+    'itemLocal': '/planejamento-basedados/local',
+};
+
+let itemModal;
+let edicaoId = null;
+let edicaoLinhaId = null;
 const itensCache = {};
 const itensPorLote = {};
-window.itensPorLote = itensPorLote;
 
 function formatarDataPtBr(iso) {
     if (!iso) return '';
@@ -125,21 +140,36 @@ function preencherFormulario(item) {
 
     const dtIni = toInputDate(item.data_inicial || item.data);
     const dtFim = toInputDate(item.data_final || item.data);
-    document.getElementById('data-inicial').value = dtIni;
-    document.getElementById('data-final').value = dtFim;
-    document.getElementById('semana').value = new Date(dtIni + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long' }).replace(/^./, c => c.toUpperCase());
+    document.getElementById('itemDataInicio').value = dtIni;
+    document.getElementById('itemDataFim').value = dtFim;
+    document.getElementById('itemSemana').value = new Date(dtIni + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long' }).replace(/^./, c => c.toUpperCase());
 
-    selecionarPorTexto(document.getElementById('select-horario'), item.horario);
-    selecionarPorTexto(document.getElementById('select-ch'), item.cargaHoraria);
-    selecionarPorTexto(document.getElementById('select-modalidade'), item.modalidade);
-    selecionarPorTexto(document.getElementById('select-treinamento'), item.treinamento);
-    selecionarValorOuCriar(document.getElementById('select-cmd'), item.cmd_id, item.cmd);
-    selecionarValorOuCriar(document.getElementById('select-sjb'), item.sjb_id, item.sjb);
-    selecionarValorOuCriar(document.getElementById('select-sag_tombos'), item.sag_tombos_id, item.sagTombos || item.sag_tombos);
-    selecionarPorTexto(document.getElementById('select-instrutor'), item.instrutor);
-    selecionarPorTexto(document.getElementById('select-local'), item.local);
+    selecionarPorTexto(document.getElementById('itemHorario'), item.horario);
+    selecionarPorTexto(document.getElementById('itemCargaHoraria'), item.cargaHoraria);
+    selecionarPorTexto(document.getElementById('itemModalidade'), item.modalidade);
+    selecionarPorTexto(document.getElementById('itemTreinamento'), item.treinamento);
+    selecionarValorOuCriar(document.getElementById('itemCmd'), item.cmd_id, item.cmd);
+    selecionarValorOuCriar(document.getElementById('itemSjb'), item.sjb_id, item.sjb);
+    selecionarValorOuCriar(document.getElementById('itemSagTombos'), item.sag_tombos_id, item.sagTombos || item.sag_tombos);
+    selecionarPorTexto(document.getElementById('itemInstrutor'), item.instrutor);
+    selecionarPorTexto(document.getElementById('itemLocal'), item.local);
 
-    document.getElementById('observacao').value = item.observacao || '';
+    document.getElementById('itemObservacao').value = item.observacao || '';
+}
+
+async function carregarCmd() {
+    const dados = await chamarAPI('/planejamento-basedados/publico-alvo');
+    popularSelect('itemCmd', dados);
+}
+
+async function carregarSjb() {
+    const dados = await chamarAPI('/planejamento-basedados/publico-alvo');
+    popularSelect('itemSjb', dados);
+}
+
+async function carregarSagTombos() {
+    const dados = await chamarAPI('/planejamento-basedados/publico-alvo');
+    popularSelect('itemSagTombos', dados);
 }
 
 async function obterItemPorId(idItem) {
@@ -154,30 +184,18 @@ async function obterItemPorId(idItem) {
     }
 }
 
-window.abrirModalParaEditar = async (idItem, rowId) => {
-    const item = await obterItemPorId(idItem);
-    window.edicaoId = idItem;
-    window.edicaoLinhaId = rowId;
-
-    await Promise.all([carregarCmd(), carregarSjb(), carregarSagTombos()]);
-
-    const lista = itensPorLote[idItem] || [];
-    const linha = lista.find(it => String(it.id) === String(rowId));
-    if (linha) {
-        item.instrutor = linha.instrutor;
-    }
-
-    preencherFormulario(item);
-    document.getElementById('itemId').value = rowId || '';
-
-    document.getElementById('modalAdicionarPlanejamentoLabel').textContent = 'Editar Item do Planejamento';
-    modalPlanejamento.show();
-};
-
 /**
  * Função executada quando o DOM está totalmente carregado.
  */
 document.addEventListener('DOMContentLoaded', async () => {
+    itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
+
+    document.getElementById('itemDataInicio').addEventListener('change', calcularSemana);
+    document.getElementById('btn-adicionar-planejamento').addEventListener('click', () => abrirModalParaAdicionar());
+    document.getElementById('btnSalvarItem').addEventListener('click', salvarPlanejamento);
+    document.getElementById('btnCancelarItem').addEventListener('click', () => { edicaoId = null; edicaoLinhaId = null; });
+    document.getElementById('itemModal').addEventListener('hidden.bs.modal', () => { edicaoId = null; edicaoLinhaId = null; });
+
     const tabelaContainer = document.getElementById('planejamento-container');
     tabelaContainer.addEventListener('click', async (e) => {
         const btnEditar = e.target.closest('.btn-editar');
@@ -213,8 +231,228 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    await carregarItens();
+    await inicializarPagina();
 });
+
+/**
+ * Orquestra o carregamento inicial dos dados da página.
+ */
+async function inicializarPagina() {
+    try {
+        await Promise.all([
+            carregarOpcoesDosSelects(),
+            carregarItens()
+        ]);
+    } catch (error) {
+        console.error("Erro ao inicializar a página:", error);
+        showToast("Falha ao carregar dados iniciais da página.", 'danger');
+    }
+}
+
+/**
+ * Busca os dados da API e popula todos os campos de seleção do modal.
+ */
+async function carregarOpcoesDosSelects() {
+    const promessas = [carregarCmd(), carregarSjb(), carregarSagTombos()];
+
+    const restante = { ...mapeamentoSelects };
+    delete restante.itemCmd;
+    delete restante.itemSjb;
+    delete restante.itemSagTombos;
+
+    Object.entries(restante).forEach(([selectId, endpoint]) => {
+        promessas.push(
+            chamarAPI(endpoint)
+                .then(dados => popularSelect(selectId, dados))
+                .catch(error => {
+                    console.error(`Falha ao carregar opções para ${selectId}:`, error);
+                    showToast(`Erro ao carregar dados para ${selectId.replace('item', '')}.`, 'warning');
+                })
+        );
+    });
+
+    await Promise.all(promessas);
+}
+
+/**
+ * Popula um elemento <select> com os dados fornecidos.
+ */
+function popularSelect(selectId, dados) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    const placeholder = select.options[0];
+    select.innerHTML = '';
+    select.appendChild(placeholder);
+
+    dados.forEach(item => {
+        const option = document.createElement('option');
+        option.value = String(item.id);
+        option.textContent = escapeHTML(item.nome ?? item.descricao ?? '');
+        select.appendChild(option);
+    });
+}
+
+async function montarRegistrosPlanejamento() {
+    const dataInicio = document.getElementById('itemDataInicio').value;
+    const dataFim = document.getElementById('itemDataFim').value;
+
+    const selectsObrigatorios = ['itemHorario', 'itemCargaHoraria', 'itemModalidade', 'itemTreinamento', 'itemCmd', 'itemSjb', 'itemSagTombos', 'itemInstrutor', 'itemLocal'];
+    const campos = { dataInicio, dataFim };
+    selectsObrigatorios.forEach(id => { campos[id] = document.getElementById(id).value; });
+
+    const nomesCampos = {
+        dataInicio: 'Data Inicial',
+        dataFim: 'Data Final',
+        itemHorario: 'Horário',
+        itemCargaHoraria: 'Carga Horária',
+        itemModalidade: 'Modalidade',
+        itemTreinamento: 'Treinamento',
+        itemCmd: 'CMD',
+        itemSjb: 'SJB',
+        itemSagTombos: 'SAG/TOMBOS',
+        itemInstrutor: 'Instrutor',
+        itemLocal: 'Local'
+    };
+
+    const faltantes = Object.entries(campos)
+        .filter(([_, valor]) => !valor)
+        .map(([chave]) => nomesCampos[chave]);
+
+    if (faltantes.length) {
+        showToast(`Preencha os campos: ${faltantes.join(', ')}`, 'warning');
+        return null;
+    }
+
+    const inicioDate = parseISODateToLocal(dataInicio);
+    const fimDate = parseISODateToLocal(dataFim);
+    if (fimDate < inicioDate) {
+        showToast('Data final deve ser maior que a inicial', 'warning');
+        return null;
+    }
+
+    const horario = document.getElementById('itemHorario').selectedOptions[0].textContent;
+    const cargaHoraria = document.getElementById('itemCargaHoraria').selectedOptions[0].textContent;
+    const modalidade = document.getElementById('itemModalidade').selectedOptions[0].textContent;
+    const treinamento = document.getElementById('itemTreinamento').selectedOptions[0].textContent;
+    const cmd = document.getElementById('itemCmd').selectedOptions[0].textContent;
+    const sjb = document.getElementById('itemSjb').selectedOptions[0].textContent;
+    const sagTombos = document.getElementById('itemSagTombos').selectedOptions[0].textContent;
+    const instrutor = document.getElementById('itemInstrutor').selectedOptions[0].textContent;
+    const local = document.getElementById('itemLocal').selectedOptions[0].textContent;
+    const observacao = document.getElementById('itemObservacao').value;
+
+    const loteIdInput = document.getElementById('loteId');
+    const loteId = loteIdInput.value || crypto.randomUUID();
+    loteIdInput.value = loteId;
+
+    const registros = [];
+    const feriadosSet = await loadCMDHolidaysBetween(inicioDate, fimDate);
+    for (const d of eachBusinessDay(inicioDate, fimDate, feriadosSet)) {
+        const iso = toISODateLocal(d);
+        const diaSemana = d.toLocaleDateString('pt-BR', { weekday: 'long' });
+        registros.push({
+            data: iso,
+            loteId,
+            semana: diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1),
+            horario,
+            carga_horaria: cargaHoraria,
+            modalidade,
+            treinamento,
+            cmd,
+            sjb,
+            sag_tombos: sagTombos,
+            instrutor,
+            local,
+            observacao
+        });
+    }
+
+    return registros;
+}
+
+/**
+ * Calcula o número da semana com base na data selecionada.
+ */
+function calcularSemana() {
+    const dataInput = document.getElementById('itemDataInicio').value;
+    if (dataInput) {
+        const data = new Date(dataInput + 'T00:00:00');
+        const diaSemana = data.toLocaleDateString('pt-BR', { weekday: 'long' });
+        document.getElementById('itemSemana').value = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
+    }
+}
+
+/**
+ * Abre o modal para adicionar um novo item.
+ */
+window.abrirModalParaAdicionar = (loteId = '') => {
+    document.getElementById('itemForm').reset();
+    document.getElementById('itemId').value = '';
+    document.getElementById('loteId').value = loteId;
+    document.getElementById('itemModalLabel').textContent = 'Adicionar Item ao Planejamento';
+    edicaoId = null;
+    itemModal.show();
+};
+
+/**
+ * Abre o modal para editar um item existente.
+ */
+window.abrirModalParaEditar = async (idItem, rowId) => {
+    const item = await obterItemPorId(idItem);
+    edicaoId = idItem;
+    edicaoLinhaId = rowId;
+
+    await Promise.all([carregarCmd(), carregarSjb(), carregarSagTombos()]);
+
+    const lista = itensPorLote[idItem] || [];
+    const linha = lista.find(it => String(it.id) === String(rowId));
+    if (linha) {
+        item.instrutor = linha.instrutor;
+    }
+
+    preencherFormulario(item);
+    document.getElementById('itemId').value = rowId || '';
+
+    document.getElementById('itemModalLabel').textContent = 'Editar Item do Planejamento';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('itemModal')).show();
+};
+
+
+/**
+ * Envia o planejamento para a API.
+ */
+async function salvarPlanejamento() {
+    const registros = await montarRegistrosPlanejamento();
+    if (!registros) return;
+    const btnSalvar = document.getElementById('btnSalvarItem');
+    try {
+        await executarAcaoComFeedback(btnSalvar, async () => {
+            if (edicaoId) {
+                const itensOriginais = itensPorLote[edicaoId] || [];
+                const promessas = itensOriginais.map((orig, idx) => {
+                    const base = registros[idx] || registros[registros.length - 1];
+                    const payload = { ...base };
+                    if (String(orig.id) !== String(edicaoLinhaId)) {
+                        payload.instrutor = orig.instrutor;
+                    }
+                    return chamarAPI(`/planejamento/itens/${orig.id}`, 'PUT', payload);
+                });
+                await Promise.all(promessas);
+            } else {
+                const promessas = registros.map(reg => chamarAPI('/planejamento/itens', 'POST', reg));
+                await Promise.all(promessas);
+            }
+        });
+        showToast('Item salvo com sucesso!', 'success');
+        itemModal.hide();
+        edicaoId = null;
+        edicaoLinhaId = null;
+        await carregarItens();
+    } catch (error) {
+        showToast(error.message || 'Dados inválidos', 'danger');
+    }
+}
 
 /**
  * Carrega e renderiza todos os itens do planejamento.

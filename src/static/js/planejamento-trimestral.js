@@ -18,6 +18,9 @@ let edicaoId = null;
 let edicaoLinhaId = null;
 const itensCache = {};
 const itensPorLote = {};
+let planejamentoItens = [];
+let originalData = [];
+let sortDirection = {};
 
 function formatarDataPtBr(iso) {
     if (!iso) return '';
@@ -230,6 +233,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     });
+
+    const tableHeader = document.getElementById('table-header-planejamento');
+    if (tableHeader) {
+        tableHeader.addEventListener('click', (event) => {
+            const th = event.target.closest('th');
+            if (th && th.dataset.column) {
+                sortTable(th.dataset.column);
+            }
+        });
+    }
 
     await inicializarPagina();
 });
@@ -462,6 +475,21 @@ async function carregarItens() {
         const itens = await chamarAPI('/planejamento/itens');
         adicionarSufixoDias(itens);
 
+        const dataFinalPorLote = {};
+        itens.forEach(it => {
+            const atual = dataFinalPorLote[it.loteId];
+            dataFinalPorLote[it.loteId] = atual && atual > it.data ? atual : it.data;
+            const d = new Date(it.data + 'T00:00:00');
+            it.semana = d.toLocaleDateString('pt-BR', { weekday: 'long' });
+        });
+        itens.forEach(it => {
+            it.data_final = dataFinalPorLote[it.loteId];
+        });
+
+        originalData = [...itens];
+        planejamentoItens = [...itens];
+        sortDirection = {};
+
         Object.keys(itensCache).forEach(k => delete itensCache[k]);
         Object.keys(itensPorLote).forEach(k => delete itensPorLote[k]);
         itens.forEach(it => {
@@ -476,7 +504,7 @@ async function carregarItens() {
             itensPorLote[id].push(it);
         });
 
-        renderizarItens(itens);
+        renderizarItens(planejamentoItens);
     } catch (error) {
         showToast('Não foi possível carregar o planejamento.', 'danger');
     }
@@ -486,66 +514,80 @@ async function carregarItens() {
  * Renderiza todos os itens do planejamento em uma única tabela.
  */
 function renderizarItens(itens) {
-    const container = document.getElementById('planejamento-container');
-
-    container.innerHTML = `
-        <div class="card mb-4">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table id="tabela-planejamento" class="table table-striped table-hover mb-0">
-                        ${criarCabecalhoTabela()}
-                        <tbody id="planejamento-tbody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>`;
-
     const tbody = document.getElementById('planejamento-tbody');
+    if (!tbody) return;
+
     tbody.innerHTML = '';
 
     if (itens.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="14" class="text-center">Nenhum item de planejamento encontrado.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="16" class="text-center">Nenhum item de planejamento encontrado.</td></tr>';
+        updateSortIcons();
         return;
     }
 
-    // Calcula a data final para cada lote
-    const dataFinalPorLote = {};
     itens.forEach(item => {
-        const atual = dataFinalPorLote[item.loteId];
-        dataFinalPorLote[item.loteId] = atual && atual > item.data ? atual : item.data;
+        tbody.insertAdjacentHTML('beforeend', criarLinhaItem(item));
     });
 
-    itens.forEach(item => {
-        const dataFinal = dataFinalPorLote[item.loteId];
-        tbody.insertAdjacentHTML('beforeend', criarLinhaItem(item, dataFinal));
+    updateSortIcons();
+}
+
+function sortTable(column) {
+    if (!sortDirection[column]) {
+        sortDirection = {};
+        sortDirection[column] = 'asc';
+    } else if (sortDirection[column] === 'asc') {
+        sortDirection[column] = 'desc';
+    } else {
+        delete sortDirection[column];
+        planejamentoItens = [...originalData];
+        renderizarItens(planejamentoItens);
+        return;
+    }
+
+    const sortedData = [...planejamentoItens];
+
+    sortedData.sort((a, b) => {
+        let valA = a[column];
+        let valB = b[column];
+
+        if (column === 'data' || column === 'data_final') {
+            valA = new Date(valA);
+            valB = new Date(valB);
+        } else {
+            if (typeof valA === 'string') valA = valA.toLowerCase();
+            if (typeof valB === 'string') valB = valB.toLowerCase();
+        }
+
+        if (valA < valB) return sortDirection[column] === 'asc' ? -1 : 1;
+        if (valA > valB) return sortDirection[column] === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    planejamentoItens = sortedData;
+    renderizarItens(sortedData);
+}
+
+function updateSortIcons() {
+    const header = document.getElementById('table-header-planejamento');
+    if (!header) return;
+
+    header.querySelectorAll('th[data-column]').forEach(th => {
+        const column = th.dataset.column;
+        const baseText = th.textContent.replace(/[↕️🔼🔽]/g, '').trim();
+        let icon = '↕️';
+        if (sortDirection[column] === 'asc') icon = '🔼';
+        else if (sortDirection[column] === 'desc') icon = '🔽';
+        th.textContent = `${baseText} ${icon}`;
     });
 }
-
-/**
- * Cria o cabeçalho da tabela de itens.
- */
-function criarCabecalhoTabela() {
-    return `
-        <thead>
-            <tr>
-                <th>Data Inicial</th><th>Data Final</th><th>Semana</th><th>Horário</th><th>C.H.</th>
-                <th>Modalidade</th><th>Treinamento</th><th>CMD</th><th>SJB</th>
-                <th>SAG/TOMBOS</th><th>Instrutor</th><th>Local</th><th>Obs.</th>
-                <th class="hidden-col" style="display: none;">SGE</th><th class="hidden-col" style="display: none;">LINK</th>
-                <th class="text-end">Ações</th>
-            </tr>
-        </thead>
-    `;
-}
-
 /**
  * Cria uma linha <tr> da tabela para um item do planejamento.
  */
-function criarLinhaItem(item, dataFinal) {
-    const dataObj = new Date(item.data + 'T00:00:00');
-    const dataInicialFormatada = dataObj.toLocaleDateString('pt-BR');
-    const dataFinalFormatada = new Date(dataFinal + 'T00:00:00').toLocaleDateString('pt-BR');
-    const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'long' });
+function criarLinhaItem(item) {
+    const dataInicialFormatada = new Date(item.data + 'T00:00:00').toLocaleDateString('pt-BR');
+    const dataFinalFormatada = new Date(item.data_final + 'T00:00:00').toLocaleDateString('pt-BR');
+    const diaSemana = item.semana || '';
     return `
         <tr data-item-id="${item.loteId}">
             <td>${dataInicialFormatada}</td>
@@ -561,17 +603,10 @@ function criarLinhaItem(item, dataFinal) {
             <td>${escapeHTML(item.instrutor || '')}</td>
             <td>${escapeHTML(item.local || '')}</td>
             <td>${escapeHTML(item.observacao || '')}</td>
-            <!--
-            <td>
-                <label class="sge-switch" title="Ativar SGE">
-                    <input type="checkbox" class="sge-toggle" data-id="${item.id || ''}" ${item.sge_ativo ? 'checked' : ''}>
-                    <span class="sge-slider" aria-hidden="true"></span>
-                </label>
-            </td>
-            <td class="link-col">${item.sge_ativo ? `<input type='url' class='form-control form-control-sm sge-link-input' placeholder='https://...' value='${escapeHTML(item.sge_link || '')}'>` : ''}</td>
-            -->
+            <td class="hidden-col" style="display: none;"></td>
+            <td class="hidden-col" style="display: none;"></td>
             <td class="text-end">
-                <button class="btn btn-sm btn-outline-primary btn-editar" data-item-id="${item.loteId}" data-row-id="${item.id}" data-data-inicial="${item.data}" data-data-final="${dataFinal}">
+                <button class="btn btn-sm btn-outline-primary btn-editar" data-item-id="${item.loteId}" data-row-id="${item.id}" data-data-inicial="${item.data}" data-data-final="${item.data_final}">
                     <i class="bi bi-pencil"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-danger btn-excluir" data-item-id="${item.loteId}" data-titulo="${escapeHTML(item.treinamento || '')}" data-data-inicial-formatada="${dataInicialFormatada}" data-data-final-formatada="${dataFinalFormatada}">

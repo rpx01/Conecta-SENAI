@@ -92,7 +92,36 @@
         </div>
 
         <div id="planejamento-container" class="mt-4">
+            <div class="card mb-4">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table id="tabela-planejamento" class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr id="table-header-planejamento">
+                                    <th data-column="data" style="cursor: pointer;">Data Inicial ↕️</th>
+                                    <th data-column="data_final" style="cursor: pointer;">Data Final ↕️</th>
+                                    <th data-column="semana" style="cursor: pointer;">Semana ↕️</th>
+                                    <th data-column="horario" style="cursor: pointer;">Horário ↕️</th>
+                                    <th data-column="cargaHoraria" style="cursor: pointer;">C.H. ↕️</th>
+                                    <th data-column="modalidade" style="cursor: pointer;">Modalidade ↕️</th>
+                                    <th data-column="treinamento" style="cursor: pointer;">Treinamento ↕️</th>
+                                    <th data-column="cmd" style="cursor: pointer;">CMD ↕️</th>
+                                    <th data-column="sjb" style="cursor: pointer;">SJB ↕️</th>
+                                    <th data-column="sagTombos" style="cursor: pointer;">SAG/TOMBOS ↕️</th>
+                                    <th data-column="instrutor" style="cursor: pointer;">Instrutor ↕️</th>
+                                    <th data-column="local" style="cursor: pointer;">Local ↕️</th>
+                                    <th data-column="observacao" style="cursor: pointer;">Obs. ↕️</th>
+                                    <th class="hidden-col" style="display: none;">SGE</th>
+                                    <th class="hidden-col" style="display: none;">LINK</th>
+                                    <th class="text-end">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="planejamento-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
+        </div>
     </main>
 
     <div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="itemModalLabel" aria-hidden="true">

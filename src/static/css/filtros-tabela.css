@@ -1,91 +1,17 @@
-/* /src/static/css/filtros-tabela.css */
-
-/* Estilo para o contêiner principal dos filtros */
-.filtro-container {
-    position: relative;
-    display: inline-block;
-    margin-bottom: 20px;
+th { position: relative; }
+.filter-toggle {
+  margin-left: .5rem; border: 1px solid #ddd; background: #fff; cursor: pointer;
+  font-size: 12px; padding: 2px 6px; border-radius: 4px;
 }
-
-/* Novo estilo para o botão de Filtro Principal */
-.filtro-btn {
-    background-color: #005AAD; /* Azul institucional SENAI */
-    color: white;
-    padding: 12px 24px;
-    font-size: 16px;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
-    border-radius: 8px; /* Cantos arredondados */
-    display: flex;
-    align-items: center;
-    gap: 8px; /* Espaço entre o ícone e o texto */
-    transition: background-color 0.3s ease;
+.filter-menu {
+  position: absolute; top: 100%; right: 0; min-width: 220px; z-index: 1000;
+  background: #fff; border: 1px solid #ddd; border-radius: 8px;
+  padding: 8px; box-shadow: 0 8px 20px rgba(0,0,0,.15);
 }
-
-/* Efeito hover para o botão de filtro */
-.filtro-btn:hover {
-    background-color: #003e80; /* Tom de azul mais escuro */
-}
-
-/* Estilo para o conteúdo do menu suspenso de filtros */
-.filtro-dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: #f9f9f9;
-    min-width: 280px;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
-    z-index: 100;
-    padding: 15px;
-    border: 1px solid #ddd;
-}
-
-/* Organiza os grupos de filtros */
-.filtro-dropdown-content .filter-group {
-    margin-bottom: 15px;
-}
-
-.filtro-dropdown-content h4 {
-    margin-top: 0;
-    margin-bottom: 10px;
-    font-size: 14px;
-    color: #333;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 5px;
-}
-
-/* Estilo para os itens individuais (checkbox + label) */
-.filtro-dropdown-content label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 14px;
-    color: #333;
-    cursor: pointer;
-}
-
-.filtro-dropdown-content input[type="checkbox"] {
-    margin-right: 10px;
-}
-
-/* Botão para aplicar os filtros dentro do dropdown */
-.filtro-dropdown-content button {
-    background-color: #005AAD;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 100%;
-    font-size: 14px;
-    margin-top: 10px;
-}
-
-.filtro-dropdown-content button:hover {
-    background-color: #003e80;
-}
-
-/* Classe para exibir o dropdown via JavaScript */
-.show {
-    display: block;
+.filter-menu.hidden { display: none; }
+.filter-menu .search { width: 100%; margin-bottom: 6px; padding: 6px; }
+.filter-menu .options { max-height: 240px; overflow: auto; }
+.filter-menu .actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.filter-menu .btn {
+  border: 1px solid #ddd; background: #f7f7f7; padding: 4px 8px; border-radius: 4px; cursor: pointer;
 }

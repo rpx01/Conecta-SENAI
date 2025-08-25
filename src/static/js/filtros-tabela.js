@@ -18,28 +18,47 @@
     headers.forEach((th, idx) => {
       const btn = th.querySelector('.filter-btn');
       if(!btn) return;
-      const col = btn.getAttribute('data-col');
+      const col = btn.getAttribute('data-filter-for');
       colIndex[col] = idx;
 
-      const menu = th.querySelector('.filter-menu [data-role="filter-options"]');
-      if(!menu) return;
-
+      const dd = th.querySelector('.filter-dropdown');
+      if(!dd) return;
+      dd.innerHTML = `
+        <div class="filter-card">
+          <div class="filter-head">
+            <input type="text" class="form-control form-control-sm filter-search" placeholder="Buscar...">
+          </div>
+          <div class="filter-list" role="group" aria-label="Opções de filtro"></div>
+          <div class="filter-actions">
+            <div class="sort-group" role="group" aria-label="Ordenação">
+              <button type="button" class="btn btn-light btn-sm sort-asc" title="Ordenar A–Z">A–Z</button>
+              <button type="button" class="btn btn-light btn-sm sort-desc" title="Ordenar Z–A">Z–A</button>
+            </div>
+            <div class="cta-group">
+              <button type="button" class="btn btn-primary btn-sm apply">Aplicar</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm clear">Limpar</button>
+            </div>
+          </div>
+          <div class="filter-foot text-muted">Pressione Esc para fechar</div>
+        </div>`;
+      const list = dd.querySelector('.filter-list');
       const valores = [...new Set(Array.from(tabela.tBodies[0].rows).map(r => (r.cells[idx]?.innerText || '').trim()))]
         .sort((a,b)=>a.localeCompare(b,'pt-BR'));
 
       valores.forEach(v => {
-        const id = `${col}-${btoa(unescape(encodeURIComponent(v))).replace(/=/g,'')}`;
-        menu.insertAdjacentHTML('beforeend',
-          `<div class="form-check"><input class="form-check-input" type="checkbox" id="${id}" value="${v}" checked>
-          <label class="form-check-label" for="${id}">${v || '&lt;vazio&gt;'}</label></div>`);
+        const safe = typeof escapeHTML === 'function' ? escapeHTML(v) : v;
+        list.insertAdjacentHTML('beforeend',
+          `<label class="filter-item"><input type="checkbox" value="${safe}" checked><span>${safe || '&lt;vazio&gt;'}</span></label>`);
       });
+
+      window.filterAttachHandlers && window.filterAttachHandlers(dd);
     });
 
     const resetBtn = document.querySelector('[data-reset-filtros]');
     if(resetBtn){
       resetBtn.addEventListener('click', () => {
         Object.keys(filtros).forEach(k => delete filtros[k]);
-        tabela.querySelectorAll('[data-role="filter-options"] input[type="checkbox"]').forEach(i=>i.checked = true);
+        document.querySelectorAll('.filter-dropdown input[type="checkbox"]').forEach(i=>i.checked = false);
         aplicarFiltros();
       });
     }

@@ -3,14 +3,14 @@
 // - Chamar a mesma API usada na trimestral (ex.: chamarAPI(urlComParametros, 'GET')).
 // - Estruturar dados por instrutor e por dia do mês.
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener("DOMContentLoaded", async () => {
   try {
     const intervalo = obterIntervaloUsadoNaTrimestral();
     const itens = await carregarItensPlanejamento(intervalo);
 
-    const { diasDoMes, instrutores, mapa } = montarMapaPorInstrutor(itens, intervalo);
+    const { dias, instrutores, mapa } = montarMapaPorInstrutor(itens);
 
-    renderTabelaPorInstrutor(diasDoMes, instrutores, mapa);
+    renderTabelaPorInstrutor(dias, instrutores, mapa);
   } catch (e) {
     console.error(e);
     alert('Falha ao carregar planejamento por instrutor.');
@@ -51,96 +51,142 @@ function construirURLDePlanejamento(intervalo) {
 }
 
 // 2) Mapeamento: dia -> instrutor -> lista de itens (que colidem com o dia)
-function montarMapaPorInstrutor(itens, intervalo) {
-  const inicio = new Date(intervalo.inicio);
-  const ano = inicio.getFullYear();
-  const mes = inicio.getMonth();
-
-  const ultimoDia = new Date(ano, mes + 1, 0).getDate();
-  const diasDoMes = Array.from({ length: ultimoDia }, (_, i) => i + 1);
-
-  const instrutores = Array.from(new Set(
-    itens.map(i => (i.instrutor_nome || i.instrutor || i.responsavel || '').trim()).filter(Boolean)
-  )).sort((a, b) => a.localeCompare(b, 'pt-BR'));
-
+function montarMapaPorInstrutor(itens) {
+  const diasSet = new Set();
+  const instrutoresSet = new Set();
   const mapa = {};
-  for (const d of diasDoMes) mapa[d] = Object.fromEntries(instrutores.map(n => [n, []]));
 
   for (const it of itens) {
     const di = new Date(it.data_inicio || it.data);
     const df = new Date(it.data_fim || it.data_final || it.data);
 
-    const cursor = new Date(Math.max(di, new Date(ano, mes, 1)));
-    const limite = new Date(Math.min(df, new Date(ano, mes, ultimoDia)));
-
     const instr = (it.instrutor_nome || it.instrutor || it.responsavel || '').trim();
     if (!instr) continue;
 
-    while (cursor <= limite) {
-      const d = cursor.getDate();
-      mapa[d][instr].push(it);
+    instrutoresSet.add(instr);
+
+    const cursor = new Date(di);
+    while (cursor <= df) {
+      const iso = cursor.toISOString().slice(0, 10);
+      diasSet.add(iso);
+      mapa[iso] = mapa[iso] || {};
+      mapa[iso][instr] = mapa[iso][instr] || { manha: [], tarde: [] };
+
+      let turno = (it.turno || '').toString().toLowerCase();
+      if (!turno) {
+        const h = parseInt(String(it.hora_inicio || it.inicio_hora || '0').slice(0, 2), 10);
+        turno = h < 12 ? 'manha' : 'tarde';
+      } else if (turno.startsWith('m')) {
+        turno = 'manha';
+      } else {
+        turno = 'tarde';
+      }
+
+      mapa[iso][instr][turno].push(it);
+
       cursor.setDate(cursor.getDate() + 1);
     }
   }
 
-  return { diasDoMes, instrutores, mapa };
+  const dias = Array.from(diasSet).sort();
+  const instrutores = Array.from(instrutoresSet).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+  return { dias, instrutores, mapa };
 }
 
 // 3) Renderização da tabela
-function renderTabelaPorInstrutor(diasDoMes, instrutores, mapa) {
+function renderTabelaPorInstrutor(dias, instrutores, mapa) {
   const thead = document.querySelector('#tabela-por-instrutor thead');
   const tbody = document.querySelector('#tabela-por-instrutor tbody');
 
   const trHead = document.createElement('tr');
-  const thDia = document.createElement('th');
-  thDia.textContent = 'Dia';
-  thDia.classList.add('dia-col');
-  trHead.appendChild(thDia);
-
-  for (const nome of instrutores) {
+  ['DATA', 'SEMANA', 'TURNO', ...instrutores].forEach(t => {
     const th = document.createElement('th');
-    th.textContent = nome;
+    th.textContent = t;
     trHead.appendChild(th);
-  }
+  });
   thead.innerHTML = '';
   thead.appendChild(trHead);
 
   const frag = document.createDocumentFragment();
-  for (const d of diasDoMes) {
-    const tr = document.createElement('tr');
+  for (const diaISO of dias) {
+    const trManha = document.createElement('tr');
+    const trTarde = document.createElement('tr');
 
-    const th = document.createElement('th');
-    th.classList.add('dia-col');
-    th.textContent = String(d).padStart(2, '0');
-    tr.appendChild(th);
+    const thData = document.createElement('th');
+    thData.textContent = formatarDataCompleta(diaISO);
+    thData.setAttribute('rowspan', '2');
+    thData.classList.add('dia-col');
+
+    const thSemana = document.createElement('th');
+    thSemana.textContent = diaDaSemanaPtBR(diaISO);
+    thSemana.setAttribute('rowspan', '2');
+
+    const tdTurnoManha = document.createElement('td');
+    tdTurnoManha.textContent = 'Manhã';
+    const tdTurnoTarde = document.createElement('td');
+    tdTurnoTarde.textContent = 'Tarde';
 
     for (const nome of instrutores) {
-      const td = document.createElement('td');
-      const itensDoDia = mapa[d][nome] || [];
-      for (const it of itensDoDia) {
-        const div = document.createElement('div');
-        div.className = 'cell-treinamento';
+      const tdM = document.createElement('td');
+      const tdT = document.createElement('td');
 
-        const titulo = it.treinamento || it.titulo || it.nome || 'Treinamento';
-        const horario = montarFaixaHorario(it);
-        const local = it.local || it.sala || '';
+      const atividadesM = mapa[diaISO]?.[nome]?.manha || [];
+      const atividadesT = mapa[diaISO]?.[nome]?.tarde || [];
 
-        div.textContent = local ? `${titulo} (${horario}) • ${local}` : `${titulo} (${horario})`;
-        td.appendChild(div);
-      }
-      tr.appendChild(td);
+      preencherTdComAtividades(tdM, atividadesM);
+      preencherTdComAtividades(tdT, atividadesT);
+
+      trManha.appendChild(tdM);
+      trTarde.appendChild(tdT);
     }
 
-    frag.appendChild(tr);
+    trManha.prepend(tdTurnoManha);
+    trManha.prepend(thSemana);
+    trManha.prepend(thData);
+    trTarde.prepend(tdTurnoTarde);
+
+    frag.appendChild(trManha);
+    frag.appendChild(trTarde);
   }
 
   tbody.innerHTML = '';
   tbody.appendChild(frag);
 }
 
+function preencherTdComAtividades(td, atividades) {
+  for (const it of atividades) {
+    const div = document.createElement('div');
+    div.className = 'cell-treinamento';
+
+    const titulo = it.treinamento || it.titulo || it.nome || 'Treinamento';
+    const horario = montarFaixaHorario(it);
+    const local = it.local || it.sala || '';
+
+    div.textContent = local ? `${titulo} (${horario}) • ${local}` : `${titulo} (${horario})`;
+    if (div.textContent.toUpperCase().includes('BLOQUEIO')) {
+      div.classList.add('bg-success-subtle');
+    }
+    td.appendChild(div);
+  }
+}
+
 function montarFaixaHorario(it) {
   const hi = (it.hora_inicio || it.inicio_hora || '').toString().slice(0, 5);
   const hf = (it.hora_fim || it.fim_hora || '').toString().slice(0, 5);
   return hi && hf ? `${hi}–${hf}` : (hi || hf || '');
+}
+
+function formatarDataCompleta(isoDateStr) {
+  const d = new Date(isoDateStr);
+  const dia = String(d.getDate()).padStart(2, '0');
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const ano = d.getFullYear();
+  return `${dia}/${mes}/${ano}`;
+}
+
+function diaDaSemanaPtBR(isoDateStr) {
+  const d = new Date(isoDateStr);
+  return d.toLocaleDateString('pt-BR', { weekday: 'long' }).replace(/^\w/, c => c.toUpperCase());
 }
 

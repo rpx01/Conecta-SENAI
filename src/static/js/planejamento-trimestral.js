@@ -477,6 +477,7 @@ async function carregarItens() {
         });
 
         renderizarItens(itens);
+        window.inicializarFiltrosTabela?.('#tabela-trimestral');
     } catch (error) {
         showToast('Não foi possível carregar o planejamento.', 'danger');
     }
@@ -486,21 +487,9 @@ async function carregarItens() {
  * Renderiza todos os itens do planejamento em uma única tabela.
  */
 function renderizarItens(itens) {
-    const container = document.getElementById('planejamento-container');
-
-    container.innerHTML = `
-        <div class="card mb-4">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table id="tabela-planejamento" class="table table-striped table-hover mb-0">
-                        ${criarCabecalhoTabela()}
-                        <tbody id="planejamento-tbody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>`;
-
     const tbody = document.getElementById('planejamento-tbody');
+    if (!tbody) return;
+
     tbody.innerHTML = '';
 
     if (itens.length === 0) {
@@ -519,23 +508,6 @@ function renderizarItens(itens) {
         const dataFinal = dataFinalPorLote[item.loteId];
         tbody.insertAdjacentHTML('beforeend', criarLinhaItem(item, dataFinal));
     });
-}
-
-/**
- * Cria o cabeçalho da tabela de itens.
- */
-function criarCabecalhoTabela() {
-    return `
-        <thead>
-            <tr>
-                <th>Data Inicial</th><th>Data Final</th><th>Semana</th><th>Horário</th><th>C.H.</th>
-                <th>Modalidade</th><th>Treinamento</th><th>CMD</th><th>SJB</th>
-                <th>SAG/TOMBOS</th><th>Instrutor</th><th>Local</th><th>Obs.</th>
-                <th class="hidden-col" style="display: none;">SGE</th><th class="hidden-col" style="display: none;">LINK</th>
-                <th class="text-end">Ações</th>
-            </tr>
-        </thead>
-    `;
 }
 
 /**

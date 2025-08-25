@@ -78,6 +78,40 @@ body { font-family: "Gibson", "Exo 2", sans-serif; }
 </div>
 ```
 
+#### UI de Filtros de Tabela
+
+Tokens utilizados: `--brand-blue-700`, `--brand-blue-500`, `--brand-orange`, `--neutral-300`, `--neutral-700` e `--white`.
+
+```html
+<th>
+  Coluna
+  <span class="filter-scope">
+    <div class="dropdown d-inline">
+      <button class="filter-btn" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Filtrar coluna">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"/></svg>
+      </button>
+      <div class="filter-menu dropdown-menu dropdown-menu-end shadow">
+        <div class="mb-2">
+          <input type="text" class="form-control form-control-sm" placeholder="Buscar..." data-role="filter-search">
+        </div>
+        <div class="mb-2" data-role="filter-options"></div>
+        <div class="divider"></div>
+        <div class="filter-actions">
+          <button class="btn btn-primary btn-sm" data-action="apply">Aplicar</button>
+          <button class="btn btn-outline-secondary btn-sm" data-action="clear">Limpar</button>
+          <button class="btn btn-outline-primary btn-sm ms-auto" data-action="sort-asc">A–Z</button>
+          <button class="btn btn-outline-primary btn-sm" data-action="sort-desc">Z–A</button>
+        </div>
+      </div>
+    </div>
+  </span>
+</th>
+```
+
+Classes CSS principais: `.filter-scope`, `.filter-btn`, `.filter-menu`, `.filter-actions`.
+
+Boas práticas de acessibilidade: forneça `aria-label` ao botão, mantenha `aria-expanded` sincronizado, permita fechar com a tecla Esc e use `dropdown-menu-end` para evitar corte em telas estreitas.
+
 ### Acessibilidade
 
 - Uma `<h1>` por página.

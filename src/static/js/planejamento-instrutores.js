@@ -3,19 +3,6 @@
 // - Chamar a mesma API usada na trimestral (ex.: chamarAPI(urlComParametros, 'GET')).
 // - Estruturar dados por instrutor e por dia do mês.
 
-document.addEventListener('DOMContentLoaded', async () => {
-  try {
-    const intervalo = obterIntervaloUsadoNaTrimestral();
-    const itens = await carregarItensPlanejamento(intervalo);
-
-    const { diasDoMes, instrutores, mapa } = montarMapaPorInstrutor(itens, intervalo);
-
-    renderTabelaPorInstrutor(diasDoMes, instrutores, mapa);
-  } catch (e) {
-    console.error(e);
-    alert('Falha ao carregar planejamento por instrutor.');
-  }
-});
 
 // 1) Busca de dados (reutilizando o que já existe na trimestral)
 async function carregarItensPlanejamento(intervalo) {
@@ -50,7 +37,40 @@ function construirURLDePlanejamento(intervalo) {
   return `/planejamento/itens${qs ? `?${qs}` : ''}`;
 }
 
-// 2) Mapeamento: dia -> instrutor -> lista de itens (que colidem com o dia)
+// === helpers novos ===
+function formatarDiaCompleto(ano, mesZeroBased, dia) {
+  const dt = new Date(ano, mesZeroBased, dia);
+  return dt.toLocaleDateString('pt-BR');
+}
+
+function nomeDaSemana(ano, mesZeroBased, dia) {
+  const dt = new Date(ano, mesZeroBased, dia);
+  const w = dt.toLocaleDateString('pt-BR', { weekday: 'long' });
+  return w.charAt(0).toUpperCase() + w.slice(1);
+}
+
+function horaParaMinutos(hhmm) {
+  if (!hhmm || typeof hhmm !== 'string' || !hhmm.includes(':')) return null;
+  const [h, m] = hhmm.split(':').map((x) => parseInt(x, 10));
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  return h * 60 + m;
+}
+
+function classificarTurno(item) {
+  const hi = (item.hora_inicio || item.inicio_hora || '').slice(0, 5);
+  const hf = (item.hora_fim || item.fim_hora || '').slice(0, 5);
+
+  const ini = horaParaMinutos(hi);
+  const fim = horaParaMinutos(hf);
+  const meioDia = 12 * 60;
+
+  if (ini == null || fim == null) return 'Ambos';
+  if (ini < meioDia && fim <= meioDia) return 'Manhã';
+  if (ini >= meioDia) return 'Tarde';
+  return 'Ambos';
+}
+
+// === ATUALIZE a função que monta o mapa para também devolver ano/mes ===
 function montarMapaPorInstrutor(itens, intervalo) {
   const inicio = new Date(intervalo.inicio);
   const ano = inicio.getFullYear();
@@ -59,17 +79,20 @@ function montarMapaPorInstrutor(itens, intervalo) {
   const ultimoDia = new Date(ano, mes + 1, 0).getDate();
   const diasDoMes = Array.from({ length: ultimoDia }, (_, i) => i + 1);
 
-  const instrutores = Array.from(new Set(
-    itens.map(i => (i.instrutor_nome || i.instrutor || i.responsavel || '').trim()).filter(Boolean)
-  )).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const instrutores = Array.from(
+    new Set(
+      itens
+        .map((i) => (i.instrutor_nome || i.instrutor || i.responsavel || '').trim())
+        .filter(Boolean)
+    )
+  ).sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
   const mapa = {};
-  for (const d of diasDoMes) mapa[d] = Object.fromEntries(instrutores.map(n => [n, []]));
+  for (const d of diasDoMes) mapa[d] = Object.fromEntries(instrutores.map((n) => [n, []]));
 
   for (const it of itens) {
     const di = new Date(it.data_inicio || it.data);
     const df = new Date(it.data_fim || it.data_final || it.data);
-
     const cursor = new Date(Math.max(di, new Date(ano, mes, 1)));
     const limite = new Date(Math.min(df, new Date(ano, mes, ultimoDia)));
 
@@ -83,64 +106,103 @@ function montarMapaPorInstrutor(itens, intervalo) {
     }
   }
 
-  return { diasDoMes, instrutores, mapa };
+  return { diasDoMes, instrutores, mapa, ano, mes };
 }
 
-// 3) Renderização da tabela
-function renderTabelaPorInstrutor(diasDoMes, instrutores, mapa) {
+// === SUBSTITUA o renderer para gerar Dia + Semana + Turno e duas linhas por dia ===
+function renderTabelaPorInstrutor(diasDoMes, instrutores, mapa, contextoMes) {
+  const { ano, mes } = contextoMes;
   const thead = document.querySelector('#tabela-por-instrutor thead');
   const tbody = document.querySelector('#tabela-por-instrutor tbody');
 
   const trHead = document.createElement('tr');
+
   const thDia = document.createElement('th');
-  thDia.textContent = 'Dia';
+  thDia.textContent = 'DATA';
   thDia.classList.add('dia-col');
   trHead.appendChild(thDia);
+
+  const thSemana = document.createElement('th');
+  thSemana.textContent = 'SEMANA';
+  trHead.appendChild(thSemana);
+
+  const thTurno = document.createElement('th');
+  thTurno.textContent = 'TURNO';
+  trHead.appendChild(thTurno);
 
   for (const nome of instrutores) {
     const th = document.createElement('th');
     th.textContent = nome;
     trHead.appendChild(th);
   }
+
   thead.innerHTML = '';
   thead.appendChild(trHead);
 
   const frag = document.createDocumentFragment();
+  const turnos = ['Manhã', 'Tarde'];
+
   for (const d of diasDoMes) {
-    const tr = document.createElement('tr');
+    for (const turno of turnos) {
+      const tr = document.createElement('tr');
 
-    const th = document.createElement('th');
-    th.classList.add('dia-col');
-    th.textContent = String(d).padStart(2, '0');
-    tr.appendChild(th);
+      const tdData = document.createElement('th');
+      tdData.classList.add('dia-col');
+      tdData.textContent = formatarDiaCompleto(ano, mes, d);
+      tr.appendChild(tdData);
 
-    for (const nome of instrutores) {
-      const td = document.createElement('td');
-      const itensDoDia = mapa[d][nome] || [];
-      for (const it of itensDoDia) {
-        const div = document.createElement('div');
-        div.className = 'cell-treinamento';
+      const tdSemana = document.createElement('td');
+      tdSemana.textContent = nomeDaSemana(ano, mes, d);
+      tr.appendChild(tdSemana);
 
-        const titulo = it.treinamento || it.titulo || it.nome || 'Treinamento';
-        const horario = montarFaixaHorario(it);
-        const local = it.local || it.sala || '';
+      const tdTurno = document.createElement('td');
+      tdTurno.textContent = turno;
+      tr.appendChild(tdTurno);
 
-        div.textContent = local ? `${titulo} (${horario}) • ${local}` : `${titulo} (${horario})`;
-        td.appendChild(div);
+      for (const nome of instrutores) {
+        const td = document.createElement('td');
+        const itensDoDia = (mapa[d] && mapa[d][nome]) || [];
+
+        const itensFiltrados = itensDoDia.filter((it) => {
+          const cls = classificarTurno(it);
+          return cls === 'Ambos' || cls === turno;
+        });
+
+        for (const it of itensFiltrados) {
+          const div = document.createElement('div');
+          div.className = `cell-treinamento ${getClasseTurno(turno)}`;
+
+          const titulo = it.treinamento || it.titulo || it.nome || 'Treinamento';
+          const hi = (it.hora_inicio || it.inicio_hora || '').toString().slice(0, 5);
+          const hf = (it.hora_fim || it.fim_hora || '').toString().slice(0, 5);
+          const faixa = hi && hf ? `${hi}–${hf}` : (hi || hf || '');
+          const local = it.local || it.sala || '';
+
+          div.textContent = local ? `${titulo} (${faixa}) • ${local}` : `${titulo} (${faixa})`;
+          td.appendChild(div);
+        }
+
+        tr.appendChild(td);
       }
-      tr.appendChild(td);
-    }
 
-    frag.appendChild(tr);
+      frag.appendChild(tr);
+    }
   }
 
   tbody.innerHTML = '';
   tbody.appendChild(frag);
 }
 
-function montarFaixaHorario(it) {
-  const hi = (it.hora_inicio || it.inicio_hora || '').toString().slice(0, 5);
-  const hf = (it.hora_fim || it.fim_hora || '').toString().slice(0, 5);
-  return hi && hf ? `${hi}–${hf}` : (hi || hf || '');
-}
+// === AJUSTE NA INICIALIZAÇÃO: passe ano/mes ao renderer ===
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const intervalo = obterIntervaloUsadoNaTrimestral();
+    const itens = await carregarItensPlanejamento(intervalo);
+    const { diasDoMes, instrutores, mapa, ano, mes } = montarMapaPorInstrutor(itens, intervalo);
+    renderTabelaPorInstrutor(diasDoMes, instrutores, mapa, { ano, mes });
+  } catch (e) {
+    console.error(e);
+    alert('Falha ao carregar planejamento por instrutor.');
+  }
+});
 

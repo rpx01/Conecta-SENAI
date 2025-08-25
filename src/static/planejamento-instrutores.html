@@ -105,9 +105,20 @@
             <div id="filtros-wrapper" class="mb-3"></div>
 
             <div class="table-responsive" id="tabela-por-instrutor-wrapper">
-                <table id="tabela-por-instrutor" class="table table-bordered table-sm table-hover align-middle">
-                    <thead></thead>
-                    <tbody></tbody>
+                <table id="tabela-instrutores" class="table table-bordered table-sm table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" class="mes" id="mes-ano-anterior">Mês Anterior</th>
+                            <th colspan="5" class="mes" id="mes-ano-atual">Mês Atual</th>
+                            <th rowspan="2" class="mes" id="mes-ano-seguinte">Próximo Mês</th>
+                        </tr>
+                        <tr>
+                            <th>DIA</th>
+                            <th>SEMANA</th>
+                            <th>TURNO</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo-tabela"></tbody>
                 </table>
             </div>
         </div>

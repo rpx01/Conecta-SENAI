@@ -1,0 +1,54 @@
+/* src/static/css/components/filter.css */
+
+/* Paleta FIEMG/SENAI (tokens mínimos para o componente) */
+:root{
+  --brand-blue-700: #164194;  /* Primário */
+  --brand-blue-500: #008BD2;  /* Destaque/hover/foco */
+  --brand-orange:   #F3B54E;  /* Ação/realce eventual */
+  --neutral-300:    #D8D9DD;  /* Borda */
+  --neutral-700:    #5B5B5F;  /* Texto secundário */
+  --white:          #FFFFFF;
+}
+
+/* Tipografia do componente (fallback sem impactar o site todo) */
+.filter-scope{ font-family: "Exo 2", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
+
+/* Botão de filtro “ghost” minimalista */
+.filter-btn{
+  --size: 28px;
+  width: var(--size);
+  height: var(--size);
+  display: inline-grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid var(--neutral-300);
+  background: var(--white);
+  padding: 0;
+  cursor: pointer;
+  transition: box-shadow .2s ease, border-color .2s ease, background-color .2s ease, color .2s ease;
+  color: var(--brand-blue-700);
+}
+.filter-btn:hover{ border-color: var(--brand-blue-500); box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+.filter-btn:focus{ outline: 3px solid color-mix(in srgb, var(--brand-blue-700) 24%, transparent); outline-offset: 2px; }
+.filter-btn[aria-expanded="true"]{ background: var(--brand-blue-700); color: var(--white); }
+
+/* Dropdown “card” clean */
+.filter-menu.dropdown-menu{
+  /* Bootstrap dá base; aqui refinamos o visual */
+  border: 1px solid var(--neutral-300);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+  padding: .75rem;
+  min-width: 260px;
+}
+.filter-menu .form-control{ height: 34px; border-radius: 8px; }
+.filter-menu .filter-actions{ display:flex; gap:.5rem; flex-wrap:wrap; }
+.filter-menu .btn{
+  border-radius: 10px;
+  padding: .35rem .65rem;
+}
+.filter-menu .btn-primary{ background: var(--brand-blue-700); border-color: var(--brand-blue-700); }
+.filter-menu .btn-outline-primary{ color: var(--brand-blue-700); border-color: var(--brand-blue-500); }
+.filter-menu .btn-outline-primary:hover{ background: var(--brand-blue-500); color: var(--white); }
+.filter-menu .btn-outline-secondary{ color: var(--neutral-700); }
+.filter-menu .divider{ height:1px; background: var(--neutral-300); margin:.5rem 0; }

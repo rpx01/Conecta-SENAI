@@ -29,15 +29,12 @@ from src.routes.horario import horario_bp
 from src.routes.inscricoes_treinamento import bp as inscricoes_treinamento_bp
 from src.blueprints.auth_reset import auth_reset_bp
 from src.blueprints.auth import auth_bp
-from apscheduler.schedulers.background import BackgroundScheduler
-from src.services.notificacao_service import criar_notificacoes_agendamentos_proximos
+from src.services.scheduler import iniciar_scheduler
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 csrf = CSRFProtect()
 
-# Scheduler global para evitar múltiplas instâncias
-scheduler = None
 
 swagger_template = {
     "components": {
@@ -238,6 +235,7 @@ def create_app():
     # Inicia scheduler para notificações
     iniciar_scheduler(app)
 
+
     @app.route('/')
     def index():
         return redirect('/admin/login.html')
@@ -255,26 +253,6 @@ def create_app():
     # separadamente durante o processo de deploy.
 
     return app
-
-
-def iniciar_scheduler(app):
-    """Configura scheduler para geração periódica de notificações."""
-    global scheduler
-    if scheduler and scheduler.running:
-        logging.debug("Scheduler já está em execução; ignorando nova inicialização")
-        return
-
-    scheduler = BackgroundScheduler()
-
-    def job():
-        with app.app_context():
-            criar_notificacoes_agendamentos_proximos()
-
-    intervalo = int(os.getenv('NOTIFICACAO_INTERVALO_MINUTOS', '60'))
-    scheduler.add_job(job, 'interval', minutes=intervalo, id='notificacoes_agendamentos')
-    scheduler.start()
-
-
 try:
     logging.info("Iniciando a criação da aplicação Flask...")
     app = create_app()

@@ -184,11 +184,11 @@ window.abrirModalInstrutor = () => {
 async function salvarItemGeral() {
     const tipo = document.getElementById('itemType').value;
     const id = document.getElementById('itemId').value;
-    const nome = document.getElementById('itemName').value;
+    const nome = document.getElementById('itemName').value.trim();
     const cargaHoraria = document.getElementById('itemCargaHoraria').value;
     const turno = document.getElementById('itemTurno').value;
 
-    if (!nome.trim()) {
+    if (!nome) {
         showToast('O nome não pode estar vazio.', 'warning');
         return;
     }

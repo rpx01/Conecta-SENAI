@@ -1,6 +1,5 @@
 """Model for storing planning items."""
 from datetime import datetime
-from sqlalchemy import Enum as SAEnum
 from src.models import db
 
 
@@ -90,10 +89,7 @@ class Horario(PlanejamentoBase):
         "tarde/noite",
     )
 
-    turno = db.Column(
-        SAEnum(*TURNOS, name="turno_enum", native_enum=False),
-        nullable=True,
-    )
+    turno = db.Column(db.String(20), nullable=False)
 
     def to_dict(self):
         dados = super().to_dict()

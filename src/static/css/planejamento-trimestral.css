@@ -1,0 +1,59 @@
+:root{
+  --fiemg-blue:#164194;
+  --senai-orange:#F3B54E;
+}
+
+/* Cabeçalho */
+.pt-header{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:12px; flex-wrap:nowrap; margin:12px 0 8px;
+}
+.pt-title{
+  margin:0; font-weight:600; color:#164194;
+  font-family: "Exo 2", Calibri, system-ui, sans-serif;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.pt-actions{ display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+
+/* Visual do botão de filtro */
+.btn-filter{
+  display:inline-flex; align-items:center; gap:8px;
+  height:32px; padding:0 10px; border-radius:9999px;
+  background:var(--fiemg-blue); color:#fff; border:1px solid transparent;
+  font-weight:600; line-height:1; font-size:14px;
+  font-family:"Exo 2", Calibri, system-ui, sans-serif;
+}
+.btn-filter .icon{ font-size:14px; line-height:1; }
+.btn-filter:focus-visible{ outline:2px solid var(--senai-orange); outline-offset:2px; }
+.btn-filter:hover{ filter:brightness(0.95); }
+@media (max-width:420px){ .btn-filter .label{ display:none; } }
+
+/* Container do dropdown */
+.filter-dropdown{
+  position:absolute; z-index:1050; min-width:280px; width:360px; max-width:92vw;
+  background:#fff; border:1px solid #E6EAF0; border-radius:12px;
+  box-shadow:0 10px 24px rgba(0,0,0,.08);
+  font-family:"Exo 2", Calibri, system-ui, sans-serif;
+}
+
+/* Barra de busca sticky */
+.fd-search{ position:sticky; top:0; background:#fff; padding:10px 12px; border-bottom:1px solid #EEF2F6; border-top-left-radius:12px; border-top-right-radius:12px; }
+.fd-input{
+  width:100%; height:32px; padding:0 10px; border:1px solid #D9DEE7; border-radius:8px; font-size:14px;
+}
+
+/* Lista rolável */
+.fd-list{ max-height:320px; overflow:auto; padding:8px 12px; }
+
+/* Item com checkbox alinhado */
+.fd-item{ display:flex; align-items:flex-start; gap:8px; padding:6px 0; }
+.fd-check{ width:16px; height:16px; margin-top:2px; accent-color:var(--fiemg-blue); }
+.fd-label{ line-height:1.25; font-size:14px; color:#1f2937; }
+
+/* Rodapé */
+.fd-footer{ display:flex; justify-content:flex-end; gap:8px; padding:10px 12px; border-top:1px solid #EEF2F6; }
+.fd-apply, .fd-clear{
+  height:32px; padding:0 10px; border-radius:8px; border:1px solid #E6EAF0; background:#fff; font-weight:600; font-size:13px;
+}
+.fd-apply{ background:var(--fiemg-blue); color:#fff; border-color:var(--fiemg-blue); }
+.fd-apply:focus-visible{ outline:2px solid var(--senai-orange); outline-offset:2px; }

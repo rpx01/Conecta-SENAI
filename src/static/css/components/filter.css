@@ -13,24 +13,53 @@
 /* Tipografia do componente (fallback sem impactar o site todo) */
 .filter-scope{ font-family: "Exo 2", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
 
-/* Botão de filtro compacto e simples */
-.filter-btn{
-  --size: 24px;
-  width: var(--size);
-  height: var(--size);
-  display: inline-grid;
-  place-items: center;
-  border-radius: 4px;
-  border: 1px solid var(--neutral-300);
-  background: var(--white);
+/* Cabeçalho de tabela com rótulo + botão de filtro */
+.th-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  vertical-align: middle;
+}
+
+/* Botão de filtro compacto */
+.filter-toggle,
+.filtro-btn,
+.filter-btn {
+  width: 22px;
+  height: 22px;
   padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid #e6eef7;
+  border-radius: 4px;
+  line-height: 0;
   cursor: pointer;
   transition: box-shadow .2s ease, border-color .2s ease, background-color .2s ease, color .2s ease;
   color: var(--brand-blue-700);
 }
+.filter-toggle:hover,
+.filtro-btn:hover,
 .filter-btn:hover{ border-color: var(--brand-blue-500); box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+.filter-toggle:focus,
+.filtro-btn:focus,
 .filter-btn:focus{ outline: 3px solid color-mix(in srgb, var(--brand-blue-700) 24%, transparent); outline-offset: 2px; }
+.filter-toggle[aria-expanded="true"],
+.filtro-btn[aria-expanded="true"],
 .filter-btn[aria-expanded="true"]{ background: var(--brand-blue-700); color: var(--white); }
+
+/* Ícone do funil centralizado e proporcional */
+.filtro-btn i,
+.filtro-btn svg,
+.filter-toggle i,
+.filter-toggle svg,
+.filter-btn i,
+.filter-btn svg {
+  display: block;
+  font-size: 12px;
+  line-height: 1;
+}
 
 /* Dropdown “card” clean */
 .filter-menu.dropdown-menu{
@@ -60,7 +89,7 @@ th[data-filterable="true"]{
 th[data-filterable="true"] .filter-scope{
   display: inline-block;
   vertical-align: middle;
-  margin-left: .25rem;
+  margin-left: 0;
 }
 
 /* Alinhamento do menu suspenso de filtros */

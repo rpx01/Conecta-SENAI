@@ -1,16 +1,23 @@
 th { position: relative; }
 .filtro-btn {
     background-color: var(--white);
-    border: 1px solid var(--gray-200);
-    border-radius: 8px;
-    padding: 8px;
+    border: 1px solid var(--brand-gray-300);
+    border-radius: 4px;
+    padding: 0;
     cursor: pointer;
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    color: var(--brand-primary);
+}
+
+.filtro-btn svg {
+    width: 12px;
+    height: 12px;
+    display: block;
 }
 .filter-toggle {
   margin-left: .5rem; border: 1px solid #ddd; background: #fff; cursor: pointer;

@@ -1,4 +1,17 @@
 th { position: relative; }
+.filtro-btn {
+    background-color: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
 .filter-toggle {
   margin-left: .5rem; border: 1px solid #ddd; background: #fff; cursor: pointer;
   font-size: 12px; padding: 2px 6px; border-radius: 4px;

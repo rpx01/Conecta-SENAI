@@ -50,12 +50,19 @@
 .filter-btn[aria-expanded="true"]{ background: var(--brand-blue-700); color: var(--white); }
 
 /* Ícone do funil centralizado e proporcional */
-.filtro-btn i,
 .filtro-btn svg,
-.filter-toggle i,
 .filter-toggle svg,
-.filter-btn i,
 .filter-btn svg {
+  display: block;
+  width: 12px;
+  height: 12px;
+  color: currentColor;
+  line-height: 1;
+}
+
+.filtro-btn i,
+.filter-toggle i,
+.filter-btn i {
   display: block;
   font-size: 12px;
   line-height: 1;

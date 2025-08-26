@@ -24,7 +24,7 @@ html, body {
 .th-content{
   display: flex; align-items: center; justify-content: space-between; gap: .5rem;
 }
-.th-title{ font-weight: 600; }
+.th-label{ font-weight: 600; }
 
 /* Botão filtro clean */
 .filter-btn{
@@ -94,78 +94,3 @@ html, body {
 .actions .btn, .table .btn-icon{
   min-width: 32px; width: 32px; height: 32px; padding: 0; display:inline-flex; align-items:center; justify-content:center;
 }
-
-/* Contraste geral */
-:root{
-  --fg: #111827;          /* slate-900 */
-  --fg-muted: #374151;     /* slate-700 */
-  --bg: #F9FAFB;           /* slate-50 */
-  --border: #E5E7EB;       /* slate-200 */
-  --focus: #2563EB;        /* blue-600 */
-  --elev: 9999;            /* z-index p/ overlays */
-}
-
-html, body{
-  color: var(--fg);
-  background: var(--bg);
-}
-
-table{
-  color: var(--fg);
-}
-
-table thead th{
-  color: var(--fg);
-  background: white;
-  border-bottom: 1px solid var(--border);
-  position: relative;
-}
-
-table tbody td{
-  color: var(--fg-muted);
-  border-bottom: 1px solid var(--border);
-}
-
-a, button{
-  color: var(--fg);
-}
-
-::placeholder{
-  color: #6B7280; /* slate-500, visível sobre bg claro */
-}
-
-/* Acessibilidade visual dos hints */
-.sr-only, .visually-hidden{
-  position: absolute !important;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
-  overflow: hidden; clip: rect(0,0,0,0);
-  white-space: nowrap; border: 0;
-}
-
-/* Grupo do botão de filtros */
-.filter-group{
-  position: relative; /* âncora para o menu */
-  display: inline-block;
-}
-
-/* Dropdown ancorado (não fixo) */
-.dropdown-menu{
-  position: absolute;
-  inset: auto auto auto 0;   /* top/left definidos via JS */
-  min-width: 240px;
-  max-height: 60vh;
-  overflow: auto;
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  box-shadow: 0 10px 20px rgba(0,0,0,.08);
-  z-index: var(--elev);
-  padding: .75rem;
-}
-
-/* Estado visível */
-.dropdown-menu[hidden]{ display: none !important; }
-
-/* Evitar textos avulsos sobre o TH */
-th .filter-hint{ display: none !important; }

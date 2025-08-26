@@ -1,10 +1,12 @@
 """Rotas para gerenciamento de horários."""
 
 from flask import Blueprint, request, jsonify
+from sqlalchemy.exc import SQLAlchemyError
 
 from src.models import db, Horario
 from src.schemas.horario import HorarioCreateSchema, HorarioOutSchema
 from src.services.horario_service import create_horario, update_horario
+from src.utils.error_handler import handle_internal_error
 
 horario_bp = Blueprint("horario", __name__)
 
@@ -22,11 +24,17 @@ def listar_horarios():
 def criar_horario():
     data = request.get_json(silent=True) or {}
     validated = HorarioCreateSchema(**data)
-    horario = create_horario(validated.model_dump())
-    out = HorarioOutSchema(
-        id=horario.id, nome=horario.nome, turno=horario.turno
-    )
-    return jsonify(out.model_dump()), 201
+    if Horario.query.filter_by(nome=validated.nome).first():
+        return jsonify({"erro": "Já existe um horário com este nome"}), 400
+    try:
+        horario = create_horario(validated.model_dump())
+        out = HorarioOutSchema(
+            id=horario.id, nome=horario.nome, turno=horario.turno
+        )
+        return jsonify(out.model_dump()), 201
+    except SQLAlchemyError as e:  # pragma: no cover - segurança
+        db.session.rollback()
+        return handle_internal_error(e)
 
 
 @horario_bp.route("/horarios/<int:horario_id>", methods=["PUT", "PATCH"])
@@ -40,11 +48,20 @@ def atualizar_horario(horario_id: int):
         "turno": data.get("turno", horario.turno),
     }
     validated = HorarioCreateSchema(**payload)
-    horario = update_horario(horario, validated.model_dump())
-    out = HorarioOutSchema(
-        id=horario.id, nome=horario.nome, turno=horario.turno
-    )
-    return jsonify(out.model_dump())
+    if (
+        validated.nome != horario.nome
+        and Horario.query.filter_by(nome=validated.nome).first()
+    ):
+        return jsonify({"erro": "Já existe um horário com este nome"}), 400
+    try:
+        horario = update_horario(horario, validated.model_dump())
+        out = HorarioOutSchema(
+            id=horario.id, nome=horario.nome, turno=horario.turno
+        )
+        return jsonify(out.model_dump())
+    except SQLAlchemyError as e:  # pragma: no cover - segurança
+        db.session.rollback()
+        return handle_internal_error(e)
 
 
 @horario_bp.route("/horarios/<int:horario_id>", methods=["DELETE"])

@@ -140,13 +140,12 @@ window.abrirModal = (tipo, id = null, nome = '', carga = '', turno = '') => {
     document.getElementById('itemId').value = id || '';
     document.getElementById('itemName').value = nome || '';
     const turnoGroup = document.getElementById('turnoGroup');
-    const turnoSelect = document.getElementById('itemTurno');
     if (tipo === 'horario') {
         turnoGroup.classList.remove('d-none');
-        turnoSelect.value = turno || '';
+        document.getElementById('turno').value = turno || '';
     } else {
         turnoGroup.classList.add('d-none');
-        turnoSelect.value = '';
+        document.getElementById('turno').value = '';
     }
 
     const cargaGroup = document.getElementById('cargaHorariaGroup');
@@ -186,7 +185,7 @@ async function salvarItemGeral() {
     const id = document.getElementById('itemId').value;
     const nome = document.getElementById('itemName').value.trim();
     const cargaHoraria = document.getElementById('itemCargaHoraria').value;
-    const turno = document.getElementById('itemTurno').value;
+    const turno = document.getElementById('turno').value;
 
     if (!nome) {
         showToast('O nome não pode estar vazio.', 'warning');
@@ -211,6 +210,24 @@ async function salvarItemGeral() {
     }
     if (tipo === 'horario') {
         payload.turno = turno;
+        try {
+            const resp = await fetch(endpoint, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome, turno })
+            });
+            if (!resp.ok) {
+                const erro = await resp.json().catch(() => ({}));
+                throw new Error(erro?.erro || 'Erro ao salvar horário');
+            }
+            await resp.json();
+            showToast(`${NOMES_TIPO[tipo]} ${id ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
+            geralModal.hide();
+            carregarTodosOsDados();
+        } catch (error) {
+            showToast(error.message, 'danger');
+        }
+        return;
     }
 
     try {

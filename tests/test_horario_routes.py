@@ -1,4 +1,6 @@
 import pytest
+from sqlalchemy import text
+from src.models import db
 
 
 @pytest.mark.usefixtures("app")
@@ -33,3 +35,16 @@ def test_listar_horarios_retorna_turno(client):
     assert resp.status_code == 200
     data = resp.get_json()
     assert any(h["nome"] == "Horario Tarde" and h["turno"] == "tarde" for h in data)
+
+
+@pytest.mark.usefixtures("app")
+def test_listar_horarios_sem_coluna_turno(client, app):
+    """Garante que a listagem não falha sem a coluna 'turno'."""
+    with app.app_context():
+        db.session.execute(text("ALTER TABLE planejamento_horarios DROP COLUMN turno"))
+        db.session.commit()
+
+    resp = client.get("/api/horarios")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert all(h.get("turno") is None for h in data)

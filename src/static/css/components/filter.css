@@ -13,14 +13,14 @@
 /* Tipografia do componente (fallback sem impactar o site todo) */
 .filter-scope{ font-family: "Exo 2", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
 
-/* Botão de filtro “ghost” minimalista */
+/* Botão de filtro compacto e simples */
 .filter-btn{
-  --size: 28px;
+  --size: 24px;
   width: var(--size);
   height: var(--size);
   display: inline-grid;
   place-items: center;
-  border-radius: 8px;
+  border-radius: 4px;
   border: 1px solid var(--neutral-300);
   background: var(--white);
   padding: 0;
@@ -52,3 +52,29 @@
 .filter-menu .btn-outline-primary:hover{ background: var(--brand-blue-500); color: var(--white); }
 .filter-menu .btn-outline-secondary{ color: var(--neutral-700); }
 .filter-menu .divider{ height:1px; background: var(--neutral-300); margin:.5rem 0; }
+
+/* Ajustes para cabeçalhos com botão de filtro */
+th[data-filterable="true"]{
+  white-space: nowrap;
+}
+th[data-filterable="true"] .filter-scope{
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: .25rem;
+}
+
+/* Alinhamento do menu suspenso de filtros */
+.filter-menu .form-check{
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  margin-bottom: .25rem;
+}
+.filter-menu .form-check-input{
+  margin-top: 0;
+  flex-shrink: 0;
+}
+.filter-menu .form-check-label{
+  margin-bottom: 0;
+  flex-grow: 1;
+}

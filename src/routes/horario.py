@@ -1,7 +1,8 @@
 """Rotas para gerenciamento de horários."""
 
 from flask import Blueprint, request, jsonify
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, ProgrammingError, OperationalError
+from sqlalchemy import text
 from pydantic import ValidationError
 
 from src.models import db, Horario
@@ -14,10 +15,19 @@ horario_bp = Blueprint("horario", __name__)
 
 @horario_bp.route("/horarios", methods=["GET"])
 def listar_horarios():
-    horarios = Horario.query.order_by(Horario.nome).all()
-    payload = [
-        {"id": h.id, "nome": h.nome, "turno": h.turno} for h in horarios
-    ]
+    """Lista horários, lidando com ausência da coluna 'turno'."""
+    try:
+        horarios = Horario.query.order_by(Horario.nome).all()
+        payload = [
+            {"id": h.id, "nome": h.nome, "turno": getattr(h, "turno", None)}
+            for h in horarios
+        ]
+    except (ProgrammingError, OperationalError):  # coluna 'turno' ausente
+        db.session.rollback()
+        result = db.session.execute(
+            text("SELECT id, nome FROM planejamento_horarios ORDER BY nome")
+        )
+        payload = [{"id": row.id, "nome": row.nome, "turno": None} for row in result]
     return jsonify(payload)
 
 

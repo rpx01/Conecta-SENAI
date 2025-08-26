@@ -10,9 +10,6 @@
     <link href="/css/styles.css" rel="stylesheet">
     <link rel="stylesheet" href="css/menu-suspenso.css">
     <link rel="stylesheet" href="css/components/filter.css">
-    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/planejamento-trimestral.css">
-    <script src="/static/js/planejamento-trimestral.js" defer></script>
     <style>
         .table-responsive {
             max-height: 75vh;
@@ -88,35 +85,12 @@
     </aside>
 
     <main class="container-fluid py-4" id="aba-planejamento-trimestral">
-        <header class="page-header">
-            <h1 class="page-title">Planejamento Trimestral</h1>
-            <div class="actions">
-                <div class="filters">
-                    <button id="btnFiltros" class="btn-filter" aria-haspopup="true" aria-expanded="false" aria-controls="filtroMenu">
-                        Filtros
-                    </button>
-                    <div id="filtroMenu" class="filter-menu" role="menu" aria-labelledby="btnFiltros">
-                        <div class="filter-group">
-                            <label class="filter-option">
-                                <input type="checkbox" name="tipo" value="treinamento">
-                                <span>Treinamento</span>
-                            </label>
-                            <label class="filter-option">
-                                <input type="checkbox" name="tipo" value="manutencao">
-                                <span>Manutenção</span>
-                            </label>
-                        </div>
-                        <div class="filter-actions">
-                            <button type="button" class="btn-apply">Aplicar</button>
-                            <button type="button" class="btn-clear">Limpar</button>
-                        </div>
-                    </div>
-                </div>
-                <button id="btn-adicionar-planejamento" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-2"></i>Adicionar
-                </button>
-            </div>
-        </header>
+        <div class="page-header">
+            <h1 class="mb-0">Planejamento Trimestral</h1>
+            <button id="btn-adicionar-planejamento" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Adicionar
+            </button>
+        </div>
 
         <div id="planejamento-container" class="mt-4">
             <div class="card mb-4">
@@ -647,6 +621,7 @@
     <script src="/js/app.js"></script>
     <script src="js/menu-suspenso.js"></script>
     <script src="/js/utils/datas.js"></script>
+    <script src="/js/planejamento-trimestral.js"></script>
     <script src="js/filtros-tabela.js"></script>
     <script src="js/filters-ui.js"></script>
     <script>

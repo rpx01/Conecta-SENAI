@@ -1,45 +1,5 @@
 /* global bootstrap, chamarAPI, showToast, escapeHTML, executarAcaoComFeedback */
 
-(function () {
-  const btn = document.getElementById('btnFiltros');
-  const menu = document.getElementById('filtroMenu');
-
-  if (!btn || !menu) return;
-
-  function openMenu() {
-    menu.classList.add('open');
-    btn.setAttribute('aria-expanded', 'true');
-
-    const rect = menu.getBoundingClientRect();
-    if (rect.right > window.innerWidth) {
-      menu.style.left = 'auto';
-      menu.style.right = '0';
-    }
-  }
-
-  function closeMenu() {
-    menu.classList.remove('open');
-    btn.setAttribute('aria-expanded', 'false');
-  }
-
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    menu.classList.contains('open') ? closeMenu() : openMenu();
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!menu.contains(e.target) && e.target !== btn) closeMenu();
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeMenu();
-  });
-
-  window.addEventListener('resize', () => {
-    if (menu.classList.contains('open')) openMenu();
-  });
-})();
-
 // Mapeamento dos endpoints da API para os IDs dos selects no HTML
 const mapeamentoSelects = {
     'itemHorario': '/planejamento-basedados/horario',

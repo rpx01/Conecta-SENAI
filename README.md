@@ -73,7 +73,8 @@ Todas as variáveis disponíveis estão listadas em `.env.example`.
 
 7. Um scheduler baseado em APScheduler gera periodicamente lembretes de
    agendamentos. O intervalo em minutos pode ser ajustado pela variável de
-   ambiente `NOTIFICACAO_INTERVALO_MINUTOS` (padrão: `60`).
+   ambiente `NOTIFICACAO_INTERVALO_MINUTOS` (padrão: `60`). Defina
+   `SCHEDULER_ENABLED=0` para desativá-lo completamente.
 
 ## Segurança
 

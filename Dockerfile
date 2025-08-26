@@ -47,4 +47,4 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl -f http://localhos
 
 # Comando para iniciar a aplicação
 # Executa as migrações do banco de dados e inicia o servidor Gunicorn
-CMD sh -c "flask --app src.main db upgrade && gunicorn --factory -b 0.0.0.0:${PORT:-8080} src.main:create_app"
+CMD ["/bin/bash", "-lc", "SCHEDULER_ENABLED=0 flask --app src.main db upgrade && exec gunicorn 'src.main:create_app()' --bind 0.0.0.0:${PORT:-8080} --workers 1 --threads 1 --max-requests 200 --max-requests-jitter 50 --timeout 30 --graceful-timeout 30 --keep-alive 2 --log-level info"]

@@ -2,6 +2,7 @@
 
 from flask import Blueprint, request, jsonify
 from sqlalchemy.exc import SQLAlchemyError
+from pydantic import ValidationError
 
 from src.models import db, Horario
 from src.schemas.horario import HorarioCreateSchema, HorarioOutSchema
@@ -23,7 +24,10 @@ def listar_horarios():
 @horario_bp.route("/horarios", methods=["POST"])
 def criar_horario():
     data = request.get_json(silent=True) or {}
-    validated = HorarioCreateSchema(**data)
+    try:
+        validated = HorarioCreateSchema(**data)
+    except ValidationError as e:
+        return jsonify({"erro": e.errors()}), 400
     if Horario.query.filter_by(nome=validated.nome).first():
         return jsonify({"erro": "Já existe um horário com este nome"}), 400
     try:
@@ -47,7 +51,10 @@ def atualizar_horario(horario_id: int):
         "nome": data.get("nome", horario.nome),
         "turno": data.get("turno", horario.turno),
     }
-    validated = HorarioCreateSchema(**payload)
+    try:
+        validated = HorarioCreateSchema(**payload)
+    except ValidationError as e:
+        return jsonify({"erro": e.errors()}), 400
     if (
         validated.nome != horario.nome
         and Horario.query.filter_by(nome=validated.nome).first()

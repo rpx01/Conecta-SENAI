@@ -55,6 +55,14 @@ i.bi {
   flex: 1;
 }
 
+/* DESCRIÇÃO: Este código organiza o contêiner do cabeçalho para que seus itens (título e botão) fiquem em linha, com alinhamento vertical centralizado. */
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
 .page-header {
   display: flex;
   justify-content: space-between;

@@ -51,6 +51,8 @@ async function carregarTodosOsDados() {
         let endpoint = `/planejamento-basedados/${tipo}`;
         if (tipo === 'instrutor') {
             endpoint = '/instrutores'; // Endpoint específico para instrutores
+        } else if (tipo === 'horario') {
+            endpoint = '/horarios';
         }
         
         try {
@@ -74,7 +76,7 @@ function renderizarTabela(tipo, dados) {
 
     tbody.innerHTML = ''; // Limpa o conteúdo atual da tabela
     if (!dados || dados.length === 0) {
-        const colSpan = tipo === 'treinamento' ? 3 : 2;
+        const colSpan = tipo === 'treinamento' || tipo === 'horario' ? 3 : 2;
         tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center">Nenhum item cadastrado.</td></tr>`;
         return;
     }
@@ -88,6 +90,19 @@ function renderizarTabela(tipo, dados) {
                 <td>${item.carga_horaria ?? ''}</td>
                 <td class="text-end">
                     <button class="btn btn-sm btn-outline-primary" onclick="editarItem('${tipo}', ${item.id}, '${escapeHTML(item.nome)}', ${item.carga_horaria ?? 'null'})">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusao('${tipo}', ${item.id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+        } else if (tipo === 'horario') {
+            tr.innerHTML = `
+                <td>${escapeHTML(item.nome)}</td>
+                <td>${escapeHTML(item.turno ?? '')}</td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary" onclick="editarItem('${tipo}', ${item.id}, '${escapeHTML(item.nome)}', '', '${item.turno || ''}')">
                         <i class="bi bi-pencil"></i>
                     </button>
                     <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusao('${tipo}', ${item.id})">
@@ -118,12 +133,21 @@ function renderizarTabela(tipo, dados) {
  * @param {number|null} id - O ID do item (para edição).
  * @param {string|null} nome - O nome atual do item (para edição).
  */
-window.abrirModal = (tipo, id = null, nome = '', carga = '') => {
+window.abrirModal = (tipo, id = null, nome = '', carga = '', turno = '') => {
     const form = document.getElementById('geralForm');
     form.reset();
     document.getElementById('itemType').value = tipo;
     document.getElementById('itemId').value = id || '';
     document.getElementById('itemName').value = nome || '';
+    const turnoGroup = document.getElementById('turnoGroup');
+    const turnoSelect = document.getElementById('itemTurno');
+    if (tipo === 'horario') {
+        turnoGroup.classList.remove('d-none');
+        turnoSelect.value = turno || '';
+    } else {
+        turnoGroup.classList.add('d-none');
+        turnoSelect.value = '';
+    }
 
     const cargaGroup = document.getElementById('cargaHorariaGroup');
     const cargaInput = document.getElementById('itemCargaHoraria');
@@ -162,20 +186,31 @@ async function salvarItemGeral() {
     const id = document.getElementById('itemId').value;
     const nome = document.getElementById('itemName').value;
     const cargaHoraria = document.getElementById('itemCargaHoraria').value;
+    const turno = document.getElementById('itemTurno').value;
 
     if (!nome.trim()) {
         showToast('O nome não pode estar vazio.', 'warning');
         return;
     }
-    
-    const endpoint = id 
-        ? `/planejamento-basedados/${tipo}/${id}` 
+    if (tipo === 'horario' && !turno) {
+        showToast('Selecione um turno.', 'warning');
+        return;
+    }
+
+    let endpoint = id
+        ? `/planejamento-basedados/${tipo}/${id}`
         : `/planejamento-basedados/${tipo}`;
+    if (tipo === 'horario') {
+        endpoint = id ? `/horarios/${id}` : '/horarios';
+    }
     const method = id ? 'PUT' : 'POST';
-    
+
     const payload = { nome };
     if (tipo === 'treinamento' && cargaHoraria) {
         payload.carga_horaria = parseInt(cargaHoraria, 10);
+    }
+    if (tipo === 'horario') {
+        payload.turno = turno;
     }
 
     try {
@@ -262,6 +297,8 @@ async function executarExclusao() {
     let endpoint = `/planejamento-basedados/${tipo}/${id}`;
     if (tipo === 'instrutor') {
         endpoint = `/instrutores/${id}`;
+    } else if (tipo === 'horario') {
+        endpoint = `/horarios/${id}`;
     }
 
     try {

@@ -87,6 +87,11 @@ def create_item_generico(tipo):
 
     if tipo == "treinamento":
         item = model(nome=nome, carga_horaria=data.get("carga_horaria"))
+    elif tipo == "horario":
+        turno = data.get("turno")
+        if not turno:
+            return jsonify({"erro": "O campo 'turno' é obrigatório"}), 400
+        item = model(nome=nome, turno=turno)
     else:
         item = model(nome=nome)
     db.session.add(item)
@@ -113,6 +118,9 @@ def update_item_generico(tipo, item_id):
     item.nome = nome
     if tipo == "treinamento":
         item.carga_horaria = data.get("carga_horaria")
+    elif tipo == "horario":
+        if data.get("turno"):
+            item.turno = data.get("turno")
     db.session.commit()
     return jsonify(item.to_dict())
 

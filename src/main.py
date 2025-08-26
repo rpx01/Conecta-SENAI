@@ -25,6 +25,7 @@ from src.routes.user import user_bp
 from src.routes.rateio import rateio_bp
 from src.routes.treinamentos import treinamento_bp, turma_bp
 from src.routes.planejamento import basedados_bp, planejamento_bp
+from src.routes.horario import horario_bp
 from src.routes.inscricoes_treinamento import bp as inscricoes_treinamento_bp
 from src.blueprints.auth_reset import auth_reset_bp
 from src.blueprints.auth import auth_bp
@@ -227,6 +228,7 @@ def create_app():
     app.register_blueprint(ocupacao_bp, url_prefix='/api')
     app.register_blueprint(rateio_bp, url_prefix='/api')
     app.register_blueprint(treinamento_bp, url_prefix='/api')
+    app.register_blueprint(horario_bp, url_prefix='/api')
     app.register_blueprint(basedados_bp, url_prefix='/api/planejamento-basedados')
     app.register_blueprint(planejamento_bp, url_prefix='/api')
     app.register_blueprint(inscricoes_treinamento_bp)

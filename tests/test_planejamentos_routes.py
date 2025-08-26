@@ -22,7 +22,7 @@ def auth_headers(client, login_admin, csrf_token):
 @pytest.fixture
 def base_ids(app):
     with app.app_context():
-        horario = Horario(nome='Manhã', turno='manhã')
+        horario = Horario(nome='Manhã')
         carga = CargaHoraria(nome='8h')
         modalidade = Modalidade(nome='Presencial')
         treinamento = PlanejamentoTreinamento(nome='Treinamento X')

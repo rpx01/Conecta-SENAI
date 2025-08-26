@@ -7,7 +7,7 @@ import sys
 from flask import Flask, redirect
 from flasgger import Swagger
 from flask_wtf.csrf import CSRFProtect
-from flask_migrate import Migrate, upgrade
+from flask_migrate import Migrate
 from src.limiter import limiter
 from src.redis_client import init_redis
 from src.config import DevConfig, ProdConfig, TestConfig
@@ -185,9 +185,6 @@ def create_app():
 
     db.init_app(app)
     Migrate(app, db, directory=migrations_dir)
-    if not app.config.get('TESTING'):
-        with app.app_context():
-            upgrade()
     init_redis(app)
     limiter.init_app(app)
     app.config['WTF_CSRF_CHECK_DEFAULT'] = False

@@ -92,6 +92,13 @@
             </button>
         </div>
 
+        <div class="filter-group">
+            <button id="btnFiltros" class="btn btn-filter" aria-expanded="false" aria-controls="menuFiltros">
+                Filtros
+            </button>
+            <div id="menuFiltros" class="dropdown-menu" role="menu" hidden></div>
+        </div>
+
         <div id="planejamento-container" class="mt-4">
             <div class="card mb-4">
                 <div class="card-body p-0">
@@ -101,7 +108,7 @@
                                 <tr>
                                     <th scope="col" data-filterable="true">
                                         <div class="th-content">
-                                            <span class="th-label">Data Inicial</span>
+                                            <span class="th-title">Data Inicial</span>
                                             <button class="filter-btn" type="button"
                                                 aria-haspopup="menu" aria-expanded="false"
                                                 data-filter-for="data-inicial">
@@ -115,7 +122,7 @@
                                     </th>
                                     <th scope="col" data-filterable="true">
                                         <div class="th-content">
-                                            <span class="th-label">Data Final</span>
+                                            <span class="th-title">Data Final</span>
                                             <button class="filter-btn" type="button"
                                                 aria-haspopup="menu" aria-expanded="false"
                                                 data-filter-for="data-final">
@@ -129,7 +136,7 @@
                                     </th>
                                     <th scope="col" data-filterable="true">
                                         <div class="th-content">
-                                            <span class="th-label">Semana</span>
+                                            <span class="th-title">Semana</span>
                                             <button class="filter-btn" type="button"
                                                 aria-haspopup="menu" aria-expanded="false"
                                                 data-filter-for="semana">
@@ -143,7 +150,7 @@
                                     </th>
                                     <th scope="col" data-filterable="true">
                                         <div class="th-content">
-                                            <span class="th-label">Horário</span>
+                                            <span class="th-title">Horário</span>
                                             <button class="filter-btn" type="button"
                                                 aria-haspopup="menu" aria-expanded="false"
                                                 data-filter-for="horario">
@@ -157,7 +164,7 @@
                                     </th>
                                     <th scope="col" data-filterable="true">
                                         <div class="th-content">
-                                            <span class="th-label">C.H.</span>
+                                            <span class="th-title">C.H.</span>
                                             <button class="filter-btn" type="button"
                                                 aria-haspopup="menu" aria-expanded="false"
                                                 data-filter-for="carga-horaria">
@@ -171,7 +178,7 @@
                                     </th>
                                     <th scope="col" data-filterable="true">
                                         <div class="th-content">
-                                            <span class="th-label">Modalidade</span>
+                                            <span class="th-title">Modalidade</span>
                                             <button class="filter-btn" type="button"
                                                 aria-haspopup="menu" aria-expanded="false"
                                                 data-filter-for="modalidade">
@@ -185,7 +192,7 @@
                                     </th>
                                     <th scope="col" data-filterable="true">
                                         <div class="th-content">
-                                            <span class="th-label">Treinamento</span>
+                                            <span class="th-title">Treinamento</span>
                                             <button class="filter-btn" type="button"
                                                 aria-haspopup="menu" aria-expanded="false"
                                                 data-filter-for="treinamento">
@@ -199,7 +206,7 @@
                                     </th>
                                     <th scope="col" data-filterable="true">
                                         <div class="th-content">
-                                            <span class="th-label">CMD</span>
+                                            <span class="th-title">CMD</span>
                                             <button class="filter-btn" type="button"
                                                 aria-haspopup="menu" aria-expanded="false"
                                                 data-filter-for="cmd">
@@ -213,7 +220,7 @@
                                     </th>
                                     <th scope="col" data-filterable="true">
                                         <div class="th-content">
-                                            <span class="th-label">SJB</span>
+                                            <span class="th-title">SJB</span>
                                             <button class="filter-btn" type="button"
                                                 aria-haspopup="menu" aria-expanded="false"
                                                 data-filter-for="sjb">
@@ -227,7 +234,7 @@
                                     </th>
                                     <th scope="col" data-filterable="true">
                                         <div class="th-content">
-                                            <span class="th-label">SAG/TOMBOS</span>
+                                            <span class="th-title">SAG/TOMBOS</span>
                                             <button class="filter-btn" type="button"
                                                 aria-haspopup="menu" aria-expanded="false"
                                                 data-filter-for="sag-tombos">
@@ -241,7 +248,7 @@
                                     </th>
                                     <th scope="col" data-filterable="true">
                                         <div class="th-content">
-                                            <span class="th-label">Instrutor</span>
+                                            <span class="th-title">Instrutor</span>
                                             <button class="filter-btn" type="button"
                                                 aria-haspopup="menu" aria-expanded="false"
                                                 data-filter-for="instrutor">
@@ -255,7 +262,7 @@
                                     </th>
                                     <th scope="col" data-filterable="true">
                                         <div class="th-content">
-                                            <span class="th-label">Local</span>
+                                            <span class="th-title">Local</span>
                                             <button class="filter-btn" type="button"
                                                 aria-haspopup="menu" aria-expanded="false"
                                                 data-filter-for="local">
@@ -269,7 +276,7 @@
                                     </th>
                                     <th scope="col" data-filterable="true">
                                         <div class="th-content">
-                                            <span class="th-label">Obs.</span>
+                                            <span class="th-title">Obs.</span>
         <button class="filter-btn" type="button"
                                                 aria-haspopup="menu" aria-expanded="false"
                                                 data-filter-for="observacao">
@@ -414,6 +421,7 @@
     <script src="js/menu-suspenso.js"></script>
     <script src="/js/utils/datas.js"></script>
     <script src="/js/planejamento-trimestral.js"></script>
+    <script src="js/filters.js"></script>
     <script src="js/filtros-tabela.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', () => {

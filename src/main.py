@@ -139,6 +139,7 @@ def create_default_recursos(app):
 
 def create_app():
     """Fábrica de aplicação usada pelo Flask."""
+    logging.info("Iniciando a criação da aplicação Flask...")
     app = Flask(__name__, static_url_path='', static_folder='static')
 
     env = os.getenv('FLASK_ENV', 'development').lower()
@@ -233,7 +234,9 @@ def create_app():
     app.register_blueprint(auth_bp)
 
     # Inicia scheduler para notificações
-    iniciar_scheduler(app)
+    with app.app_context():
+        if os.getenv("ENABLE_SCHEDULER", "1") == "1":
+            iniciar_scheduler(app)
 
 
     @app.route('/')
@@ -252,11 +255,10 @@ def create_app():
     # A inicializacao do banco (migracoes e dados padrao) deve ser executada
     # separadamente durante o processo de deploy.
 
+    logging.info("Aplicação Flask criada com sucesso.")
     return app
 try:
-    logging.info("Iniciando a criação da aplicação Flask...")
     app = create_app()
-    logging.info("Aplicação Flask criada com sucesso.")
 except Exception as e:
     logging.error("!!!!!! FALHA CRÍTICA AO INICIAR A APLICAÇÃO !!!!!!")
     logging.error(f"Erro: {e}")

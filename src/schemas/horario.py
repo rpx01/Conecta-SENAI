@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional
 from pydantic import BaseModel, ConfigDict, constr
 
 TurnoLiteral = Literal["manhã", "tarde", "noite", "manhã/tarde", "tarde/noite"]
@@ -12,3 +12,4 @@ class HorarioCreateSchema(BaseModel):
 
 class HorarioOutSchema(HorarioCreateSchema):
     id: int
+    turno: Optional[TurnoLiteral] = None

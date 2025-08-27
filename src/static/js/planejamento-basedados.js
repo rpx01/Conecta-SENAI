@@ -142,7 +142,16 @@ window.abrirModal = (tipo, id = null, nome = '', carga = '', turno = '') => {
     const turnoGroup = document.getElementById('turnoGroup');
     if (tipo === 'horario') {
         turnoGroup.classList.remove('d-none');
-        form.turno.value = turno || '';
+        const select = form.turno;
+        select.value = '';
+        if (turno) {
+            for (const opt of select.options) {
+                if (opt.text === turno) {
+                    opt.selected = true;
+                    break;
+                }
+            }
+        }
     } else {
         turnoGroup.classList.add('d-none');
         form.turno.value = '';
@@ -186,7 +195,8 @@ async function salvarItemGeral() {
     const id = document.getElementById('itemId').value;
     const nome = document.getElementById('itemName').value.trim();
     const cargaHoraria = document.getElementById('itemCargaHoraria').value;
-    const turno = form.turno.value;
+    const turnoSelect = form.turno;
+    const turno = turnoSelect.options[turnoSelect.selectedIndex]?.text || '';
 
     if (!nome) {
         showToast('O nome não pode estar vazio.', 'warning');

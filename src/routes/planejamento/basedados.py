@@ -92,10 +92,9 @@ def create_item_generico(tipo):
         turno = data.get("turno")
         if not turno:
             return jsonify({"erro": "O campo 'turno' é obrigatório"}), 400
-        try:
-            item = model(nome=nome, turno=TurnoEnum(turno))
-        except ValueError:
+        if turno not in [t.value for t in TurnoEnum]:
             return jsonify({"erro": "Turno inválido"}), 400
+        item = model(nome=nome, turno=turno)
     else:
         item = model(nome=nome)
     db.session.add(item)
@@ -124,10 +123,10 @@ def update_item_generico(tipo, item_id):
         item.carga_horaria = data.get("carga_horaria")
     elif tipo == "horario":
         if data.get("turno") is not None:
-            try:
-                item.turno = TurnoEnum(data.get("turno"))
-            except ValueError:
+            turno = data.get("turno")
+            if turno not in [t.value for t in TurnoEnum]:
                 return jsonify({"erro": "Turno inválido"}), 400
+            item.turno = turno
     db.session.commit()
     return jsonify(item.to_dict())
 

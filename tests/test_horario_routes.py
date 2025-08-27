@@ -7,12 +7,12 @@ from src.models import db
 def test_criar_horario_valido(client):
     resp = client.post(
         "/api/horarios",
-        json={"nome": "Horario Manha", "turno": "manha"},
+        json={"nome": "Horario Manha", "turno": "Manhã"},
     )
     assert resp.status_code == 201
     data = resp.get_json()
     assert data["nome"] == "Horario Manha"
-    assert data["turno"] == "manha"
+    assert data["turno"] == "Manhã"
     assert "id" in data
 
 
@@ -29,12 +29,12 @@ def test_criar_horario_turno_invalido(client):
 def test_listar_horarios_retorna_turno(client):
     client.post(
         "/api/horarios",
-        json={"nome": "Horario Tarde", "turno": "tarde"},
+        json={"nome": "Horario Tarde", "turno": "Tarde"},
     )
     resp = client.get("/api/horarios")
     assert resp.status_code == 200
     data = resp.get_json()
-    assert any(h["nome"] == "Horario Tarde" and h["turno"] == "tarde" for h in data)
+    assert any(h["nome"] == "Horario Tarde" and h["turno"] == "Tarde" for h in data)
 
 
 @pytest.mark.usefixtures("app")
@@ -61,7 +61,7 @@ def test_criar_horario_sem_coluna_turno(client, app):
 
     resp = client.post(
         "/api/horarios",
-        json={"nome": "Horario X", "turno": "manha"},
+        json={"nome": "Horario X", "turno": "Manhã"},
     )
     assert resp.status_code == 201
     data = resp.get_json()
@@ -84,11 +84,11 @@ def test_criar_horario_com_turno_legado_minusculo(client, app):
 
     resp = client.post(
         "/api/horarios",
-        json={"nome": "Horario Legacy", "turno": "manha"},
+        json={"nome": "Horario Legacy", "turno": "Manhã"},
     )
     assert resp.status_code == 201
     data = resp.get_json()
-    assert data["turno"] == "manha"
+    assert data["turno"] == "Manhã"
 
 
 @pytest.mark.usefixtures("app")
@@ -101,13 +101,13 @@ def test_atualizar_horario_sem_coluna_turno(client, app):
 
     resp = client.post(
         "/api/horarios",
-        json={"nome": "Horario Y", "turno": "manha"},
+        json={"nome": "Horario Y", "turno": "Manhã"},
     )
     horario_id = resp.get_json()["id"]
 
     resp = client.put(
         f"/api/horarios/{horario_id}",
-        json={"nome": "Horario Z", "turno": "tarde"},
+        json={"nome": "Horario Z", "turno": "Tarde"},
     )
     assert resp.status_code == 200
     data = resp.get_json()
@@ -125,7 +125,7 @@ def test_excluir_horario_sem_coluna_turno(client, app):
 
     resp = client.post(
         "/api/horarios",
-        json={"nome": "Horario W", "turno": "manha"},
+        json={"nome": "Horario W", "turno": "Manhã"},
     )
     horario_id = resp.get_json()["id"]
 

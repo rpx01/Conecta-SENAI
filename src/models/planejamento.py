@@ -2,7 +2,6 @@
 from datetime import datetime
 from src.models import db
 from enum import Enum as PyEnum
-from sqlalchemy import Enum as SAEnum
 
 
 class PlanejamentoItem(db.Model):
@@ -81,23 +80,21 @@ class Modalidade(PlanejamentoBase):
 
 
 class TurnoEnum(str, PyEnum):
-    MANHA = "manha"
-    TARDE = "tarde"
-    NOITE = "noite"
-    MANHA_TARDE = "manha_tarde"
-    TARDE_NOITE = "tarde_noite"
+    MANHA = "Manhã"
+    TARDE = "Tarde"
+    NOITE = "Noite"
+    MANHA_TARDE = "Manhã/Tarde"
+    TARDE_NOITE = "Tarde/Noite"
 
 
 class Horario(PlanejamentoBase):
     __tablename__ = "planejamento_horarios"
 
-    turno = db.Column(
-        SAEnum(TurnoEnum, name="turno_enum"), nullable=False, index=True
-    )
+    turno = db.Column(db.String(20), nullable=True, index=True)
 
     def to_dict(self):
         dados = super().to_dict()
-        dados["turno"] = self.turno.value
+        dados["turno"] = self.turno
         return dados
 
 

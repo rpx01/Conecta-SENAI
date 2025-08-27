@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from enum import Enum as PyEnum
 
 from src.models import db, Horario
-from src.schemas.planejamento import HorarioCreate, HorarioUpdate, HorarioOut
+from src.schemas.horario import HorarioCreate, HorarioUpdate, HorarioOut
 from src.utils.error_handler import handle_internal_error
 
 horario_bp = Blueprint("horario", __name__)
@@ -20,11 +20,11 @@ horario_bp = Blueprint("horario", __name__)
 
 # Mapas para compatibilizar valores antigos de turno no banco
 LEGACY_FORMS = {
-    "manha": ["Manhã", "manhã"],
-    "tarde": ["Tarde", "tarde"],
-    "noite": ["Noite", "noite"],
-    "manha_tarde": ["Manhã/Tarde", "manhã/tarde"],
-    "tarde_noite": ["Tarde/Noite", "tarde/noite"],
+    "Manhã": ["Manhã", "manhã", "manha"],
+    "Tarde": ["Tarde", "tarde"],
+    "Noite": ["Noite", "noite"],
+    "Manhã/Tarde": ["Manhã/Tarde", "manhã/tarde", "manha/tarde", "manha_tarde"],
+    "Tarde/Noite": ["Tarde/Noite", "tarde/noite", "tarde_noite"],
 }
 LEGACY_TO_CANON = {
     legacy: canon for canon, forms in LEGACY_FORMS.items() for legacy in forms
@@ -106,8 +106,9 @@ def criar_horario():
         ).first()
     if exists:
         return jsonify({"erro": "Já existe um horário com este nome"}), 400
+    turno_canon = _to_canonical(validated.turno) if validated.turno is not None else None
     try:
-        horario = Horario(nome=validated.nome, turno=validated.turno)
+        horario = Horario(nome=validated.nome, turno=turno_canon)
         db.session.add(horario)
         db.session.commit()
         out = HorarioOut(
@@ -129,7 +130,7 @@ def criar_horario():
                     text(
                         "INSERT INTO planejamento_horarios (nome, turno) VALUES (:nome, :turno) RETURNING id, nome, turno"
                     ),
-                    {"nome": validated.nome, "turno": validated.turno.value},
+                    {"nome": validated.nome, "turno": turno_canon},
                 )
                 .mappings()
                 .first()
@@ -138,7 +139,7 @@ def criar_horario():
         except (ProgrammingError, OperationalError, IntegrityError):
             db.session.rollback()
             result = None
-            for legacy_turno in _legacy_variants(validated.turno):
+            for legacy_turno in _legacy_variants(turno_canon):
                 try:
                     result = (
                         db.session.execute(
@@ -237,7 +238,11 @@ def atualizar_horario(horario_id: int):
                 return jsonify({"erro": "Horário não encontrado"}), 404
             novo_nome = validated.nome if validated.nome is not None else result["nome"]
             turno_atual = _to_canonical(result.get("turno"))
-            novo_turno = validated.turno if validated.turno is not None else turno_atual
+            novo_turno = (
+                _to_canonical(validated.turno)
+                if validated.turno is not None
+                else turno_atual
+            )
             if db.session.execute(
                 text(
                     "SELECT 1 FROM planejamento_horarios WHERE nome=:nome AND id<>:id LIMIT 1"
@@ -252,7 +257,7 @@ def atualizar_horario(horario_id: int):
                     ),
                     {
                         "nome": novo_nome,
-                        "turno": getattr(novo_turno, "value", novo_turno),
+                        "turno": novo_turno,
                         "id": horario_id,
                     },
                 )
@@ -307,7 +312,7 @@ def atualizar_horario(horario_id: int):
     if validated.nome is not None:
         horario.nome = validated.nome
     if validated.turno is not None:
-        horario.turno = validated.turno
+        horario.turno = _to_canonical(validated.turno)
 
     try:
         db.session.commit()

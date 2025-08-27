@@ -9,13 +9,13 @@ from sqlalchemy.exc import SQLAlchemyError
 from src.models import db
 from src.models.planejamento import (
     PlanejamentoItem,
+    Horario,
     CargaHoraria,
     Modalidade,
     PlanejamentoTreinamento,
     Local,
     PublicoAlvo,
 )
-from src.models import Horario
 from src.models.treinamento import Treinamento
 from src.models.instrutor import Instrutor
 from src.routes.user import verificar_autenticacao

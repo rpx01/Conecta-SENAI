@@ -210,13 +210,13 @@
                         </div>
                         <div class="mb-3 d-none" id="turnoGroup">
                             <label for="turno" class="form-label">Turno</label>
-                            <select id="turno" name="turno" class="form-select">
-                                <option value="" selected>Selecione o turno</option>
-                                <option value="MANHA">Manhã</option>
-                                <option value="TARDE">Tarde</option>
-                                <option value="NOITE">Noite</option>
-                                <option value="MANHA_TARDE">Manhã/Tarde</option>
-                                <option value="TARDE_NOITE">Tarde/Noite</option>
+                            <select id="turno" name="turno" class="form-select" required>
+                                <option value="" disabled selected>Selecione o turno</option>
+                                <option value="manha">Manhã</option>
+                                <option value="tarde">Tarde</option>
+                                <option value="noite">Noite</option>
+                                <option value="manha_tarde">Manhã/Tarde</option>
+                                <option value="tarde_noite">Tarde/Noite</option>
                             </select>
                         </div>
                         <div class="mb-3 d-none" id="cargaHorariaGroup">

@@ -305,8 +305,7 @@ def atualizar_horario(horario_id: int):
         return jsonify({"erro": "Já existe um horário com este nome"}), 400
 
     horario.nome = payload.nome
-    if payload.turno is not None:
-        horario.turno = _to_canonical(payload.turno)
+    horario.turno = _to_canonical(payload.turno) if payload.turno is not None else None
 
     try:
         db.session.commit()

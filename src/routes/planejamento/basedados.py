@@ -9,7 +9,6 @@ from src.models.planejamento import (
     CargaHoraria,
     PublicoAlvo,
     PlanejamentoTreinamento,
-    TurnoEnum,
 )
 
 basedados_bp = Blueprint(
@@ -92,11 +91,7 @@ def create_item_generico(tipo):
         turno = data.get("turno")
         if not turno:
             return jsonify({"erro": "O campo 'turno' é obrigatório"}), 400
-        try:
-            turno_enum = TurnoEnum(turno)
-        except ValueError:
-            return jsonify({"erro": "Turno inválido"}), 400
-        item = model(nome=nome, turno=turno_enum)
+        item = model(nome=nome, turno=turno)
     else:
         item = model(nome=nome)
     db.session.add(item)
@@ -124,12 +119,8 @@ def update_item_generico(tipo, item_id):
     if tipo == "treinamento":
         item.carga_horaria = data.get("carga_horaria")
     elif tipo == "horario":
-        turno_valor = data.get("turno")
-        if turno_valor:
-            try:
-                item.turno = TurnoEnum(turno_valor)
-            except ValueError:
-                return jsonify({"erro": "Turno inválido"}), 400
+        if data.get("turno"):
+            item.turno = data.get("turno")
     db.session.commit()
     return jsonify(item.to_dict())
 

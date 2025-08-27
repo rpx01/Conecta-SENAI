@@ -1,6 +1,8 @@
 """Model for storing planning items."""
 from datetime import datetime
 from src.models import db
+from enum import Enum as PyEnum
+from sqlalchemy import Enum as SAEnum
 
 
 class PlanejamentoItem(db.Model):
@@ -76,6 +78,27 @@ class Local(PlanejamentoBase):
 
 class Modalidade(PlanejamentoBase):
     __tablename__ = "planejamento_modalidades"
+
+
+class TurnoEnum(str, PyEnum):
+    MANHA = "manha"
+    TARDE = "tarde"
+    NOITE = "noite"
+    MANHA_TARDE = "manha_tarde"
+    TARDE_NOITE = "tarde_noite"
+
+
+class Horario(PlanejamentoBase):
+    __tablename__ = "planejamento_horarios"
+
+    turno = db.Column(
+        SAEnum(TurnoEnum, name="turno_enum"), nullable=False, index=True
+    )
+
+    def to_dict(self):
+        dados = super().to_dict()
+        dados["turno"] = self.turno.value
+        return dados
 
 
 class CargaHoraria(PlanejamentoBase):

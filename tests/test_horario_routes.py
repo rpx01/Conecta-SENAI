@@ -7,12 +7,12 @@ from src.models import db
 def test_criar_horario_valido(client):
     resp = client.post(
         "/api/horarios",
-        json={"nome": "Horario Manha", "turno": "Manhã"},
+        json={"nome": "Horario Manha", "turno": "manha"},
     )
     assert resp.status_code == 201
     data = resp.get_json()
     assert data["nome"] == "Horario Manha"
-    assert data["turno"] == "Manhã"
+    assert data["turno"] == "manha"
     assert "id" in data
 
 
@@ -29,12 +29,12 @@ def test_criar_horario_turno_invalido(client):
 def test_listar_horarios_retorna_turno(client):
     client.post(
         "/api/horarios",
-        json={"nome": "Horario Tarde", "turno": "Tarde"},
+        json={"nome": "Horario Tarde", "turno": "tarde"},
     )
     resp = client.get("/api/horarios")
     assert resp.status_code == 200
     data = resp.get_json()
-    assert any(h["nome"] == "Horario Tarde" and h["turno"] == "Tarde" for h in data)
+    assert any(h["nome"] == "Horario Tarde" and h["turno"] == "tarde" for h in data)
 
 
 @pytest.mark.usefixtures("app")
@@ -61,7 +61,7 @@ def test_criar_horario_sem_coluna_turno(client, app):
 
     resp = client.post(
         "/api/horarios",
-        json={"nome": "Horario X", "turno": "Manhã"},
+        json={"nome": "Horario X", "turno": "manha"},
     )
     assert resp.status_code == 201
     data = resp.get_json()
@@ -79,13 +79,13 @@ def test_atualizar_horario_sem_coluna_turno(client, app):
 
     resp = client.post(
         "/api/horarios",
-        json={"nome": "Horario Y", "turno": "Manhã"},
+        json={"nome": "Horario Y", "turno": "manha"},
     )
     horario_id = resp.get_json()["id"]
 
     resp = client.put(
         f"/api/horarios/{horario_id}",
-        json={"nome": "Horario Z", "turno": "Tarde"},
+        json={"nome": "Horario Z", "turno": "tarde"},
     )
     assert resp.status_code == 200
     data = resp.get_json()
@@ -103,7 +103,7 @@ def test_excluir_horario_sem_coluna_turno(client, app):
 
     resp = client.post(
         "/api/horarios",
-        json={"nome": "Horario W", "turno": "Manhã"},
+        json={"nome": "Horario W", "turno": "manha"},
     )
     horario_id = resp.get_json()["id"]
 

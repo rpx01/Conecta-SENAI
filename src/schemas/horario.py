@@ -1,24 +1,19 @@
+from pydantic import BaseModel
 from typing import Optional, Literal
-from pydantic import BaseModel, constr, ConfigDict
 
 TurnoLiteral = Literal["Manhã", "Tarde", "Noite", "Manhã/Tarde", "Tarde/Noite"]
 
 
-class HorarioBase(BaseModel):
-    nome: constr(min_length=1, strip_whitespace=True)
+class HorarioIn(BaseModel):
+    nome: str
     turno: Optional[TurnoLiteral] = None
-    model_config = ConfigDict(from_attributes=True)
 
 
-class HorarioCreate(HorarioBase):
-    pass
-
-
-class HorarioUpdate(BaseModel):
-    nome: Optional[constr(min_length=1, strip_whitespace=True)] = None
-    turno: Optional[TurnoLiteral] = None
-    model_config = ConfigDict(from_attributes=True)
-
-
-class HorarioOut(HorarioBase):
+class HorarioOut(BaseModel):
     id: int
+    nome: str
+    turno: Optional[TurnoLiteral] = None
+
+    class Config:
+        from_attributes = True
+

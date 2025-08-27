@@ -90,7 +90,7 @@ class TurnoEnum(str, PyEnum):
 class Horario(PlanejamentoBase):
     __tablename__ = "planejamento_horarios"
 
-    turno = db.Column(db.String(20), nullable=True, index=True)
+    turno = db.Column(db.String(20), nullable=True)
 
     def to_dict(self):
         dados = super().to_dict()

@@ -140,21 +140,13 @@ window.abrirModal = (tipo, id = null, nome = '', carga = '', turno = '') => {
     document.getElementById('itemId').value = id || '';
     document.getElementById('itemName').value = nome || '';
     const turnoGroup = document.getElementById('turnoGroup');
+    const selectTurno = document.getElementById('turnoHorario');
     if (tipo === 'horario') {
         turnoGroup.classList.remove('d-none');
-        const select = form.turno;
-        select.value = '';
-        if (turno) {
-            for (const opt of select.options) {
-                if (opt.text === turno) {
-                    opt.selected = true;
-                    break;
-                }
-            }
-        }
+        selectTurno.value = turno || '';
     } else {
         turnoGroup.classList.add('d-none');
-        form.turno.value = '';
+        selectTurno.value = '';
     }
 
     const cargaGroup = document.getElementById('cargaHorariaGroup');
@@ -195,8 +187,7 @@ async function salvarItemGeral() {
     const id = document.getElementById('itemId').value;
     const nome = document.getElementById('itemName').value.trim();
     const cargaHoraria = document.getElementById('itemCargaHoraria').value;
-    const turnoSelect = form.turno;
-    const turno = turnoSelect.options[turnoSelect.selectedIndex]?.text || '';
+    const turno = document.querySelector('#turnoHorario')?.value || '';
 
     if (!nome) {
         showToast('O nome não pode estar vazio.', 'warning');
@@ -237,7 +228,12 @@ async function salvarHorario(id, nome, turno) {
     const endpoint = id ? `/horarios/${id}` : '/horarios';
     const method = id ? 'PUT' : 'POST';
     try {
-        await chamarAPI(endpoint, method, { nome, turno });
+        await executarAcaoComFeedback(
+            document.getElementById('btnSalvarGeral'),
+            async () => {
+                await chamarAPI(endpoint, method, { nome, turno });
+            }
+        );
         showToast(`${NOMES_TIPO['horario']} ${id ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
         geralModal.hide();
         carregarTodosOsDados();

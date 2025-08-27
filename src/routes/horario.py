@@ -13,6 +13,29 @@ from src.utils.error_handler import handle_internal_error
 horario_bp = Blueprint("horario", __name__)
 
 
+# Mapas para compatibilizar valores antigos de turno no banco
+LEGACY_TO_CANON = {
+    "Manhã": "manha",
+    "Tarde": "tarde",
+    "Noite": "noite",
+    "Manhã/Tarde": "manha_tarde",
+    "Tarde/Noite": "tarde_noite",
+}
+CANON_TO_LEGACY = {v: k for k, v in LEGACY_TO_CANON.items()}
+
+
+def _to_canonical(turno):
+    """Converte valores de turno legados para o formato canônico."""
+    if isinstance(turno, PyEnum):
+        turno = turno.value
+    return LEGACY_TO_CANON.get(turno, turno)
+
+
+def _to_legacy(turno):
+    """Converte turno canônico para forma legada utilizada em algumas bases."""
+    return CANON_TO_LEGACY.get(turno, turno)
+
+
 @horario_bp.route("/horarios", methods=["GET"])
 def listar_horarios():
     """Lista horários, lidando com ausência da coluna 'turno'."""
@@ -20,16 +43,26 @@ def listar_horarios():
         horarios = Horario.query.order_by(Horario.nome).all()
         payload = []
         for h in horarios:
-            turno = getattr(h, "turno", None)
-            if isinstance(turno, PyEnum):
-                turno = turno.value
+            turno = _to_canonical(getattr(h, "turno", None))
             payload.append({"id": h.id, "nome": h.nome, "turno": turno})
-    except (ProgrammingError, OperationalError):  # coluna 'turno' ausente
+    except (ProgrammingError, OperationalError, ValueError, LookupError):
         db.session.rollback()
-        result = db.session.execute(
-            text("SELECT id, nome FROM planejamento_horarios ORDER BY nome")
-        )
-        payload = [{"id": row.id, "nome": row.nome, "turno": None} for row in result]
+        try:
+            result = db.session.execute(
+                text("SELECT id, nome, turno FROM planejamento_horarios ORDER BY nome")
+            )
+            payload = []
+            for row in result.mappings():
+                turno = _to_canonical(row.get("turno"))
+                payload.append({"id": row["id"], "nome": row["nome"], "turno": turno})
+        except (ProgrammingError, OperationalError):
+            db.session.rollback()
+            result = db.session.execute(
+                text("SELECT id, nome FROM planejamento_horarios ORDER BY nome")
+            )
+            payload = [
+                {"id": row.id, "nome": row.nome, "turno": None} for row in result
+            ]
     return jsonify(payload)
 
 
@@ -56,10 +89,13 @@ def criar_horario():
         horario = Horario(nome=validated.nome, turno=validated.turno)
         db.session.add(horario)
         db.session.commit()
-        out = HorarioOut(id=horario.id, nome=horario.nome, turno=horario.turno)
+        out = HorarioOut(
+            id=horario.id, nome=horario.nome, turno=_to_canonical(horario.turno)
+        )
         return jsonify(out.model_dump()), 201
-    except (ProgrammingError, OperationalError):
+    except (ProgrammingError, OperationalError, ValueError, LookupError):
         db.session.rollback()
+        # Tenta inserir diretamente com o valor canônico
         try:
             result = db.session.execute(
                 text(
@@ -68,23 +104,32 @@ def criar_horario():
                 {"nome": validated.nome, "turno": validated.turno},
             ).mappings().first()
             db.session.commit()
-            out = {
-                "id": result["id"],
-                "nome": result["nome"],
-                "turno": result.get("turno"),
-            }
-            return jsonify(out), 201
         except (ProgrammingError, OperationalError):
             db.session.rollback()
-            result = db.session.execute(
-                text(
-                    "INSERT INTO planejamento_horarios (nome) VALUES (:nome) RETURNING id, nome"
-                ),
-                {"nome": validated.nome},
-            ).mappings().first()
-            db.session.commit()
-            out = {"id": result["id"], "nome": result["nome"], "turno": None}
-            return jsonify(out), 201
+            # Tenta novamente usando valores legados de turno
+            try:
+                result = db.session.execute(
+                    text(
+                        "INSERT INTO planejamento_horarios (nome, turno) VALUES (:nome, :turno) RETURNING id, nome, turno"
+                    ),
+                    {"nome": validated.nome, "turno": _to_legacy(validated.turno)},
+                ).mappings().first()
+                db.session.commit()
+            except (ProgrammingError, OperationalError):
+                db.session.rollback()
+                result = db.session.execute(
+                    text(
+                        "INSERT INTO planejamento_horarios (nome) VALUES (:nome) RETURNING id, nome"
+                    ),
+                    {"nome": validated.nome},
+                ).mappings().first()
+                db.session.commit()
+                turno = None
+                out = {"id": result["id"], "nome": result["nome"], "turno": turno}
+                return jsonify(out), 201
+        turno = _to_canonical(result.get("turno"))
+        out = {"id": result["id"], "nome": result["nome"], "turno": turno}
+        return jsonify(out), 201
     except SQLAlchemyError as e:  # pragma: no cover - segurança
         db.session.rollback()
         return handle_internal_error(e)
@@ -145,7 +190,8 @@ def atualizar_horario(horario_id: int):
             if not result:
                 return jsonify({"erro": "Horário não encontrado"}), 404
             novo_nome = validated.nome if validated.nome is not None else result["nome"]
-            novo_turno = validated.turno if validated.turno is not None else result.get("turno")
+            turno_atual = _to_canonical(result.get("turno"))
+            novo_turno = validated.turno if validated.turno is not None else turno_atual
             if db.session.execute(
                 text(
                     "SELECT 1 FROM planejamento_horarios WHERE nome=:nome AND id<>:id LIMIT 1"
@@ -163,14 +209,32 @@ def atualizar_horario(horario_id: int):
                 db.session.commit()
             except (ProgrammingError, OperationalError):
                 db.session.rollback()
-                db.session.execute(
-                    text("UPDATE planejamento_horarios SET nome=:nome WHERE id=:id"),
-                    {"nome": novo_nome, "id": horario_id},
-                )
-                db.session.commit()
-                out = {"id": horario_id, "nome": novo_nome, "turno": None}
-                return jsonify(out)
-            out = {"id": horario_id, "nome": novo_nome, "turno": novo_turno}
+                try:
+                    db.session.execute(
+                        text(
+                            "UPDATE planejamento_horarios SET nome=:nome, turno=:turno WHERE id=:id"
+                        ),
+                        {
+                            "nome": novo_nome,
+                            "turno": _to_legacy(novo_turno),
+                            "id": horario_id,
+                        },
+                    )
+                    db.session.commit()
+                except (ProgrammingError, OperationalError):
+                    db.session.rollback()
+                    db.session.execute(
+                        text("UPDATE planejamento_horarios SET nome=:nome WHERE id=:id"),
+                        {"nome": novo_nome, "id": horario_id},
+                    )
+                    db.session.commit()
+                    out = {"id": horario_id, "nome": novo_nome, "turno": None}
+                    return jsonify(out)
+            out = {
+                "id": horario_id,
+                "nome": novo_nome,
+                "turno": _to_canonical(novo_turno),
+            }
             return jsonify(out)
 
     if not horario:
@@ -192,20 +256,42 @@ def atualizar_horario(horario_id: int):
         db.session.commit()
     except (ProgrammingError, OperationalError):
         db.session.rollback()
-        db.session.execute(
-            text(
-                "UPDATE planejamento_horarios SET nome=:nome WHERE id=:id"
-            ),
-            {"nome": horario.nome, "id": horario_id},
-        )
-        db.session.commit()
-        out = {"id": horario_id, "nome": horario.nome, "turno": None}
-        return jsonify(out)
+        try:
+            db.session.execute(
+                text(
+                    "UPDATE planejamento_horarios SET nome=:nome, turno=:turno WHERE id=:id"
+                ),
+                {
+                    "nome": horario.nome,
+                    "turno": _to_legacy(horario.turno),
+                    "id": horario_id,
+                },
+            )
+            db.session.commit()
+            out = {
+                "id": horario_id,
+                "nome": horario.nome,
+                "turno": _to_canonical(horario.turno),
+            }
+            return jsonify(out)
+        except (ProgrammingError, OperationalError):
+            db.session.rollback()
+            db.session.execute(
+                text(
+                    "UPDATE planejamento_horarios SET nome=:nome WHERE id=:id"
+                ),
+                {"nome": horario.nome, "id": horario_id},
+            )
+            db.session.commit()
+            out = {"id": horario_id, "nome": horario.nome, "turno": None}
+            return jsonify(out)
     except SQLAlchemyError as e:  # pragma: no cover - segurança
         db.session.rollback()
         return handle_internal_error(e)
 
-    out = HorarioOut(id=horario.id, nome=horario.nome, turno=horario.turno)
+    out = HorarioOut(
+        id=horario.id, nome=horario.nome, turno=_to_canonical(horario.turno)
+    )
     return jsonify(out.model_dump())
 
 

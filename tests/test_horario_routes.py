@@ -26,6 +26,40 @@ def test_criar_horario_turno_invalido(client):
 
 
 @pytest.mark.usefixtures("app")
+def test_atualizar_horario_atualiza_turno(client):
+    resp = client.post(
+        "/api/horarios",
+        json={"nome": "Horario X", "turno": "Manhã"},
+    )
+    horario_id = resp.get_json()["id"]
+
+    resp = client.put(
+        f"/api/horarios/{horario_id}",
+        json={"nome": "Horario X", "turno": "Tarde"},
+    )
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["turno"] == "Tarde"
+
+
+@pytest.mark.usefixtures("app")
+def test_atualizar_horario_mantem_turno_quando_ausente(client):
+    resp = client.post(
+        "/api/horarios",
+        json={"nome": "Horario Y", "turno": "Manhã"},
+    )
+    horario_id = resp.get_json()["id"]
+
+    resp = client.put(
+        f"/api/horarios/{horario_id}",
+        json={"nome": "Horario Z"},
+    )
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["turno"] == "Manhã"
+
+
+@pytest.mark.usefixtures("app")
 def test_listar_horarios_retorna_turno(client):
     client.post(
         "/api/horarios",

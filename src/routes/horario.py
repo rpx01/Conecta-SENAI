@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from enum import Enum as PyEnum
 
 from src.models import db, Horario
-from src.schemas.horario import HorarioCreate, HorarioUpdate, HorarioOut
+from src.schemas.horario import HorarioIn, HorarioOut
 from src.utils.error_handler import handle_internal_error
 
 horario_bp = Blueprint("horario", __name__)
@@ -93,22 +93,22 @@ def listar_horarios():
 def criar_horario():
     data = request.get_json(silent=True) or {}
     try:
-        validated = HorarioCreate(**data)
+        payload = HorarioIn(**data)
     except ValidationError as e:
         return jsonify({"erro": e.errors()}), 400
     try:
-        exists = Horario.query.filter_by(nome=validated.nome).first()
+        exists = Horario.query.filter_by(nome=payload.nome).first()
     except (ProgrammingError, OperationalError, IntegrityError):
         db.session.rollback()
         exists = db.session.execute(
             text("SELECT 1 FROM planejamento_horarios WHERE nome=:nome LIMIT 1"),
-            {"nome": validated.nome},
+            {"nome": payload.nome},
         ).first()
     if exists:
         return jsonify({"erro": "Já existe um horário com este nome"}), 400
-    turno_canon = _to_canonical(validated.turno) if validated.turno is not None else None
+    turno_canon = _to_canonical(payload.turno) if payload.turno is not None else None
     try:
-        horario = Horario(nome=validated.nome, turno=turno_canon)
+        horario = Horario(nome=payload.nome, turno=turno_canon)
         db.session.add(horario)
         db.session.commit()
         out = HorarioOut(
@@ -130,7 +130,7 @@ def criar_horario():
                     text(
                         "INSERT INTO planejamento_horarios (nome, turno) VALUES (:nome, :turno) RETURNING id, nome, turno"
                     ),
-                    {"nome": validated.nome, "turno": turno_canon},
+                    {"nome": payload.nome, "turno": turno_canon},
                 )
                 .mappings()
                 .first()
@@ -146,7 +146,7 @@ def criar_horario():
                             text(
                                 "INSERT INTO planejamento_horarios (nome, turno) VALUES (:nome, :turno) RETURNING id, nome, turno"
                             ),
-                            {"nome": validated.nome, "turno": legacy_turno},
+                            {"nome": payload.nome, "turno": legacy_turno},
                         )
                         .mappings()
                         .first()
@@ -161,7 +161,7 @@ def criar_horario():
                         text(
                             "INSERT INTO planejamento_horarios (nome) VALUES (:nome) RETURNING id, nome"
                         ),
-                        {"nome": validated.nome},
+                        {"nome": payload.nome},
                     )
                     .mappings()
                     .first()
@@ -190,7 +190,7 @@ def atualizar_horario(horario_id: int):
 
     data = request.get_json(silent=True) or {}
     try:
-        validated = HorarioUpdate(**data)
+        payload = HorarioIn(**data)
     except ValidationError as e:
         return jsonify({"erro": e.errors()}), 400
 
@@ -218,7 +218,7 @@ def atualizar_horario(horario_id: int):
             )
             if not result:
                 return jsonify({"erro": "Horário não encontrado"}), 404
-            novo_nome = validated.nome if validated.nome is not None else result["nome"]
+            novo_nome = payload.nome
             if db.session.execute(
                 text(
                     "SELECT 1 FROM planejamento_horarios WHERE nome=:nome AND id<>:id LIMIT 1"
@@ -236,13 +236,9 @@ def atualizar_horario(horario_id: int):
         else:
             if not result:
                 return jsonify({"erro": "Horário não encontrado"}), 404
-            novo_nome = validated.nome if validated.nome is not None else result["nome"]
+            novo_nome = payload.nome
             turno_atual = _to_canonical(result.get("turno"))
-            novo_turno = (
-                _to_canonical(validated.turno)
-                if validated.turno is not None
-                else turno_atual
-            )
+            novo_turno = _to_canonical(payload.turno) if payload.turno is not None else turno_atual
             if db.session.execute(
                 text(
                     "SELECT 1 FROM planejamento_horarios WHERE nome=:nome AND id<>:id LIMIT 1"
@@ -303,16 +299,13 @@ def atualizar_horario(horario_id: int):
         return jsonify({"erro": "Horário não encontrado"}), 404
 
     if (
-        validated.nome is not None
-        and validated.nome != horario.nome
-        and Horario.query.filter_by(nome=validated.nome).first()
+        payload.nome != horario.nome
+        and Horario.query.filter_by(nome=payload.nome).first()
     ):
         return jsonify({"erro": "Já existe um horário com este nome"}), 400
 
-    if validated.nome is not None:
-        horario.nome = validated.nome
-    if validated.turno is not None:
-        horario.turno = _to_canonical(validated.turno)
+    horario.nome = payload.nome
+    horario.turno = _to_canonical(payload.turno) if payload.turno is not None else None
 
     try:
         db.session.commit()

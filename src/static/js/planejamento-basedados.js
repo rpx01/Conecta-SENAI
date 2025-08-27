@@ -227,21 +227,12 @@ async function salvarHorario(id, nome, turno) {
     const endpoint = id ? `/horarios/${id}` : '/horarios';
     const method = id ? 'PUT' : 'POST';
     try {
-        const resp = await fetch(endpoint, {
-            method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nome, turno })
-        });
-        if (!resp.ok) {
-            const erro = await resp.json().catch(() => ({}));
-            throw new Error(erro?.erro || 'Erro ao salvar horário');
-        }
-        await resp.json();
+        await chamarAPI(endpoint, method, { nome, turno });
         showToast(`${NOMES_TIPO['horario']} ${id ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
         geralModal.hide();
         carregarTodosOsDados();
     } catch (error) {
-        showToast(error.message, 'danger');
+        showToast(error.message || 'Erro ao salvar horário', 'danger');
     }
 }
 

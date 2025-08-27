@@ -70,6 +70,28 @@ def test_criar_horario_sem_coluna_turno(client, app):
 
 
 @pytest.mark.usefixtures("app")
+def test_criar_horario_com_turno_legado_minusculo(client, app):
+    """Deve aceitar valores legados com acento minúsculo."""
+    with app.app_context():
+        db.session.execute(text("DROP INDEX IF EXISTS ix_planejamento_horarios_turno"))
+        db.session.execute(text("ALTER TABLE planejamento_horarios DROP COLUMN turno"))
+        db.session.execute(
+            text(
+                "ALTER TABLE planejamento_horarios ADD COLUMN turno VARCHAR(20) NOT NULL CHECK (turno IN ('manhã','tarde','noite','manhã/tarde','tarde/noite'))"
+            )
+        )
+        db.session.commit()
+
+    resp = client.post(
+        "/api/horarios",
+        json={"nome": "Horario Legacy", "turno": "manha"},
+    )
+    assert resp.status_code == 201
+    data = resp.get_json()
+    assert data["turno"] == "manha"
+
+
+@pytest.mark.usefixtures("app")
 def test_atualizar_horario_sem_coluna_turno(client, app):
     """Atualização deve ocorrer mesmo sem a coluna 'turno'."""
     with app.app_context():

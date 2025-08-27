@@ -60,15 +60,31 @@ def criar_horario():
         return jsonify(out.model_dump()), 201
     except (ProgrammingError, OperationalError):
         db.session.rollback()
-        result = db.session.execute(
-            text(
-                "INSERT INTO planejamento_horarios (nome) VALUES (:nome) RETURNING id, nome"
-            ),
-            {"nome": validated.nome},
-        ).mappings().first()
-        db.session.commit()
-        out = {"id": result["id"], "nome": result["nome"], "turno": None}
-        return jsonify(out), 201
+        try:
+            result = db.session.execute(
+                text(
+                    "INSERT INTO planejamento_horarios (nome, turno) VALUES (:nome, :turno) RETURNING id, nome, turno"
+                ),
+                {"nome": validated.nome, "turno": validated.turno},
+            ).mappings().first()
+            db.session.commit()
+            out = {
+                "id": result["id"],
+                "nome": result["nome"],
+                "turno": result.get("turno"),
+            }
+            return jsonify(out), 201
+        except (ProgrammingError, OperationalError):
+            db.session.rollback()
+            result = db.session.execute(
+                text(
+                    "INSERT INTO planejamento_horarios (nome) VALUES (:nome) RETURNING id, nome"
+                ),
+                {"nome": validated.nome},
+            ).mappings().first()
+            db.session.commit()
+            out = {"id": result["id"], "nome": result["nome"], "turno": None}
+            return jsonify(out), 201
     except SQLAlchemyError as e:  # pragma: no cover - segurança
         db.session.rollback()
         return handle_internal_error(e)
@@ -91,31 +107,70 @@ def atualizar_horario(horario_id: int):
         return jsonify({"erro": e.errors()}), 400
 
     if not coluna_turno:
-        result = db.session.execute(
-            text(
-                "SELECT id, nome FROM planejamento_horarios WHERE id=:id"
-            ),
-            {"id": horario_id},
-        ).mappings().first()
-        if not result:
-            return jsonify({"erro": "Horário não encontrado"}), 404
-        novo_nome = validated.nome if validated.nome is not None else result["nome"]
-        if db.session.execute(
-            text(
-                "SELECT 1 FROM planejamento_horarios WHERE nome=:nome AND id<>:id LIMIT 1"
-            ),
-            {"nome": novo_nome, "id": horario_id},
-        ).first():
-            return jsonify({"erro": "Já existe um horário com este nome"}), 400
-        db.session.execute(
-            text(
-                "UPDATE planejamento_horarios SET nome=:nome WHERE id=:id"
-            ),
-            {"nome": novo_nome, "id": horario_id},
-        )
-        db.session.commit()
-        out = {"id": horario_id, "nome": novo_nome, "turno": None}
-        return jsonify(out)
+        try:
+            result = db.session.execute(
+                text(
+                    "SELECT id, nome, turno FROM planejamento_horarios WHERE id=:id"
+                ),
+                {"id": horario_id},
+            ).mappings().first()
+        except (ProgrammingError, OperationalError):
+            result = db.session.execute(
+                text(
+                    "SELECT id, nome FROM planejamento_horarios WHERE id=:id"
+                ),
+                {"id": horario_id},
+            ).mappings().first()
+            if not result:
+                return jsonify({"erro": "Horário não encontrado"}), 404
+            novo_nome = validated.nome if validated.nome is not None else result["nome"]
+            if db.session.execute(
+                text(
+                    "SELECT 1 FROM planejamento_horarios WHERE nome=:nome AND id<>:id LIMIT 1"
+                ),
+                {"nome": novo_nome, "id": horario_id},
+            ).first():
+                return jsonify({"erro": "Já existe um horário com este nome"}), 400
+            db.session.execute(
+                text(
+                    "UPDATE planejamento_horarios SET nome=:nome WHERE id=:id"
+                ),
+                {"nome": novo_nome, "id": horario_id},
+            )
+            db.session.commit()
+            out = {"id": horario_id, "nome": novo_nome, "turno": None}
+            return jsonify(out)
+        else:
+            if not result:
+                return jsonify({"erro": "Horário não encontrado"}), 404
+            novo_nome = validated.nome if validated.nome is not None else result["nome"]
+            novo_turno = validated.turno if validated.turno is not None else result.get("turno")
+            if db.session.execute(
+                text(
+                    "SELECT 1 FROM planejamento_horarios WHERE nome=:nome AND id<>:id LIMIT 1"
+                ),
+                {"nome": novo_nome, "id": horario_id},
+            ).first():
+                return jsonify({"erro": "Já existe um horário com este nome"}), 400
+            try:
+                db.session.execute(
+                    text(
+                        "UPDATE planejamento_horarios SET nome=:nome, turno=:turno WHERE id=:id"
+                    ),
+                    {"nome": novo_nome, "turno": novo_turno, "id": horario_id},
+                )
+                db.session.commit()
+            except (ProgrammingError, OperationalError):
+                db.session.rollback()
+                db.session.execute(
+                    text("UPDATE planejamento_horarios SET nome=:nome WHERE id=:id"),
+                    {"nome": novo_nome, "id": horario_id},
+                )
+                db.session.commit()
+                out = {"id": horario_id, "nome": novo_nome, "turno": None}
+                return jsonify(out)
+            out = {"id": horario_id, "nome": novo_nome, "turno": novo_turno}
+            return jsonify(out)
 
     if not horario:
         return jsonify({"erro": "Horário não encontrado"}), 404

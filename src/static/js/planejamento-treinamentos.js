@@ -172,7 +172,7 @@ function criarLinhaItem(item, dataFinal, feriadosSet) {
             <td>${dataInicialFormatada}</td>
             <td>${dataFinalFormatada}</td>
             <td>${diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1)}</td>
-            <td>${escapeHTML(item.horario || '')}</td>
+            <td>${escapeHTML(item.horario?.nome || item.horario || '')}</td>
             <td>${escapeHTML(item.cargaHoraria || '')}</td>
             <td>${escapeHTML(item.modalidade || '')}</td>
             <td>${escapeHTML(item.treinamento || '')}</td>

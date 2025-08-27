@@ -4,9 +4,10 @@ from flask import Blueprint, request, jsonify
 from sqlalchemy.exc import SQLAlchemyError, ProgrammingError, OperationalError
 from sqlalchemy import text
 from pydantic import ValidationError
+from enum import Enum as PyEnum
 
 from src.models import db, Horario
-from src.schemas.horario_schema import HorarioCreate, HorarioUpdate, HorarioOut
+from src.schemas.planejamento import HorarioCreate, HorarioUpdate, HorarioOut
 from src.utils.error_handler import handle_internal_error
 
 horario_bp = Blueprint("horario", __name__)
@@ -17,10 +18,12 @@ def listar_horarios():
     """Lista horários, lidando com ausência da coluna 'turno'."""
     try:
         horarios = Horario.query.order_by(Horario.nome).all()
-        payload = [
-            {"id": h.id, "nome": h.nome, "turno": getattr(h, "turno", None)}
-            for h in horarios
-        ]
+        payload = []
+        for h in horarios:
+            turno = getattr(h, "turno", None)
+            if isinstance(turno, PyEnum):
+                turno = turno.value
+            payload.append({"id": h.id, "nome": h.nome, "turno": turno})
     except (ProgrammingError, OperationalError):  # coluna 'turno' ausente
         db.session.rollback()
         result = db.session.execute(
@@ -64,8 +67,8 @@ def criar_horario():
             {"nome": validated.nome},
         ).mappings().first()
         db.session.commit()
-        out = HorarioOut(id=result["id"], nome=result["nome"], turno=None)
-        return jsonify(out.model_dump()), 201
+        out = {"id": result["id"], "nome": result["nome"], "turno": None}
+        return jsonify(out), 201
     except SQLAlchemyError as e:  # pragma: no cover - segurança
         db.session.rollback()
         return handle_internal_error(e)
@@ -111,8 +114,8 @@ def atualizar_horario(horario_id: int):
             {"nome": novo_nome, "id": horario_id},
         )
         db.session.commit()
-        out = HorarioOut(id=horario_id, nome=novo_nome, turno=None)
-        return jsonify(out.model_dump())
+        out = {"id": horario_id, "nome": novo_nome, "turno": None}
+        return jsonify(out)
 
     if not horario:
         return jsonify({"erro": "Horário não encontrado"}), 404
@@ -140,8 +143,8 @@ def atualizar_horario(horario_id: int):
             {"nome": horario.nome, "id": horario_id},
         )
         db.session.commit()
-        out = HorarioOut(id=horario_id, nome=horario.nome, turno=None)
-        return jsonify(out.model_dump())
+        out = {"id": horario_id, "nome": horario.nome, "turno": None}
+        return jsonify(out)
     except SQLAlchemyError as e:  # pragma: no cover - segurança
         db.session.rollback()
         return handle_internal_error(e)

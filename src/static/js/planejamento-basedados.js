@@ -142,10 +142,10 @@ window.abrirModal = (tipo, id = null, nome = '', carga = '', turno = '') => {
     const turnoGroup = document.getElementById('turnoGroup');
     if (tipo === 'horario') {
         turnoGroup.classList.remove('d-none');
-        document.getElementById('turno').value = turno || '';
+        form.turno.value = turno || '';
     } else {
         turnoGroup.classList.add('d-none');
-        document.getElementById('turno').value = '';
+        form.turno.value = '';
     }
 
     const cargaGroup = document.getElementById('cargaHorariaGroup');
@@ -181,11 +181,12 @@ window.abrirModalInstrutor = () => {
  * Salva um item genérico (chama a API para criar ou atualizar).
  */
 async function salvarItemGeral() {
+    const form = document.getElementById('geralForm');
     const tipo = document.getElementById('itemType').value;
     const id = document.getElementById('itemId').value;
     const nome = document.getElementById('itemName').value.trim();
     const cargaHoraria = document.getElementById('itemCargaHoraria').value;
-    const turno = document.getElementById('turno').value;
+    const turno = form.turno.value;
 
     if (!nome) {
         showToast('O nome não pode estar vazio.', 'warning');
@@ -196,38 +197,20 @@ async function salvarItemGeral() {
         return;
     }
 
+    const method = id ? 'PUT' : 'POST';
+
+    if (tipo === 'horario') {
+        await salvarHorario(id, nome, turno);
+        return;
+    }
+
     let endpoint = id
         ? `/planejamento-basedados/${tipo}/${id}`
         : `/planejamento-basedados/${tipo}`;
-    if (tipo === 'horario') {
-        endpoint = id ? `/horarios/${id}` : '/horarios';
-    }
-    const method = id ? 'PUT' : 'POST';
 
     const payload = { nome };
     if (tipo === 'treinamento' && cargaHoraria) {
         payload.carga_horaria = parseInt(cargaHoraria, 10);
-    }
-    if (tipo === 'horario') {
-        payload.turno = turno;
-        try {
-            const resp = await fetch(endpoint, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nome, turno })
-            });
-            if (!resp.ok) {
-                const erro = await resp.json().catch(() => ({}));
-                throw new Error(erro?.erro || 'Erro ao salvar horário');
-            }
-            await resp.json();
-            showToast(`${NOMES_TIPO[tipo]} ${id ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
-            geralModal.hide();
-            carregarTodosOsDados();
-        } catch (error) {
-            showToast(error.message, 'danger');
-        }
-        return;
     }
 
     try {
@@ -235,6 +218,28 @@ async function salvarItemGeral() {
         showToast(`${NOMES_TIPO[tipo]} ${id ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
         geralModal.hide();
         carregarTodosOsDados(); // Recarrega os dados para atualizar a tabela
+    } catch (error) {
+        showToast(error.message, 'danger');
+    }
+}
+
+async function salvarHorario(id, nome, turno) {
+    const endpoint = id ? `/horarios/${id}` : '/horarios';
+    const method = id ? 'PUT' : 'POST';
+    try {
+        const resp = await fetch(endpoint, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome, turno })
+        });
+        if (!resp.ok) {
+            const erro = await resp.json().catch(() => ({}));
+            throw new Error(erro?.erro || 'Erro ao salvar horário');
+        }
+        await resp.json();
+        showToast(`${NOMES_TIPO['horario']} ${id ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
+        geralModal.hide();
+        carregarTodosOsDados();
     } catch (error) {
         showToast(error.message, 'danger');
     }

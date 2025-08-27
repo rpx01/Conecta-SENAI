@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
 from sqlalchemy import inspect
-from src.models import db
-from src.models.planejamento import (
+
+from src.models import (
+    db,
     PlanejamentoBDItem,
     Local,
     Modalidade,
@@ -9,6 +10,7 @@ from src.models.planejamento import (
     CargaHoraria,
     PublicoAlvo,
     PlanejamentoTreinamento,
+    TurnoEnum,
 )
 
 basedados_bp = Blueprint(
@@ -89,9 +91,7 @@ def create_item_generico(tipo):
         item = model(nome=nome, carga_horaria=data.get("carga_horaria"))
     elif tipo == "horario":
         turno = data.get("turno")
-        if not turno:
-            return jsonify({"erro": "O campo 'turno' é obrigatório"}), 400
-        item = model(nome=nome, turno=turno)
+        item = model(nome=nome, turno=TurnoEnum(turno) if turno else None)
     else:
         item = model(nome=nome)
     db.session.add(item)
@@ -119,8 +119,9 @@ def update_item_generico(tipo, item_id):
     if tipo == "treinamento":
         item.carga_horaria = data.get("carga_horaria")
     elif tipo == "horario":
-        if data.get("turno"):
-            item.turno = data.get("turno")
+        if "turno" in data:
+            turno = data.get("turno")
+            item.turno = TurnoEnum(turno) if turno else None
     db.session.commit()
     return jsonify(item.to_dict())
 

@@ -11,6 +11,14 @@ const NOMES_TIPO = {
     'instrutor': 'Instrutor'
 };
 
+const ROTULOS_TURNO = {
+    'MANHA': 'Manhã',
+    'TARDE': 'Tarde',
+    'NOITE': 'Noite',
+    'MANHA_TARDE': 'Manhã/Tarde',
+    'TARDE_NOITE': 'Tarde/Noite'
+};
+
 // Variáveis globais para os modais e dados
 let geralModal;
 let instrutorModal;
@@ -98,9 +106,10 @@ function renderizarTabela(tipo, dados) {
                 </td>
             `;
         } else if (tipo === 'horario') {
+            const rotuloTurno = ROTULOS_TURNO[item.turno] || '';
             tr.innerHTML = `
                 <td>${escapeHTML(item.nome)}</td>
-                <td>${escapeHTML(item.turno ?? '')}</td>
+                <td>${escapeHTML(rotuloTurno)}</td>
                 <td class="text-end">
                     <button class="btn btn-sm btn-outline-primary" onclick="editarItem('${tipo}', ${item.id}, '${escapeHTML(item.nome)}', '', '${item.turno || ''}')">
                         <i class="bi bi-pencil"></i>
@@ -192,10 +201,6 @@ async function salvarItemGeral() {
         showToast('O nome não pode estar vazio.', 'warning');
         return;
     }
-    if (tipo === 'horario' && !turno) {
-        showToast('Selecione um turno.', 'warning');
-        return;
-    }
 
     const method = id ? 'PUT' : 'POST';
 
@@ -227,7 +232,7 @@ async function salvarHorario(id, nome, turno) {
     const endpoint = id ? `/horarios/${id}` : '/horarios';
     const method = id ? 'PUT' : 'POST';
     try {
-        await chamarAPI(endpoint, method, { nome, turno });
+        await chamarAPI(endpoint, method, { nome, turno: turno || null });
         showToast(`${NOMES_TIPO['horario']} ${id ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
         geralModal.hide();
         carregarTodosOsDados();

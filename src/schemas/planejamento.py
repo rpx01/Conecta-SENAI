@@ -1,7 +1,6 @@
 from datetime import date, datetime
 from typing import List, Optional
-from pydantic import BaseModel, Field, field_validator, ConfigDict, constr
-from enum import Enum
+from pydantic import BaseModel, Field, field_validator
 
 
 class PolosSchema(BaseModel):
@@ -55,31 +54,3 @@ class PlanejamentoCreateSchema(BaseModel):
 
     class Config:
         populate_by_name = True
-
-
-class TurnoEnum(str, Enum):
-    MANHA = "manha"
-    TARDE = "tarde"
-    NOITE = "noite"
-    MANHA_TARDE = "manha_tarde"
-    TARDE_NOITE = "tarde_noite"
-
-
-class HorarioBase(BaseModel):
-    nome: constr(min_length=1, strip_whitespace=True)
-    turno: TurnoEnum
-    model_config = ConfigDict(from_attributes=True)
-
-
-class HorarioCreate(HorarioBase):
-    pass
-
-
-class HorarioUpdate(BaseModel):
-    nome: Optional[constr(min_length=1, strip_whitespace=True)] = None
-    turno: Optional[TurnoEnum] = None
-    model_config = ConfigDict(from_attributes=True)
-
-
-class HorarioOut(HorarioBase):
-    id: int

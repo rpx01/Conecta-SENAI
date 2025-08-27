@@ -1,3 +1,4 @@
+# flake8: noqa
 import os
 import sys
 from datetime import datetime, timedelta
@@ -24,7 +25,7 @@ from src.routes.ocupacao import sala_bp, instrutor_bp, ocupacao_bp
 from src.routes.treinamentos import turma_bp, treinamento_bp
 from src.routes.laboratorios import agendamento_bp, laboratorio_bp
 from src.routes.planejamento import planejamento_bp, basedados_bp
-from src.routes.horario import horario_bp
+from src.routes.horarios import horario_bp
 from src.routes.rateio.rateio import rateio_bp
 from src.blueprints.auth import auth_bp
 

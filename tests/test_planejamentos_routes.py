@@ -1,6 +1,8 @@
+"""Testes das rotas de planejamentos."""
+# flake8: noqa
 import pytest
-from src.models import db
-from src.models.planejamento import (
+from src.models import (
+    db,
     Horario,
     CargaHoraria,
     Modalidade,
@@ -22,7 +24,7 @@ def auth_headers(client, login_admin, csrf_token):
 @pytest.fixture
 def base_ids(app):
     with app.app_context():
-        horario = Horario(nome='Manhã', turno='manha')
+        horario = Horario(nome='Manhã', turno='MANHA')
         carga = CargaHoraria(nome='8h')
         modalidade = Modalidade(nome='Presencial')
         treinamento = PlanejamentoTreinamento(nome='Treinamento X')

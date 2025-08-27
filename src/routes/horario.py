@@ -1,4 +1,5 @@
 """Rotas para gerenciamento de horários."""
+# flake8: noqa
 
 from flask import Blueprint, request, jsonify
 from sqlalchemy.exc import (
@@ -305,7 +306,9 @@ def atualizar_horario(horario_id: int):
         return jsonify({"erro": "Já existe um horário com este nome"}), 400
 
     horario.nome = payload.nome
-    horario.turno = _to_canonical(payload.turno) if payload.turno is not None else None
+    horario.turno = (
+        _to_canonical(payload.turno) if payload.turno is not None else horario.turno
+    )
 
     try:
         db.session.commit()

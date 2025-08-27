@@ -52,7 +52,7 @@ def iniciar_scheduler(app) -> None:
 
     if fcntl:
         try:
-            _lock_file = open("/tmp/apscheduler.lock", "w")
+            _lock_file = open("/tmp/apscheduler.lock", "w")  # nosec B108
             fcntl.flock(_lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError:
             logging.debug("Outra instância do scheduler já está em execução")

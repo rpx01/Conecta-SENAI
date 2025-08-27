@@ -100,7 +100,7 @@ function renderizarTabela(tipo, dados) {
         } else if (tipo === 'horario') {
             tr.innerHTML = `
                 <td>${escapeHTML(item.nome)}</td>
-                <td>${escapeHTML(item.turno ?? '')}</td>
+                <td>${escapeHTML(formatarTurno(item.turno))}</td>
                 <td class="text-end">
                     <button class="btn btn-sm btn-outline-primary" onclick="editarItem('${tipo}', ${item.id}, '${escapeHTML(item.nome)}', '', '${item.turno || ''}')">
                         <i class="bi bi-pencil"></i>

@@ -115,6 +115,7 @@ def atualizar_horario(horario_id: int):
                 {"id": horario_id},
             ).mappings().first()
         except (ProgrammingError, OperationalError):
+            db.session.rollback()
             result = db.session.execute(
                 text(
                     "SELECT id, nome FROM planejamento_horarios WHERE id=:id"

@@ -1,7 +1,10 @@
 from datetime import date, datetime
 from typing import List, Optional
-from pydantic import BaseModel, Field, field_validator, ConfigDict, constr
 from enum import Enum
+
+from marshmallow import Schema, fields
+from pydantic import BaseModel, Field, field_validator, ConfigDict, constr
+from src.models.planejamento import Horario, TurnoEnum as ModelTurnoEnum
 
 
 class PolosSchema(BaseModel):
@@ -83,3 +86,15 @@ class HorarioUpdate(BaseModel):
 
 class HorarioOut(HorarioBase):
     id: int
+
+
+class HorarioSchema(Schema):
+    id = fields.Int(dump_only=True)
+    hora_inicio = fields.Time(required=True)
+    hora_fim = fields.Time(required=True)
+    turno = fields.Enum(ModelTurnoEnum, by_value=False, allow_none=True)
+
+    class Meta:
+        model = Horario
+        load_instance = True
+        include_fk = True

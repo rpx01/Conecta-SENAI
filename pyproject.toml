@@ -30,7 +30,8 @@ dependencies = [
     ,"flask-wtf (==1.2.1)"
     ,"apscheduler (==3.10.4)"
     ,"flasgger (==0.9.7.1)",
-    "flask-mail (==0.9.1)"
+    "flask-mail (==0.9.1)",
+    "marshmallow (==3.21.1)"
 ]
 
 [tool.poetry]
@@ -65,6 +66,7 @@ flask-wtf = "1.2.1"
 apscheduler = "3.10.4"
 flasgger = "0.9.7.1"
 flask-mail = "0.9.1"
+marshmallow = "3.21.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "8.4.1"

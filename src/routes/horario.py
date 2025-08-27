@@ -27,9 +27,7 @@ LEGACY_FORMS = {
     "tarde_noite": ["Tarde/Noite", "tarde/noite"],
 }
 LEGACY_TO_CANON = {
-    legacy: canon
-    for canon, forms in LEGACY_FORMS.items()
-    for legacy in forms
+    legacy: canon for canon, forms in LEGACY_FORMS.items() for legacy in forms
 }
 CANON_TO_LEGACY = {canon: forms[0] for canon, forms in LEGACY_FORMS.items()}
 
@@ -64,7 +62,13 @@ def listar_horarios():
         for h in horarios:
             turno = _to_canonical(getattr(h, "turno", None))
             payload.append({"id": h.id, "nome": h.nome, "turno": turno})
-    except (ProgrammingError, OperationalError, IntegrityError, ValueError, LookupError):
+    except (
+        ProgrammingError,
+        OperationalError,
+        IntegrityError,
+        ValueError,
+        LookupError,
+    ):
         db.session.rollback()
         try:
             result = db.session.execute(
@@ -97,9 +101,7 @@ def criar_horario():
     except (ProgrammingError, OperationalError, IntegrityError):
         db.session.rollback()
         exists = db.session.execute(
-            text(
-                "SELECT 1 FROM planejamento_horarios WHERE nome=:nome LIMIT 1"
-            ),
+            text("SELECT 1 FROM planejamento_horarios WHERE nome=:nome LIMIT 1"),
             {"nome": validated.nome},
         ).first()
     if exists:
@@ -112,39 +114,57 @@ def criar_horario():
             id=horario.id, nome=horario.nome, turno=_to_canonical(horario.turno)
         )
         return jsonify(out.model_dump()), 201
-    except (ProgrammingError, OperationalError, IntegrityError, ValueError, LookupError):
+    except (
+        ProgrammingError,
+        OperationalError,
+        IntegrityError,
+        ValueError,
+        LookupError,
+    ):
         db.session.rollback()
         # Tenta inserir diretamente com o valor canônico
         try:
-            result = db.session.execute(
-                text(
-                    "INSERT INTO planejamento_horarios (nome, turno) VALUES (:nome, :turno) RETURNING id, nome, turno"
-                ),
-                {"nome": validated.nome, "turno": validated.turno},
-            ).mappings().first()
+            result = (
+                db.session.execute(
+                    text(
+                        "INSERT INTO planejamento_horarios (nome, turno) VALUES (:nome, :turno) RETURNING id, nome, turno"
+                    ),
+                    {"nome": validated.nome, "turno": validated.turno.value},
+                )
+                .mappings()
+                .first()
+            )
             db.session.commit()
         except (ProgrammingError, OperationalError, IntegrityError):
             db.session.rollback()
             result = None
             for legacy_turno in _legacy_variants(validated.turno):
                 try:
-                    result = db.session.execute(
-                        text(
-                            "INSERT INTO planejamento_horarios (nome, turno) VALUES (:nome, :turno) RETURNING id, nome, turno"
-                        ),
-                        {"nome": validated.nome, "turno": legacy_turno},
-                    ).mappings().first()
+                    result = (
+                        db.session.execute(
+                            text(
+                                "INSERT INTO planejamento_horarios (nome, turno) VALUES (:nome, :turno) RETURNING id, nome, turno"
+                            ),
+                            {"nome": validated.nome, "turno": legacy_turno},
+                        )
+                        .mappings()
+                        .first()
+                    )
                     db.session.commit()
                     break
                 except (ProgrammingError, OperationalError, IntegrityError):
                     db.session.rollback()
             if result is None:
-                result = db.session.execute(
-                    text(
-                        "INSERT INTO planejamento_horarios (nome) VALUES (:nome) RETURNING id, nome"
-                    ),
-                    {"nome": validated.nome},
-                ).mappings().first()
+                result = (
+                    db.session.execute(
+                        text(
+                            "INSERT INTO planejamento_horarios (nome) VALUES (:nome) RETURNING id, nome"
+                        ),
+                        {"nome": validated.nome},
+                    )
+                    .mappings()
+                    .first()
+                )
                 db.session.commit()
                 turno = None
                 out = {"id": result["id"], "nome": result["nome"], "turno": turno}
@@ -175,20 +195,26 @@ def atualizar_horario(horario_id: int):
 
     if not coluna_turno:
         try:
-            result = db.session.execute(
-                text(
-                    "SELECT id, nome, turno FROM planejamento_horarios WHERE id=:id"
-                ),
-                {"id": horario_id},
-            ).mappings().first()
+            result = (
+                db.session.execute(
+                    text(
+                        "SELECT id, nome, turno FROM planejamento_horarios WHERE id=:id"
+                    ),
+                    {"id": horario_id},
+                )
+                .mappings()
+                .first()
+            )
         except (ProgrammingError, OperationalError, IntegrityError):
             db.session.rollback()
-            result = db.session.execute(
-                text(
-                    "SELECT id, nome FROM planejamento_horarios WHERE id=:id"
-                ),
-                {"id": horario_id},
-            ).mappings().first()
+            result = (
+                db.session.execute(
+                    text("SELECT id, nome FROM planejamento_horarios WHERE id=:id"),
+                    {"id": horario_id},
+                )
+                .mappings()
+                .first()
+            )
             if not result:
                 return jsonify({"erro": "Horário não encontrado"}), 404
             novo_nome = validated.nome if validated.nome is not None else result["nome"]
@@ -200,9 +226,7 @@ def atualizar_horario(horario_id: int):
             ).first():
                 return jsonify({"erro": "Já existe um horário com este nome"}), 400
             db.session.execute(
-                text(
-                    "UPDATE planejamento_horarios SET nome=:nome WHERE id=:id"
-                ),
+                text("UPDATE planejamento_horarios SET nome=:nome WHERE id=:id"),
                 {"nome": novo_nome, "id": horario_id},
             )
             db.session.commit()
@@ -226,7 +250,11 @@ def atualizar_horario(horario_id: int):
                     text(
                         "UPDATE planejamento_horarios SET nome=:nome, turno=:turno WHERE id=:id"
                     ),
-                    {"nome": novo_nome, "turno": novo_turno, "id": horario_id},
+                    {
+                        "nome": novo_nome,
+                        "turno": getattr(novo_turno, "value", novo_turno),
+                        "id": horario_id,
+                    },
                 )
                 db.session.commit()
             except (ProgrammingError, OperationalError, IntegrityError):
@@ -238,7 +266,11 @@ def atualizar_horario(horario_id: int):
                             text(
                                 "UPDATE planejamento_horarios SET nome=:nome, turno=:turno WHERE id=:id"
                             ),
-                            {"nome": novo_nome, "turno": legacy_turno, "id": horario_id},
+                            {
+                                "nome": novo_nome,
+                                "turno": legacy_turno,
+                                "id": horario_id,
+                            },
                         )
                         db.session.commit()
                         atualizado = True
@@ -247,7 +279,9 @@ def atualizar_horario(horario_id: int):
                         db.session.rollback()
                 if not atualizado:
                     db.session.execute(
-                        text("UPDATE planejamento_horarios SET nome=:nome WHERE id=:id"),
+                        text(
+                            "UPDATE planejamento_horarios SET nome=:nome WHERE id=:id"
+                        ),
                         {"nome": novo_nome, "id": horario_id},
                     )
                     db.session.commit()
@@ -304,9 +338,7 @@ def atualizar_horario(horario_id: int):
                 db.session.rollback()
         if not atualizado:
             db.session.execute(
-                text(
-                    "UPDATE planejamento_horarios SET nome=:nome WHERE id=:id"
-                ),
+                text("UPDATE planejamento_horarios SET nome=:nome WHERE id=:id"),
                 {"nome": horario.nome, "id": horario_id},
             )
             db.session.commit()
@@ -333,9 +365,7 @@ def excluir_horario(horario_id: int):
 
     if not coluna_turno:
         result = db.session.execute(
-            text(
-                "DELETE FROM planejamento_horarios WHERE id=:id RETURNING id"
-            ),
+            text("DELETE FROM planejamento_horarios WHERE id=:id RETURNING id"),
             {"id": horario_id},
         ).first()
         if not result:

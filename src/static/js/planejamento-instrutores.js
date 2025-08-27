@@ -1,21 +1,164 @@
-// Utilizar as mesmas funções/fluxo de dados da página trimestral:
-// - Reaproveitar os mesmos filtros de data (ou ler do querystring as mesmas chaves).
-// - Chamar a mesma API usada na trimestral (ex.: chamarAPI(urlComParametros, 'GET')).
-// - Estruturar dados por instrutor e por dia do mês.
+// Página de planejamento por instrutor
+// Constrói uma tabela com linhas para manhã e tarde de cada dia, preenchendo
+// as células de acordo com o turno associado ao horário de cada atividade.
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener('DOMContentLoaded', async () => {
   try {
     const intervalo = obterIntervaloUsadoNaTrimestral();
     const itens = await carregarItensPlanejamento(intervalo);
 
-    const { dias, instrutores, mapa } = montarMapaPorInstrutor(itens);
+    const diasSet = new Set();
+    const instrutoresSet = new Set();
 
-    renderTabelaPorInstrutor(dias, instrutores, mapa);
+    // Coleta de dias e instrutores existentes
+    itens.forEach(it => {
+      const di = new Date(it.data_inicio || it.data);
+      const df = new Date(it.data_fim || it.data_final || it.data);
+      const nomeInstr = (it.instrutor_nome || it.instrutor || it.responsavel || '').trim();
+      if (!nomeInstr) return;
+      instrutoresSet.add(nomeInstr);
+      const cursor = new Date(di);
+      while (cursor <= df) {
+        diasSet.add(cursor.toISOString().slice(0, 10));
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    });
+
+    const dias = Array.from(diasSet).sort();
+    const instrutores = Array.from(instrutoresSet).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    const { diaContainers, instrutorIndexMap } = construirTabela(dias, instrutores);
+
+    // Distribui os itens nas células corretas
+    itens.forEach(it => {
+      const instr = (it.instrutor_nome || it.instrutor || it.responsavel || '').trim();
+      const idx = instrutorIndexMap[instr];
+      if (idx === undefined) return;
+
+      const slots = mapTurnoToSlots(it?.horario?.turno);
+      const html = `
+        <div class="atividade">
+          <div>${it.descricao || it.treinamento || ''}</div>
+          <small>${it?.horario?.nome || ''}</small>
+        </div>
+      `;
+
+      const di = new Date(it.data_inicio || it.data);
+      const df = new Date(it.data_fim || it.data_final || it.data);
+      const cursor = new Date(di);
+      while (cursor <= df) {
+        const iso = cursor.toISOString().slice(0, 10);
+        const cont = diaContainers[iso];
+        if (cont) preencherCelulaPorTurno(cont, slots, idx, html);
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    });
   } catch (e) {
     console.error(e);
     alert('Falha ao carregar planejamento por instrutor.');
   }
 });
+
+// Util: remover acentos e normalizar
+function normalize(str) {
+  if (!str) return '';
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+// Mapeia o turno em slots de linhas
+function mapTurnoToSlots(turnoRaw) {
+  const t = normalize(turnoRaw);
+  if (t.includes('manha') && t.includes('tarde')) return ['manha', 'tarde'];
+  if (t.includes('manha')) return ['manha'];
+  if (t.includes('tarde')) return ['tarde'];
+  return ['manha', 'tarde'];
+}
+
+// Preenche uma célula da linha/coluna correta
+function preencherCelulaPorTurno(containerTabela, slots, instrutorIndex, htmlConteudo) {
+  slots.forEach(slot => {
+    const linha = containerTabela.querySelector(`tr.linha-turno[data-turno="${slot}"]`);
+    if (!linha) return;
+    const celulas = linha.querySelectorAll('.col-conteudo');
+    const alvo = celulas[instrutorIndex];
+    if (alvo) {
+      if (alvo.innerHTML.trim()) {
+        alvo.innerHTML += '<hr class="m-0 my-1">';
+      }
+      alvo.innerHTML += htmlConteudo;
+    }
+  });
+}
+
+// Constrói o cabeçalho e os corpos da tabela
+function construirTabela(dias, instrutores) {
+  const tabela = document.getElementById('tabela-por-instrutor');
+  const thead = tabela.querySelector('thead');
+
+  const trHead = document.createElement('tr');
+  ['DATA', 'SEMANA', 'TURNO', ...instrutores].forEach(t => {
+    const th = document.createElement('th');
+    th.textContent = t;
+    trHead.appendChild(th);
+  });
+  thead.innerHTML = '';
+  thead.appendChild(trHead);
+
+  const diaContainers = {};
+  const instrutorIndexMap = {};
+  instrutores.forEach((n, i) => { instrutorIndexMap[n] = i; });
+
+  dias.forEach(diaISO => {
+    const corpo = document.createElement('tbody');
+    corpo.dataset.dia = diaISO;
+
+    const trManha = document.createElement('tr');
+    trManha.classList.add('linha-turno');
+    trManha.dataset.turno = 'manha';
+
+    const trTarde = document.createElement('tr');
+    trTarde.classList.add('linha-turno');
+    trTarde.dataset.turno = 'tarde';
+
+    const thData = document.createElement('th');
+    thData.textContent = formatarDataCompleta(diaISO);
+    thData.rowSpan = 2;
+    thData.classList.add('dia-col');
+
+    const thSemana = document.createElement('th');
+    thSemana.textContent = diaDaSemanaPtBR(diaISO);
+    thSemana.rowSpan = 2;
+
+    const tdTurnoM = document.createElement('td');
+    tdTurnoM.textContent = 'Manhã';
+    const tdTurnoT = document.createElement('td');
+    tdTurnoT.textContent = 'Tarde';
+
+    for (let i = 0; i < instrutores.length; i++) {
+      const tdM = document.createElement('td');
+      tdM.classList.add('col-conteudo', `col-instrutor-${i + 1}`);
+      const tdT = document.createElement('td');
+      tdT.classList.add('col-conteudo', `col-instrutor-${i + 1}`);
+      trManha.appendChild(tdM);
+      trTarde.appendChild(tdT);
+    }
+
+    trManha.prepend(tdTurnoM);
+    trManha.prepend(thSemana);
+    trManha.prepend(thData);
+    trTarde.prepend(tdTurnoT);
+
+    corpo.appendChild(trManha);
+    corpo.appendChild(trTarde);
+    tabela.appendChild(corpo);
+    diaContainers[diaISO] = corpo;
+  });
+
+  return { diaContainers, instrutorIndexMap };
+}
 
 // 1) Busca de dados (reutilizando o que já existe na trimestral)
 async function carregarItensPlanejamento(intervalo) {
@@ -50,133 +193,6 @@ function construirURLDePlanejamento(intervalo) {
   return `/planejamento/itens${qs ? `?${qs}` : ''}`;
 }
 
-// 2) Mapeamento: dia -> instrutor -> lista de itens (que colidem com o dia)
-function montarMapaPorInstrutor(itens) {
-  const diasSet = new Set();
-  const instrutoresSet = new Set();
-  const mapa = {};
-
-  for (const it of itens) {
-    const di = new Date(it.data_inicio || it.data);
-    const df = new Date(it.data_fim || it.data_final || it.data);
-
-    const instr = (it.instrutor_nome || it.instrutor || it.responsavel || '').trim();
-    if (!instr) continue;
-
-    instrutoresSet.add(instr);
-
-    const cursor = new Date(di);
-    while (cursor <= df) {
-      const iso = cursor.toISOString().slice(0, 10);
-      diasSet.add(iso);
-      mapa[iso] = mapa[iso] || {};
-      mapa[iso][instr] = mapa[iso][instr] || { manha: [], tarde: [] };
-
-      let turno = (it.turno || '').toString().toLowerCase();
-      if (!turno) {
-        const h = parseInt(String(it.hora_inicio || it.inicio_hora || '0').slice(0, 2), 10);
-        turno = h < 12 ? 'manha' : 'tarde';
-      } else if (turno.startsWith('m')) {
-        turno = 'manha';
-      } else {
-        turno = 'tarde';
-      }
-
-      mapa[iso][instr][turno].push(it);
-
-      cursor.setDate(cursor.getDate() + 1);
-    }
-  }
-
-  const dias = Array.from(diasSet).sort();
-  const instrutores = Array.from(instrutoresSet).sort((a, b) => a.localeCompare(b, 'pt-BR'));
-
-  return { dias, instrutores, mapa };
-}
-
-// 3) Renderização da tabela
-function renderTabelaPorInstrutor(dias, instrutores, mapa) {
-  const thead = document.querySelector('#tabela-por-instrutor thead');
-  const tbody = document.querySelector('#tabela-por-instrutor tbody');
-
-  const trHead = document.createElement('tr');
-  ['DATA', 'SEMANA', 'TURNO', ...instrutores].forEach(t => {
-    const th = document.createElement('th');
-    th.textContent = t;
-    trHead.appendChild(th);
-  });
-  thead.innerHTML = '';
-  thead.appendChild(trHead);
-
-  const frag = document.createDocumentFragment();
-  for (const diaISO of dias) {
-    const trManha = document.createElement('tr');
-    const trTarde = document.createElement('tr');
-
-    const thData = document.createElement('th');
-    thData.textContent = formatarDataCompleta(diaISO);
-    thData.setAttribute('rowspan', '2');
-    thData.classList.add('dia-col');
-
-    const thSemana = document.createElement('th');
-    thSemana.textContent = diaDaSemanaPtBR(diaISO);
-    thSemana.setAttribute('rowspan', '2');
-
-    const tdTurnoManha = document.createElement('td');
-    tdTurnoManha.textContent = 'Manhã';
-    const tdTurnoTarde = document.createElement('td');
-    tdTurnoTarde.textContent = 'Tarde';
-
-    for (const nome of instrutores) {
-      const tdM = document.createElement('td');
-      const tdT = document.createElement('td');
-
-      const atividadesM = mapa[diaISO]?.[nome]?.manha || [];
-      const atividadesT = mapa[diaISO]?.[nome]?.tarde || [];
-
-      preencherTdComAtividades(tdM, atividadesM);
-      preencherTdComAtividades(tdT, atividadesT);
-
-      trManha.appendChild(tdM);
-      trTarde.appendChild(tdT);
-    }
-
-    trManha.prepend(tdTurnoManha);
-    trManha.prepend(thSemana);
-    trManha.prepend(thData);
-    trTarde.prepend(tdTurnoTarde);
-
-    frag.appendChild(trManha);
-    frag.appendChild(trTarde);
-  }
-
-  tbody.innerHTML = '';
-  tbody.appendChild(frag);
-}
-
-function preencherTdComAtividades(td, atividades) {
-  for (const it of atividades) {
-    const div = document.createElement('div');
-    div.className = 'cell-treinamento';
-
-    const titulo = it.treinamento || it.titulo || it.nome || 'Treinamento';
-    const horario = montarFaixaHorario(it);
-    const local = it.local || it.sala || '';
-
-    div.textContent = local ? `${titulo} (${horario}) • ${local}` : `${titulo} (${horario})`;
-    if (div.textContent.toUpperCase().includes('BLOQUEIO')) {
-      div.classList.add('bg-success-subtle');
-    }
-    td.appendChild(div);
-  }
-}
-
-function montarFaixaHorario(it) {
-  const hi = (it.hora_inicio || it.inicio_hora || '').toString().slice(0, 5);
-  const hf = (it.hora_fim || it.fim_hora || '').toString().slice(0, 5);
-  return hi && hf ? `${hi}–${hf}` : (hi || hf || '');
-}
-
 function formatarDataCompleta(isoDateStr) {
   const d = new Date(isoDateStr);
   const dia = String(d.getDate()).padStart(2, '0');
@@ -189,4 +205,3 @@ function diaDaSemanaPtBR(isoDateStr) {
   const d = new Date(isoDateStr);
   return d.toLocaleDateString('pt-BR', { weekday: 'long' }).replace(/^\w/, c => c.toUpperCase());
 }
-

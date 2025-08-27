@@ -34,7 +34,7 @@ function getGroupKey(item) {
     if (item.loteId != null) return `g:${item.loteId}`;
     const nome = item.treinamento || item.nome_treinamento || item.nome || '';
     const dataFinal = item.data_final || '';
-    const horario = item.horario || '';
+    const horario = item.horario?.nome || item.horario || '';
     const modalidade = item.modalidade || '';
     const instrutor = item.instrutor_id || item.instrutor || '';
     const local = item.local || '';
@@ -144,7 +144,7 @@ function preencherFormulario(item) {
     document.getElementById('itemDataFim').value = dtFim;
     document.getElementById('itemSemana').value = new Date(dtIni + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long' }).replace(/^./, c => c.toUpperCase());
 
-    selecionarPorTexto(document.getElementById('itemHorario'), item.horario);
+    selecionarPorTexto(document.getElementById('itemHorario'), item.horario?.nome || item.horario);
     selecionarPorTexto(document.getElementById('itemCargaHoraria'), item.cargaHoraria);
     selecionarPorTexto(document.getElementById('itemModalidade'), item.modalidade);
     selecionarPorTexto(document.getElementById('itemTreinamento'), item.treinamento);
@@ -523,7 +523,7 @@ function criarLinhaItem(item, dataFinal) {
             <td>${dataInicialFormatada}</td>
             <td>${dataFinalFormatada}</td>
             <td>${diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1)}</td>
-            <td>${escapeHTML(item.horario || '')}</td>
+            <td>${escapeHTML(item.horario?.nome || item.horario || '')}</td>
             <td>${escapeHTML(item.cargaHoraria || '')}</td>
             <td>${escapeHTML(item.modalidade || '')}</td>
             <td>${escapeHTML((item.treinamento || '') + (item.__sufixoDia || ''))}</td>

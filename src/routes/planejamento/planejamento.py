@@ -79,8 +79,22 @@ def listar_planejamentos():
     try:
         if not _tabela_planejamento_existe():
             return jsonify([]), 200
+
         itens = PlanejamentoItem.query.all()
-        return jsonify([item.to_dict() for item in itens])
+
+        # Mapeia os horários pelo nome para evitar consultas repetidas.
+        horarios = {h.nome: h for h in Horario.query.all()}
+        out = []
+        for item in itens:
+            data = item.to_dict()
+            h = horarios.get(item.horario)
+            if h:
+                data["horario"] = {"id": h.id, "nome": h.nome, "turno": h.turno}
+            else:
+                data["horario"] = {"id": None, "nome": item.horario, "turno": None}
+            out.append(data)
+
+        return jsonify(out)
     except SQLAlchemyError as e:
         db.session.rollback()
         return handle_internal_error(e)

@@ -66,7 +66,7 @@ def test_criar_horario_sem_coluna_turno(client, app):
     assert resp.status_code == 201
     data = resp.get_json()
     assert data["nome"] == "Horario X"
-    assert data["turno"] is None
+    assert data["turno"] == "Manhã"
 
 
 @pytest.mark.usefixtures("app")
@@ -112,7 +112,7 @@ def test_atualizar_horario_sem_coluna_turno(client, app):
     assert resp.status_code == 200
     data = resp.get_json()
     assert data["nome"] == "Horario Z"
-    assert data["turno"] is None
+    assert data["turno"] == "Tarde"
 
 
 @pytest.mark.usefixtures("app")

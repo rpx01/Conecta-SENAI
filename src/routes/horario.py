@@ -7,7 +7,7 @@ from sqlalchemy.exc import (
     OperationalError,
     IntegrityError,
 )
-from sqlalchemy import text
+from sqlalchemy import text, inspect
 from pydantic import ValidationError
 from enum import Enum as PyEnum
 
@@ -30,6 +30,15 @@ LEGACY_TO_CANON = {
     legacy: canon for canon, forms in LEGACY_FORMS.items() for legacy in forms
 }
 CANON_TO_LEGACY = {canon: forms[0] for canon, forms in LEGACY_FORMS.items()}
+
+
+def _ensure_turno_column_exists():
+    """Garantir que a coluna 'turno' exista na tabela de horários."""
+    inspector = inspect(db.engine)
+    columns = {col["name"] for col in inspector.get_columns("planejamento_horarios")}
+    if "turno" not in columns:
+        with db.engine.begin() as conn:
+            conn.execute(text("ALTER TABLE planejamento_horarios ADD COLUMN turno VARCHAR(20)"))
 
 
 def _to_canonical(turno):
@@ -56,6 +65,7 @@ def _to_legacy(turno):
 @horario_bp.route("/horarios", methods=["GET"])
 def listar_horarios():
     """Lista horários, lidando com ausência da coluna 'turno'."""
+    _ensure_turno_column_exists()
     try:
         horarios = Horario.query.order_by(Horario.nome).all()
         payload = []
@@ -91,6 +101,7 @@ def listar_horarios():
 
 @horario_bp.route("/horarios", methods=["POST"])
 def criar_horario():
+    _ensure_turno_column_exists()
     data = request.get_json(silent=True) or {}
     try:
         payload = HorarioIn(**data)
@@ -180,6 +191,7 @@ def criar_horario():
 
 @horario_bp.route("/horarios/<int:horario_id>", methods=["PUT", "PATCH"])
 def atualizar_horario(horario_id: int):
+    _ensure_turno_column_exists()
     try:
         horario = db.session.get(Horario, horario_id)
         coluna_turno = True

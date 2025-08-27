@@ -18,19 +18,19 @@ from .treinamento import (  # noqa: E402
     TurmaTreinamento,
     InscricaoTreinamento,
 )
-from .inscricao_treinamento import (
+from .inscricao_treinamento import (  # noqa: E402
     InscricaoTreinamentoFormulario,
-)  # noqa: E402
+)
 from .planejamento import (  # noqa: E402
     PlanejamentoItem,
     PlanejamentoBDItem,
     Local,
     Modalidade,
-    Horario,
     CargaHoraria,
     PublicoAlvo,
     PlanejamentoTreinamento,
 )
+from .horario import Horario, TurnoEnum  # noqa: E402
 
 __all__ = [
     "db",
@@ -55,6 +55,7 @@ __all__ = [
     "Local",
     "Modalidade",
     "Horario",
+    "TurnoEnum",
     "CargaHoraria",
     "PublicoAlvo",
     "PlanejamentoTreinamento",

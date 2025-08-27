@@ -418,17 +418,6 @@ function formatarHorario(horario) {
     return horario;
 }
 
-function formatarTurno(turno) {
-    const mapa = {
-        manha: 'Manhã',
-        tarde: 'Tarde',
-        noite: 'Noite',
-        manha_tarde: 'Manhã/Tarde',
-        tarde_noite: 'Tarde/Noite',
-    };
-    return mapa[turno] || '';
-}
-
 /**
  * Garante a existência de um container global para toasts
  * @returns {HTMLElement} - Elemento container

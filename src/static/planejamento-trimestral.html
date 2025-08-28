@@ -9,6 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="/css/styles.css" rel="stylesheet">
     <link rel="stylesheet" href="css/menu-suspenso.css">
+    <link rel="stylesheet" href="/css/components/filter.css">
     <style>
         .table-responsive {
             max-height: 75vh;
@@ -102,82 +103,436 @@
             <div class="card mb-4">
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        
-<table id="tabela-planejamento" class="table table-striped">
-    <thead>
-        <tr>
-            <th>Data Inicial
-                <button class="filter-btn" data-col="0" aria-haspopup="true" aria-expanded="false" title="Filtrar Data Inicial">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
-                </button>
-            </th>
-            <th>Data Final
-                <button class="filter-btn" data-col="1" aria-haspopup="true" aria-expanded="false" title="Filtrar Data Final">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
-                </button>
-            </th>
-            <th>Semana
-                <button class="filter-btn" data-col="2" aria-haspopup="true" aria-expanded="false" title="Filtrar Semana">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
-                </button>
-            </th>
-            <th>Horário
-                <button class="filter-btn" data-col="3" aria-haspopup="true" aria-expanded="false" title="Filtrar Horário">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
-                </button>
-            </th>
-            <th>C.H.
-                <button class="filter-btn" data-col="4" aria-haspopup="true" aria-expanded="false" title="Filtrar C.H.">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
-                </button>
-            </th>
-            <th>Modalidade
-                <button class="filter-btn" data-col="5" aria-haspopup="true" aria-expanded="false" title="Filtrar Modalidade">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
-                </button>
-            </th>
-            <th>Treinamento
-                <button class="filter-btn" data-col="6" aria-haspopup="true" aria-expanded="false" title="Filtrar Treinamento">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
-                </button>
-            </th>
-            <th>CMD
-                <button class="filter-btn" data-col="7" aria-haspopup="true" aria-expanded="false" title="Filtrar CMD">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
-                </button>
-            </th>
-            <th>SJB
-                <button class="filter-btn" data-col="8" aria-haspopup="true" aria-expanded="false" title="Filtrar SJB">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
-                </button>
-            </th>
-            <th>SAG/TOMBOS
-                <button class="filter-btn" data-col="9" aria-haspopup="true" aria-expanded="false" title="Filtrar SAG/TOMBOS">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
-                </button>
-            </th>
-            <th>Instrutor
-                <button class="filter-btn" data-col="10" aria-haspopup="true" aria-expanded="false" title="Filtrar Instrutor">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
-                </button>
-            </th>
-            <th>Local
-                <button class="filter-btn" data-col="11" aria-haspopup="true" aria-expanded="false" title="Filtrar Local">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
-                </button>
-            </th>
-            <th>Obs.
-                <button class="filter-btn" data-col="12" aria-haspopup="true" aria-expanded="false" title="Filtrar Obs.">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
-                </button>
-            </th>
-        </tr>
-    </thead>
+                        <table id="tabela-trimestral" class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th data-filterable="true">
+                                      <span class="th-wrap">Data Inicial
+                                      <span class="filter-scope">
+                                        <div class="dropdown d-inline">
+                                          <button class="filtro-btn filter-btn filter-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Filtrar coluna Data Inicial" data-col="data-inicial">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                              <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"></path>
+                                            </svg>
+                                          </button>
+
+                                          <div class="filter-menu dropdown-menu dropdown-menu-end shadow">
+                                            <div class="mb-2">
+                                              <input type="text" class="form-control form-control-sm" placeholder="Buscar..." data-role="filter-search">
+                                            </div>
+
+                                            <div class="mb-2" data-role="filter-options">
+                                              <!-- mantenha/repita aqui os checkboxes existentes da coluna (gerados como hoje) -->
+                                            </div>
+
+                                            <div class="divider"></div>
+
+                                            <div class="filter-actions">
+                                              <button class="btn btn-primary btn-sm"  data-action="apply">Aplicar</button>
+                                              <button class="btn btn-outline-secondary btn-sm" data-action="clear">Limpar</button>
+                                              <button class="btn btn-outline-primary btn-sm ms-auto" data-action="sort-asc">A–Z</button>
+                                              <button class="btn btn-outline-primary btn-sm" data-action="sort-desc">Z–A</button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </span>
+                                      </span>
+                                    </th>
+                                    <th data-filterable="true">
+                                      <span class="th-wrap">Data Final
+                                      <span class="filter-scope">
+                                        <div class="dropdown d-inline">
+                                          <button class="filtro-btn filter-btn filter-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Filtrar coluna Data Final" data-col="data-final">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                              <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"></path>
+                                            </svg>
+                                          </button>
+
+                                          <div class="filter-menu dropdown-menu dropdown-menu-end shadow">
+                                            <div class="mb-2">
+                                              <input type="text" class="form-control form-control-sm" placeholder="Buscar..." data-role="filter-search">
+                                            </div>
+
+                                            <div class="mb-2" data-role="filter-options">
+                                              <!-- mantenha/repita aqui os checkboxes existentes da coluna (gerados como hoje) -->
+                                            </div>
+
+                                            <div class="divider"></div>
+
+                                            <div class="filter-actions">
+                                              <button class="btn btn-primary btn-sm"  data-action="apply">Aplicar</button>
+                                              <button class="btn btn-outline-secondary btn-sm" data-action="clear">Limpar</button>
+                                              <button class="btn btn-outline-primary btn-sm ms-auto" data-action="sort-asc">A–Z</button>
+                                              <button class="btn btn-outline-primary btn-sm" data-action="sort-desc">Z–A</button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </span>
+                                      </span>
+                                    </th>
+                                    <th data-filterable="true">
+                                      <span class="th-wrap">Semana
+                                      <span class="filter-scope">
+                                        <div class="dropdown d-inline">
+                                          <button class="filtro-btn filter-btn filter-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Filtrar coluna Semana" data-col="semana">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                              <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"></path>
+                                            </svg>
+                                          </button>
+
+                                          <div class="filter-menu dropdown-menu dropdown-menu-end shadow">
+                                            <div class="mb-2">
+                                              <input type="text" class="form-control form-control-sm" placeholder="Buscar..." data-role="filter-search">
+                                            </div>
+
+                                            <div class="mb-2" data-role="filter-options">
+                                              <!-- mantenha/repita aqui os checkboxes existentes da coluna (gerados como hoje) -->
+                                            </div>
+
+                                            <div class="divider"></div>
+
+                                            <div class="filter-actions">
+                                              <button class="btn btn-primary btn-sm"  data-action="apply">Aplicar</button>
+                                              <button class="btn btn-outline-secondary btn-sm" data-action="clear">Limpar</button>
+                                              <button class="btn btn-outline-primary btn-sm ms-auto" data-action="sort-asc">A–Z</button>
+                                              <button class="btn btn-outline-primary btn-sm" data-action="sort-desc">Z–A</button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </span>
+                                      </span>
+                                    </th>
+                                    <th data-filterable="true">
+                                      <span class="th-wrap">Horário
+                                      <span class="filter-scope">
+                                        <div class="dropdown d-inline">
+                                          <button class="filtro-btn filter-btn filter-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Filtrar coluna Horário" data-col="horario">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                              <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"></path>
+                                            </svg>
+                                          </button>
+
+                                          <div class="filter-menu dropdown-menu dropdown-menu-end shadow">
+                                            <div class="mb-2">
+                                              <input type="text" class="form-control form-control-sm" placeholder="Buscar..." data-role="filter-search">
+                                            </div>
+
+                                            <div class="mb-2" data-role="filter-options">
+                                              <!-- mantenha/repita aqui os checkboxes existentes da coluna (gerados como hoje) -->
+                                            </div>
+
+                                            <div class="divider"></div>
+
+                                            <div class="filter-actions">
+                                              <button class="btn btn-primary btn-sm"  data-action="apply">Aplicar</button>
+                                              <button class="btn btn-outline-secondary btn-sm" data-action="clear">Limpar</button>
+                                              <button class="btn btn-outline-primary btn-sm ms-auto" data-action="sort-asc">A–Z</button>
+                                              <button class="btn btn-outline-primary btn-sm" data-action="sort-desc">Z–A</button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </span>
+                                      </span>
+                                    </th>
+                                    <th data-filterable="true">
+                                      <span class="th-wrap">C.H.
+                                      <span class="filter-scope">
+                                        <div class="dropdown d-inline">
+                                          <button class="filtro-btn filter-btn filter-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Filtrar coluna C.H." data-col="carga-horaria">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                              <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"></path>
+                                            </svg>
+                                          </button>
+
+                                          <div class="filter-menu dropdown-menu dropdown-menu-end shadow">
+                                            <div class="mb-2">
+                                              <input type="text" class="form-control form-control-sm" placeholder="Buscar..." data-role="filter-search">
+                                            </div>
+
+                                            <div class="mb-2" data-role="filter-options">
+                                              <!-- mantenha/repita aqui os checkboxes existentes da coluna (gerados como hoje) -->
+                                            </div>
+
+                                            <div class="divider"></div>
+
+                                            <div class="filter-actions">
+                                              <button class="btn btn-primary btn-sm"  data-action="apply">Aplicar</button>
+                                              <button class="btn btn-outline-secondary btn-sm" data-action="clear">Limpar</button>
+                                              <button class="btn btn-outline-primary btn-sm ms-auto" data-action="sort-asc">A–Z</button>
+                                              <button class="btn btn-outline-primary btn-sm" data-action="sort-desc">Z–A</button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </span>
+                                      </span>
+                                    </th>
+                                    <th data-filterable="true">
+                                      <span class="th-wrap">Modalidade
+                                      <span class="filter-scope">
+                                        <div class="dropdown d-inline">
+                                          <button class="filtro-btn filter-btn filter-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Filtrar coluna Modalidade" data-col="modalidade">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                              <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"></path>
+                                            </svg>
+                                          </button>
+
+                                          <div class="filter-menu dropdown-menu dropdown-menu-end shadow">
+                                            <div class="mb-2">
+                                              <input type="text" class="form-control form-control-sm" placeholder="Buscar..." data-role="filter-search">
+                                            </div>
+
+                                            <div class="mb-2" data-role="filter-options">
+                                              <!-- mantenha/repita aqui os checkboxes existentes da coluna (gerados como hoje) -->
+                                            </div>
+
+                                            <div class="divider"></div>
+
+                                            <div class="filter-actions">
+                                              <button class="btn btn-primary btn-sm"  data-action="apply">Aplicar</button>
+                                              <button class="btn btn-outline-secondary btn-sm" data-action="clear">Limpar</button>
+                                              <button class="btn btn-outline-primary btn-sm ms-auto" data-action="sort-asc">A–Z</button>
+                                              <button class="btn btn-outline-primary btn-sm" data-action="sort-desc">Z–A</button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </span>
+                                      </span>
+                                    </th>
+                                    <th data-filterable="true">
+                                      <span class="th-wrap">Treinamento
+                                      <span class="filter-scope">
+                                        <div class="dropdown d-inline">
+                                          <button class="filtro-btn filter-btn filter-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Filtrar coluna Treinamento" data-col="treinamento">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                              <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"></path>
+                                            </svg>
+                                          </button>
+
+                                          <div class="filter-menu dropdown-menu dropdown-menu-end shadow">
+                                            <div class="mb-2">
+                                              <input type="text" class="form-control form-control-sm" placeholder="Buscar..." data-role="filter-search">
+                                            </div>
+
+                                            <div class="mb-2" data-role="filter-options">
+                                              <!-- mantenha/repita aqui os checkboxes existentes da coluna (gerados como hoje) -->
+                                            </div>
+
+                                            <div class="divider"></div>
+
+                                            <div class="filter-actions">
+                                              <button class="btn btn-primary btn-sm"  data-action="apply">Aplicar</button>
+                                              <button class="btn btn-outline-secondary btn-sm" data-action="clear">Limpar</button>
+                                              <button class="btn btn-outline-primary btn-sm ms-auto" data-action="sort-asc">A–Z</button>
+                                              <button class="btn btn-outline-primary btn-sm" data-action="sort-desc">Z–A</button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </span>
+                                      </span>
+                                    </th>
+                                    <th data-filterable="true">
+                                      <span class="th-wrap">CMD
+                                      <span class="filter-scope">
+                                        <div class="dropdown d-inline">
+                                          <button class="filtro-btn filter-btn filter-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Filtrar coluna CMD" data-col="cmd">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                              <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"></path>
+                                            </svg>
+                                          </button>
+
+                                          <div class="filter-menu dropdown-menu dropdown-menu-end shadow">
+                                            <div class="mb-2">
+                                              <input type="text" class="form-control form-control-sm" placeholder="Buscar..." data-role="filter-search">
+                                            </div>
+
+                                            <div class="mb-2" data-role="filter-options">
+                                              <!-- mantenha/repita aqui os checkboxes existentes da coluna (gerados como hoje) -->
+                                            </div>
+
+                                            <div class="divider"></div>
+
+                                            <div class="filter-actions">
+                                              <button class="btn btn-primary btn-sm"  data-action="apply">Aplicar</button>
+                                              <button class="btn btn-outline-secondary btn-sm" data-action="clear">Limpar</button>
+                                              <button class="btn btn-outline-primary btn-sm ms-auto" data-action="sort-asc">A–Z</button>
+                                              <button class="btn btn-outline-primary btn-sm" data-action="sort-desc">Z–A</button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </span>
+                                      </span>
+                                    </th>
+                                    <th data-filterable="true">
+                                      <span class="th-wrap">SJB
+                                      <span class="filter-scope">
+                                        <div class="dropdown d-inline">
+                                          <button class="filtro-btn filter-btn filter-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Filtrar coluna SJB" data-col="sjb">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                              <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"></path>
+                                            </svg>
+                                          </button>
+
+                                          <div class="filter-menu dropdown-menu dropdown-menu-end shadow">
+                                            <div class="mb-2">
+                                              <input type="text" class="form-control form-control-sm" placeholder="Buscar..." data-role="filter-search">
+                                            </div>
+
+                                            <div class="mb-2" data-role="filter-options">
+                                              <!-- mantenha/repita aqui os checkboxes existentes da coluna (gerados como hoje) -->
+                                            </div>
+
+                                            <div class="divider"></div>
+
+                                            <div class="filter-actions">
+                                              <button class="btn btn-primary btn-sm"  data-action="apply">Aplicar</button>
+                                              <button class="btn btn-outline-secondary btn-sm" data-action="clear">Limpar</button>
+                                              <button class="btn btn-outline-primary btn-sm ms-auto" data-action="sort-asc">A–Z</button>
+                                              <button class="btn btn-outline-primary btn-sm" data-action="sort-desc">Z–A</button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </span>
+                                      </span>
+                                    </th>
+                                    <th data-filterable="true">
+                                      <span class="th-wrap">SAG/TOMBOS
+                                      <span class="filter-scope">
+                                        <div class="dropdown d-inline">
+                                          <button class="filtro-btn filter-btn filter-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Filtrar coluna SAG/TOMBOS" data-col="sag-tombos">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                              <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"></path>
+                                            </svg>
+                                          </button>
+
+                                          <div class="filter-menu dropdown-menu dropdown-menu-end shadow">
+                                            <div class="mb-2">
+                                              <input type="text" class="form-control form-control-sm" placeholder="Buscar..." data-role="filter-search">
+                                            </div>
+
+                                            <div class="mb-2" data-role="filter-options">
+                                              <!-- mantenha/repita aqui os checkboxes existentes da coluna (gerados como hoje) -->
+                                            </div>
+
+                                            <div class="divider"></div>
+
+                                            <div class="filter-actions">
+                                              <button class="btn btn-primary btn-sm"  data-action="apply">Aplicar</button>
+                                              <button class="btn btn-outline-secondary btn-sm" data-action="clear">Limpar</button>
+                                              <button class="btn btn-outline-primary btn-sm ms-auto" data-action="sort-asc">A–Z</button>
+                                              <button class="btn btn-outline-primary btn-sm" data-action="sort-desc">Z–A</button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </span>
+                                      </span>
+                                    </th>
+                                    <th data-filterable="true">
+                                      <span class="th-wrap">Instrutor
+                                      <span class="filter-scope">
+                                        <div class="dropdown d-inline">
+                                          <button class="filtro-btn filter-btn filter-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Filtrar coluna Instrutor" data-col="instrutor">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                              <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"></path>
+                                            </svg>
+                                          </button>
+
+                                          <div class="filter-menu dropdown-menu dropdown-menu-end shadow">
+                                            <div class="mb-2">
+                                              <input type="text" class="form-control form-control-sm" placeholder="Buscar..." data-role="filter-search">
+                                            </div>
+
+                                            <div class="mb-2" data-role="filter-options">
+                                              <!-- mantenha/repita aqui os checkboxes existentes da coluna (gerados como hoje) -->
+                                            </div>
+
+                                            <div class="divider"></div>
+
+                                            <div class="filter-actions">
+                                              <button class="btn btn-primary btn-sm"  data-action="apply">Aplicar</button>
+                                              <button class="btn btn-outline-secondary btn-sm" data-action="clear">Limpar</button>
+                                              <button class="btn btn-outline-primary btn-sm ms-auto" data-action="sort-asc">A–Z</button>
+                                              <button class="btn btn-outline-primary btn-sm" data-action="sort-desc">Z–A</button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </span>
+                                      </span>
+                                    </th>
+                                    <th data-filterable="true">
+                                      <span class="th-wrap">Local
+                                      <span class="filter-scope">
+                                        <div class="dropdown d-inline">
+                                          <button class="filtro-btn filter-btn filter-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Filtrar coluna Local" data-col="local">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                              <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"></path>
+                                            </svg>
+                                          </button>
+
+                                          <div class="filter-menu dropdown-menu dropdown-menu-end shadow">
+                                            <div class="mb-2">
+                                              <input type="text" class="form-control form-control-sm" placeholder="Buscar..." data-role="filter-search">
+                                            </div>
+
+                                            <div class="mb-2" data-role="filter-options">
+                                              <!-- mantenha/repita aqui os checkboxes existentes da coluna (gerados como hoje) -->
+                                            </div>
+
+                                            <div class="divider"></div>
+
+                                            <div class="filter-actions">
+                                              <button class="btn btn-primary btn-sm"  data-action="apply">Aplicar</button>
+                                              <button class="btn btn-outline-secondary btn-sm" data-action="clear">Limpar</button>
+                                              <button class="btn btn-outline-primary btn-sm ms-auto" data-action="sort-asc">A–Z</button>
+                                              <button class="btn btn-outline-primary btn-sm" data-action="sort-desc">Z–A</button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </span>
+                                      </span>
+                                    </th>
+                                    <th data-filterable="true">
+                                      <span class="th-wrap">Obs.
+                                      <span class="filter-scope">
+                                        <div class="dropdown d-inline">
+                                          <button class="filtro-btn filter-btn filter-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Filtrar coluna Obs." data-col="observacao">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                              <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"></path>
+                                            </svg>
+                                          </button>
+
+                                          <div class="filter-menu dropdown-menu dropdown-menu-end shadow">
+                                            <div class="mb-2">
+                                              <input type="text" class="form-control form-control-sm" placeholder="Buscar..." data-role="filter-search">
+                                            </div>
+
+                                            <div class="mb-2" data-role="filter-options">
+                                              <!-- mantenha/repita aqui os checkboxes existentes da coluna (gerados como hoje) -->
+                                            </div>
+
+                                            <div class="divider"></div>
+
+                                            <div class="filter-actions">
+                                              <button class="btn btn-primary btn-sm"  data-action="apply">Aplicar</button>
+                                              <button class="btn btn-outline-secondary btn-sm" data-action="clear">Limpar</button>
+                                              <button class="btn btn-outline-primary btn-sm ms-auto" data-action="sort-asc">A–Z</button>
+                                              <button class="btn btn-outline-primary btn-sm" data-action="sort-desc">Z–A</button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </span>
+                                      </span>
+                                    </th>
+                                    <th data-no-filter="true" class="text-end">Ações</th>
+                                </tr>
+                            </thead>
                             <tbody id="planejamento-tbody"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
+        </div>
+        <div class="mt-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-reset-filtros>Limpar todos os filtros</button>
         </div>
     </main>
 
@@ -295,35 +650,17 @@
       </div>
     </div>
 
-    <!-- Popover (apenas 1 no body) -->
-    <div id="filter-popover" class="filter-popover hidden" role="dialog" aria-modal="true">
-      <div class="filter-popover__header">
-        <input type="text" placeholder="Buscar..." class="filter-search" aria-label="Buscar valores" />
-      </div>
-
-      <div class="filter-popover__toolbar">
-        <button class="btn-az" type="button">A–Z</button>
-        <button class="btn-za" type="button">Z–A</button>
-      </div>
-
-      <div class="filter-popover__selectall">
-        <label><input type="checkbox" class="check-all" checked> (Selecionar Tudo)</label>
-      </div>
-
-      <div class="filter-options" tabindex="0" aria-label="Opções de filtro"></div>
-
-      <div class="filter-popover__actions">
-        <button class="btn-apply" type="button">Aplicar</button>
-        <button class="btn-clear" type="button">Limpar</button>
-      </div>
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/app.js"></script>
     <script src="js/menu-suspenso.js"></script>
     <script src="/js/utils/datas.js"></script>
     <script src="/js/planejamento-trimestral.js"></script>
-    <link rel="stylesheet" href="/static/css/filters.css">
-    <script src="/static/js/filters.js"></script>
+    <script src="js/filtros-tabela.js"></script>
+    <script src="js/filters-ui.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        window.inicializarFiltrosTabela?.('#tabela-trimestral');
+      });
+    </script>
 </body>
 </html>

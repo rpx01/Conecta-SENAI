@@ -477,7 +477,6 @@ async function carregarItens() {
         });
 
         renderizarItens(itens);
-        window.inicializarFiltrosTabela?.('#tabela-trimestral');
     } catch (error) {
         showToast('Não foi possível carregar o planejamento.', 'danger');
     }

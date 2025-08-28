@@ -3,13 +3,6 @@
 (function(){
   const $doc = document;
 
-  // Prevê que os menus de filtro sejam anexados estaticamente, evitando
-  // que o Bootstrap restrinja sua posição dentro de contêineres com
-  // overflow e fazendo com que não sejam cortados ao reduzir a altura da tabela.
-  $doc.querySelectorAll('.filter-btn[data-bs-toggle="dropdown"]').forEach(btn => {
-    btn.setAttribute('data-bs-display', 'static');
-  });
-
   // Fechar dropdown ao apertar ESC
   $doc.addEventListener('keydown', (e) => {
     if(e.key === 'Escape'){

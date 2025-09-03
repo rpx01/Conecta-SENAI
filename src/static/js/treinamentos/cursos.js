@@ -132,6 +132,24 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
+ * Calcula a data limite para inscrições, considerando um dia útil
+ * anterior à data de início do treinamento.
+ * @param {string} dataInicioStr - Data de início em formato ISO (YYYY-MM-DD).
+ * @returns {string} Data de encerramento das inscrições em formato ISO.
+ */
+function calcularDataLimiteInscricao(dataInicioStr) {
+    const data = new Date(dataInicioStr);
+    if (isNaN(data)) return dataInicioStr;
+
+    data.setDate(data.getDate() - 1);
+    while (data.getDay() === 0 || data.getDay() === 6) {
+        data.setDate(data.getDate() - 1);
+    }
+
+    return data.toISOString().split('T')[0];
+}
+
+/**
  * Carrega a lista de turmas disponíveis, verificando se o usuário já está inscrito.
  */
 async function carregarTreinamentos() {
@@ -157,6 +175,7 @@ async function carregarTreinamentos() {
         turmas.forEach(t => {
             const isInscrito = minhasInscricoesIds.has(t.turma_id);
             const botaoHtml = `<button class="btn ${isInscrito ? 'btn-success' : 'btn-primary'}" onclick="abrirModalInscricao(${t.turma_id})">${isInscrito ? '<i class="bi bi-check-circle-fill"></i> INSCRITO' : 'INSCREVER-SE'}</button>`;
+            const dataEncerramento = calcularDataLimiteInscricao(t.data_inicio);
 
             const cardHtml = `
             <div class="col">
@@ -190,7 +209,7 @@ async function carregarTreinamentos() {
                             ${botaoHtml}
                             <div class="text-end">
                                 <small class="text-muted d-block">Inscrições encerram em:</small>
-                                <span class="countdown-timer" id="countdown-${t.turma_id}" data-fim="${t.data_inicio}"></span>
+                                <span class="countdown-timer" id="countdown-${t.turma_id}" data-fim="${dataEncerramento}"></span>
                             </div>
                         </div>
                     </div>

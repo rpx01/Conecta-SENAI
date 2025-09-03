@@ -3,6 +3,7 @@
 // Armazena os dados do usuário logado e suas inscrições
 let dadosUsuarioLogado = null;
 let minhasInscricoesIds = new Set();
+let contadoresIntervals = [];
 let cacheMeusCursos = []; // Cache para os dados dos cursos do usuário
 
 /**
@@ -184,23 +185,70 @@ async function carregarTreinamentos() {
                             <span><b>Local:</b> ${escapeHTML(t.local_realizacao || 'A definir')}</span>
                         </div>
                     </div>
-                    <div class="card-footer bg-light d-flex justify-content-between align-items-center">
-                        ${botaoHtml}
-                        <small class="text-muted" data-deadline>Inscrições encerram em: --</small>
+                    <div class="card-footer bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            ${botaoHtml}
+                            <div class="text-end">
+                                <small class="text-muted d-block">Inscrições encerram em:</small>
+                                <span class="countdown-timer" id="countdown-${t.turma_id}" data-fim="${t.data_inicio}"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>`;
             container.insertAdjacentHTML('beforeend', cardHtml);
         });
 
-        if (typeof initDeadlineCounters === 'function') {
-            initDeadlineCounters();
-        }
+        iniciarContadores();
 
     } catch (e) {
         showToast(e.message, 'danger');
         container.innerHTML = '<p class="text-center text-danger w-100">Falha ao carregar os cursos.</p>';
     }
+}
+
+function iniciarContadores() {
+    contadoresIntervals.forEach(clearInterval);
+    contadoresIntervals = [];
+
+    document.querySelectorAll('.countdown-timer').forEach(timerEl => {
+        const fim = timerEl.dataset.fim;
+        if (!fim) {
+            timerEl.textContent = 'Data inválida';
+            return;
+        }
+        let dataFim = new Date(fim);
+        if (isNaN(dataFim.getTime())) {
+            timerEl.textContent = 'Data inválida';
+            return;
+        }
+        dataFim.setHours(23, 59, 59, 999);
+
+        const intervalId = setInterval(() => {
+            const agora = new Date();
+            const diferenca = dataFim - agora;
+
+            if (diferenca <= 0) {
+                clearInterval(intervalId);
+                timerEl.textContent = 'Inscrições encerradas';
+                const cardFooter = timerEl.closest('.card-footer');
+                if (cardFooter) {
+                    const btn = cardFooter.querySelector('.btn');
+                    if (btn && !btn.textContent.includes('INSCRITO')) {
+                        btn.disabled = true;
+                        btn.innerHTML = 'ENCERRADO';
+                    }
+                }
+                return;
+            }
+
+            const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
+            const horas = Math.floor((diferenca % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+            timerEl.textContent = `${dias}d e ${horas}h`;
+        }, 1000);
+        contadoresIntervals.push(intervalId);
+    });
 }
 
 /**

@@ -52,6 +52,25 @@ function validarCPF(input) {
 }
 
 /**
+ * Subtrai 'n' dias úteis (segunda a sexta) de uma data, ignorando feriados.
+ * @param {Date} date - Data de referência.
+ * @param {number} n - Número de dias úteis a subtrair.
+ * @returns {Date} Nova data após subtração.
+ */
+function subtractBusinessDays(date, n) {
+    const result = new Date(date.getTime());
+    let daysSubtracted = 0;
+    while (daysSubtracted < n) {
+        result.setUTCDate(result.getUTCDate() - 1);
+        const day = result.getUTCDay();
+        if (day !== 0 && day !== 6) {
+            daysSubtracted++;
+        }
+    }
+    return result;
+}
+
+/**
  * Listener que é executado quando o conteúdo da página termina de carregar.
  */
 document.addEventListener('DOMContentLoaded', () => {
@@ -190,7 +209,7 @@ async function carregarTreinamentos() {
                             ${botaoHtml}
                             <div class="text-end">
                                 <small class="text-muted d-block">Inscrições encerram em:</small>
-                                <span class="countdown-timer" id="countdown-${t.turma_id}" data-fim="${t.data_inicio}"></span>
+                                <span class="countdown-timer" id="countdown-${t.turma_id}" data-inicio="${t.data_inicio}"></span>
                             </div>
                         </div>
                     </div>
@@ -212,17 +231,18 @@ function iniciarContadores() {
     contadoresIntervals = [];
 
     document.querySelectorAll('.countdown-timer').forEach(timerEl => {
-        const fim = timerEl.dataset.fim;
-        if (!fim) {
+        const inicioStr = timerEl.dataset.inicio;
+        if (!inicioStr) {
             timerEl.textContent = 'Data inválida';
             return;
         }
-        let dataFim = new Date(fim);
-        if (isNaN(dataFim.getTime())) {
+        let dataInicio = new Date(inicioStr + 'T00:00:00-03:00');
+        if (isNaN(dataInicio.getTime())) {
             timerEl.textContent = 'Data inválida';
             return;
         }
-        dataFim.setHours(23, 59, 59, 999);
+        let dataFim = subtractBusinessDays(dataInicio, 1);
+        dataFim = new Date(dataFim.getTime() + 24 * 60 * 60 * 1000 - 1);
 
         const intervalId = setInterval(() => {
             const agora = new Date();

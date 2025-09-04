@@ -225,7 +225,8 @@ async function carregarInstrutores() {
  * @param {number|null} id - O ID da turma para editar, ou null para criar uma nova.
  */
 async function abrirModalTurma(id = null) {
-    resetFormularioTurma();
+    const form = document.getElementById('turmaForm');
+    form.reset();
     document.getElementById('turmaId').value = id || '';
 
     // Popula o select de treinamentos
@@ -252,9 +253,17 @@ async function abrirModalTurma(id = null) {
     if (id) {
         try {
             const t = await chamarAPI(`/treinamentos/turmas/${id}`);
-            preencherFormularioTurma(t);
+            selectTrein.value = t.treinamento_id;
+            document.getElementById('dataInicio').value = t.data_inicio ? t.data_inicio.split('T')[0] : '';
+
             // Dispara o evento de change para atualizar a carga horária e data mínima
             selectTrein.dispatchEvent(new Event('change'));
+
+            document.getElementById('dataFim').value = t.data_fim ? t.data_fim.split('T')[0] : '';
+            document.getElementById('localRealizacao').value = t.local_realizacao || '';
+            document.getElementById('instrutorId').value = t.instrutor_id || '';
+            document.getElementById('horario').value = t.horario || '';
+
         } catch(e) {
             showToast(`Não foi possível carregar dados da turma: ${e.message}`, 'danger');
             return; // Não abre o modal se houver erro
@@ -262,7 +271,7 @@ async function abrirModalTurma(id = null) {
     } else {
         // Se for novo
         document.getElementById('cargaHoraria').value = '';
-        document.getElementById('dataFim').min = '';
+        document.getElementById('dataFim').min = ''; // Limpa a restrição
     }
 
     new bootstrap.Modal(document.getElementById('turmaModal')).show();
@@ -278,40 +287,17 @@ function editarTurma(id) {
     abrirModalTurma(id);
 }
 
-function coletarDadosTurmaDoFormulario() {
-    const teoricoOnline = document.getElementById('turma-teorico-online').checked;
-    return {
+// Salva a turma (nova ou existente)
+async function salvarTurma() {
+    const id = document.getElementById('turmaId').value;
+    const body = {
         treinamento_id: parseInt(document.getElementById('turmaTreinamentoId').value),
         data_inicio: document.getElementById('dataInicio').value,
         data_fim: document.getElementById('dataFim').value,
         local_realizacao: document.getElementById('localRealizacao').value,
         horario: document.getElementById('horario').value,
-        instrutor_id: parseInt(document.getElementById('instrutorId').value) || null,
-        teorico_online: teoricoOnline
+        instrutor_id: parseInt(document.getElementById('instrutorId').value) || null
     };
-}
-
-function preencherFormularioTurma(turma) {
-    const selectTrein = document.getElementById('turmaTreinamentoId');
-    selectTrein.value = turma.treinamento_id;
-    document.getElementById('dataInicio').value = turma.data_inicio ? turma.data_inicio.split('T')[0] : '';
-    document.getElementById('dataFim').value = turma.data_fim ? turma.data_fim.split('T')[0] : '';
-    document.getElementById('localRealizacao').value = turma.local_realizacao || '';
-    document.getElementById('instrutorId').value = turma.instrutor_id || '';
-    document.getElementById('horario').value = turma.horario || '';
-    document.getElementById('turma-teorico-online').checked = !!turma.teorico_online;
-}
-
-function resetFormularioTurma() {
-    const form = document.getElementById('turmaForm');
-    form.reset();
-    document.getElementById('turma-teorico-online').checked = false;
-}
-
-// Salva a turma (nova ou existente)
-async function salvarTurma() {
-    const id = document.getElementById('turmaId').value;
-    const body = coletarDadosTurmaDoFormulario();
 
     if (!body.treinamento_id || !body.data_inicio || !body.data_fim) {
         showToast("Por favor, preencha todos os campos obrigatórios.", "warning");

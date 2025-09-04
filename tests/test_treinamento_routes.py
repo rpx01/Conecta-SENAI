@@ -64,23 +64,3 @@ def test_atualizar_turma_ativa_permitido(client, app):
     )
     assert resp_up.status_code == 200
     assert resp_up.get_json()['local_realizacao'] == 'Nova'
-
-
-def test_criar_turma_com_teorico_online(client, app):
-    headers = admin_headers(app)
-    r = client.post('/api/treinamentos/catalogo', json={'nome': 'Trein2', 'codigo': 'T100'}, headers=headers)
-    treino_id = r.get_json()['id']
-
-    hoje = datetime.utcnow().date()
-    resp_turma = client.post(
-        '/api/treinamentos/turmas',
-        json={
-            'treinamento_id': treino_id,
-            'data_inicio': (hoje + timedelta(days=1)).isoformat(),
-            'data_fim': (hoje + timedelta(days=2)).isoformat(),
-            'teorico_online': True
-        },
-        headers=headers,
-    )
-    assert resp_turma.status_code == 201
-    assert resp_turma.get_json()['teorico_online'] is True

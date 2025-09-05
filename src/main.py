@@ -257,15 +257,21 @@ def create_app():
 
     logging.info("Aplicação Flask criada com sucesso.")
     return app
-try:
-    app = create_app()
-except Exception as e:
-    logging.error("!!!!!! FALHA CRÍTICA AO INICIAR A APLICAÇÃO !!!!!!")
-    logging.error(f"Erro: {e}")
-    logging.error(f"Traceback: {traceback.format_exc()}")
-    raise e
 
-if __name__ == '__main__':
+
+def main():
+    try:
+        app = create_app()
+    except Exception as e:
+        logging.error("!!!!!! FALHA CRÍTICA AO INICIAR A APLICAÇÃO !!!!!!")
+        logging.error("Erro: %s", e)
+        logging.error("Traceback: %s", traceback.format_exc())
+        raise e
+
     debug = os.getenv('FLASK_DEBUG', '0').lower() in ('1', 'true', 't', 'yes')
     port = int(os.getenv('PORT', '5000'))
     app.run(debug=debug, host='127.0.0.1', port=port)
+
+
+if __name__ == '__main__':
+    main()

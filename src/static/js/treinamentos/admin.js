@@ -138,6 +138,9 @@ async function enviarInscricaoAdmin() {
             showToast('Participante inscrito com sucesso!', 'success');
             const modal = bootstrap.Modal.getInstance(document.getElementById('adminInscricaoModal'));
             modal.hide();
+            if (document.getElementById('inscricoesTableBody')) {
+                await carregarInscricoes(turmaId);
+            }
         } catch (e) {
             showToast(e.message, 'danger');
             throw e;
@@ -399,7 +402,7 @@ async function carregarInscricoes(turmaId) {
             const statusReprovado = i.status_aprovacao === 'Reprovado' ? 'selected' : '';
 
             const tdPraticaHtml = temPratica ? `
-                <td class="text-center">
+                <td class="text-center" data-col="presenca_pratica">
                     <input class="form-check-input presenca-pratica-check" type="checkbox" ${i.presenca_pratica ? 'checked' : ''}>
                 </td>` : '';
 
@@ -415,17 +418,17 @@ async function carregarInscricoes(turmaId) {
                 <td>${escapeHTML(i.nome)}</td>
                 <td>${i.cpf || ''}</td>
                 <td>${i.empresa || ''}</td>
-                <td class="text-center">
+                <td class="text-center" data-col="presenca_teoria">
                     <input class="form-check-input presenca-teoria-check" type="checkbox" ${i.presenca_teoria ? 'checked' : ''}>
                 </td>
                 ${tdPraticaHtml}
-                <td>
+                <td data-col="nota_teoria">
                     <input type="number" class="form-control form-control-sm nota-teoria-input" value="${i.nota_teoria !== null ? i.nota_teoria : ''}" min="0" max="100" step="0.1">
                 </td>
-                <td>
+                <td data-col="nota_pratica">
                     <input type="number" class="form-control form-control-sm nota-pratica-input" value="${i.nota_pratica !== null ? i.nota_pratica : ''}" min="0" max="100" step="0.1">
                 </td>
-                <td>
+                <td data-col="status">
                     <select class="form-select form-select-sm status-aprovacao-select">
                         <option value="">Selecione...</option>
                         <option value="Aprovado" ${statusAprovado}>Aprovado</option>

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/static/css/brand.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="/css/styles.css" rel="stylesheet">
+    <link href="/css/treinamentos.css" rel="stylesheet">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
@@ -149,11 +150,11 @@
                                         <th scope="col">Nome</th>
                                         <th scope="col">CPF</th>
                                         <th scope="col">Empresa</th>
-                                        <th scope="col" class="text-center" style="width: 100px;">Presença Teoria</th>
-                                        <th scope="col" id="thPresencaPratica" class="text-center" style="width: 100px; display: none;">Presença Prática</th>
-                                        <th scope="col" style="width: 120px;">Nota Teoria</th>
-                                        <th scope="col" style="width: 120px;">Nota Prática</th>
-                                        <th scope="col" style="width: 150px;">Status</th>
+                                        <th scope="col" class="text-center" style="width: 100px;" data-col="presenca_teoria">Presença Teoria</th>
+                                        <th scope="col" id="thPresencaPratica" class="text-center" style="width: 100px; display: none;" data-col="presenca_pratica">Presença Prática</th>
+                                        <th scope="col" style="width: 120px;" data-col="nota_teoria">Nota Teoria</th>
+                                        <th scope="col" style="width: 120px;" data-col="nota_pratica">Nota Prática</th>
+                                        <th scope="col" style="width: 150px;" data-col="status">Status</th>
                                         <th scope="col" style="width: 80px;">Ações</th>
                                     </tr>
                                 </thead>

@@ -8,7 +8,7 @@ workers = int(os.getenv("WEB_CONCURRENCY", "1"))
 threads = int(os.getenv("GTHREADS", "1"))
 worker_class = os.getenv("WORKER_CLASS", "sync")
 
-timeout = 60
+timeout = 30
 keepalive = 2
 max_requests = 600
 max_requests_jitter = 60

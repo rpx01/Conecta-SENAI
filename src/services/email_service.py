@@ -5,8 +5,40 @@ import smtplib
 import ssl
 import threading
 import time
+import socket
 
 from flask import current_app
+
+
+def _connect_gmail(user: str, pwd: str, timeout: int = 15):
+    """Connect to Gmail using IPv4 and fallback from TLS to SSL."""
+    last_err = None
+    for host, port, mode in [
+        ("smtp.gmail.com", 587, "tls"),
+        ("smtp.gmail.com", 465, "ssl"),
+    ]:
+        try:
+            addr = next(
+                a[4]
+                for a in socket.getaddrinfo(
+                    host, port, socket.AF_INET, socket.SOCK_STREAM
+                )
+            )
+            sock = socket.create_connection(addr, timeout=timeout)
+            sock.close()
+
+            if mode == "tls":
+                s = smtplib.SMTP(host, port, timeout=timeout)
+                s.ehlo()
+                s.starttls()
+                s.ehlo()
+            else:
+                s = smtplib.SMTP_SSL(host, port, timeout=timeout)
+            s.login(user, pwd)
+            return s
+        except Exception as e:  # pragma: no cover - network dependent
+            last_err = e
+    raise last_err
 
 
 def _build_reset_message(to_email: str, reset_url: str) -> EmailMessage:
@@ -62,13 +94,21 @@ def send_email_via_smtp(app, message: EmailMessage) -> None:
     password = cfg.get("MAIL_PASSWORD")
     use_tls = cfg.get("MAIL_USE_TLS", True)
     use_ssl = cfg.get("MAIL_USE_SSL", False)
+    if cfg.get("MAIL_SUPPRESS_SEND"):
+        app.logger.info("Envio de e-mail suprimido para %s", message["To"])
+        return
     timeout = int(cfg.get("MAIL_TIMEOUT", 12))
     max_attempts = int(cfg.get("MAIL_MAX_RETRIES", 3))
 
     delay = 1
     for attempt in range(1, max_attempts + 1):
         try:
-            if use_ssl:
+            if server == "smtp.gmail.com":
+                with _connect_gmail(
+                    username, password, timeout=timeout
+                ) as smtp:
+                    smtp.send_message(message)
+            elif use_ssl:
                 context = ssl.create_default_context()
                 with smtplib.SMTP_SSL(
                     server, port, timeout=timeout, context=context
@@ -92,7 +132,8 @@ def send_email_via_smtp(app, message: EmailMessage) -> None:
         except OSError as e:
             if getattr(e, "errno", None) == 101:
                 app.logger.error(
-                    "Falha ao enviar e-mail para %s: rede indisponível (tentativa %s/%s)",
+                    "Falha ao enviar e-mail para %s: rede indisponível"
+                    " (tentativa %s/%s)",
                     message["To"],
                     attempt,
                     max_attempts,

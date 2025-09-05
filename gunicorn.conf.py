@@ -1,14 +1,12 @@
 import os
 
-# Bind to host/port pulled from PORT env var for flexibility
-bind = f"0.0.0.0:{os.getenv('PORT', '8080')}"
-
-# Worker settings tuned to avoid OOM and excessive concurrency
-workers = int(os.getenv("WEB_CONCURRENCY", "1"))
+wsgi_app = "src.main:create_app()"
+bind = "0.0.0.0:8080"
+workers = 1
 threads = int(os.getenv("GTHREADS", "1"))
 worker_class = os.getenv("WORKER_CLASS", "sync")
-
 timeout = 30
+loglevel = "debug"
 keepalive = 2
 max_requests = 600
 max_requests_jitter = 60

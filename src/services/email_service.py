@@ -28,9 +28,14 @@ def _build_reset_message(to_email: str, reset_url: str) -> EmailMessage:
     return msg
 
 
-def send_email_via_smtp(message: EmailMessage):
-    """Envio SMTP com timeout curto para não travar o worker."""
-    app = current_app._get_current_object()
+def send_email_via_smtp(app, message: EmailMessage):
+    """Envio SMTP com timeout curto para não travar o worker.
+
+    Como o envio ocorre em uma thread separada, ``current_app`` não está
+    disponível. Por isso, passamos explicitamente a instância de aplicação
+    para acessar configuração e logger sem depender de contexto de
+    requisição.
+    """
     cfg = app.config
 
     server = cfg.get("MAIL_SERVER")
@@ -79,5 +84,5 @@ def queue_reset_email(to_email: str, token: str):
     reset_url = f"{base_url}/reset?token={token}"
     msg = _build_reset_message(to_email, reset_url)
 
-    t = threading.Thread(target=send_email_via_smtp, args=(msg,), daemon=True)
+    t = threading.Thread(target=send_email_via_smtp, args=(app, msg), daemon=True)
     t.start()

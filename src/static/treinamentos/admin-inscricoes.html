@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/static/css/brand.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="/css/styles.css" rel="stylesheet">
+    <link href="/css/treinamentos.css" rel="stylesheet">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
@@ -149,11 +150,11 @@
                                         <th scope="col">Nome</th>
                                         <th scope="col">CPF</th>
                                         <th scope="col">Empresa</th>
-                                        <th scope="col" class="text-center" style="width: 100px;">Presença Teoria</th>
-                                        <th scope="col" id="thPresencaPratica" class="text-center" style="width: 100px; display: none;">Presença Prática</th>
-                                        <th scope="col" style="width: 120px;">Nota Teoria</th>
-                                        <th scope="col" style="width: 120px;">Nota Prática</th>
-                                        <th scope="col" style="width: 150px;">Status</th>
+                                        <th scope="col" data-col="presenca_teoria" class="text-center" style="width: 100px;">Presença Teoria</th>
+                                        <th scope="col" data-col="presenca_pratica" id="thPresencaPratica" class="text-center" style="width: 100px; display: none;">Presença Prática</th>
+                                        <th scope="col" data-col="nota_teoria" style="width: 120px;">Nota Teoria</th>
+                                        <th scope="col" data-col="nota_pratica" style="width: 120px;">Nota Prática</th>
+                                        <th scope="col" data-col="status" style="width: 150px;">Status</th>
                                         <th scope="col" style="width: 80px;">Ações</th>
                                     </tr>
                                 </thead>
@@ -224,7 +225,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="btnEnviarAdminInscricao">
+                    <button type="submit" class="btn btn-primary" id="btnEnviarAdminInscricao">
                         <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                         <span class="btn-text">Inscrever Participante</span>
                     </button>

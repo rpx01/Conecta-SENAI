@@ -1,7 +1,11 @@
 from email.message import EmailMessage
+import json
+from pathlib import Path
 import smtplib
 import ssl
 import threading
+import time
+
 from flask import current_app
 
 
@@ -28,8 +32,22 @@ def _build_reset_message(to_email: str, reset_url: str) -> EmailMessage:
     return msg
 
 
-def send_email_via_smtp(app, message: EmailMessage):
-    """Envio SMTP com timeout curto para não travar o worker.
+def _enqueue_email(app, message: EmailMessage) -> None:
+    """Persiste e-mail para reprocessamento futuro."""
+    queue_path = Path(app.config.get("MAIL_QUEUE_PATH", "email_queue.jsonl"))
+    queue_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "to": message["To"],
+        "subject": message.get("Subject", ""),
+        "raw": message.as_string(),
+    }
+    with queue_path.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(payload) + "\n")
+    app.logger.info("E-mail enfileirado para %s", message["To"])
+
+
+def send_email_via_smtp(app, message: EmailMessage) -> None:
+    """Envio SMTP com timeout curto e retry com backoff exponencial.
 
     Como o envio ocorre em uma thread separada, ``current_app`` não está
     disponível. Por isso, passamos explicitamente a instância de aplicação
@@ -45,46 +63,60 @@ def send_email_via_smtp(app, message: EmailMessage):
     use_tls = cfg.get("MAIL_USE_TLS", True)
     use_ssl = cfg.get("MAIL_USE_SSL", False)
     timeout = int(cfg.get("MAIL_TIMEOUT", 12))
+    max_attempts = int(cfg.get("MAIL_MAX_RETRIES", 3))
 
-    try:
-        if use_ssl:
-            context = ssl.create_default_context()
-            with smtplib.SMTP_SSL(
-                server, port, timeout=timeout, context=context
-            ) as smtp:
-                if username and password:
-                    smtp.login(username, password)
-                smtp.send_message(message)
-        else:
-            with smtplib.SMTP(server, port, timeout=timeout) as smtp:
-                smtp.ehlo()
-                if use_tls:
-                    context = ssl.create_default_context()
-                    smtp.starttls(context=context)
+    delay = 1
+    for attempt in range(1, max_attempts + 1):
+        try:
+            if use_ssl:
+                context = ssl.create_default_context()
+                with smtplib.SMTP_SSL(
+                    server, port, timeout=timeout, context=context
+                ) as smtp:
+                    if username and password:
+                        smtp.login(username, password)
+                    smtp.send_message(message)
+            else:
+                with smtplib.SMTP(server, port, timeout=timeout) as smtp:
                     smtp.ehlo()
-                if username and password:
-                    smtp.login(username, password)
-                smtp.send_message(message)
+                    if use_tls:
+                        context = ssl.create_default_context()
+                        smtp.starttls(context=context)
+                        smtp.ehlo()
+                    if username and password:
+                        smtp.login(username, password)
+                    smtp.send_message(message)
 
-        app.logger.info("E-mail enviado para %s", message["To"])
-    except OSError as e:
-        # Erros de rede são comuns em ambientes sem conectividade;
-        # loga sem stack
-        if getattr(e, "errno", None) == 101:
-            app.logger.error(
-                "Falha ao enviar e-mail para %s: rede indisponível",
-                message["To"],
-            )
-        else:
+            app.logger.info("E-mail enviado para %s", message["To"])
+            return
+        except OSError as e:
+            if getattr(e, "errno", None) == 101:
+                app.logger.error(
+                    "Falha ao enviar e-mail para %s: rede indisponível (tentativa %s/%s)",
+                    message["To"],
+                    attempt,
+                    max_attempts,
+                )
+            else:
+                app.logger.exception(
+                    "Falha ao enviar e-mail para %s (tentativa %s/%s)",
+                    message["To"],
+                    attempt,
+                    max_attempts,
+                )
+        except Exception:
             app.logger.exception(
-                "Falha ao enviar e-mail para %s", message["To"]
+                "Falha ao enviar e-mail para %s (tentativa %s/%s)",
+                message["To"],
+                attempt,
+                max_attempts,
             )
-    except Exception:
-        # Loga a stack completa mas NÃO levanta para não quebrar o fluxo do
-        # /forgot
-        app.logger.exception(
-            "Falha ao enviar e-mail para %s", message["To"]
-        )
+
+        if attempt == max_attempts:
+            _enqueue_email(app, message)
+            return
+        time.sleep(delay)
+        delay *= 2
 
 
 def queue_reset_email(to_email: str, token: str):

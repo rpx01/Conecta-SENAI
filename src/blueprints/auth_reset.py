@@ -1,7 +1,6 @@
 import logging
 import re
 import time
-from threading import Thread
 from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
 from flask_mail import Message
 from email_validator import validate_email, EmailNotValidError
@@ -53,16 +52,10 @@ def forgot_post():
             )
             msg.body = render_template('emails/reset_password.txt', reset_url=reset_url)
             msg.html = render_template('emails/reset_password.html', reset_url=reset_url)
-
-            def send_async_email(app, message):
-                with app.app_context():
-                    try:
-                        mail.send(message)
-                    except Exception as e:  # pragma: no cover - envio de email
-                        app.logger.error('Falha ao enviar e-mail de redefinição: %s', e)
-
-            app_obj = current_app._get_current_object()
-            Thread(target=send_async_email, args=(app_obj, msg), daemon=True).start()
+            try:
+                mail.send(msg)
+            except Exception as e:  # pragma: no cover - envio de email
+                current_app.logger.error('Falha ao enviar e-mail de redefinição: %s', e)
     flash('Se o e-mail existir em nossa base, você receberá as instruções para redefinir sua senha.', 'info')
     return redirect('/admin/login.html')
 

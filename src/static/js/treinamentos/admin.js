@@ -136,8 +136,6 @@ async function enviarInscricaoAdmin() {
         try {
             await chamarAPI(`/treinamentos/turmas/${turmaId}/inscricoes/admin`, 'POST', body);
             showToast('Participante inscrito com sucesso!', 'success');
-            await carregarInscricoes(turmaId);
-            document.getElementById('adminInscricaoForm').reset();
             const modal = bootstrap.Modal.getInstance(document.getElementById('adminInscricaoModal'));
             modal.hide();
         } catch (e) {
@@ -401,12 +399,12 @@ async function carregarInscricoes(turmaId) {
             const statusReprovado = i.status_aprovacao === 'Reprovado' ? 'selected' : '';
 
             const tdPraticaHtml = temPratica ? `
-                <td data-col="presenca_pratica" class="text-center">
+                <td class="text-center">
                     <input class="form-check-input presenca-pratica-check" type="checkbox" ${i.presenca_pratica ? 'checked' : ''}>
                 </td>` : '';
 
             const acoesHtml = `
-                <td data-col="acoes">
+                <td>
                     <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusaoParticipante(${i.id}, '${escapeHTML(i.nome)}')">
                         <i class="bi bi-trash"></i>
                     </button>
@@ -414,20 +412,20 @@ async function carregarInscricoes(turmaId) {
             `;
 
             tr.innerHTML = `
-                <td data-col="nome">${escapeHTML(i.nome)}</td>
-                <td data-col="cpf">${i.cpf || ''}</td>
-                <td data-col="empresa">${i.empresa || ''}</td>
-                <td data-col="presenca_teoria" class="text-center">
+                <td>${escapeHTML(i.nome)}</td>
+                <td>${i.cpf || ''}</td>
+                <td>${i.empresa || ''}</td>
+                <td class="text-center">
                     <input class="form-check-input presenca-teoria-check" type="checkbox" ${i.presenca_teoria ? 'checked' : ''}>
                 </td>
                 ${tdPraticaHtml}
-                <td data-col="nota_teoria">
+                <td>
                     <input type="number" class="form-control form-control-sm nota-teoria-input" value="${i.nota_teoria !== null ? i.nota_teoria : ''}" min="0" max="100" step="0.1">
                 </td>
-                <td data-col="nota_pratica">
+                <td>
                     <input type="number" class="form-control form-control-sm nota-pratica-input" value="${i.nota_pratica !== null ? i.nota_pratica : ''}" min="0" max="100" step="0.1">
                 </td>
-                <td data-col="status">
+                <td>
                     <select class="form-select form-select-sm status-aprovacao-select">
                         <option value="">Selecione...</option>
                         <option value="Aprovado" ${statusAprovado}>Aprovado</option>
@@ -519,12 +517,9 @@ document.addEventListener('DOMContentLoaded', () => {
         carregarTurmas();
     }
 
-    const formInscricaoAdmin = document.getElementById('adminInscricaoForm');
-    if (formInscricaoAdmin) {
-        formInscricaoAdmin.addEventListener('submit', (e) => {
-            e.preventDefault();
-            enviarInscricaoAdmin();
-        });
+    const btnEnviarAdmin = document.getElementById('btnEnviarAdminInscricao');
+    if (btnEnviarAdmin) {
+        btnEnviarAdmin.addEventListener('click', enviarInscricaoAdmin);
     }
 
     const formTreinamento = document.getElementById('treinamentoForm');

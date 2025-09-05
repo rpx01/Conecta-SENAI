@@ -27,6 +27,8 @@ from src.routes.planejamento import planejamento_bp, basedados_bp
 from src.routes.horario import horario_bp
 from src.routes.rateio.rateio import rateio_bp
 from src.blueprints.auth import auth_bp
+from src.blueprints.auth_reset import auth_reset_bp
+from src.extensions import mail
 
 @pytest.fixture
 def app():
@@ -40,6 +42,9 @@ def app():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = 'test'
+    app.config['SECURITY_PASSWORD_SALT'] = 'salt'
+    app.config['FRONTEND_BASE_URL'] = 'http://localhost'
+    app.config['MAIL_SUPPRESS_SEND'] = True
     app.config['WTF_CSRF_CHECK_DEFAULT'] = False
     db.init_app(app)
     limiter.init_app(app)
@@ -57,6 +62,8 @@ def app():
     app.register_blueprint(planejamento_bp, url_prefix='/api')
     app.register_blueprint(basedados_bp, url_prefix='/api')
     app.register_blueprint(auth_bp)
+    app.register_blueprint(auth_reset_bp)
+    mail.init_app(app)
 
     with app.app_context():
         db.create_all()

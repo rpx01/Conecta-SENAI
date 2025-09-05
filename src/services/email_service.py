@@ -67,6 +67,18 @@ def send_email_via_smtp(app, message: EmailMessage):
                 smtp.send_message(message)
 
         app.logger.info("E-mail enviado para %s", message["To"])
+    except OSError as e:
+        # Erros de rede são comuns em ambientes sem conectividade;
+        # loga sem stack
+        if getattr(e, "errno", None) == 101:
+            app.logger.error(
+                "Falha ao enviar e-mail para %s: rede indisponível",
+                message["To"],
+            )
+        else:
+            app.logger.exception(
+                "Falha ao enviar e-mail para %s", message["To"]
+            )
     except Exception:
         # Loga a stack completa mas NÃO levanta para não quebrar o fluxo do
         # /forgot
@@ -84,5 +96,9 @@ def queue_reset_email(to_email: str, token: str):
     reset_url = f"{base_url}/reset?token={token}"
     msg = _build_reset_message(to_email, reset_url)
 
-    t = threading.Thread(target=send_email_via_smtp, args=(app, msg), daemon=True)
+    t = threading.Thread(
+        target=send_email_via_smtp,
+        args=(app, msg),
+        daemon=True,
+    )
     t.start()

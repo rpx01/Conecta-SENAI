@@ -11,34 +11,47 @@ from flask import current_app
 
 
 def _connect_gmail(user: str, pwd: str, timeout: int = 15):
-    """Connect to Gmail using IPv4 and fallback from TLS to SSL."""
-    last_err = None
-    for host, port, mode in [
-        ("smtp.gmail.com", 587, "tls"),
-        ("smtp.gmail.com", 465, "ssl"),
-    ]:
-        try:
-            addr = next(
-                a[4]
-                for a in socket.getaddrinfo(
-                    host, port, socket.AF_INET, socket.SOCK_STREAM
-                )
-            )
-            sock = socket.create_connection(addr, timeout=timeout)
-            sock.close()
+    """Attempt connection to Gmail using TLS first and fallback to SSL.
 
-            if mode == "tls":
-                s = smtplib.SMTP(host, port, timeout=timeout)
-                s.ehlo()
-                s.starttls()
-                s.ehlo()
-            else:
-                s = smtplib.SMTP_SSL(host, port, timeout=timeout)
-            s.login(user, pwd)
-            return s
-        except Exception as e:  # pragma: no cover - network dependent
-            last_err = e
-    raise last_err
+    This helper tries multiple combinations of host/port for Gmail. It will
+    first try the STARTTLS port (587) and, upon failure, retry using the SSL
+    port (465). If all attempts fail, the last captured exception is raised.
+    """
+
+    servers = [
+        ("smtp.gmail.com", 587),
+        ("smtp.gmail.com", 465),
+    ]
+
+    last_exc: Exception | None = None
+
+    for host, port in servers:
+        smtp = None
+        try:
+            if port == 587:
+                smtp = smtplib.SMTP(host, port, timeout=timeout)
+                smtp.ehlo()
+                smtp.starttls()
+                smtp.ehlo()
+            else:  # port 465
+                smtp = smtplib.SMTP_SSL(host, port, timeout=timeout)
+
+            smtp.login(user, pwd)
+            return smtp
+
+        except (socket.timeout, smtplib.SMTPException, OSError) as exc:
+            last_exc = exc
+            if smtp is not None:
+                try:
+                    smtp.close()
+                except Exception:
+                    pass
+
+    # Se todas as tentativas falharem, propaga a última exceção capturada
+    if last_exc is not None:
+        raise last_exc
+
+    raise RuntimeError("Failed to connect to Gmail without an explicit error")
 
 
 def _build_reset_message(to_email: str, reset_url: str) -> EmailMessage:

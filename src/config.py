@@ -1,6 +1,25 @@
 import logging
 import os
-from distutils.util import strtobool
+
+
+def strtobool(val: str) -> int:
+    """Convert a string representation of truth to ``1`` or ``0``.
+
+    This mirrors :func:`distutils.util.strtobool`, which was removed in
+    Python 3.12.  Recognised values are::
+
+        "y", "yes", "t", "true", "on", "1"  ->  ``1``
+        "n", "no", "f", "false", "off", "0" ->  ``0``
+
+    Any other value results in a :class:`ValueError`.
+    """
+
+    val = val.lower()
+    if val in ("y", "yes", "t", "true", "on", "1"):
+        return 1
+    if val in ("n", "no", "f", "false", "off", "0"):
+        return 0
+    raise ValueError(f"invalid truth value {val}")
 
 
 def env_bool(name: str, default: bool = False) -> bool:

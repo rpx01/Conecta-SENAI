@@ -37,22 +37,41 @@ def env_bool(name: str, default: bool = False) -> bool:
 
 class BaseConfig:
     """Base configuration with default settings."""
+
     DEBUG = False
     TESTING = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     LOG_LEVEL = logging.INFO
 
-    MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
-    MAIL_PORT = int(os.getenv("MAIL_PORT", "587"))
-    MAIL_USE_TLS = env_bool("MAIL_USE_TLS", True)
-    MAIL_USE_SSL = env_bool("MAIL_USE_SSL", False)
-    MAIL_SUPPRESS_SEND = env_bool("MAIL_SUPPRESS_SEND", False)
-    MAIL_USERNAME = os.getenv("MAIL_USERNAME", "")
-    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "")
-    MAIL_DEFAULT_SENDER = os.getenv(
-        "MAIL_DEFAULT_SENDER", "no-reply@conecta-senai"
+    # E-mail settings (new names with fallback to legacy MAIL_* variables)
+    EMAIL_PROVIDER = os.getenv("EMAIL_PROVIDER", "OUTLOOK")
+    EMAIL_FROM = os.getenv(
+        "EMAIL_FROM", os.getenv("MAIL_DEFAULT_SENDER", "")
     )
-    MAIL_TIMEOUT = int(os.getenv("MAIL_TIMEOUT", "12"))
+    EMAIL_FROM_NAME = os.getenv("EMAIL_FROM_NAME", "Conecta SENAI")
+    SMTP_SERVER = os.getenv(
+        "SMTP_SERVER", os.getenv("MAIL_SERVER", "smtp.office365.com")
+    )
+    SMTP_PORT = int(os.getenv("SMTP_PORT", os.getenv("MAIL_PORT", "587")))
+    SMTP_USERNAME = os.getenv("SMTP_USERNAME", os.getenv("MAIL_USERNAME", ""))
+    SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", os.getenv("MAIL_PASSWORD", ""))
+    SMTP_USE_TLS = env_bool("SMTP_USE_TLS", env_bool("MAIL_USE_TLS", True))
+    SMTP_USE_SSL = env_bool("SMTP_USE_SSL", env_bool("MAIL_USE_SSL", False))
+    SMTP_TIMEOUT = int(os.getenv("SMTP_TIMEOUT", os.getenv("MAIL_TIMEOUT", "15")))
+    EMAIL_SMTP_VALIDATE_ON_STARTUP = env_bool(
+        "EMAIL_SMTP_VALIDATE_ON_STARTUP", False
+    )
+
+    # Legacy aliases to avoid breaking old code paths
+    MAIL_SERVER = SMTP_SERVER
+    MAIL_PORT = SMTP_PORT
+    MAIL_USE_TLS = SMTP_USE_TLS
+    MAIL_USE_SSL = SMTP_USE_SSL
+    MAIL_USERNAME = SMTP_USERNAME
+    MAIL_PASSWORD = SMTP_PASSWORD
+    MAIL_DEFAULT_SENDER = EMAIL_FROM
+    MAIL_TIMEOUT = SMTP_TIMEOUT
+
     SECURITY_PASSWORD_SALT = os.environ.get(
         'SECURITY_PASSWORD_SALT', 'change-me'
     )

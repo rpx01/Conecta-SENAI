@@ -16,7 +16,7 @@ from flask_wtf.csrf import generate_csrf, validate_csrf, CSRFError
 
 from src.repositories.user_repository import UserRepository
 from src.utils.tokens import generate_reset_token, confirm_reset_token
-from src.services.email_service import queue_reset_email
+from src.services.email_service import EmailClient
 
 auth_reset_bp = Blueprint('auth_reset', __name__)
 
@@ -39,8 +39,7 @@ def forgot_post():
     try:
         validate_csrf(request.form.get('csrf_token'))
     except CSRFError:
-        flash('Token CSRF inválido.', 'error')
-        return redirect(url_for('auth_reset.forgot_get'))
+        return jsonify({"ok": False, "message": "Token CSRF inválido."}), 400
 
     email = request.form.get('email', '').strip().lower()
     if email:
@@ -51,18 +50,24 @@ def forgot_post():
             user = None
         if user:
             token = generate_reset_token(email)
+            reset_url = f"{current_app.config.get('APP_BASE_URL')}/reset?token={token}"
             try:
-                queue_reset_email(user.email, token)
-            except Exception:
-                current_app.logger.exception(
-                    'Erro ao enfileirar e-mail de reset'
+                EmailClient().send_mail(
+                    to=user.email,
+                    subject="Instruções para redefinir sua senha",
+                    html_body=render_template("emails/reset_password.html", reset_url=reset_url),
+                    text_body=f"Use este link para redefinir sua senha: {reset_url}",
                 )
-    flash(
-        'Se o e-mail estiver cadastrado, enviaremos '
-        'instruções de redefinição.',
-        'info',
-    )
-    return redirect(url_for('auth_reset.forgot_get', sent=1))
+            except Exception:
+                current_app.logger.exception("Falha ao enviar e-mail de reset")
+                return jsonify({
+                    "ok": False,
+                    "message": "Estamos com instabilidade no envio de e-mails. Tente novamente em alguns minutos.",
+                }), 503
+    return jsonify({
+        "ok": True,
+        "message": "Se o e-mail existir, enviaremos as instruções.",
+    })
 
 
 @auth_reset_bp.get('/reset')

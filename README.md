@@ -26,6 +26,10 @@ Atualize esse documento sempre que novos componentes visuais forem adicionados.
    ```
 Todas as variáveis disponíveis estão listadas em `.env.example`.
 
+   Para envio via Outlook/Office 365, habilite **SMTP AUTH** na conta.
+   Caso a conta use MFA, gere uma **senha de aplicativo** ou utilize OAuth
+   conforme a política da organização.
+
    Substitua todos os placeholders `<definir_em_producao>` por valores reais antes do deploy.
 
    A aplicação também reconhece a variável `FLASK_SECRET_KEY`. Uma das duas deve estar definida; se nenhuma estiver presente, a aplicação aborta a inicialização. Use um valor longo e aleatório (por exemplo, `export SECRET_KEY=$(openssl rand -hex 32)`).

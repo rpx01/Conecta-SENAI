@@ -12,7 +12,6 @@ from src.limiter import limiter
 from src.redis_client import init_redis
 from src.config import DevConfig, ProdConfig, TestConfig
 from src.repositories.user_repository import UserRepository
-from src.extensions import mail
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
@@ -30,6 +29,7 @@ from src.routes.inscricoes_treinamento import bp as inscricoes_treinamento_bp
 from src.blueprints.auth_reset import auth_reset_bp
 from src.blueprints.auth import auth_bp
 from src.services.scheduler import iniciar_scheduler
+from src.services.email_service import EmailClient
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -187,8 +187,8 @@ def create_app():
     limiter.init_app(app)
     app.config['WTF_CSRF_CHECK_DEFAULT'] = False
     csrf.init_app(app)
-    mail.init_app(app)
-
+    if app.config.get("EMAIL_SMTP_VALIDATE_ON_STARTUP"):
+        EmailClient().test_smtp_connection()
     app.config['SWAGGER'] = {
         'title': 'Conecta SENAI API',
         'uiversion': 3,

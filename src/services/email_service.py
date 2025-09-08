@@ -1,190 +1,115 @@
-from email.message import EmailMessage
-import json
-from pathlib import Path
-import smtplib
+import os
 import ssl
-import threading
-import time
+import smtplib
 import socket
+import time
+import logging
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 
-from flask import current_app
+log = logging.getLogger(__name__)
 
+def _env_bool(name: str, default: bool = False) -> bool:
+    return os.getenv(name, str(default)).lower() in {"1", "true", "t", "yes", "on"}
 
-def _connect_gmail(user: str, pwd: str, timeout: int = 15):
-    """Attempt connection to Gmail using TLS first and fallback to SSL.
+class EmailClient:
+    def __init__(self):
+        self.provider = os.getenv("EMAIL_PROVIDER", "OUTLOOK")
+        self.from_addr = os.getenv("EMAIL_FROM") or os.getenv("MAIL_DEFAULT_SENDER")
+        self.from_name = os.getenv("EMAIL_FROM_NAME", "Conecta SENAI")
+        self.server = os.getenv("SMTP_SERVER", os.getenv("MAIL_SERVER", "smtp.office365.com"))
+        self.port = int(os.getenv("SMTP_PORT", os.getenv("MAIL_PORT", "587")))
+        self.username = os.getenv("SMTP_USERNAME", os.getenv("MAIL_USERNAME", ""))
+        self.password = os.getenv("SMTP_PASSWORD", os.getenv("MAIL_PASSWORD", ""))
+        self.use_tls = _env_bool("SMTP_USE_TLS", True)
+        self.use_ssl = _env_bool("SMTP_USE_SSL", False)
+        self.timeout = int(os.getenv("SMTP_TIMEOUT", os.getenv("MAIL_TIMEOUT", "15")))
+        self.max_retries = 3
 
-    This helper tries multiple combinations of host/port for Gmail. It will
-    first try the STARTTLS port (587) and, upon failure, retry using the SSL
-    port (465). If all attempts fail, the last captured exception is raised.
-    """
-
-    servers = [
-        ("smtp.gmail.com", 587),
-        ("smtp.gmail.com", 465),
-    ]
-
-    last_exc: Exception | None = None
-
-    for host, port in servers:
-        smtp = None
-        try:
-            if port == 587:
-                smtp = smtplib.SMTP(host, port, timeout=timeout)
+    def _connect(self):
+        if self.use_ssl:
+            smtp = smtplib.SMTP_SSL(self.server, self.port, timeout=self.timeout)
+        else:
+            smtp = smtplib.SMTP(self.server, self.port, timeout=self.timeout)
+            smtp.ehlo()
+            if self.use_tls:
+                smtp.starttls(context=ssl.create_default_context())
                 smtp.ehlo()
-                smtp.starttls()
-                smtp.ehlo()
-            else:  # port 465
-                smtp = smtplib.SMTP_SSL(host, port, timeout=timeout)
+        if self.username and self.password:
+            smtp.login(self.username, self.password)
+        return smtp
 
-            smtp.login(user, pwd)
-            return smtp
+    def send_mail(self, to, subject, html_body, text_body=None, reply_to=None,
+                  cc=None, bcc=None, attachments=None):
+        assert self.from_addr, "EMAIL_FROM não configurado"
+        to_list = [to] if isinstance(to, str) else list(to)
+        cc = cc or []
+        bcc = bcc or []
+        recipients = to_list + list(cc) + list(bcc)
 
-        except (socket.timeout, smtplib.SMTPException, OSError) as exc:
-            last_exc = exc
-            if smtp is not None:
-                try:
-                    smtp.close()
-                except Exception:
-                    pass
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = f"{self.from_name} <{self.from_addr}>"
+        msg["To"] = ", ".join(to_list)
+        if cc:
+            msg["Cc"] = ", ".join(cc)
+        if reply_to:
+            msg["Reply-To"] = reply_to
+        if text_body:
+            msg.attach(MIMEText(text_body, "plain", "utf-8"))
+        msg.attach(MIMEText(html_body, "html", "utf-8"))
+        for att in attachments or []:
+            part = MIMEBase("application", "octet-stream")
+            part.set_payload(att["bytes"])
+            encoders.encode_base64(part)
+            part.add_header("Content-Disposition", f'attachment; filename="{att["filename"]}"')
+            msg.attach(part)
 
-    # Se todas as tentativas falharem, propaga a última exceção capturada
-    if last_exc is not None:
-        raise last_exc
+        attempt = 1
+        backoff = 1
+        while True:
+            start = time.time()
+            try:
+                log.info("EMAIL_SEND_START", extra={"to": to_list, "subject": subject, "attempt": attempt})
+                with self._connect() as smtp:
+                    smtp.sendmail(self.from_addr, recipients, msg.as_string())
+                elapsed = int((time.time() - start) * 1000)
+                log.info("EMAIL_SEND_SUCCESS", extra={"to": to_list, "subject": subject, "attempt": attempt, "elapsed_ms": elapsed})
+                return True
+            except smtplib.SMTPAuthenticationError as e:
+                log.error("EMAIL_SEND_FAILURE", extra={"to": to_list, "subject": subject, "attempt": attempt, "error_kind": "auth", "error": str(e)})
+                raise
+            except (socket.gaierror, TimeoutError, socket.timeout, smtplib.SMTPConnectError,
+                    smtplib.SMTPServerDisconnected, smtplib.SMTPResponseException, OSError) as e:
+                if isinstance(e, socket.gaierror):
+                    kind = "dns"
+                elif isinstance(e, (TimeoutError, socket.timeout)):
+                    kind = "timeout"
+                elif isinstance(e, OSError) and getattr(e, "errno", None) in (101, 113):
+                    kind = "no_route_to_host"
+                else:
+                    kind = "network"
+                elapsed = int((time.time() - start) * 1000)
+                log.warning("EMAIL_SEND_FAILURE", extra={"to": to_list, "subject": subject, "attempt": attempt, "elapsed_ms": elapsed, "error_kind": kind, "error": str(e)})
+                if attempt >= self.max_retries:
+                    log.error("EMAIL_SEND_FAILURE", extra={"to": to_list, "subject": subject, "attempt": attempt, "elapsed_ms": elapsed, "error_kind": kind, "error": str(e)})
+                    raise
+                time.sleep(backoff)
+                attempt += 1
+                backoff = backoff * 2 + 1
+            except Exception as e:
+                elapsed = int((time.time() - start) * 1000)
+                log.error("EMAIL_SEND_FAILURE", extra={"to": to_list, "subject": subject, "attempt": attempt, "elapsed_ms": elapsed, "error_kind": "unknown", "error": str(e)})
+                raise
 
-    raise RuntimeError("Failed to connect to Gmail without an explicit error")
-
-
-def _build_reset_message(to_email: str, reset_url: str) -> EmailMessage:
-    cfg = current_app.config
-    msg = EmailMessage()
-    msg["Subject"] = "Conecta SENAI – Redefinição de senha"
-    msg["From"] = cfg.get("MAIL_DEFAULT_SENDER")
-    msg["To"] = to_email
-
-    text = (
-        f"Olá,\n\nUse o link abaixo para redefinir sua senha:\n{reset_url}\n\n"
-        "Se você não solicitou, ignore esta mensagem."
-    )
-    html = f"""
-        <p>Olá,</p>
-        <p>Use o link abaixo para redefinir sua senha:</p>
-        <p><a href="{reset_url}">{reset_url}</a></p>
-        <p>Se você não solicitou, ignore esta mensagem.</p>
-    """
-
-    msg.set_content(text)
-    msg.add_alternative(html, subtype="html")
-    return msg
-
-
-def _enqueue_email(app, message: EmailMessage) -> None:
-    """Persiste e-mail para reprocessamento futuro."""
-    queue_path = Path(app.config.get("MAIL_QUEUE_PATH", "email_queue.jsonl"))
-    queue_path.parent.mkdir(parents=True, exist_ok=True)
-    payload = {
-        "to": message["To"],
-        "subject": message.get("Subject", ""),
-        "raw": message.as_string(),
-    }
-    with queue_path.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(payload) + "\n")
-    app.logger.info("E-mail enfileirado para %s", message["To"])
-
-
-def send_email_via_smtp(app, message: EmailMessage) -> None:
-    """Envio SMTP com timeout curto e retry com backoff exponencial.
-
-    Como o envio ocorre em uma thread separada, ``current_app`` não está
-    disponível. Por isso, passamos explicitamente a instância de aplicação
-    para acessar configuração e logger sem depender de contexto de
-    requisição.
-    """
-    cfg = app.config
-
-    server = cfg.get("MAIL_SERVER")
-    port = int(cfg.get("MAIL_PORT", 587))
-    username = cfg.get("MAIL_USERNAME")
-    password = cfg.get("MAIL_PASSWORD")
-    use_tls = cfg.get("MAIL_USE_TLS", True)
-    use_ssl = cfg.get("MAIL_USE_SSL", False)
-    if cfg.get("MAIL_SUPPRESS_SEND"):
-        app.logger.info("Envio de e-mail suprimido para %s", message["To"])
-        return
-    timeout = int(cfg.get("MAIL_TIMEOUT", 12))
-    max_attempts = int(cfg.get("MAIL_MAX_RETRIES", 3))
-
-    delay = 1
-    for attempt in range(1, max_attempts + 1):
+    def test_smtp_connection(self):
         try:
-            if server == "smtp.gmail.com":
-                with _connect_gmail(
-                    username, password, timeout=timeout
-                ) as smtp:
-                    smtp.send_message(message)
-            elif use_ssl:
-                context = ssl.create_default_context()
-                with smtplib.SMTP_SSL(
-                    server, port, timeout=timeout, context=context
-                ) as smtp:
-                    if username and password:
-                        smtp.login(username, password)
-                    smtp.send_message(message)
-            else:
-                with smtplib.SMTP(server, port, timeout=timeout) as smtp:
-                    smtp.ehlo()
-                    if use_tls:
-                        context = ssl.create_default_context()
-                        smtp.starttls(context=context)
-                        smtp.ehlo()
-                    if username and password:
-                        smtp.login(username, password)
-                    smtp.send_message(message)
-
-            app.logger.info("E-mail enviado para %s", message["To"])
-            return
-        except OSError as e:
-            if getattr(e, "errno", None) == 101:
-                app.logger.error(
-                    "Falha ao enviar e-mail para %s: rede indisponível"
-                    " (tentativa %s/%s)",
-                    message["To"],
-                    attempt,
-                    max_attempts,
-                )
-            else:
-                app.logger.exception(
-                    "Falha ao enviar e-mail para %s (tentativa %s/%s)",
-                    message["To"],
-                    attempt,
-                    max_attempts,
-                )
-        except Exception:
-            app.logger.exception(
-                "Falha ao enviar e-mail para %s (tentativa %s/%s)",
-                message["To"],
-                attempt,
-                max_attempts,
-            )
-
-        if attempt == max_attempts:
-            _enqueue_email(app, message)
-            return
-        time.sleep(delay)
-        delay *= 2
-
-
-def queue_reset_email(to_email: str, token: str):
-    """Dispara em thread para não bloquear o request."""
-    app = current_app._get_current_object()
-    base_url = app.config.get(
-        "APP_BASE_URL", "https://conecta-senai.up.railway.app"
-    )
-    reset_url = f"{base_url}/reset?token={token}"
-    msg = _build_reset_message(to_email, reset_url)
-
-    t = threading.Thread(
-        target=send_email_via_smtp,
-        args=(app, msg),
-        daemon=True,
-    )
-    t.start()
+            with self._connect() as smtp:
+                pass
+            log.info("SMTP connection test succeeded")
+            return True
+        except Exception as e:
+            log.error("SMTP connection test failed", exc_info=e)
+            return False

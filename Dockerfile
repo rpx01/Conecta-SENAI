@@ -1,10 +1,12 @@
 # Estágio 1: Builder - Instala as dependências
 FROM python:3.12-slim AS builder
 
-# Define variáveis de ambiente para otimizar a execução
+# Define variáveis de ambiente para otimizar a execução e configurar o Poetry
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    POETRY_NO_INTERACTION=1
+    POETRY_VERSION=1.8.3 \
+    POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_CREATE=false
 
 WORKDIR /app
 
@@ -12,15 +14,25 @@ WORKDIR /app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends build-essential \
     && rm -rf /var/lib/apt/lists/* \
-    && pip install --no-cache-dir poetry
+    && pip install --no-cache-dir "poetry==${POETRY_VERSION}"
 
-# Copia TODOS os arquivos do projeto primeiro
-# Esta é a principal correção: agora o diretório 'src' estará presente.
-COPY . .
+# Copia os arquivos de configuração do projeto
+COPY pyproject.toml poetry.lock* ./
 
-# Instala as dependências do projeto, agora com o 'src' disponível
-RUN poetry config virtualenvs.create false \
-    && poetry install --without dev --no-interaction --no-ansi
+# RUN poetry lock --no-update  # Use para atualizar o poetry.lock sem alterar as dependências
+
+# Instala as dependências sem o código do projeto
+RUN poetry install --without dev --no-ansi --no-root
+
+# Copia o código fonte
+COPY src ./src
+
+# Instala somente o pacote do projeto
+RUN poetry install --only-root --no-ansi || pip install -e .
+
+# Copia arquivos adicionais necessários em runtime
+COPY alembic.ini ./
+COPY migrations ./migrations
 
 # Estágio 2: Runtime - Cria a imagem final e mais leve
 FROM python:3.12-slim AS runtime

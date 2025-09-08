@@ -72,3 +72,16 @@ PY
           scan-type: 'config'
           scan-ref: 'Dockerfile'
           exit-code: '1'
+
+  poetry-lock-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Poetry
+        run: pip install "poetry==1.8.3"
+      - name: Check pyproject and lock sync
+        run: poetry check --lock

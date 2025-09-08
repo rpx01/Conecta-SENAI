@@ -29,7 +29,13 @@ dependencies = [
     ,"requests (==2.31.0)"
     ,"flask-wtf (==1.2.1)"
     ,"apscheduler (==3.10.4)"
-    ,"flasgger (==0.9.7.1)",
+    ,"flasgger (==0.9.7.1)"
+    ,"structlog"
+    ,"python-json-logger"
+    ,"sentry-sdk[flask]"
+    ,"opentelemetry-sdk"
+    ,"opentelemetry-instrumentation-flask"
+    ,"opentelemetry-exporter-otlp"
 ]
 
 [tool.poetry]
@@ -63,6 +69,12 @@ flask-jwt-extended = "4.6.0"
 flask-wtf = "1.2.1"
 apscheduler = "3.10.4"
 flasgger = "0.9.7.1"
+structlog = "*"
+python-json-logger = "*"
+"sentry-sdk[flask]" = "*"
+opentelemetry-sdk = "*"
+opentelemetry-instrumentation-flask = "*"
+opentelemetry-exporter-otlp = "*"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "8.4.1"

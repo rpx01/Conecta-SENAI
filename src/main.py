@@ -4,17 +4,50 @@ import os
 import logging
 import traceback
 import sys
+import re
 from flask import Flask, redirect
 from flasgger import Swagger
 from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
+from sentry_sdk.integrations.flask import FlaskIntegration
+import sentry_sdk
 from src.limiter import limiter
 from src.redis_client import init_redis
 from src.config import DevConfig, ProdConfig, TestConfig
 from src.repositories.user_repository import UserRepository
+from src.logging_conf import setup_logging
+from src.middlewares.request_id import request_id_bp
+from src.telemetry import instrument
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+setup_logging()
+
+EMAIL_RE = re.compile(r"[^@]+@[^@]+")
+
+
+def before_send(event, hint):
+    request = event.get("request", {})
+    for section in ("headers", "data"):
+        payload = request.get(section)
+        if isinstance(payload, dict):
+            cleaned = {}
+            for k, v in payload.items():
+                if isinstance(v, str) and (EMAIL_RE.fullmatch(v) or "token" in k.lower()):
+                    cleaned[k] = "[Filtered]"
+                else:
+                    cleaned[k] = v
+            request[section] = cleaned
+    return event
+
+
+sentry_sdk.init(
+    dsn=os.getenv("SENTRY_DSN"),
+    environment=os.getenv("APP_ENV"),
+    release=os.getenv("APP_RELEASE"),
+    integrations=[FlaskIntegration()],
+    traces_sample_rate=0.2,
+    send_default_pii=False,
+    before_send=before_send,
+)
 
 from src.models import db
 from src.routes.laboratorios import agendamento_bp, laboratorio_bp
@@ -141,6 +174,8 @@ def create_app():
     """Fábrica de aplicação usada pelo Flask."""
     logging.info("Iniciando a criação da aplicação Flask...")
     app = Flask(__name__, static_url_path='', static_folder='static')
+    app.register_blueprint(request_id_bp)
+    instrument(app)
 
     env = os.getenv('FLASK_ENV', 'development').lower()
     config_map = {
@@ -251,6 +286,10 @@ def create_app():
     def health_check():
         """Endpoint usado para verificacao de saude da aplicacao."""
         return "OK", 200
+
+    @app.route('/debug-sentry')
+    def debug_sentry():
+        1 / 0
 
     # A inicializacao do banco (migracoes e dados padrao) deve ser executada
     # separadamente durante o processo de deploy.

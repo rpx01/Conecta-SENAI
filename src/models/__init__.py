@@ -1,7 +1,6 @@
-"""Inicializacao do pacote de modelos."""
-from flask_sqlalchemy import SQLAlchemy
+"""Inicialização do pacote de modelos."""
 
-db = SQLAlchemy()
+from src.extensions import db
 
 from .refresh_token import RefreshToken  # noqa: E402
 from .recurso import Recurso  # noqa: E402

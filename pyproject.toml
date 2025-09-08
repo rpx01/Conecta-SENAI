@@ -71,7 +71,7 @@ apscheduler = "3.10.4"
 flasgger = "0.9.7.1"
 structlog = "*"
 python-json-logger = "*"
-"sentry-sdk[flask]" = "*"
+sentry-sdk = {version = "*", extras = ["flask"]}
 opentelemetry-sdk = "*"
 opentelemetry-instrumentation-flask = "*"
 opentelemetry-exporter-otlp = "*"

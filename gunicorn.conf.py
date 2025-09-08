@@ -1,6 +1,5 @@
 import os
 from gunicorn import glogging
-from flask import g
 from src.logging_conf import LOGGING_CONFIG
 
 wsgi_app = "src.main:create_app()"
@@ -18,9 +17,13 @@ preload_app = False
 
 class RequestIDLogger(glogging.Logger):
     def access(self, resp, req, environ, request_time):
-        environ['o'] = getattr(
-            g, 'request_id', environ.get('HTTP_X_REQUEST_ID', '-')
-        )
+        request_id = None
+        headers = getattr(resp, "headers", {})
+        if hasattr(headers, "get"):
+            request_id = headers.get("X-Request-ID")
+        if not request_id:
+            request_id = environ.get("HTTP_X_REQUEST_ID", "-")
+        environ["o"] = request_id
         super().access(resp, req, environ, request_time)
 
 

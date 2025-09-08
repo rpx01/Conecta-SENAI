@@ -16,7 +16,7 @@ from src.repositories.user_repository import UserRepository
 from src.logging_conf import setup_logging
 from src.middlewares.request_id import request_id_bp
 from src.telemetry import instrument
-from src.extensions import db, migrate, mail, jwt, limiter
+from src.extensions import db, migrate, jwt, limiter
 
 setup_logging()
 
@@ -217,7 +217,6 @@ def create_app():
 
     db.init_app(app)
     migrate.init_app(app, db, directory=migrations_dir)
-    mail.init_app(app)
     jwt.init_app(app)
     init_redis(app)
     limiter.init_app(app)

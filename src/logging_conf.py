@@ -1,7 +1,7 @@
 import os
 import logging
 import logging.config
-from flask import g, has_request_context
+from flask import g
 from pythonjsonlogger import jsonlogger
 from opentelemetry import trace
 
@@ -14,9 +14,7 @@ class ContextFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         record.env = APP_ENV
         record.release = APP_RELEASE
-        record.request_id = (
-            getattr(g, "request_id", None) if has_request_context() else None
-        )
+        record.request_id = getattr(g, "request_id", None)
         span = trace.get_current_span()
         ctx = span.get_span_context()
         if ctx and ctx.is_valid:

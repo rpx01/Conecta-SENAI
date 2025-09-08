@@ -80,6 +80,30 @@ Todas as variáveis disponíveis estão listadas em `.env.example`.
    ambiente `NOTIFICACAO_INTERVALO_MINUTOS` (padrão: `60`). Defina
    `SCHEDULER_ENABLED=0` para desativá-lo completamente.
 
+## Observabilidade e Logs
+
+- **Executar com Gunicorn**:
+  ```bash
+  gunicorn --config gunicorn.conf.py src.main:create_app
+  ```
+- **Executar com Uvicorn**:
+  ```bash
+  uvicorn src.main:create_app --factory
+  ```
+- Os logs são emitidos em JSON. Para visualizá-los formatados:
+  ```bash
+  gunicorn --config gunicorn.conf.py src.main:create_app 2>&1 | jq '.'
+  ```
+- Cada requisição gera um `request_id` retornado no cabeçalho `X-Request-ID`.
+  Utilize esse valor para filtrar os logs:
+  ```bash
+  jq 'select(.request_id=="<id>")' log.json
+  ```
+- Para testar a captura de erros (Sentry), acesse:
+  ```bash
+  curl http://localhost:8000/debug-sentry
+  ```
+
 ## Segurança
 
 - **JWT**: A API utiliza tokens JWT para autenticação. Tokens de acesso possuem

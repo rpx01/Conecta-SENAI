@@ -8,16 +8,15 @@ import re
 from flask import Flask, redirect
 from flasgger import Swagger
 from flask_wtf.csrf import CSRFProtect
-from flask_migrate import Migrate
 from sentry_sdk.integrations.flask import FlaskIntegration
 import sentry_sdk
-from src.limiter import limiter
 from src.redis_client import init_redis
 from src.config import DevConfig, ProdConfig, TestConfig
 from src.repositories.user_repository import UserRepository
 from src.logging_conf import setup_logging
 from src.middlewares.request_id import request_id_bp
 from src.telemetry import instrument
+from src.extensions import db, migrate, mail, jwt, limiter
 
 setup_logging()
 
@@ -61,7 +60,7 @@ from src.routes.horario import horario_bp
 from src.routes.inscricoes_treinamento import bp as inscricoes_treinamento_bp
 from src.blueprints.auth_reset import auth_reset_bp
 from src.blueprints.auth import auth_bp
-from src.services.scheduler import iniciar_scheduler
+from src.scheduler import start_scheduler
 from src.services.email_service import EmailClient
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -217,7 +216,9 @@ def create_app():
     app.config['COOKIE_SAMESITE'] = cookie_samesite
 
     db.init_app(app)
-    Migrate(app, db, directory=migrations_dir)
+    migrate.init_app(app, db, directory=migrations_dir)
+    mail.init_app(app)
+    jwt.init_app(app)
     init_redis(app)
     limiter.init_app(app)
     app.config['WTF_CSRF_CHECK_DEFAULT'] = False
@@ -269,9 +270,8 @@ def create_app():
     app.register_blueprint(auth_bp)
 
     # Inicia scheduler para notificações
-    with app.app_context():
-        if os.getenv("ENABLE_SCHEDULER", "1") == "1":
-            iniciar_scheduler(app)
+    if os.getenv("SCHEDULER_ENABLED", "0") == "1":
+        start_scheduler(app)
 
 
     @app.route('/')

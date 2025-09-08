@@ -18,7 +18,7 @@ from src.models import db
 from src.models.user import User
 from src.models.sala import Sala
 from src.models.log_rateio import LogLancamentoRateio
-from src.limiter import limiter
+from src.extensions import limiter
 from src.routes.user import user_bp, gerar_token_acesso, gerar_refresh_token
 from src.routes.ocupacao import sala_bp, instrutor_bp, ocupacao_bp
 from src.routes.treinamentos import turma_bp, treinamento_bp

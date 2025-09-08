@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify, current_app, g, redirect
 import os
 import hmac
 
-from src.limiter import limiter
+from src.extensions import limiter
 from datetime import datetime, timedelta
 import jwt
 import uuid

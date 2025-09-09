@@ -9,6 +9,8 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 
+import msal
+
 log = logging.getLogger(__name__)
 
 def _env_bool(name: str, default: bool = False) -> bool:
@@ -23,10 +25,26 @@ class EmailClient:
         self.port = int(os.getenv("SMTP_PORT", os.getenv("MAIL_PORT", "587")))
         self.username = os.getenv("SMTP_USERNAME", os.getenv("MAIL_USERNAME", ""))
         self.password = os.getenv("SMTP_PASSWORD", os.getenv("MAIL_PASSWORD", ""))
+        self.client_id = os.getenv("CLIENT_ID", "")
+        self.tenant_id = os.getenv("TENANT_ID", "")
+        self.client_secret = os.getenv("CLIENT_SECRET", "")
         self.use_tls = _env_bool("SMTP_USE_TLS", True)
         self.use_ssl = _env_bool("SMTP_USE_SSL", False)
         self.timeout = int(os.getenv("SMTP_TIMEOUT", os.getenv("MAIL_TIMEOUT", "15")))
         self.max_retries = 3
+
+    def _get_oauth2_token(self) -> str:
+        authority = f"https://login.microsoftonline.com/{self.tenant_id}"
+        app = msal.ConfidentialClientApplication(
+            self.client_id, authority=authority, client_credential=self.client_secret
+        )
+        result = app.acquire_token_for_client(
+            scopes=["https://outlook.office365.com/.default"]
+        )
+        token = result.get("access_token")
+        if not token:
+            raise Exception(result.get("error_description", "failed to obtain token"))
+        return token
 
     def _connect(self):
         if self.use_ssl:
@@ -37,8 +55,10 @@ class EmailClient:
             if self.use_tls:
                 smtp.starttls(context=ssl.create_default_context())
                 smtp.ehlo()
-        if self.username and self.password:
-            smtp.login(self.username, self.password)
+        if self.username:
+            token = self._get_oauth2_token()
+            auth_string = f"user={self.username}\1auth=Bearer {token}\1\1".encode("utf-8")
+            smtp.auth("XOAUTH2", lambda x: auth_string)
         return smtp
 
     def send_mail(self, to, subject, html_body, text_body=None, reply_to=None,
@@ -107,7 +127,7 @@ class EmailClient:
     def test_smtp_connection(self):
         try:
             with self._connect() as smtp:
-                pass
+                smtp.noop()
             log.info("SMTP connection test succeeded")
             return True
         except Exception as e:

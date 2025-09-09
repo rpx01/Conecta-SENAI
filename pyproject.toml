@@ -36,6 +36,7 @@ dependencies = [
     ,"opentelemetry-sdk"
     ,"opentelemetry-instrumentation-flask"
     ,"opentelemetry-exporter-otlp"
+    ,"msal (==1.33.0)"
 ]
 
 [tool.poetry]
@@ -75,6 +76,7 @@ sentry-sdk = {version = "*", extras = ["flask"]}
 opentelemetry-sdk = "*"
 opentelemetry-instrumentation-flask = "*"
 opentelemetry-exporter-otlp = "*"
+msal = "1.33.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "8.4.1"

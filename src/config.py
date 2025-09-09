@@ -82,6 +82,12 @@ class BaseConfig:
         'APP_BASE_URL', 'https://conecta-senai.up.railway.app'
     )
 
+    REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+    REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+    RATELIMIT_STORAGE_URI = os.getenv(
+        "RATELIMIT_STORAGE_URI", f"redis://{REDIS_HOST}:{REDIS_PORT}"
+    )
+
 
 class DevConfig(BaseConfig):
     """Development configuration."""

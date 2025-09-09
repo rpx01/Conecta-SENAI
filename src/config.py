@@ -58,6 +58,9 @@ class BaseConfig:
     SMTP_USE_TLS = env_bool("SMTP_USE_TLS", env_bool("MAIL_USE_TLS", True))
     SMTP_USE_SSL = env_bool("SMTP_USE_SSL", env_bool("MAIL_USE_SSL", False))
     SMTP_TIMEOUT = int(os.getenv("SMTP_TIMEOUT", os.getenv("MAIL_TIMEOUT", "15")))
+    CLIENT_ID = os.getenv("CLIENT_ID", "")
+    TENANT_ID = os.getenv("TENANT_ID", "")
+    CLIENT_SECRET = os.getenv("CLIENT_SECRET", "")
     EMAIL_SMTP_VALIDATE_ON_STARTUP = env_bool(
         "EMAIL_SMTP_VALIDATE_ON_STARTUP", False
     )

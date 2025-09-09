@@ -16,9 +16,16 @@ def email_env(monkeypatch):
     monkeypatch.setenv("SMTP_PORT", "587")
     monkeypatch.setenv("SMTP_USERNAME", "user")
     monkeypatch.setenv("SMTP_PASSWORD", "pass")
+    monkeypatch.setenv("CLIENT_ID", "cid")
+    monkeypatch.setenv("TENANT_ID", "tid")
+    monkeypatch.setenv("CLIENT_SECRET", "sec")
     monkeypatch.setenv("SMTP_USE_TLS", "true")
     monkeypatch.setenv("SMTP_USE_SSL", "false")
     monkeypatch.setenv("SMTP_TIMEOUT", "15")
+    monkeypatch.setattr(
+        "src.services.email_service.EmailClient._get_oauth2_token",
+        lambda self: "token",
+    )
 
 
 def _mock_smtp(instance):
@@ -76,12 +83,12 @@ def test_send_mail_dns_error(email_env):
 
 def test_send_mail_auth_error(email_env):
     instance = MagicMock()
-    instance.login.side_effect = smtplib.SMTPAuthenticationError(535, b"5.7.3 auth failed")
+    instance.auth.side_effect = smtplib.SMTPAuthenticationError(535, b"5.7.3 auth failed")
     with patch("src.services.email_service.smtplib.SMTP", _mock_smtp(instance)):
         client = EmailClient()
         with pytest.raises(smtplib.SMTPAuthenticationError):
             client.send_mail("a@b", "s", "<p>hi</p>")
-    assert instance.login.called
+    assert instance.auth.called
 
 
 def test_send_mail_no_route(email_env):
@@ -113,3 +120,11 @@ def test_send_mail_backoff_success(email_env):
         assert sleep.call_args_list[0][0][0] == 1
         assert sleep.call_args_list[1][0][0] == 3
         assert call["n"] == 3
+
+
+def test_test_smtp_connection_oauth(email_env):
+    instance = MagicMock()
+    with patch("src.services.email_service.smtplib.SMTP", _mock_smtp(instance)):
+        client = EmailClient()
+        assert client.test_smtp_connection()
+    assert instance.auth.called

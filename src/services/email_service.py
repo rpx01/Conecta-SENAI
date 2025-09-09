@@ -131,5 +131,9 @@ class EmailClient:
             log.info("SMTP connection test succeeded")
             return True
         except Exception as e:
-            log.error("SMTP connection test failed", exc_info=e)
+            log.error(
+                "SMTP connection test failed",
+                extra={"error": str(e)},
+                exc_info=e,
+            )
             return False

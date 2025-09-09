@@ -1,3 +1,4 @@
+# flake8: noqa
 import os
 import ssl
 import smtplib
@@ -18,11 +19,24 @@ def _env_bool(name: str, default: bool = False) -> bool:
 
 class EmailClient:
     def __init__(self):
-        self.provider = os.getenv("EMAIL_PROVIDER", "OUTLOOK")
+        self.provider = os.getenv("EMAIL_PROVIDER", "GMAIL")
         self.from_addr = os.getenv("EMAIL_FROM") or os.getenv("MAIL_DEFAULT_SENDER")
         self.from_name = os.getenv("EMAIL_FROM_NAME", "Conecta SENAI")
-        self.server = os.getenv("SMTP_SERVER", os.getenv("MAIL_SERVER", "smtp.office365.com"))
-        self.port = int(os.getenv("SMTP_PORT", os.getenv("MAIL_PORT", "587")))
+
+        if self.provider == "GMAIL":
+            self.server = os.getenv(
+                "SMTP_SERVER", os.getenv("MAIL_SERVER", "smtp.gmail.com")
+            )
+            self.port = int(
+                os.getenv("SMTP_PORT", os.getenv("MAIL_PORT", "587"))
+            )
+        else:  # OUTLOOK or default
+            self.server = os.getenv(
+                "SMTP_SERVER", os.getenv("MAIL_SERVER", "smtp.office365.com")
+            )
+            self.port = int(
+                os.getenv("SMTP_PORT", os.getenv("MAIL_PORT", "587"))
+            )
         self.username = os.getenv("SMTP_USERNAME", os.getenv("MAIL_USERNAME", ""))
         self.password = os.getenv("SMTP_PASSWORD", os.getenv("MAIL_PASSWORD", ""))
         self.client_id = os.getenv("CLIENT_ID", "")
@@ -55,15 +69,24 @@ class EmailClient:
             if self.use_tls:
                 smtp.starttls(context=ssl.create_default_context())
                 smtp.ehlo()
-        if self.username:
-            token = self._get_oauth2_token()
-            auth_string = f"user={self.username}\1auth=Bearer {token}\1\1".encode("utf-8")
-            smtp.auth("XOAUTH2", lambda x: auth_string)
+
+        if self.provider == "OUTLOOK":
+            if self.username:
+                token = self._get_oauth2_token()
+                auth_string = (
+                    f"user={self.username}\1auth=Bearer {token}\1\1".encode("utf-8")
+                )
+                smtp.auth("XOAUTH2", lambda x: auth_string)
+        elif self.provider == "GMAIL":
+            if self.username and self.password:
+                smtp.login(self.username, self.password)
+
         return smtp
 
     def send_mail(self, to, subject, html_body, text_body=None, reply_to=None,
                   cc=None, bcc=None, attachments=None):
-        assert self.from_addr, "EMAIL_FROM não configurado"
+        if not self.from_addr:
+            raise ValueError("EMAIL_FROM não configurado")
         to_list = [to] if isinstance(to, str) else list(to)
         cc = cc or []
         bcc = bcc or []

@@ -44,20 +44,41 @@ class BaseConfig:
     LOG_LEVEL = logging.INFO
 
     # E-mail settings (new names with fallback to legacy MAIL_* variables)
-    EMAIL_PROVIDER = os.getenv("EMAIL_PROVIDER", "OUTLOOK")
+    EMAIL_PROVIDER = os.getenv("EMAIL_PROVIDER", "GMAIL")
     EMAIL_FROM = os.getenv(
         "EMAIL_FROM", os.getenv("MAIL_DEFAULT_SENDER", "")
     )
     EMAIL_FROM_NAME = os.getenv("EMAIL_FROM_NAME", "Conecta SENAI")
-    SMTP_SERVER = os.getenv(
-        "SMTP_SERVER", os.getenv("MAIL_SERVER", "smtp.office365.com")
+
+    if EMAIL_PROVIDER == "GMAIL":
+        SMTP_SERVER = os.getenv(
+            "SMTP_SERVER", os.getenv("MAIL_SERVER", "smtp.gmail.com")
+        )
+        SMTP_PORT = int(
+            os.getenv("SMTP_PORT", os.getenv("MAIL_PORT", "587"))
+        )
+    else:  # OUTLOOK or any other provider defaults to Outlook settings
+        SMTP_SERVER = os.getenv(
+            "SMTP_SERVER", os.getenv("MAIL_SERVER", "smtp.office365.com")
+        )
+        SMTP_PORT = int(
+            os.getenv("SMTP_PORT", os.getenv("MAIL_PORT", "587"))
+        )
+    SMTP_USERNAME = os.getenv(
+        "SMTP_USERNAME", os.getenv("MAIL_USERNAME", "")
     )
-    SMTP_PORT = int(os.getenv("SMTP_PORT", os.getenv("MAIL_PORT", "587")))
-    SMTP_USERNAME = os.getenv("SMTP_USERNAME", os.getenv("MAIL_USERNAME", ""))
-    SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", os.getenv("MAIL_PASSWORD", ""))
-    SMTP_USE_TLS = env_bool("SMTP_USE_TLS", env_bool("MAIL_USE_TLS", True))
-    SMTP_USE_SSL = env_bool("SMTP_USE_SSL", env_bool("MAIL_USE_SSL", False))
-    SMTP_TIMEOUT = int(os.getenv("SMTP_TIMEOUT", os.getenv("MAIL_TIMEOUT", "15")))
+    SMTP_PASSWORD = os.getenv(
+        "SMTP_PASSWORD", os.getenv("MAIL_PASSWORD", "")
+    )
+    SMTP_USE_TLS = env_bool(
+        "SMTP_USE_TLS", env_bool("MAIL_USE_TLS", True)
+    )
+    SMTP_USE_SSL = env_bool(
+        "SMTP_USE_SSL", env_bool("MAIL_USE_SSL", False)
+    )
+    SMTP_TIMEOUT = int(
+        os.getenv("SMTP_TIMEOUT", os.getenv("MAIL_TIMEOUT", "15"))
+    )
     CLIENT_ID = os.getenv("CLIENT_ID", "")
     TENANT_ID = os.getenv("TENANT_ID", "")
     CLIENT_SECRET = os.getenv("CLIENT_SECRET", "")

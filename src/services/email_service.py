@@ -44,8 +44,12 @@ class EmailClient:
         self.client_secret = os.getenv("CLIENT_SECRET", "")
         self.use_tls = _env_bool("SMTP_USE_TLS", True)
         self.use_ssl = _env_bool("SMTP_USE_SSL", False)
-        self.timeout = int(os.getenv("SMTP_TIMEOUT", os.getenv("MAIL_TIMEOUT", "15")))
-        self.max_retries = 3
+        self.timeout = int(
+            os.getenv("SMTP_TIMEOUT", os.getenv("MAIL_TIMEOUT", "5"))
+        )
+        self.max_retries = int(
+            os.getenv("SMTP_MAX_RETRIES", os.getenv("MAIL_MAX_RETRIES", "1"))
+        )
 
     def _get_oauth2_token(self) -> str:
         authority = f"https://login.microsoftonline.com/{self.tenant_id}"

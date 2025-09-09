@@ -277,6 +277,10 @@ def create_app():
     def index():
         return redirect('/admin/login.html')
 
+    @app.route('/static/<path:filename>')
+    def static_files(filename):
+        return app.send_static_file(filename)
+
     @app.route('/<path:path>')
     def static_file(path):
         return app.send_static_file(path)

@@ -11,10 +11,14 @@ import os
 db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
+
+
+DEFAULT_REDIS_URI = os.getenv(
+    "REDIS_URL",
+    f"redis://{os.getenv('REDIS_HOST', 'localhost')}:{os.getenv('REDIS_PORT', '6379')}",
+)
+
 limiter = Limiter(
     key_func=get_remote_address,
-    storage_uri=os.getenv(
-        "RATELIMIT_STORAGE_URI",
-        f"redis://{os.getenv('REDIS_HOST', 'localhost')}:{os.getenv('REDIS_PORT', '6379')}",
-    ),
+    storage_uri=os.getenv("RATELIMIT_STORAGE_URI", DEFAULT_REDIS_URI),
 )

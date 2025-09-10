@@ -19,9 +19,11 @@ def email_env(monkeypatch):
     monkeypatch.setenv("CLIENT_ID", "cid")
     monkeypatch.setenv("TENANT_ID", "tid")
     monkeypatch.setenv("CLIENT_SECRET", "sec")
+    monkeypatch.setenv("EMAIL_PROVIDER", "OUTLOOK")
     monkeypatch.setenv("SMTP_USE_TLS", "true")
     monkeypatch.setenv("SMTP_USE_SSL", "false")
     monkeypatch.setenv("SMTP_TIMEOUT", "15")
+    monkeypatch.setenv("SMTP_MAX_RETRIES", "3")
     monkeypatch.setattr(
         "src.services.email_service.EmailClient._get_oauth2_token",
         lambda self: "token",

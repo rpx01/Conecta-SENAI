@@ -26,9 +26,10 @@ Atualize esse documento sempre que novos componentes visuais forem adicionados.
    ```
 Todas as variáveis disponíveis estão listadas em `.env.example`.
 
-   Para envio via Outlook/Office 365, habilite **SMTP AUTH** na conta.
-   Caso a conta use MFA, gere uma **senha de aplicativo** ou utilize OAuth
-   conforme a política da organização.
+   Configure as variáveis do [Resend](https://resend.com/) para envio de e-mails:
+   defina `RESEND_API_KEY` e `RESEND_FROM` (remetente verificado) no `.env`.
+   É necessário verificar o domínio/remetente no painel do Resend e adicionar os
+   registros DNS (SPF/DKIM) antes de produção.
 
    Substitua todos os placeholders `<definir_em_producao>` por valores reais antes do deploy.
 

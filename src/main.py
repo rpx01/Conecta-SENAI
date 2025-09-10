@@ -61,7 +61,6 @@ from src.routes.inscricoes_treinamento import bp as inscricoes_treinamento_bp
 from src.blueprints.auth_reset import auth_reset_bp
 from src.blueprints.auth import auth_bp
 from src.scheduler import start_scheduler
-from src.services.email_service import EmailClient
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -222,8 +221,6 @@ def create_app():
     limiter.init_app(app)
     app.config['WTF_CSRF_CHECK_DEFAULT'] = False
     csrf.init_app(app)
-    if app.config.get("EMAIL_SMTP_VALIDATE_ON_STARTUP"):
-        EmailClient().test_smtp_connection()
     app.config['SWAGGER'] = {
         'title': 'Conecta SENAI API',
         'uiversion': 3,

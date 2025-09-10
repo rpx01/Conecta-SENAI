@@ -43,58 +43,10 @@ class BaseConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     LOG_LEVEL = logging.INFO
 
-    # E-mail settings (new names with fallback to legacy MAIL_* variables)
-    EMAIL_PROVIDER = os.getenv("EMAIL_PROVIDER", "GMAIL")
-    EMAIL_FROM = os.getenv(
-        "EMAIL_FROM", os.getenv("MAIL_DEFAULT_SENDER", "")
-    )
-    EMAIL_FROM_NAME = os.getenv("EMAIL_FROM_NAME", "Conecta SENAI")
-
-    if EMAIL_PROVIDER == "GMAIL":
-        SMTP_SERVER = os.getenv(
-            "SMTP_SERVER", os.getenv("MAIL_SERVER", "smtp.gmail.com")
-        )
-        SMTP_PORT = int(
-            os.getenv("SMTP_PORT", os.getenv("MAIL_PORT", "587"))
-        )
-    else:  # OUTLOOK or any other provider defaults to Outlook settings
-        SMTP_SERVER = os.getenv(
-            "SMTP_SERVER", os.getenv("MAIL_SERVER", "smtp.office365.com")
-        )
-        SMTP_PORT = int(
-            os.getenv("SMTP_PORT", os.getenv("MAIL_PORT", "587"))
-        )
-    SMTP_USERNAME = os.getenv(
-        "SMTP_USERNAME", os.getenv("MAIL_USERNAME", "")
-    )
-    SMTP_PASSWORD = os.getenv(
-        "SMTP_PASSWORD", os.getenv("MAIL_PASSWORD", "")
-    )
-    SMTP_USE_TLS = env_bool(
-        "SMTP_USE_TLS", env_bool("MAIL_USE_TLS", True)
-    )
-    SMTP_USE_SSL = env_bool(
-        "SMTP_USE_SSL", env_bool("MAIL_USE_SSL", False)
-    )
-    SMTP_TIMEOUT = int(
-        os.getenv("SMTP_TIMEOUT", os.getenv("MAIL_TIMEOUT", "15"))
-    )
-    CLIENT_ID = os.getenv("CLIENT_ID", "")
-    TENANT_ID = os.getenv("TENANT_ID", "")
-    CLIENT_SECRET = os.getenv("CLIENT_SECRET", "")
-    EMAIL_SMTP_VALIDATE_ON_STARTUP = env_bool(
-        "EMAIL_SMTP_VALIDATE_ON_STARTUP", False
-    )
-
-    # Legacy aliases to avoid breaking old code paths
-    MAIL_SERVER = SMTP_SERVER
-    MAIL_PORT = SMTP_PORT
-    MAIL_USE_TLS = SMTP_USE_TLS
-    MAIL_USE_SSL = SMTP_USE_SSL
-    MAIL_USERNAME = SMTP_USERNAME
-    MAIL_PASSWORD = SMTP_PASSWORD
-    MAIL_DEFAULT_SENDER = EMAIL_FROM
-    MAIL_TIMEOUT = SMTP_TIMEOUT
+    # Resend e-mail settings
+    RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+    RESEND_FROM = os.getenv("RESEND_FROM", "no-reply@example.com")
+    RESEND_REPLY_TO = os.getenv("RESEND_REPLY_TO")
 
     SECURITY_PASSWORD_SALT = os.environ.get(
         'SECURITY_PASSWORD_SALT', 'change-me'

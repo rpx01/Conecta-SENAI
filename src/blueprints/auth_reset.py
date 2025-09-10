@@ -17,7 +17,7 @@ from flask_wtf.csrf import generate_csrf, validate_csrf, CSRFError
 
 from src.repositories.user_repository import UserRepository
 from src.utils.tokens import generate_reset_token, confirm_reset_token
-from src.services.email_service import EmailClient
+from src.services.email_service import send_email, render_email_template
 
 auth_reset_bp = Blueprint('auth_reset', __name__)
 
@@ -51,19 +51,30 @@ def forgot_post():
             user = None
         if user:
             token = generate_reset_token(email)
-            reset_url = f"{current_app.config.get('APP_BASE_URL')}/reset?token={token}"
+            base = current_app.config.get('APP_BASE_URL')
+            reset_url = f"{base}/reset?token={token}"
             try:
-                EmailClient().send_mail(
+                html = render_email_template(
+                    "reset_password.html.j2", reset_url=reset_url
+                )
+                text = render_email_template(
+                    "reset_password.txt.j2", reset_url=reset_url
+                )
+                send_email(
                     to=user.email,
                     subject="Instruções para redefinir sua senha",
-                    html_body=render_template("emails/reset_password.html", reset_url=reset_url),
-                    text_body=f"Use este link para redefinir sua senha: {reset_url}",
+                    html=html,
+                    text=text,
+                    tags=[{"name": "category", "value": "password_reset"}],
                 )
             except Exception:
                 current_app.logger.exception("Falha ao enviar e-mail de reset")
                 return jsonify({
                     "ok": False,
-                    "message": "Estamos com instabilidade no envio de e-mails. Tente novamente em alguns minutos.",
+                    "message": (
+                        "Estamos com instabilidade no envio de e-mails. "
+                        "Tente novamente em alguns minutos."
+                    ),
                 }), 503
     return jsonify({
         "ok": True,

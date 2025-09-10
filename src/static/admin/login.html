@@ -27,9 +27,18 @@
                     </div>
                     <h1 class="h3 mb-3 fw-normal">Acesse sua conta</h1>
                     <p class="text-muted mb-4">Bem-vindo de volta! Por favor, insira as suas credenciais.</p>
-                    
-                    
-                    <form id="loginForm">
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                      {% if messages %}
+                        {% for category, message in messages %}
+                          <div class="alert alert-danger" role="alert">
+                            {{ message }}
+                          </div>
+                        {% endfor %}
+                      {% endif %}
+                    {% endwith %}
+
+                    <form id="loginForm" method="POST">
                         <div class="form-floating mb-3">
                             <input type="email" class="form-control" id="email" name="email" placeholder="seu@email.com" required aria-required="true" aria-describedby="email-help email-error">
                             <label for="email"><i class="bi bi-envelope me-2"></i>Email</label>

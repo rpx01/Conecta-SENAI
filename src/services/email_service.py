@@ -65,27 +65,57 @@ class EmailClient:
         return token
 
     def _connect(self):
-        if self.use_ssl:
-            smtp = smtplib.SMTP_SSL(self.server, self.port, timeout=self.timeout)
-        else:
-            smtp = smtplib.SMTP(self.server, self.port, timeout=self.timeout)
-            smtp.ehlo()
-            if self.use_tls:
-                smtp.starttls(context=ssl.create_default_context())
+        """Create an SMTP connection with IPv4 fallback.
+
+        Some environments have IPv6 disabled which can cause
+        ``smtplib.SMTP`` to raise ``OSError(101, 'Network is unreachable')``
+        when it tries to connect using an IPv6 address.  To make the e-mail
+        sending more robust we first try the normal connection and, if that
+        specific error occurs, we retry forcing the use of IPv4 addresses.
+        """
+
+        def _open(host: str, port: int):
+            if self.use_ssl:
+                smtp = smtplib.SMTP_SSL(host, port, timeout=self.timeout)
+            else:
+                smtp = smtplib.SMTP(host, port, timeout=self.timeout)
                 smtp.ehlo()
+                if self.use_tls:
+                    smtp.starttls(context=ssl.create_default_context())
+                    smtp.ehlo()
 
-        if self.provider == "OUTLOOK":
-            if self.username:
-                token = self._get_oauth2_token()
-                auth_string = (
-                    f"user={self.username}\1auth=Bearer {token}\1\1".encode("utf-8")
-                )
-                smtp.auth("XOAUTH2", lambda x: auth_string)
-        elif self.provider == "GMAIL":
-            if self.username and self.password:
-                smtp.login(self.username, self.password)
+            if self.provider == "OUTLOOK":
+                if self.username:
+                    token = self._get_oauth2_token()
+                    auth_string = (
+                        f"user={self.username}\1auth=Bearer {token}\1\1".encode("utf-8")
+                    )
+                    smtp.auth("XOAUTH2", lambda x: auth_string)
+            elif self.provider == "GMAIL":
+                if self.username and self.password:
+                    smtp.login(self.username, self.password)
+            return smtp
 
-        return smtp
+        try:
+            return _open(self.server, self.port)
+        except OSError as e:
+            if getattr(e, "errno", None) != 101:  # Network unreachable
+                raise
+
+        # Force IPv4 lookup and retry connection
+        try:
+            addr_info = socket.getaddrinfo(
+                self.server, self.port, socket.AF_INET, socket.SOCK_STREAM
+            )
+            for *_ , sockaddr in addr_info:
+                try:
+                    return _open(sockaddr[0], sockaddr[1])
+                except OSError:
+                    continue
+        except Exception as ipv4_err:
+            log.debug("IPv4 fallback resolution failed: %s", ipv4_err)
+        # If all attempts fail, re-raise original error
+        raise
 
     def send_mail(self, to, subject, html_body, text_body=None, reply_to=None,
                   cc=None, bcc=None, attachments=None):

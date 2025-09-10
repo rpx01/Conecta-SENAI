@@ -9,6 +9,7 @@ from flask import (
     redirect,
     url_for,
     current_app,
+    jsonify,
 )
 from email_validator import validate_email, EmailNotValidError
 from werkzeug.security import generate_password_hash

@@ -127,47 +127,6 @@ small, .small {
     display: none;
   }
 }
-
-.sidebar {
-  background-color: #fff;
-  border-right: 1px solid #dee2e6;
-  padding: 20px;
-  height: 100%;
-  min-width: 230px;
-}
-
-.sidebar .nav-link {
-  color: var(--dark-color);
-  padding: 8px 16px;
-  margin-bottom: 5px;
-  border-radius: 0;
-}
-
-.sidebar .nav-link:hover {
-  background-color: rgba(13, 110, 253, 0.1);
-}
-
-.sidebar .nav-link.active {
-  background-color: rgba(0, 83, 159, 0.1);
-  color: var(--primary-color);
-  font-weight: bold;
-}
-
-.sidebar .nav-link.active::before {
-  content: ">";
-  font-family: "Gibson", "Exo 2", sans-serif;
-  color: var(--accent-color);
-  font-weight: 900;
-  margin-right: 8px;
-  transform: scale(1.1);
-}
-
-.sidebar .nav-link i {
-  margin-right: 10px;
-  width: 20px;
-  text-align: center;
-}
-
 .card {
   border: 1px solid #dee2e6;
   border-radius: 4px;
@@ -544,13 +503,7 @@ footer {
   }
 }
 
-@media (max-width: 991.98px) {
-  .sidebar {
-    border-right: none;
-    border-bottom: 1px solid #dee2e6;
-    margin-bottom: 20px;
-  }
-  
+@media (max-width: 991.98px) {  
   .calendario-container {
     padding: 10px;
   }
@@ -1000,11 +953,6 @@ input, select, textarea {
     body {
         font-size: 0.95rem;
     }
-
-    .sidebar {
-        padding: 1rem;
-    }
-
     main.col-lg-9 {
         padding-top: 1.5rem;
     }

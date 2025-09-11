@@ -772,10 +772,10 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         if (deveExibirLinks) {
             adicionarLinkLabTurmas('.navbar-nav.ms-auto', true);
-            adicionarLinkLabTurmas('.sidebar .nav.flex-column', false);
+            adicionarLinkLabTurmas('#sidebarDrawer nav ul', false);
 
             adicionarLinkLogs('.navbar-nav.ms-auto', true);
-            adicionarLinkLogs('.sidebar .nav.flex-column', false);
+            adicionarLinkLogs('#sidebarDrawer nav ul', false);
 
             configurarObservadoresMenu();
         }
@@ -802,11 +802,11 @@ function configurarObservadoresMenu() {
 
     // Configura o observador para a sidebar
     const sidebarObserver = new MutationObserver(function(mutations) {
-        adicionarLinkLabTurmas('.sidebar .nav.flex-column', false);
-        adicionarLinkLogs('.sidebar .nav.flex-column', false);
+        adicionarLinkLabTurmas('#sidebarDrawer nav ul', false);
+        adicionarLinkLogs('#sidebarDrawer nav ul', false);
     });
     
-    const sidebar = document.querySelector('.sidebar .nav.flex-column');
+    const sidebar = document.querySelector('#sidebarDrawer nav ul');
     if (sidebar) {
         sidebarObserver.observe(sidebar, { childList: true, subtree: true });
     }

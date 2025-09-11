@@ -152,7 +152,7 @@ def remover_turma(id):
 @turma_bp.post("/treinamentos/turmas/<int:turma_id>/convocar-todos")
 @admin_required
 def convocar_todos_da_turma(turma_id: int):
-    """Convoca todos os participantes não convocados de uma turma."""
+    """Convoca todos os participantes de uma turma, independente do status anterior."""
     current_app.logger.info(
         "Iniciando convocação para todos os participantes da turma %s.",
         turma_id,
@@ -163,13 +163,13 @@ def convocar_todos_da_turma(turma_id: int):
         return jsonify({"erro": "Turma não encontrada"}), 404
 
     inscricoes_para_convocar = InscricaoTreinamento.query.filter_by(
-        turma_id=turma_id, convocado_em=None
+        turma_id=turma_id
     ).all()
 
     total_inscricoes = len(inscricoes_para_convocar)
     if total_inscricoes == 0:
         current_app.logger.warning(
-            "Nenhuma inscrição elegível para convocação na turma %s.",
+            "Nenhuma inscrição encontrada para convocação na turma %s.",
             turma_id,
         )
         return jsonify({"message": "Nenhum participante para convocar."}), 404
@@ -206,13 +206,7 @@ def convocar_todos_da_turma(turma_id: int):
             e,
         )
         return (
-            jsonify(
-                {
-                    "error": (
-                        "Ocorreu um erro ao salvar o estado das convocações."
-                    )
-                }
-            ),
+            jsonify({"error": ("Ocorreu um erro ao salvar o estado das convocações.")}),
             500,
         )
 

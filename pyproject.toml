@@ -37,8 +37,6 @@ dependencies = [
     ,"opentelemetry-instrumentation-flask"
     ,"opentelemetry-exporter-otlp"
     ,"resend (==2.13.1)"
-    ,"holidays (==0.58)"
-    ,"pytz (==2024.1)"
 ]
 
 [tool.poetry]
@@ -79,8 +77,6 @@ opentelemetry-sdk = "*"
 opentelemetry-instrumentation-flask = "*"
 opentelemetry-exporter-otlp = "*"
 resend = "2.13.1"
-holidays = "0.58"
-pytz = "2024.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "8.4.1"

@@ -34,7 +34,6 @@ from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Border, Side, Alignment
 from openpyxl.drawing.image import Image as OpenpyxlImage
 from reportlab.lib.pagesizes import letter, landscape
-from src.scheduler import scheduler
 from reportlab.lib.units import inch
 from reportlab.platypus import (
     SimpleDocTemplate,
@@ -47,14 +46,22 @@ from reportlab.platypus import (
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
-from src.services.convocacao_service import (
-    enviar_convocacao_inscricao,
-    enviar_convocacao_turma,
-)
-from src.services.schedule_service import (
-    convocacao_datetime,
-    schedule_convocacao_turma,
-)
+from src.services.email_service import send_email, render_email_template
+
+PLATAFORMA_URL = "https://mg.ead.senai.br/"
+SENHA_INICIAL = "123456"
+
+
+def build_convocacao_conteudo(turma, treinamento, inscricao):
+    """Monta variáveis para o e-mail de convocação."""
+    return {
+        "teoria_online": bool(getattr(turma, "teoria_online", False)),
+        "tem_pratica": bool(getattr(treinamento, "tem_pratica", False)),
+        "local_realizacao": getattr(turma, "local_realizacao", "-") or "-",
+        "usuario_login": getattr(inscricao, "email", ""),
+        "senha_inicial": SENHA_INICIAL,
+        "plataforma_url": PLATAFORMA_URL,
+    }
 
 treinamento_bp = Blueprint("treinamento", __name__)
 
@@ -87,8 +94,6 @@ def listar_turmas_agendadas():
                 "instrutor_nome": turma.instrutor.nome if turma.instrutor else "A definir",
                 "teoria_online": turma.teoria_online,
                 "has_pratica": bool(getattr(turma.treinamento, "tem_pratica", False)),
-                "qtd_inscritos": turma.inscricoes.count(),
-                "convocacao_agendada": convocacao_datetime(turma.data_inicio).isoformat(),
             }
         )
     return jsonify(dados)
@@ -446,7 +451,6 @@ def criar_turma_treinamento():
     try:
         db.session.add(turma)
         db.session.commit()
-        schedule_convocacao_turma(turma, scheduler)
         return jsonify(turma.to_dict()), 201
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -522,7 +526,6 @@ def atualizar_turma_treinamento(turma_id):
         turma.teoria_online = payload.teoria_online
     try:
         db.session.commit()
-        schedule_convocacao_turma(turma, scheduler)
         log_action(
             g.current_user.id,
             'update',
@@ -1290,21 +1293,34 @@ def convocar_inscrito(inscricao_id: int):
     if not treino:
         return jsonify({"erro": "Treinamento não encontrado"}), 404
 
-    origem = f"admin:{getattr(g.current_user, 'email', '')}"
-    res = enviar_convocacao_inscricao(insc, turma, treino, origem)
-    if res.ok:
-        return jsonify({"ok": True})
-    return jsonify({"erro": res.error}), 500
+    fmt = "%d/%m/%Y"
+    data_inicio = turma.data_inicio.strftime(fmt) if turma.data_inicio else "-"
+    data_fim = turma.data_fim.strftime(fmt) if turma.data_fim else None
 
+    ctx_extra = build_convocacao_conteudo(turma, treino, insc)
 
-@treinamento_bp.post("/turmas/<int:turma_id>/convocar-todos")
-@admin_required
-def convocar_todos(turma_id: int):
-    body = request.get_json(silent=True) or {}
-    force = bool(body.get("force"))
-    origem = f"admin:{getattr(g.current_user, 'email', '')}"
-    resumo = enviar_convocacao_turma(turma_id, force=force, origem=origem)
-    return jsonify(resumo)
+    html = render_email_template(
+        "convocacao.html.j2",
+        nome_inscrito=insc.nome,
+        nome_treinamento=treino.nome,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+        horario=turma.horario or "-",
+        carga_horaria=(
+            getattr(turma, "carga_horaria", None) or treino.carga_horaria or "-"
+        ),
+        instrutor=turma.instrutor.nome if turma.instrutor else "-",
+        **ctx_extra,
+    )
+
+    subject = f"Convocação: {treino.nome} — {data_inicio}"
+    send_email(to=insc.email, subject=subject, html=html)
+
+    if hasattr(insc, "convocado_em"):
+        insc.convocado_em = datetime.utcnow()
+        db.session.commit()
+
+    return jsonify({"ok": True})
 
 
 @treinamento_bp.route(

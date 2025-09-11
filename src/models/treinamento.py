@@ -102,11 +102,6 @@ class InscricaoTreinamento(db.Model):
     """Inscricoes de usuarios em turmas de treinamento."""
 
     __tablename__ = "inscricoes_treinamento"
-    __table_args__ = (
-        db.Index(
-            "ix_insc_turma_convocado", "turma_id", "convocado_em"
-        ),
-    )
 
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True)
@@ -129,8 +124,7 @@ class InscricaoTreinamento(db.Model):
     presenca_pratica = db.Column(db.Boolean, default=False, nullable=False)
     # ------------------------------------
 
-    convocado_em = db.Column(db.DateTime(timezone=True), nullable=True)
-    convocado_por = db.Column(db.String(120), nullable=True)
+    convocado_em = db.Column(db.DateTime, nullable=True)
 
     usuario = db.relationship("User", backref="inscricoes_treinamento")
 
@@ -156,7 +150,6 @@ class InscricaoTreinamento(db.Model):
             "presenca_teoria": self.presenca_teoria,
             "presenca_pratica": self.presenca_pratica,
             "convocado_em": self.convocado_em.isoformat() if self.convocado_em else None,
-            "convocado_por": self.convocado_por,
             # ---------------------------------------------
         }
 

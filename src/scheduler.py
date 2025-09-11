@@ -29,8 +29,4 @@ def start_scheduler(app):
     )
 
     scheduler.start()
-    with app.app_context():
-        from src.services.schedule_service import schedule_convocacoes_futuras
-
-        schedule_convocacoes_futuras(scheduler)
     return scheduler

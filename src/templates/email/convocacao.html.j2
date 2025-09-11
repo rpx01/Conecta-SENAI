@@ -10,16 +10,23 @@
       <li><strong>Horário:</strong> {{ horario }}</li>
       <li><strong>Carga horária:</strong> {{ carga_horaria }} horas</li>
       <li><strong>Instrutor:</strong> {{ instrutor }}</li>
+      <li><strong>Local de Realização:</strong> {{ local_realizacao }}</li>
     </ul>
 
     {% if teoria_online %}
-      <p><strong>Teoria Online:</strong> A etapa teórica será realizada na plataforma
-      <a href="https://mg.ead.senai.br/">mg.ead.senai.br</a>.
-      Seu usuário é o seu e-mail (<em>{{ email_inscrito }}</em>) e a senha inicial é <strong>123456</strong>.</p>
-    {% endif %}
-
-    {% if possui_parte_pratica %}
-      <p><strong>Parte prática:</strong> ocorrerá presencialmente em <em>{{ local_realizacao }}</em>.</p>
+      <p><strong>Teoria:</strong> Online na plataforma
+      <a href="{{ plataforma_url }}">{{ plataforma_url }}</a>
+      (usuário: {{ usuario_login }} | senha inicial: {{ senha_inicial }}).</p>
+      {% if tem_pratica %}
+        <p><strong>Prática:</strong> Presencial no Local de Realização: {{ local_realizacao }}.</p>
+      {% endif %}
+    {% else %}
+      {% if tem_pratica %}
+        <p><strong>Teoria:</strong> Presencial no Local de Realização: {{ local_realizacao }}.</p>
+        <p><strong>Prática:</strong> Presencial no Local de Realização: {{ local_realizacao }}.</p>
+      {% else %}
+        <p><strong>Treinamento:</strong> Presencial no Local de Realização: {{ local_realizacao }}.</p>
+      {% endif %}
     {% endif %}
 
     <p>Em caso de dúvidas, responda este e-mail.</p>

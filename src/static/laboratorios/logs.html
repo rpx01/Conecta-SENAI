@@ -64,7 +64,20 @@
 
 <div class="container-fluid py-4">
     <div class="row">
-        <main class="col-12">
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="sidebar rounded shadow-sm">
+                <h2 class="mb-3">Menu Principal</h2>
+                <div class="nav flex-column">
+                    <a class="nav-link" href="/laboratorios/dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                    <a class="nav-link" href="/laboratorios/calendario.html"><i class="bi bi-calendar3"></i> Calendário</a>
+                    <a class="nav-link admin-only" href="/laboratorios/turmas.html"><i class="bi bi-building"></i> Laboratórios e Turmas</a>
+                    <a class="nav-link" href="/laboratorios/agendamento.html"><i class="bi bi-plus-circle"></i> Novo Agendamento</a>
+                    <a class="nav-link active admin-only" href="/laboratorios/logs.html"><i class="bi bi-journal-text"></i> Logs</a>
+                    <a class="nav-link" href="/laboratorios/perfil.html"><i class="bi bi-person"></i> Meu Perfil</a>
+                </div>
+            </div>
+        </div>
+        <main class="col-lg-9 col-md-12">
             <div class="page-header">
                 <h1 class="mb-0">Logs de Agendamentos</h1>
                 <button id="btnExportarCsv" class="btn btn-outline-primary"><i class="bi bi-download me-1"></i>Exportar CSV</button>

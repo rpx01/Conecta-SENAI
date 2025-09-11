@@ -3,7 +3,6 @@
 from datetime import datetime
 from src.models import db
 
-
 class Treinamento(db.Model):
     """Modelo de treinamento oferecido."""
 
@@ -16,10 +15,9 @@ class Treinamento(db.Model):
     carga_horaria = db.Column(db.Integer)
     tem_pratica = db.Column(db.Boolean, default=False)
     links_materiais = db.Column(db.JSON)
-
+    
     # NOVOS CAMPOS ADICIONADOS AQUI
-    tipo = db.Column(db.String(50), nullable=True, default="Inicial")
-    # Para 'Inicial' ou 'Periódico'
+    tipo = db.Column(db.String(50), nullable=True, default='Inicial') # Para 'Inicial' ou 'Periódico'
     conteudo_programatico = db.Column(db.Text, nullable=True)
 
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
@@ -27,9 +25,7 @@ class Treinamento(db.Model):
         db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
 
-    turmas = db.relationship(
-        "TurmaTreinamento", back_populates="treinamento", lazy="dynamic"
-    )
+    turmas = db.relationship('TurmaTreinamento', back_populates='treinamento', lazy='dynamic')
 
     def to_dict(self):
         return {
@@ -46,9 +42,7 @@ class Treinamento(db.Model):
                 self.data_criacao.isoformat() if self.data_criacao else None
             ),
             "data_atualizacao": (
-                self.data_atualizacao.isoformat()
-                if self.data_atualizacao
-                else None
+                self.data_atualizacao.isoformat() if self.data_atualizacao else None
             ),
         }
 
@@ -71,27 +65,20 @@ class TurmaTreinamento(db.Model):
     # Novos campos
     local_realizacao = db.Column(db.String(100))
     horario = db.Column(db.String(50))
-    instrutor_id = db.Column(
-        db.Integer, db.ForeignKey("instrutores.id"), nullable=True
-    )
-    teoria_online = db.Column(db.Boolean, nullable=False, default=False)
+    instrutor_id = db.Column(db.Integer, db.ForeignKey('instrutores.id'), nullable=True)
 
     # Relacionamentos
     treinamento = db.relationship(
         "Treinamento", back_populates='turmas'
     )
     instrutor = db.relationship('Instrutor')
-    inscricoes = db.relationship(
-        "InscricaoTreinamento", backref='turma', lazy='dynamic'
-    )
+    inscricoes = db.relationship('InscricaoTreinamento', backref='turma', lazy='dynamic')
 
     def to_dict(self):
         return {
             "id": self.id,
             "treinamento_id": self.treinamento_id,
-            "data_inicio": (
-                self.data_inicio.isoformat() if self.data_inicio else None
-            ),
+            "data_inicio": self.data_inicio.isoformat() if self.data_inicio else None,
             "data_fim": (
                 self.data_fim.isoformat() if self.data_fim else None
             ),
@@ -99,13 +86,10 @@ class TurmaTreinamento(db.Model):
             "horario": self.horario,
             "instrutor_id": self.instrutor_id,
             "instrutor_nome": self.instrutor.nome if self.instrutor else None,
-            "teoria_online": self.teoria_online,
         }
 
     def __repr__(self):
-        return (
-            f"<TurmaTreinamento {self.id} - Treinamento {self.treinamento_id}>"
-        )
+        return f"<TurmaTreinamento {self.id} - Treinamento {self.treinamento_id}>"
 
 
 class InscricaoTreinamento(db.Model):
@@ -114,9 +98,7 @@ class InscricaoTreinamento(db.Model):
     __tablename__ = "inscricoes_treinamento"
 
     id = db.Column(db.Integer, primary_key=True)
-    usuario_id = db.Column(
-        db.Integer, db.ForeignKey("usuarios.id"), nullable=True
-    )
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True)
     turma_id = db.Column(
         db.Integer, db.ForeignKey("turmas_treinamento.id"), nullable=False
     )
@@ -147,15 +129,11 @@ class InscricaoTreinamento(db.Model):
             "email": self.email,
             "cpf": self.cpf,
             "data_nascimento": (
-                self.data_nascimento.isoformat()
-                if self.data_nascimento
-                else None
+                self.data_nascimento.isoformat() if self.data_nascimento else None
             ),
             "empresa": self.empresa,
             "data_inscricao": (
-                self.data_inscricao.isoformat()
-                if self.data_inscricao
-                else None
+                self.data_inscricao.isoformat() if self.data_inscricao else None
             ),
             # --- NOVOS CAMPOS ADICIONADOS AO DICIONÁRIO ---
             "nota_teoria": self.nota_teoria,

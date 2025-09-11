@@ -15,7 +15,7 @@ class Treinamento(db.Model):
     codigo = db.Column(db.String(50), unique=True, nullable=False)
     capacidade_maxima = db.Column(db.Integer)
     carga_horaria = db.Column(db.Integer)
-    tem_pratica = db.Column(db.Boolean, default=False)
+    tem_pratica = db.Column(db.Boolean, nullable=False, default=False)
     links_materiais = db.Column(db.JSON)
     
     # NOVOS CAMPOS ADICIONADOS AQUI

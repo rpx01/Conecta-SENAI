@@ -61,3 +61,17 @@ class TurmaTreinamentoUpdateSchema(BaseModel):
     horario: Optional[str] = None
     instrutor_id: Optional[int] = None
     teoria_online: Optional[bool] = Field(default=None)
+
+
+class TreinamentoSchema(BaseModel):
+    """Schema para representação de treinamentos."""
+
+    id: int
+    nome: str
+    codigo: str
+    capacidade_maxima: Optional[int] = None
+    carga_horaria: Optional[int] = None
+    tem_pratica: bool = False
+    links_materiais: Optional[List[str]] = None
+    tipo: Optional[str] = None
+    conteudo_programatico: Optional[str] = None

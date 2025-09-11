@@ -5,6 +5,7 @@ import logging
 
 import resend
 from flask import current_app
+from datetime import datetime
 
 log = logging.getLogger(__name__)
 
@@ -16,6 +17,9 @@ DEFAULT_FROM = os.getenv("MAIL_FROM") or os.getenv("RESEND_FROM", "no-reply@exam
 DEFAULT_REPLY_TO = os.getenv("RESEND_REPLY_TO")
 
 Address = Union[str, Iterable[str]]
+
+PLATAFORMA_URL = "https://mg.ead.senai.br/"
+SENHA_INICIAL = "123456"
 
 
 def _normalize(addr: Address | None) -> Optional[List[str]]:
@@ -75,3 +79,43 @@ def send_email(
 def render_email_template(name: str, **ctx: Any) -> str:
     template = current_app.jinja_env.get_or_select_template(f"email/{name}")
     return template.render(**ctx)
+
+
+def _build_convocacao_context(turma: Any, treinamento: Any, inscricao: Any) -> Dict[str, Any]:
+    return {
+        "teoria_online": bool(getattr(turma, "teoria_online", False)),
+        "tem_pratica": bool(getattr(treinamento, "tem_pratica", False)),
+        "local_realizacao": getattr(turma, "local_realizacao", "-") or "-",
+        "usuario_login": getattr(inscricao, "email", ""),
+        "senha_inicial": SENHA_INICIAL,
+        "plataforma_url": PLATAFORMA_URL,
+    }
+
+
+def enviar_convocacao(inscricao: Any, turma: Any) -> None:
+    """Envia e-mail de convocação para um inscrito."""
+    treinamento = getattr(turma, "treinamento", None)
+    if treinamento is None:
+        raise ValueError("Turma sem treinamento associado")
+
+    fmt = "%d/%m/%Y"
+    data_inicio = turma.data_inicio.strftime(fmt) if getattr(turma, "data_inicio", None) else "-"
+    data_fim = turma.data_fim.strftime(fmt) if getattr(turma, "data_fim", None) else None
+
+    ctx_extra = _build_convocacao_context(turma, treinamento, inscricao)
+    html = render_email_template(
+        "convocacao.html.j2",
+        nome_inscrito=getattr(inscricao, "nome", ""),
+        nome_treinamento=getattr(treinamento, "nome", ""),
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+        horario=getattr(turma, "horario", "-") or "-",
+        carga_horaria=getattr(turma, "carga_horaria", None)
+        or getattr(treinamento, "carga_horaria", None)
+        or "-",
+        instrutor=getattr(getattr(turma, "instrutor", None), "nome", "-") or "-",
+        **ctx_extra,
+    )
+
+    subject = f"Convocação: {getattr(treinamento, 'nome', '')} — {data_inicio}"
+    send_email(to=getattr(inscricao, "email", ""), subject=subject, html=html)

@@ -36,9 +36,11 @@ COPY src ./src
 COPY gunicorn.conf.py .
 COPY alembic.ini .
 COPY migrations ./migrations
+COPY start.sh ./
+RUN chmod +x start.sh
 
 # Instala o próprio projeto (modo editável fallback c/ pip)
 RUN poetry install --only-root --no-ansi || pip install -e .
 
-# Comando padrão (ajuste se o seu for diferente)
-CMD ["gunicorn", "-c", "./gunicorn.conf.py", "src.main:create_app()"]
+# Comando padrão (executa migrações e inicia o Gunicorn)
+CMD ["./start.sh"]

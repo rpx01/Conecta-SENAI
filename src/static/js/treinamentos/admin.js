@@ -413,6 +413,9 @@ async function carregarInscricoes(turmaId) {
 
             const acoesHtml = `
                 <td>
+                    <button class="btn btn-sm btn-secondary me-1 btn-convocar" title="Convocar" data-inscricao-id="${i.id}">
+                        <i class="bi bi-envelope"></i>
+                    </button>
                     <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusaoParticipante(${i.id}, '${escapeHTML(i.nome)}')">
                         <i class="bi bi-trash"></i>
                     </button>
@@ -508,6 +511,23 @@ async function salvarAlteracoesInscricoes() {
     });
 }
 
+
+// Envia convocação por e-mail ao clicar no botão correspondente
+document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.btn-convocar');
+    if (!btn) return;
+    const id = btn.getAttribute('data-inscricao-id');
+    btn.disabled = true;
+    try {
+        await chamarAPI(`/inscricoes/${id}/convocar`, 'POST');
+        showToast('Convocação enviada por e-mail.', 'success');
+    } catch (err) {
+        console.error(err);
+        showToast('Falha ao enviar a convocação.', 'danger');
+    } finally {
+        btn.disabled = false;
+    }
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     verificarAutenticacao();

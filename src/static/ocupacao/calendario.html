@@ -73,7 +73,66 @@
 
     <div class="container-fluid">
         <div class="row">
-            <main class="col-12">
+            <div class="col-lg-3 d-none d-lg-block">
+                <div class="sidebar rounded shadow-sm">
+                    <h2 class="mb-3">Menu Principal</h2>
+                    <div class="nav flex-column">
+                        <a class="nav-link" href="/ocupacao/dashboard.html">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                        <a class="nav-link active" href="/ocupacao/calendario.html">
+                            <i class="bi bi-calendar3"></i> Calendário
+                        </a>
+                        <a class="nav-link admin-only" href="/ocupacao/salas.html">
+                            <i class="bi bi-door-open"></i> Gerenciar Salas
+                        </a>
+                        <a class="nav-link admin-only" href="/ocupacao/instrutores.html">
+                            <i class="bi bi-person-badge"></i> Corpo Docente
+                        </a>
+                        <a class="nav-link admin-only" href="/ocupacao/turmas.html">
+                            <i class="bi bi-people-fill"></i> Gerenciar Turmas
+                        </a>
+                        <a class="nav-link admin-only" href="/ocupacao/agendamento.html">
+                            <i class="bi bi-plus-circle"></i> Nova Ocupação
+                        </a>
+                        <a class="nav-link" href="/ocupacao/perfil.html">
+                            <i class="bi bi-person"></i> Meu Perfil
+                        </a>
+                    </div>
+
+                    <hr>
+
+                    <h2 class="mb-3">Filtros</h2>
+                    <form id="filtrosForm">
+                        <div class="mb-3">
+                            <label for="filtroSala" class="form-label">Sala</label>
+                            <select class="form-select" id="filtroSala">
+                                <option value="">Todas as salas</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="filtroInstrutor" class="form-label">Instrutor</label>
+                            <select class="form-select" id="filtroInstrutor">
+                                <option value="">Todos os instrutores</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="filtroTurno" class="form-label">Turno</label>
+                            <select class="form-select" id="filtroTurno">
+                                <option value="">Todos</option>
+                                <option value="Manhã">Manhã</option>
+                                <option value="Tarde">Tarde</option>
+                                <option value="Noite">Noite</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-funnel me-2"></i>Filtrar
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <main class="col-lg-9 col-md-12">
                 <h1 class="mb-4">Calendário de Ocupações</h1>
 
 

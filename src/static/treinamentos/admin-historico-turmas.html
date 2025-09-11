@@ -59,7 +59,22 @@
 
     <div class="container-fluid py-4">
         <div class="row">
-        <main class="col-12">
+            <div class="col-lg-3 d-none d-lg-block">
+                <div class="sidebar rounded shadow-sm">
+                    <h2 class="mb-3">Menu Principal</h2>
+                    <div class="nav flex-column" id="sidebar">
+                        <a class="nav-link" href="/treinamentos/index.html"><i class="bi bi-card-list"></i> Cursos Disponíveis</a>
+                        <a class="nav-link" href="/treinamentos/meus-cursos.html"><i class="bi bi-person-video3"></i> Meus Cursos</a>
+                        <a class="nav-link admin-only" href="/treinamentos/admin-turmas.html"><i class="bi bi-people-fill"></i> Turmas Futuras</a>
+                        <a class="nav-link active admin-only" href="/treinamentos/admin-historico-turmas.html"><i class="bi bi-play-circle-fill"></i> Turmas em Andamento</a>
+                        <a class="nav-link admin-only" href="/treinamentos/admin-historico-passado.html"><i class="bi bi-archive-fill"></i> Turmas Encerradas</a>
+                        <a class="nav-link admin-only" href="/treinamentos/admin-catalogo.html"><i class="bi bi-collection-fill"></i> Catálogo</a>
+                        <a class="nav-link admin-only" href="/treinamentos/admin-logs.html"><i class="bi bi-journal-text"></i> Logs</a>
+                    </div>
+                </div>
+            </div>
+
+            <main class="col-lg-9 col-md-12">
                 <div class="page-header">
                     <h1 class="mb-0">Turmas em Andamento</h1>
                 </div>
@@ -205,6 +220,18 @@
                 document.getElementById('userName').textContent = usuario.nome;
             }
         });
+    </script>
+    <script>
+    (function () {
+      var path = location.pathname.replace(/\/$/, '');
+      document.querySelectorAll('#sidebar a').forEach(function(a){
+        var href = (a.getAttribute('href') || '').replace(/\/$/, '');
+        if (href && (path === href || path.endsWith(href))) {
+          a.classList.add('active');
+          var li = a.closest('li'); if (li) li.classList.add('active');
+        }
+      });
+    })();
     </script>
     <div class="modal fade" id="confirmacaoExcluirModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">

@@ -12,3 +12,4 @@
 - Formulário de nova sala simplificado com opções fixas de localização e menos campos.
 ### Fixed
 - Edição de ocupações recorrentes agora ignora o próprio grupo ao verificar disponibilidade.
+- Corrigido erro de banco de dados ao listar treinamentos garantindo a existência da coluna `teoria_online` em `turmas_treinamento`.

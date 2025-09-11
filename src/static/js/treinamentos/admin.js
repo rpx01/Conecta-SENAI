@@ -231,6 +231,7 @@ async function abrirModalTurma(id = null) {
     const form = document.getElementById('turmaForm');
     form.reset();
     document.getElementById('turmaId').value = id || '';
+    document.getElementById('teoriaOnline').checked = false;
 
     // Popula o select de treinamentos
     const selectTrein = document.getElementById('turmaTreinamentoId');
@@ -266,6 +267,7 @@ async function abrirModalTurma(id = null) {
             document.getElementById('localRealizacao').value = t.local_realizacao || '';
             document.getElementById('instrutorId').value = t.instrutor_id || '';
             document.getElementById('horario').value = t.horario || '';
+            document.getElementById('teoriaOnline').checked = !!t.teoria_online;
 
         } catch(e) {
             showToast(`Não foi possível carregar dados da turma: ${e.message}`, 'danger');
@@ -275,6 +277,7 @@ async function abrirModalTurma(id = null) {
         // Se for novo
         document.getElementById('cargaHoraria').value = '';
         document.getElementById('dataFim').min = ''; // Limpa a restrição
+        document.getElementById('teoriaOnline').checked = false;
     }
 
     new bootstrap.Modal(document.getElementById('turmaModal')).show();
@@ -301,6 +304,8 @@ async function salvarTurma() {
         horario: document.getElementById('horario').value,
         instrutor_id: parseInt(document.getElementById('instrutorId').value) || null
     };
+    const teoriaOnline = document.getElementById('teoriaOnline')?.checked ?? false;
+    body.teoria_online = teoriaOnline;
 
     if (!body.treinamento_id || !body.data_inicio || !body.data_fim) {
         showToast("Por favor, preencha todos os campos obrigatórios.", "warning");

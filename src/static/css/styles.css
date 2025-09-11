@@ -1295,3 +1295,13 @@ input, select, textarea {
   transform: translateX(22px);
   content: "✓";
 }
+
+/* Remove fixed sidebars and expand main content */
+.sidebar {
+  display: none !important;
+}
+
+main {
+  flex: 0 0 100% !important;
+  max-width: 100% !important;
+}

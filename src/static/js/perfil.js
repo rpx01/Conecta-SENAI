@@ -9,11 +9,6 @@ document.addEventListener('DOMContentLoaded', function() {
         userNameElement.textContent = usuarioLogado.nome;
     }
     
-    // Marca o link do perfil como ativo na sidebar
-    const sidebarPerfilLink = document.getElementById('sidebar-perfil-link');
-    if(sidebarPerfilLink) {
-        sidebarPerfilLink.classList.add('active');
-    }
 
     carregarDadosUsuario();
     

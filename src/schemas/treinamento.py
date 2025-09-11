@@ -1,6 +1,6 @@
 """Esquemas Pydantic para o módulo de treinamentos."""
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import date
 
@@ -48,7 +48,7 @@ class TurmaTreinamentoCreateSchema(BaseModel):
     local_realizacao: Optional[str] = None
     horario: Optional[str] = None
     instrutor_id: Optional[int] = None
-    teoria_online: Optional[bool] = False
+    teoria_online: bool = Field(default=False)
 
 
 class TurmaTreinamentoUpdateSchema(BaseModel):
@@ -60,4 +60,4 @@ class TurmaTreinamentoUpdateSchema(BaseModel):
     local_realizacao: Optional[str] = None
     horario: Optional[str] = None
     instrutor_id: Optional[int] = None
-    teoria_online: Optional[bool] = None
+    teoria_online: Optional[bool] = Field(default=None)

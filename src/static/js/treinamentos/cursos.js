@@ -181,7 +181,10 @@ async function carregarTreinamentos() {
             <div class="col">
                 <div class="card h-100 curso-card-disponivel">
                     <div class="card-body">
-                        <h5 class="card-title">${escapeHTML(t.treinamento.nome)}</h5>
+                        <h5 class="card-title d-flex justify-content-between align-items-center">
+                            ${escapeHTML(t.treinamento.nome)}
+                            <span class="badge bg-secondary">Teoria: ${t.teoria_online ? 'Online' : 'Presencial'}</span>
+                        </h5>
                         <hr>
                         <div class="curso-info-item">
                             <i class="bi bi-calendar-range"></i>
@@ -354,6 +357,7 @@ function renderizarGrupoCursos(cursos, container, statusClass, statusText) {
                             <h5 class="card-title mb-0">${escapeHTML(c.treinamento.nome)}</h5>
                             <span class="selo-status status-${statusClass}">${statusText}</span>
                         </div>
+                        <span class="badge bg-secondary mt-2">Teoria: ${c.teoria_online ? 'Online' : 'Presencial'}</span>
                         <p class="card-text mt-2"><small class="text-muted">De ${formatarData(c.data_inicio)} a ${formatarData(c.data_fim)}</small></p>
                         <div class="progress mt-3" style="height: 10px;"><div class="progress-bar" role="progressbar" style="width: ${progresso}%;"></div></div>
                     </div>

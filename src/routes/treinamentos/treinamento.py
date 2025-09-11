@@ -253,6 +253,7 @@ def listar_meus_cursos():
                 "horario": turma.horario,
                 "local_realizacao": turma.local_realizacao,
                 "instrutor_nome": turma.instrutor.nome if turma.instrutor else None,
+                "teoria_online": turma.teoria_online,
             }
         )
     return jsonify(result)

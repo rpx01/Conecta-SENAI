@@ -11,7 +11,8 @@ log = logging.getLogger(__name__)
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 if RESEND_API_KEY:
     resend.api_key = RESEND_API_KEY
-DEFAULT_FROM = os.getenv("RESEND_FROM", "no-reply@example.com")
+# Permite definir o remetente tanto via MAIL_FROM quanto RESEND_FROM
+DEFAULT_FROM = os.getenv("MAIL_FROM") or os.getenv("RESEND_FROM", "no-reply@example.com")
 DEFAULT_REPLY_TO = os.getenv("RESEND_REPLY_TO")
 
 Address = Union[str, Iterable[str]]

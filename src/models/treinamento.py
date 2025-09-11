@@ -124,6 +124,8 @@ class InscricaoTreinamento(db.Model):
     presenca_pratica = db.Column(db.Boolean, default=False, nullable=False)
     # ------------------------------------
 
+    convocado_em = db.Column(db.DateTime, nullable=True)
+
     usuario = db.relationship("User", backref="inscricoes_treinamento")
 
     def to_dict(self):
@@ -147,6 +149,7 @@ class InscricaoTreinamento(db.Model):
             "status_aprovacao": self.status_aprovacao,
             "presenca_teoria": self.presenca_teoria,
             "presenca_pratica": self.presenca_pratica,
+            "convocado_em": self.convocado_em.isoformat() if self.convocado_em else None,
             # ---------------------------------------------
         }
 

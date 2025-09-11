@@ -149,6 +149,14 @@ function calcularDataLimiteInscricao(dataInicioStr) {
     return data.toISOString().split('T')[0];
 }
 
+function buildBadges(turma) {
+    const teoriaLabel = turma.teoria_online ? 'Teoria: Online' : 'Teoria: Presencial';
+    const teoriaBadge = `<span class="badge badge-teoria">${teoriaLabel}</span>`;
+    const hasPratica = turma.treinamento?.tem_pratica === true || turma.has_pratica === true;
+    const praticaBadge = hasPratica ? `<span class="badge badge-pratica">Prática: Presencial</span>` : '';
+    return teoriaBadge + praticaBadge;
+}
+
 /**
  * Carrega a lista de turmas disponíveis, verificando se o usuário já está inscrito.
  */
@@ -181,9 +189,9 @@ async function carregarTreinamentos() {
             <div class="col">
                 <div class="card h-100 curso-card-disponivel">
                     <div class="card-body">
-                        <h5 class="card-title d-flex justify-content-between align-items-center">
+                        <h5 class="card-title d-flex justify-content-between align-items-start">
                             ${escapeHTML(t.treinamento.nome)}
-                            <span class="badge bg-secondary">Teoria: ${t.teoria_online ? 'Online' : 'Presencial'}</span>
+                            <div class="badges">${buildBadges(t)}</div>
                         </h5>
                         <hr>
                         <div class="curso-info-item">

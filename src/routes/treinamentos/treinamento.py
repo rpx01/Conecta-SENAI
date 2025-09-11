@@ -78,6 +78,7 @@ def listar_turmas_agendadas():
                 "horario": turma.horario,
                 "instrutor_nome": turma.instrutor.nome if turma.instrutor else "A definir",
                 "teoria_online": turma.teoria_online,
+                "has_pratica": bool(getattr(turma.treinamento, "tem_pratica", False)),
             }
         )
     return jsonify(dados)
@@ -114,6 +115,7 @@ def listar_turmas_ativas():
                 "horario": turma.horario,
                 "instrutor": turma.instrutor.to_dict() if turma.instrutor else None,
                 "teoria_online": turma.teoria_online,
+                "has_pratica": bool(getattr(turma.treinamento, "tem_pratica", False)),
             }
         )
     return jsonify(dados)
@@ -146,6 +148,7 @@ def listar_historico_turmas():
                 "horario": turma.horario,
                 "instrutor": turma.instrutor.to_dict() if turma.instrutor else None,
                 "teoria_online": turma.teoria_online,
+                "has_pratica": bool(getattr(turma.treinamento, "tem_pratica", False)),
             }
         )
     return jsonify(dados)
@@ -171,6 +174,7 @@ def listar_todas_as_turmas():
                 "horario": turma.horario,
                 "instrutor": turma.instrutor.to_dict() if turma.instrutor else None,
                 "teoria_online": turma.teoria_online,
+                "has_pratica": bool(getattr(turma.treinamento, "tem_pratica", False)),
             }
         )
     return jsonify(dados)
@@ -255,6 +259,7 @@ def listar_meus_cursos():
                 "local_realizacao": turma.local_realizacao,
                 "instrutor_nome": turma.instrutor.nome if turma.instrutor else None,
                 "teoria_online": turma.teoria_online,
+                "has_pratica": bool(getattr(turma.treinamento, "tem_pratica", False)),
             }
         )
     return jsonify(result)

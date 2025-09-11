@@ -537,97 +537,63 @@ async function executarAcaoComFeedback(btn, acao) {
 }
 
 /**
- * Adiciona o link para a página de Laboratórios e Turmas no menu
- * @param {string} containerSelector - Seletor CSS do container do menu
- * @param {boolean} isNavbar - Indica se é o menu da navbar ou sidebar
- */
-function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
+* Adiciona o link para a página de Laboratórios e Turmas no menu
+* @param {string} containerSelector - Seletor CSS do container do menu
+*/
+function adicionarLinkLabTurmas(containerSelector) {
     const container = document.querySelector(containerSelector);
     if (!container) return;
-    
+
     // Verifica se o link já existe para evitar duplicação
     const linkExistente = container.querySelector('a[href="/laboratorios/turmas.html"]');
     if (linkExistente) return;
-    
-    // Cria o elemento do link baseado no tipo de menu
-    if (isNavbar) {
-        // Para navbar (menu superior)
-        const navItem = document.createElement('li');
-        navItem.className = 'nav-item admin-only';
-        
-        const link = document.createElement('a');
-        link.className = 'nav-link';
-        link.href = '/laboratorios/turmas.html';
-        link.innerHTML = '<i data-lucide="building-2" class="me-1"></i> Laboratórios e Turmas';
-        
-        navItem.appendChild(link);
 
-        // Insere antes do último item (dropdown do usuário)
-        const lastItem = container.querySelector('.dropdown');
-        if (lastItem) {
-            container.insertBefore(navItem, lastItem);
-        } else {
-            container.appendChild(navItem);
-        }
-        refreshIcons();
+    // Cria o elemento do link no menu superior
+    const navItem = document.createElement('li');
+    navItem.className = 'nav-item admin-only';
+
+    const link = document.createElement('a');
+    link.className = 'nav-link';
+    link.href = '/laboratorios/turmas.html';
+    link.innerHTML = '<i data-lucide="building-2" class="me-1"></i> Laboratórios e Turmas';
+
+    navItem.appendChild(link);
+
+    // Insere antes do último item (dropdown do usuário)
+    const lastItem = container.querySelector('.dropdown');
+    if (lastItem) {
+        container.insertBefore(navItem, lastItem);
     } else {
-        // Para sidebar (menu lateral)
-        const link = document.createElement('a');
-        link.className = 'nav-link admin-only';
-        link.href = '/laboratorios/turmas.html';
-        link.innerHTML = '<i data-lucide="building-2"></i> Laboratórios e Turmas';
-        
-        // Insere antes do último item (Meu Perfil)
-        const lastItem = container.querySelector('a[href="/laboratorios/perfil.html"], a[href="/ocupacao/perfil.html"], a[href="/admin/perfil.html"]');
-        if (lastItem) {
-            container.insertBefore(link, lastItem);
-        } else {
-            container.appendChild(link);
-        }
-        refreshIcons();
+        container.appendChild(navItem);
     }
+    refreshIcons();
 }
 
 // Adiciona o link para a página de Logs
-function adicionarLinkLogs(containerSelector, isNavbar = false) {
+function adicionarLinkLogs(containerSelector) {
     const container = document.querySelector(containerSelector);
     if (!container) return;
 
     const linkExistente = container.querySelector('a[href="/laboratorios/logs.html"]');
     if (linkExistente) return;
 
-    if (isNavbar) {
-        const navItem = document.createElement('li');
-        navItem.className = 'nav-item admin-only';
+    const navItem = document.createElement('li');
+    navItem.className = 'nav-item admin-only';
 
-        const link = document.createElement('a');
-        link.className = 'nav-link';
-        link.href = '/laboratorios/logs.html';
-        link.innerHTML = '<i data-lucide="book-open-text" class="me-1"></i> Logs';
+    const link = document.createElement('a');
+    link.className = 'nav-link';
+    link.href = '/laboratorios/logs.html';
+    link.innerHTML = '<i data-lucide="book-open-text" class="me-1"></i> Logs';
 
-        navItem.appendChild(link);
+    navItem.appendChild(link);
 
-        const lastItem = container.querySelector('.dropdown');
-        if (lastItem) {
-            container.insertBefore(navItem, lastItem);
-        } else {
-            container.appendChild(navItem);
-        }
-        refreshIcons();
+    const lastItem = container.querySelector('.dropdown');
+    if (lastItem) {
+        container.insertBefore(navItem, lastItem);
     } else {
-        const link = document.createElement('a');
-        link.className = 'nav-link admin-only';
-        link.href = '/laboratorios/logs.html';
-        link.innerHTML = '<i data-lucide="book-open-text"></i> Logs';
-
-        const lastItem = container.querySelector('a[href="/laboratorios/perfil.html"], a[href="/ocupacao/perfil.html"], a[href="/admin/perfil.html"]');
-        if (lastItem) {
-            container.insertBefore(link, lastItem);
-        } else {
-            container.appendChild(link);
-        }
-        refreshIcons();
+        container.appendChild(navItem);
     }
+    refreshIcons();
 }
 
 /**
@@ -771,12 +737,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         const deveExibirLinks = modulosDeInclusao.some(modulo => paginaAtual.startsWith(modulo));
 
         if (deveExibirLinks) {
-            adicionarLinkLabTurmas('.navbar-nav.ms-auto', true);
-            adicionarLinkLabTurmas('.sidebar .nav.flex-column', false);
-
-            adicionarLinkLogs('.navbar-nav.ms-auto', true);
-            adicionarLinkLogs('.sidebar .nav.flex-column', false);
-
+            adicionarLinkLabTurmas('.navbar-nav.ms-auto');
+            adicionarLinkLogs('.navbar-nav.ms-auto');
             configurarObservadoresMenu();
         }
     }
@@ -791,24 +753,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 function configurarObservadoresMenu() {
     // Configura o observador para a navbar
     const navbarObserver = new MutationObserver(function(mutations) {
-        adicionarLinkLabTurmas('.navbar-nav.ms-auto', true);
-        adicionarLinkLogs('.navbar-nav.ms-auto', true);
+        adicionarLinkLabTurmas('.navbar-nav.ms-auto');
+        adicionarLinkLogs('.navbar-nav.ms-auto');
     });
 
     const navbar = document.querySelector('.navbar-nav.ms-auto');
     if (navbar) {
         navbarObserver.observe(navbar, { childList: true, subtree: true });
-    }
-
-    // Configura o observador para a sidebar
-    const sidebarObserver = new MutationObserver(function(mutations) {
-        adicionarLinkLabTurmas('.sidebar .nav.flex-column', false);
-        adicionarLinkLogs('.sidebar .nav.flex-column', false);
-    });
-    
-    const sidebar = document.querySelector('.sidebar .nav.flex-column');
-    if (sidebar) {
-        sidebarObserver.observe(sidebar, { childList: true, subtree: true });
     }
 }
 
@@ -979,67 +930,3 @@ async function preencherTabela(idTabela, endpoint, funcaoRenderizarLinha) {
     }
 }
 
-// Inicializa um menu lateral oculto baseado nos links da navbar
-(() => {
-    if (document.getElementById('sidebarDrawer')) {
-        return;
-    }
-
-    const cssHref = '/css/menu-suspenso.css';
-    if (!document.querySelector(`link[href="${cssHref}"]`)) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = cssHref;
-        document.head.appendChild(link);
-    }
-
-    const edge = document.createElement('div');
-    edge.id = 'hoverEdge';
-    edge.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(edge);
-
-    const drawer = document.createElement('aside');
-    drawer.id = 'sidebarDrawer';
-    drawer.className = 'drawer';
-    drawer.setAttribute('aria-label', 'Menu lateral');
-    drawer.setAttribute('aria-expanded', 'false');
-    drawer.innerHTML = `
-        <div class="drawer-header"><h2>Menu</h2></div>
-        <nav class="drawer-nav"><ul></ul></nav>
-    `;
-
-    const navList = document.querySelector('nav .navbar-nav');
-    const ul = drawer.querySelector('ul');
-    if (navList) {
-        navList.querySelectorAll('li').forEach(li => {
-            ul.appendChild(li.cloneNode(true));
-        });
-    }
-
-    document.body.appendChild(drawer);
-
-    let openTimer, closeTimer;
-    const open = () => {
-        clearTimeout(closeTimer);
-        drawer.classList.add('open');
-        drawer.setAttribute('aria-expanded', 'true');
-    };
-    const close = () => {
-        clearTimeout(openTimer);
-        if (!drawer.matches(':hover')) {
-            drawer.classList.remove('open');
-            drawer.setAttribute('aria-expanded', 'false');
-        }
-    };
-
-    edge.addEventListener('mouseenter', () => { openTimer = setTimeout(open, 80); });
-    drawer.addEventListener('mouseleave', () => { closeTimer = setTimeout(close, 150); });
-    drawer.addEventListener('focusin', open);
-    drawer.addEventListener('focusout', () => { setTimeout(close, 120); });
-    edge.addEventListener('click', () => {
-        drawer.classList.toggle('open');
-        const expanded = drawer.classList.contains('open');
-        drawer.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-    });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
-})();

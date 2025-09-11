@@ -4,6 +4,7 @@
 let catalogoDeTreinamentos = [];
 let listaDeInstrutores = [];
 let turmaParaExcluirId = null;
+let turmaParaConvocarId = null;
 let confirmacaoModal;
 
 // Função para limpar e abrir o modal de Treinamento (Catálogo)
@@ -188,16 +189,30 @@ async function carregarTurmas() {
 }
 
 // Convoca todos os participantes de uma turma
-async function convocarTodosDaTurma(turmaId) {
-    if (!confirm('Deseja convocar todos os participantes desta turma?')) {
-        return;
+function convocarTodosDaTurma(turmaId) {
+    turmaParaConvocarId = turmaId;
+    const modalEl = document.getElementById('confirmacaoConvocarModal');
+    if (modalEl) {
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
     }
+}
+
+async function executarConvocacao() {
+    if (!turmaParaConvocarId) return;
+    const modalEl = document.getElementById('confirmacaoConvocarModal');
+    const modal = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+
     try {
-        const resp = await chamarAPI(`/treinamentos/turmas/${turmaId}/convocar-todos`, 'POST');
-        const qtd = resp?.quantidade || 0;
-        showToast(`${qtd} participante${qtd === 1 ? '' : 's'} convocado${qtd === 1 ? '' : 's'}.`, 'success');
+        await chamarAPI(`/treinamentos/turmas/${turmaParaConvocarId}/convocar-todos`, 'POST');
+        showToast('Todos os participantes foram convocados com sucesso!', 'success');
     } catch (e) {
-        showToast(`Falha ao convocar participantes: ${e.message}`, 'danger');
+        showToast(`Não foi possível convocar: ${e.message}`, 'danger');
+    } finally {
+        if (modal) {
+            modal.hide();
+        }
+        turmaParaConvocarId = null;
     }
 }
 
@@ -617,6 +632,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnXLSX) {
             btnXLSX.addEventListener('click', () => handleExport('xlsx', btnXLSX));
         }
+    }
+
+    const btnConfirmarConvocacao = document.getElementById('btnConfirmarConvocacao');
+    if (btnConfirmarConvocacao) {
+        btnConfirmarConvocacao.addEventListener('click', executarConvocacao);
     }
 
     // Listener para o select de treinamento no modal de turma

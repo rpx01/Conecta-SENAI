@@ -28,5 +28,22 @@ def start_scheduler(app):
         misfire_grace_time=300,
     )
 
+    def convocacao_job():
+        from src.jobs.convocacao_automatica import convocacao_automatica_job
+
+        with app.app_context():
+            convocacao_automatica_job()
+
+    scheduler.add_job(
+        convocacao_job,
+        "interval",
+        hours=1,
+        id="convocacao_automatica",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=300,
+    )
+
     scheduler.start()
     return scheduler

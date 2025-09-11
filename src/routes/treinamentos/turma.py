@@ -5,6 +5,10 @@ from sqlalchemy.exc import SQLAlchemyError
 from src.utils.error_handler import handle_internal_error
 from src.models.laboratorio_turma import Turma
 from src.routes.user import verificar_autenticacao, verificar_admin
+from src.models.treinamento import TurmaTreinamento, InscricaoTreinamento
+from src.services.email_service import enviar_convocacao
+from src.auth import admin_required
+from datetime import datetime
 
 turma_bp = Blueprint('turma', __name__)
 
@@ -138,3 +142,28 @@ def remover_turma(id):
     except SQLAlchemyError as e:
         db.session.rollback()
         return handle_internal_error(e)
+
+
+@turma_bp.post('/treinamentos/turmas/<int:turma_id>/convocar-todos')
+@admin_required
+def convocar_todos_da_turma(turma_id: int):
+    """Convoca todos os participantes não convocados de uma turma."""
+    turma = db.session.get(TurmaTreinamento, turma_id)
+    if not turma:
+        return jsonify({'erro': 'Turma não encontrada'}), 404
+
+    inscricoes = (
+        InscricaoTreinamento.query
+        .filter_by(turma_id=turma_id, convocado_em=None)
+        .all()
+    )
+
+    enviados = 0
+    for insc in inscricoes:
+        if insc.email:
+            enviar_convocacao(insc, turma)
+            insc.convocado_em = datetime.utcnow()
+            enviados += 1
+
+    db.session.commit()
+    return jsonify({'quantidade': enviados}), 200

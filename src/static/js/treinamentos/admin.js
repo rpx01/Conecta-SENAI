@@ -170,6 +170,9 @@ async function carregarTurmas() {
                 <td>${formatarData(t.data_inicio)}</td>
                 <td>${formatarData(t.data_fim)}</td>
                 <td>
+                    <button class="btn btn-sm btn-outline-warning me-1" onclick="convocarTodosDaTurma(${t.turma_id})" title="Convocar Todos">
+                        <i class="bi bi-broadcast"></i>
+                    </button>
                     <button class="btn btn-sm btn-outline-success me-1" onclick="abrirModalInscricaoAdmin(${t.turma_id})" title="Adicionar Participante">
                         <i class="bi bi-person-plus"></i>
                     </button>
@@ -181,6 +184,20 @@ async function carregarTurmas() {
         }
     } catch (e) {
         showToast(e.message, 'danger');
+    }
+}
+
+// Convoca todos os participantes de uma turma
+async function convocarTodosDaTurma(turmaId) {
+    if (!confirm('Deseja convocar todos os participantes desta turma?')) {
+        return;
+    }
+    try {
+        const resp = await chamarAPI(`/treinamentos/turmas/${turmaId}/convocar-todos`, 'POST');
+        const qtd = resp?.quantidade || 0;
+        showToast(`${qtd} participante${qtd === 1 ? '' : 's'} convocado${qtd === 1 ? '' : 's'}.`, 'success');
+    } catch (e) {
+        showToast(`Falha ao convocar participantes: ${e.message}`, 'danger');
     }
 }
 

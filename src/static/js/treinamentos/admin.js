@@ -5,6 +5,7 @@ let catalogoDeTreinamentos = [];
 let listaDeInstrutores = [];
 let turmaParaExcluirId = null;
 let confirmacaoModal;
+let turmaParaConvocarId = null;
 
 // Função para limpar e abrir o modal de Treinamento (Catálogo)
 function novoTreinamento() {
@@ -162,7 +163,8 @@ async function carregarTurmas() {
 
         for (const t of turmas) {
             const tr = document.createElement('tr');
-
+            const ag = t.convocacao_agendada ? new Date(t.convocacao_agendada).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : '';
+            const badge = ag ? `<div class="mt-2"><span class="badge text-bg-info">Convocação automática agendada: ${ag}</span></div>` : '';
             tr.innerHTML = `
                 <td>${t.turma_id}</td>
                 <td>${escapeHTML(t.treinamento.nome)}</td>
@@ -170,12 +172,14 @@ async function carregarTurmas() {
                 <td>${formatarData(t.data_inicio)}</td>
                 <td>${formatarData(t.data_fim)}</td>
                 <td>
+                    <button class="btn btn-sm btn-secondary me-1" onclick="abrirModalConvocarTodos(${t.turma_id})" ${t.qtd_inscritos === 0 ? 'disabled' : ''}>Convocar todos</button>
                     <button class="btn btn-sm btn-outline-success me-1" onclick="abrirModalInscricaoAdmin(${t.turma_id})" title="Adicionar Participante">
                         <i class="bi bi-person-plus"></i>
                     </button>
                     <a class="btn btn-sm btn-outline-info me-1" href="/treinamentos/admin-inscricoes.html?turma=${t.turma_id}" title="Ver Inscrições"><i class="bi bi-people"></i></a>
                     <button class="btn btn-sm btn-outline-primary me-1" onclick="editarTurma(${t.turma_id})" title="Editar Turma"><i class="bi bi-pencil"></i></button>
                     <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusaoTurma(${t.turma_id})" title="Excluir Turma"><i class="bi bi-trash"></i></button>
+                    ${badge}
                 </td>`;
             tbody.appendChild(tr);
         }
@@ -209,6 +213,45 @@ async function executarExclusao() {
             modal.hide();
         }
         turmaParaExcluirId = null;
+    }
+}
+
+function abrirModalConvocarTodos(id) {
+    turmaParaConvocarId = id;
+    const chk = document.getElementById('forceConvocacao');
+    const resEl = document.getElementById('convocacaoResultado');
+    if (chk) chk.checked = false;
+    if (resEl) resEl.textContent = '';
+    const modalEl = document.getElementById('modalConvocarTodos');
+    if (modalEl) {
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+}
+
+async function executarConvocacaoTodos() {
+    if (!turmaParaConvocarId) return;
+    const modalEl = document.getElementById('modalConvocarTodos');
+    const modal = modalEl ? bootstrap.Modal.getOrCreateInstance(modalEl) : null;
+    const btn = document.getElementById('btnConfirmarConvocacao');
+    const force = document.getElementById('forceConvocacao').checked;
+    const resultEl = document.getElementById('convocacaoResultado');
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enviando...';
+    try {
+        const res = await chamarAPI(`/turmas/${turmaParaConvocarId}/convocar-todos`, 'POST', { force });
+        if (resultEl) {
+            resultEl.textContent = `Enviados: ${res.enviados} • Pulados: ${res.pulados} • Falhas: ${res.falhas}`;
+        }
+        showToast('Convocação processada', 'success');
+        await carregarTurmas();
+    } catch (e) {
+        showToast(e.message || 'Falha ao convocar', 'danger');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Convocar';
+        turmaParaConvocarId = null;
     }
 }
 
@@ -561,6 +604,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnSalvar = document.getElementById('btnSalvarAlteracoes');
     if (btnSalvar) {
         btnSalvar.addEventListener('click', salvarAlteracoesInscricoes);
+    }
+
+    const btnConvocar = document.getElementById('btnConfirmarConvocacao');
+    if (btnConvocar) {
+        btnConvocar.addEventListener('click', executarConvocacaoTodos);
     }
 
     // Lógica para o novo modal de exportação

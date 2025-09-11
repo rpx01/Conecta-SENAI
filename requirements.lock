@@ -63,6 +63,8 @@ greenlet==3.2.3
     # via sqlalchemy
 gunicorn==23.0.0
     # via -r requirements.txt
+holidays==0.58
+    # via -r requirements.txt
 idna==3.10
     # via
     #   email-validator
@@ -122,10 +124,14 @@ pyjwt==2.10.1
     #   flask-jwt-extended
 pymysql==1.1.1
     # via -r requirements.txt
+python-dateutil==2.9.0.post0
+    # via holidays
 python-dotenv==1.0.0
     # via -r requirements.txt
-pytz==2025.2
-    # via apscheduler
+pytz==2024.1
+    # via
+    #   -r requirements.txt
+    #   apscheduler
 pyyaml==6.0.2
     # via flasgger
 redis==5.0.1
@@ -152,6 +158,7 @@ six==1.17.0
     # via
     #   apscheduler
     #   flasgger
+    #   python-dateutil
 sqlalchemy==2.0.23
     # via
     #   -r requirements.txt

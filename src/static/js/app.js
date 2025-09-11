@@ -978,3 +978,68 @@ async function preencherTabela(idTabela, endpoint, funcaoRenderizarLinha) {
         return [];
     }
 }
+
+// Inicializa um menu lateral oculto baseado nos links da navbar
+(() => {
+    if (document.getElementById('sidebarDrawer')) {
+        return;
+    }
+
+    const cssHref = '/css/menu-suspenso.css';
+    if (!document.querySelector(`link[href="${cssHref}"]`)) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = cssHref;
+        document.head.appendChild(link);
+    }
+
+    const edge = document.createElement('div');
+    edge.id = 'hoverEdge';
+    edge.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(edge);
+
+    const drawer = document.createElement('aside');
+    drawer.id = 'sidebarDrawer';
+    drawer.className = 'drawer';
+    drawer.setAttribute('aria-label', 'Menu lateral');
+    drawer.setAttribute('aria-expanded', 'false');
+    drawer.innerHTML = `
+        <div class="drawer-header"><h2>Menu</h2></div>
+        <nav class="drawer-nav"><ul></ul></nav>
+    `;
+
+    const navList = document.querySelector('nav .navbar-nav');
+    const ul = drawer.querySelector('ul');
+    if (navList) {
+        navList.querySelectorAll('li').forEach(li => {
+            ul.appendChild(li.cloneNode(true));
+        });
+    }
+
+    document.body.appendChild(drawer);
+
+    let openTimer, closeTimer;
+    const open = () => {
+        clearTimeout(closeTimer);
+        drawer.classList.add('open');
+        drawer.setAttribute('aria-expanded', 'true');
+    };
+    const close = () => {
+        clearTimeout(openTimer);
+        if (!drawer.matches(':hover')) {
+            drawer.classList.remove('open');
+            drawer.setAttribute('aria-expanded', 'false');
+        }
+    };
+
+    edge.addEventListener('mouseenter', () => { openTimer = setTimeout(open, 80); });
+    drawer.addEventListener('mouseleave', () => { closeTimer = setTimeout(close, 150); });
+    drawer.addEventListener('focusin', open);
+    drawer.addEventListener('focusout', () => { setTimeout(close, 120); });
+    edge.addEventListener('click', () => {
+        drawer.classList.toggle('open');
+        const expanded = drawer.classList.contains('open');
+        drawer.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+})();

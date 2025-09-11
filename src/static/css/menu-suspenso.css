@@ -57,9 +57,3 @@
 @media (max-width: 480px){
   #sidebarDrawer.drawer{ width: 88vw; }
 }
-
-/* Remove fixed sidebar drawer */
-#hoverEdge,
-#sidebarDrawer {
-  display: none !important;
-}

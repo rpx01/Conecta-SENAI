@@ -2,6 +2,7 @@
 """Modelos relacionados a treinamentos."""
 
 from datetime import datetime
+from sqlalchemy import text
 from src.models import db
 
 class Treinamento(db.Model):
@@ -67,7 +68,9 @@ class TurmaTreinamento(db.Model):
     local_realizacao = db.Column(db.String(100))
     horario = db.Column(db.String(50))
     instrutor_id = db.Column(db.Integer, db.ForeignKey('instrutores.id'), nullable=True)
-    teoria_online = db.Column(db.Boolean, nullable=False, default=False)
+    teoria_online = db.Column(
+        db.Boolean, nullable=False, server_default=text('FALSE'), default=False
+    )
 
     # Relacionamentos
     treinamento = db.relationship(

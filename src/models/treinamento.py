@@ -66,7 +66,6 @@ class TurmaTreinamento(db.Model):
     local_realizacao = db.Column(db.String(100))
     horario = db.Column(db.String(50))
     instrutor_id = db.Column(db.Integer, db.ForeignKey('instrutores.id'), nullable=True)
-    teoria_online = db.Column(db.Boolean, default=False, nullable=False)
 
     # Relacionamentos
     treinamento = db.relationship(
@@ -87,7 +86,6 @@ class TurmaTreinamento(db.Model):
             "horario": self.horario,
             "instrutor_id": self.instrutor_id,
             "instrutor_nome": self.instrutor.nome if self.instrutor else None,
-            "teoria_online": self.teoria_online,
         }
 
     def __repr__(self):

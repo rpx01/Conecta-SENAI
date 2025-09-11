@@ -76,6 +76,7 @@ def listar_turmas_agendadas():
                 "local_realizacao": turma.local_realizacao,
                 "horario": turma.horario,
                 "instrutor_nome": turma.instrutor.nome if turma.instrutor else "A definir",
+                "teoria_online": turma.teoria_online,
             }
         )
     return jsonify(dados)
@@ -111,6 +112,7 @@ def listar_turmas_ativas():
                 "local_realizacao": turma.local_realizacao,
                 "horario": turma.horario,
                 "instrutor": turma.instrutor.to_dict() if turma.instrutor else None,
+                "teoria_online": turma.teoria_online,
             }
         )
     return jsonify(dados)
@@ -142,6 +144,7 @@ def listar_historico_turmas():
                 "local_realizacao": turma.local_realizacao,
                 "horario": turma.horario,
                 "instrutor": turma.instrutor.to_dict() if turma.instrutor else None,
+                "teoria_online": turma.teoria_online,
             }
         )
     return jsonify(dados)
@@ -166,6 +169,7 @@ def listar_todas_as_turmas():
                 "local_realizacao": turma.local_realizacao,
                 "horario": turma.horario,
                 "instrutor": turma.instrutor.to_dict() if turma.instrutor else None,
+                "teoria_online": turma.teoria_online,
             }
         )
     return jsonify(dados)
@@ -416,10 +420,11 @@ def criar_turma_treinamento():
     turma = TurmaTreinamento(
         treinamento_id=payload.treinamento_id,
         data_inicio=payload.data_inicio,
-        data_fim=payload.data_fim,
+       data_fim=payload.data_fim,
         local_realizacao=payload.local_realizacao,
         horario=payload.horario,
         instrutor_id=payload.instrutor_id,
+        teoria_online=payload.teoria_online,
     )
     try:
         db.session.add(turma)
@@ -495,6 +500,8 @@ def atualizar_turma_treinamento(turma_id):
             if not db.session.get(Instrutor, payload.instrutor_id):
                 return jsonify({"erro": "Instrutor não encontrado"}), 404
         turma.instrutor_id = payload.instrutor_id
+    if payload.teoria_online is not None:
+        turma.teoria_online = payload.teoria_online
     try:
         db.session.commit()
         log_action(

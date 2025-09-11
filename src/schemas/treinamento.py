@@ -48,6 +48,7 @@ class TurmaTreinamentoCreateSchema(BaseModel):
     local_realizacao: Optional[str] = None
     horario: Optional[str] = None
     instrutor_id: Optional[int] = None
+    teoria_online: Optional[bool] = False
 
 
 class TurmaTreinamentoUpdateSchema(BaseModel):
@@ -59,3 +60,4 @@ class TurmaTreinamentoUpdateSchema(BaseModel):
     local_realizacao: Optional[str] = None
     horario: Optional[str] = None
     instrutor_id: Optional[int] = None
+    teoria_online: Optional[bool] = None

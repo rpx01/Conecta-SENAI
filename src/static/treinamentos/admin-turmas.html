@@ -116,13 +116,20 @@
                     <form id="turmaForm" onsubmit="event.preventDefault(); salvarTurma();">
                         <input type="hidden" id="turmaId">
                         <div class="row">
-                            <div class="col-md-8 mb-3">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">Treinamento</label>
                                 <select class="form-select" id="turmaTreinamentoId" required></select>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <label class="form-label">Carga Horária (h)</label>
                                 <input type="text" class="form-control" id="cargaHoraria" readonly>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label d-block">Teoria Online?</label>
+                                <div class="form-check form-switch mt-1">
+                                    <input class="form-check-input" type="checkbox" id="teoriaOnline">
+                                    <label class="form-check-label" for="teoriaOnline">Sim</label>
+                                </div>
                             </div>
                         </div>
                         <div class="row">

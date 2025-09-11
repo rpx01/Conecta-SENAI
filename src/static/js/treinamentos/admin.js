@@ -266,7 +266,6 @@ async function abrirModalTurma(id = null) {
             document.getElementById('localRealizacao').value = t.local_realizacao || '';
             document.getElementById('instrutorId').value = t.instrutor_id || '';
             document.getElementById('horario').value = t.horario || '';
-            document.getElementById('teoriaOnline').checked = t.teoria_online || false;
 
         } catch(e) {
             showToast(`Não foi possível carregar dados da turma: ${e.message}`, 'danger');
@@ -300,8 +299,7 @@ async function salvarTurma() {
         data_fim: document.getElementById('dataFim').value,
         local_realizacao: document.getElementById('localRealizacao').value,
         horario: document.getElementById('horario').value,
-        instrutor_id: parseInt(document.getElementById('instrutorId').value) || null,
-        teoria_online: document.getElementById('teoriaOnline').checked
+        instrutor_id: parseInt(document.getElementById('instrutorId').value) || null
     };
 
     if (!body.treinamento_id || !body.data_inicio || !body.data_fim) {

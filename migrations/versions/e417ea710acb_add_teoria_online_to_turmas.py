@@ -1,7 +1,9 @@
 """Add teoria_online to turmas
 
 Revision ID: e417ea710acb
-Revises: 74ef32d8754e
+# Atualiza o down_revision para apontar para a última migração existente
+# garantindo que esta alteração seja aplicada após todas as migrações anteriores
+Revises: e7e8d9b51a4b
 Create Date: 2025-09-11 00:34:47.408411
 
 """
@@ -13,7 +15,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = 'e417ea710acb'
-down_revision: Union[str, Sequence[str], None] = '74ef32d8754e'
+down_revision: Union[str, Sequence[str], None] = 'e7e8d9b51a4b'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

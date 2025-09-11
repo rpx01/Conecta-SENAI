@@ -359,7 +359,7 @@ async function chamarAPI(endpoint, method = 'GET', body = null) {
             response = await fetch(url, opts);
         }
 
-        if (response.status === 401) {
+        if (response.status === 401 && endpointFormatado !== '/login') {
             localStorage.removeItem('usuario');
             window.location.href = '/admin/login.html';
             throw new Error('Sessão expirada');

@@ -48,6 +48,21 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from src.services.email_service import send_email, render_email_template
 
+PLATAFORMA_URL = "https://mg.ead.senai.br/"
+SENHA_INICIAL = "123456"
+
+
+def build_convocacao_conteudo(turma, treinamento, inscricao):
+    """Monta variáveis para o e-mail de convocação."""
+    return {
+        "teoria_online": bool(getattr(turma, "teoria_online", False)),
+        "tem_pratica": bool(getattr(treinamento, "tem_pratica", False)),
+        "local_realizacao": getattr(turma, "local_realizacao", "-") or "-",
+        "usuario_login": getattr(inscricao, "email", ""),
+        "senha_inicial": SENHA_INICIAL,
+        "plataforma_url": PLATAFORMA_URL,
+    }
+
 treinamento_bp = Blueprint("treinamento", __name__)
 
 
@@ -1282,19 +1297,20 @@ def convocar_inscrito(inscricao_id: int):
     data_inicio = turma.data_inicio.strftime(fmt) if turma.data_inicio else "-"
     data_fim = turma.data_fim.strftime(fmt) if turma.data_fim else None
 
+    ctx_extra = build_convocacao_conteudo(turma, treino, insc)
+
     html = render_email_template(
         "convocacao.html.j2",
         nome_inscrito=insc.nome,
-        email_inscrito=insc.email,
         nome_treinamento=treino.nome,
         data_inicio=data_inicio,
         data_fim=data_fim,
         horario=turma.horario or "-",
-        carga_horaria=(getattr(turma, "carga_horaria", None) or treino.carga_horaria or "-"),
+        carga_horaria=(
+            getattr(turma, "carga_horaria", None) or treino.carga_horaria or "-"
+        ),
         instrutor=turma.instrutor.nome if turma.instrutor else "-",
-        teoria_online=bool(turma.teoria_online),
-        possui_parte_pratica=bool(getattr(treino, "tem_pratica", False)),
-        local_realizacao=turma.local_realizacao or "-",
+        **ctx_extra,
     )
 
     subject = f"Convocação: {treino.nome} — {data_inicio}"

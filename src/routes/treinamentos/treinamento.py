@@ -1352,26 +1352,17 @@ def convocar_inscrito(inscricao_id: int):
     if not treino:
         return jsonify({"erro": "Treinamento não encontrado"}), 404
 
-    fmt = "%d/%m/%Y"
-    data_inicio = turma.data_inicio.strftime(fmt) if turma.data_inicio else "-"
-    data_fim = turma.data_fim.strftime(fmt) if turma.data_fim else None
-
     ctx_extra = build_convocacao_conteudo(turma, treino, insc)
 
+    from src.services.email_service import build_turma_context, build_user_context
+
+    turma_ctx = build_turma_context(turma)
+    user_ctx = build_user_context(insc.nome)
     html = render_email_template(
-        "convocacao.html.j2",
-        nome_inscrito=insc.nome,
-        nome_treinamento=treino.nome,
-        data_inicio=data_inicio,
-        data_fim=data_fim,
-        horario=turma.horario or "-",
-        carga_horaria=(
-            getattr(turma, "carga_horaria", None) or treino.carga_horaria or "-"
-        ),
-        instrutor=turma.instrutor.nome if turma.instrutor else "-",
-        **ctx_extra,
+        "convocacao.html.j2", user=user_ctx, turma=turma_ctx, **ctx_extra
     )
 
+    data_inicio = turma_ctx.data_inicio.strftime("%d/%m/%Y") if turma_ctx.data_inicio else ""
     subject = f"Convocação: {treino.nome} — {data_inicio}"
     send_email(to=insc.email, subject=subject, html=html)
 

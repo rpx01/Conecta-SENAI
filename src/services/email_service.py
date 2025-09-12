@@ -1,10 +1,14 @@
 from __future__ import annotations
 import os
+import base64
 from typing import Iterable, Optional, Dict, Any, List, Union
 import logging
+import re
 
 import resend
 from flask import current_app
+from types import SimpleNamespace
+from datetime import datetime, time
 
 log = logging.getLogger(__name__)
 
@@ -29,6 +33,46 @@ def _normalize(addr: Address | None) -> Optional[List[str]]:
     if isinstance(addr, str):
         return [addr]
     return list(addr)
+
+
+def _parse_time(value: Any) -> time | None:
+    if isinstance(value, time):
+        return value
+    if isinstance(value, str):
+        digits = [int(x) for x in re.findall(r"\d+", value)]
+        if digits:
+            hour = digits[0]
+            minute = digits[1] if len(digits) > 1 else 0
+            try:
+                return time(hour, minute)
+            except ValueError:
+                return None
+    return None
+
+
+def build_turma_context(turma: Any) -> SimpleNamespace:
+    treino = getattr(turma, "treinamento", None)
+    return SimpleNamespace(
+        treinamento=SimpleNamespace(nome=getattr(treino, "nome", "")),
+        nome=getattr(turma, "nome", ""),
+        instrutor=getattr(turma, "instrutor", None),
+        data_inicio=getattr(turma, "data_inicio", None),
+        data_termino=getattr(turma, "data_fim", None),
+        horario_inicio=_parse_time(
+            getattr(turma, "horario_inicio", getattr(turma, "horario", None))
+        )
+        or time(0, 0),
+        horario_fim=_parse_time(
+            getattr(turma, "horario_fim", getattr(turma, "horario", None))
+        )
+        or time(0, 0),
+        local=getattr(turma, "local", getattr(turma, "local_realizacao", "")),
+        capacidade_maxima=getattr(turma, "capacidade_maxima", None),
+    )
+
+
+def build_user_context(nome: str) -> SimpleNamespace:
+    return SimpleNamespace(name=nome)
 
 
 def send_email(
@@ -63,6 +107,33 @@ def send_email(
         params["headers"] = headers
     if tags:
         params["tags"] = tags
+    attachments = list(attachments) if attachments else []
+    logo_path = None
+    try:
+        logo_path = os.path.join(
+            current_app.static_folder, "img", "Logo-assinatura do e-mail.png"
+        )
+    except RuntimeError:
+        logo_path = None
+
+    if logo_path and os.path.exists(logo_path):
+        with open(logo_path, "rb") as f:
+            encoded = base64.b64encode(f.read()).decode()
+        attachments.append(
+            {
+                "filename": "logo_assinatura.png",
+                "content": encoded,
+                "content_id": "logo_assinatura",
+            }
+        )
+    else:
+        try:
+            current_app.logger.warning(
+                f"Logo de assinatura não encontrado em: {logo_path}"
+            )
+        except RuntimeError:
+            pass
+
     if attachments:
         params["attachments"] = attachments
 
@@ -136,44 +207,20 @@ def enviar_convocacao(inscricao: Any, turma: Any) -> None:
     if treinamento is None:
         raise ValueError("Turma sem treinamento associado")
 
-    fmt = "%d/%m/%Y"
-    data_inicio = (
-        turma.data_inicio.strftime(fmt)
-        if getattr(turma, "data_inicio", None)
-        else "-"
-    )
-    data_fim = (
-        turma.data_fim.strftime(fmt)
-        if getattr(turma, "data_fim", None)
-        else None
-    )
-
     ctx_extra = _build_convocacao_context(turma, treinamento, inscricao)
     destinatario = getattr(inscricao, "email", "")
     log.info(f"Tentando enviar e-mail de convocação para {destinatario}")
 
+    turma_ctx = build_turma_context(turma)
+    user_ctx = build_user_context(getattr(inscricao, "nome", ""))
     html = render_email_template(
         "convocacao.html.j2",
-        nome_inscrito=getattr(inscricao, "nome", ""),
-        nome_treinamento=getattr(treinamento, "nome", ""),
-        data_inicio=data_inicio,
-        data_fim=data_fim,
-        horario=getattr(turma, "horario", "-") or "-",
-        carga_horaria=getattr(turma, "carga_horaria", None)
-        or getattr(treinamento, "carga_horaria", None)
-        or "-",
-        instrutor=(
-            getattr(
-                getattr(turma, "instrutor", None),
-                "nome",
-                "-",
-            )
-            or "-"
-        ),
+        user=user_ctx,
+        turma=turma_ctx,
         **ctx_extra,
     )
 
-    subject = f"Convocação: {getattr(treinamento, 'nome', '')} — {data_inicio}"
+    subject = f"Convocação: {getattr(treinamento, 'nome', '')} — {turma_ctx.data_inicio.strftime('%d/%m/%Y') if turma_ctx.data_inicio else ''}"
     send_email(to=destinatario, subject=subject, html=html)
     log.info(f"E-mail de convocação enviado com sucesso para {destinatario}")
 
@@ -212,10 +259,9 @@ def notificar_nova_turma(turma: "TurmaTreinamento") -> None:
 
     emails_secretaria = listar_emails_secretaria()
     if emails_secretaria:
+        turma_ctx = build_turma_context(turma)
         html_sec = render_email_template(
-            "nova_turma_secretaria.html.j2",
-            **ctx,
-            instrutor_nome=getattr(instrutor, "nome", None),
+            "nova_turma_secretaria.html.j2", turma=turma_ctx
         )
         subject_sec = f"Nova turma cadastrada - {ctx['treinamento_nome']}"
         for email in emails_secretaria:
@@ -231,10 +277,9 @@ def notificar_atualizacao_turma(
 
     emails_secretaria = listar_emails_secretaria()
     if emails_secretaria and diff:
+        turma_ctx = build_turma_context(turma)
         html_sec = render_email_template(
-            "turma_atualizada_secretaria.html.j2",
-            treinamento_nome=nome_treinamento,
-            diff=diff,
+            "turma_atualizada_secretaria.html.j2", turma=turma_ctx
         )
         subject_sec = f"Turma atualizada - {nome_treinamento}"
         for email in emails_secretaria:

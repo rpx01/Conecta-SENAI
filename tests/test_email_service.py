@@ -13,7 +13,6 @@ def reload_service(
 ):
     monkeypatch.setenv("RESEND_FROM", from_addr)
     monkeypatch.setenv("RESEND_REPLY_TO", reply_to)
-    monkeypatch.setenv("RESEND_API_KEY", "test")
     importlib.reload(email_service)
     return email_service
 

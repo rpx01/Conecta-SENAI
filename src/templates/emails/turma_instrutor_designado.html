@@ -1,6 +1,0 @@
-<p>Olá {{ instrutor.nome }},</p>
-<p>Você foi designado para ministrar a Turma #{{ turma.id }} – {{ turma.treinamento_nome }}.</p>
-<p>Data: {{ turma.data_inicio_fmt }}{% if turma.data_fim_fmt and turma.data_fim_fmt != '-' %} a {{ turma.data_fim_fmt }}{% endif %}</p>
-<p>Horário: {{ turma.horario or '-' }}</p>
-<p>Local: {{ turma.local_realizacao or '-' }}</p>
-<p>Atenciosamente,<br/>Secretaria de Treinamentos</p>

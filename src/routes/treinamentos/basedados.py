@@ -14,7 +14,7 @@ schema = SecretariaTreinamentosSchema()
 schemas = SecretariaTreinamentosSchema(many=True)
 
 
-@secretaria_bp.route("/", methods=["GET"])
+@secretaria_bp.route("", methods=["GET"])
 @admin_required
 def listar_contatos():
     contatos = (
@@ -23,7 +23,7 @@ def listar_contatos():
     return jsonify(schemas.dump(contatos))
 
 
-@secretaria_bp.route("/", methods=["POST"])
+@secretaria_bp.route("", methods=["POST"])
 @admin_required
 def criar_contato():
     data = request.get_json() or {}

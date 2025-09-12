@@ -261,7 +261,9 @@ def create_app():
     app.register_blueprint(treinamento_bp, url_prefix='/api')
     app.register_blueprint(horario_bp, url_prefix='/api')
     app.register_blueprint(basedados_bp, url_prefix='/api/planejamento-basedados')
-    app.register_blueprint(treinamentos_basedados_bp, url_prefix='/api/treinamentos')
+    app.register_blueprint(
+        treinamentos_basedados_bp, url_prefix='/api/treinamentos/secretaria'
+    )
     app.register_blueprint(planejamento_bp, url_prefix='/api')
     app.register_blueprint(inscricoes_treinamento_bp)
     app.register_blueprint(auth_reset_bp)

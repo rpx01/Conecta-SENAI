@@ -6,9 +6,7 @@ from src.models import db
 from src.models.secretaria_treinamentos import SecretariaTreinamentos
 from src.schemas.secretaria_treinamentos import SecretariaTreinamentosSchema
 
-secretaria_bp = Blueprint(
-    "treinamentos_secretaria", __name__, url_prefix="/secretaria"
-)
+secretaria_bp = Blueprint("treinamentos_secretaria", __name__)
 
 schema = SecretariaTreinamentosSchema()
 schemas = SecretariaTreinamentosSchema(many=True)

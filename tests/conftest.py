@@ -60,7 +60,7 @@ def app():
     app.register_blueprint(planejamento_bp, url_prefix='/api')
     app.register_blueprint(basedados_bp, url_prefix='/api')
     app.register_blueprint(
-        treinamentos_basedados_bp, url_prefix='/api/treinamentos'
+        treinamentos_basedados_bp, url_prefix='/api/treinamentos/secretaria'
     )
     app.register_blueprint(auth_bp)
 

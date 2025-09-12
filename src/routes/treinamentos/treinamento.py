@@ -1,7 +1,7 @@
 # flake8: noqa
 """Rotas para gerenciamento de treinamentos e inscricoes."""
 
-from flask import Blueprint, request, jsonify, g
+from flask import Blueprint, request, jsonify, g, current_app
 from sqlalchemy.exc import SQLAlchemyError
 import math
 from datetime import date, datetime, timedelta
@@ -47,6 +47,11 @@ from reportlab.platypus import (
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from src.services.email_service import send_email, render_email_template
+from src.services.notification_service import (
+    send_new_turma_notifications,
+    build_turma_snapshot,
+    send_turma_update_notifications,
+)
 
 PLATAFORMA_URL = "https://mg.ead.senai.br/"
 SENHA_INICIAL = "123456"
@@ -451,6 +456,12 @@ def criar_turma_treinamento():
     try:
         db.session.add(turma)
         db.session.commit()
+        try:
+            send_new_turma_notifications(turma.id)
+        except Exception as exc:  # pragma: no cover - apenas log
+            current_app.logger.error(
+                "Falha ao enviar notificações da nova turma %s: %s", turma.id, exc
+            )
         return jsonify(turma.to_dict()), 201
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -464,6 +475,8 @@ def atualizar_turma_treinamento(turma_id):
     turma = db.session.get(TurmaTreinamento, turma_id)
     if not turma:
         return jsonify({"erro": "Turma não encontrada"}), 404
+
+    before_snapshot = build_turma_snapshot(turma)
 
     data_fim_turma = (
         turma.data_fim.date()
@@ -533,6 +546,14 @@ def atualizar_turma_treinamento(turma_id):
             turma.id,
             payload.model_dump(exclude_unset=True)
         )
+        try:
+            send_turma_update_notifications(before_snapshot, turma.id)
+        except Exception as exc:  # pragma: no cover - apenas log
+            current_app.logger.error(
+                "Falha ao enviar notificações de atualização da turma %s: %s",
+                turma.id,
+                exc,
+            )
         return jsonify(turma.to_dict())
     except SQLAlchemyError as e:
         db.session.rollback()

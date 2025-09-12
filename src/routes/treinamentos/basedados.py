@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from sqlalchemy import inspect
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.auth import admin_required
@@ -12,9 +13,17 @@ schema = SecretariaTreinamentosSchema()
 schemas = SecretariaTreinamentosSchema(many=True)
 
 
+def ensure_table_exists(model) -> None:
+    """Cria a tabela do modelo caso não exista."""
+    inspector = inspect(db.engine)
+    if not inspector.has_table(model.__tablename__):
+        model.__table__.create(db.engine)
+
+
 @secretaria_bp.route("", methods=["GET"])
 @admin_required
 def listar_contatos():
+    ensure_table_exists(SecretariaTreinamentos)
     contatos = (
         SecretariaTreinamentos.query.order_by(SecretariaTreinamentos.id).all()
     )
@@ -24,6 +33,7 @@ def listar_contatos():
 @secretaria_bp.route("", methods=["POST"])
 @admin_required
 def criar_contato():
+    ensure_table_exists(SecretariaTreinamentos)
     data = request.get_json() or {}
     erros = schema.validate(data)
     if erros:
@@ -43,6 +53,7 @@ def criar_contato():
 @secretaria_bp.route("/<int:contato_id>", methods=["PUT"])
 @admin_required
 def atualizar_contato(contato_id):
+    ensure_table_exists(SecretariaTreinamentos)
     contato = db.session.get(SecretariaTreinamentos, contato_id)
     if not contato:
         return jsonify({"erro": "Contato não encontrado"}), 404
@@ -70,6 +81,7 @@ def atualizar_contato(contato_id):
 @secretaria_bp.route("/<int:contato_id>", methods=["DELETE"])
 @admin_required
 def excluir_contato(contato_id):
+    ensure_table_exists(SecretariaTreinamentos)
     contato = db.session.get(SecretariaTreinamentos, contato_id)
     if not contato:
         return jsonify({"erro": "Contato não encontrado"}), 404

@@ -64,12 +64,64 @@
         <div class="row">
             <main class="col-12">
                 <h1 class="mb-0">Base de Dados</h1>
+
+                <div class="card mt-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">Secretaria de Treinamentos</h2>
+                        <button class="btn btn-primary btn-sm" onclick="abrirModalSecretaria()">
+                            <i class="bi bi-plus-lg me-1"></i> Adicionar Contato
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nome</th>
+                                        <th>E-mail</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="secretariaTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </main>
+        </div>
+    </div>
+    <div class="modal fade" id="secretariaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Contato da Secretaria</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="secretariaForm">
+                        <input type="hidden" id="secretariaId">
+                        <div class="mb-3">
+                            <label class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="secretariaNome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">E-mail</label>
+                            <input type="email" class="form-control" id="secretariaEmail" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="secretariaForm" class="btn btn-primary">Salvar</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/app.js"></script>
+    <script src="/js/treinamentos/basedados.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const usuario = getUsuarioLogado();

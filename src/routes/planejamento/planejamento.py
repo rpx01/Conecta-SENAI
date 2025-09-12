@@ -6,7 +6,7 @@ from uuid import uuid4
 from flask import Blueprint, request, jsonify, current_app
 from sqlalchemy import inspect, text
 from sqlalchemy.exc import SQLAlchemyError
-from src.models import db
+from src.models import db, EmailSecretaria
 from src.models.planejamento import (
     PlanejamentoItem,
     Horario,
@@ -22,6 +22,7 @@ from src.routes.user import verificar_autenticacao
 from src.utils.error_handler import handle_internal_error
 from pydantic import ValidationError
 from src.schemas.planejamento import PlanejamentoCreateSchema
+from src.services import email_service
 
 planejamento_bp = Blueprint('planejamento', __name__)
 
@@ -240,6 +241,17 @@ def criar_item():
     try:
         db.session.add(item)
         db.session.commit()
+        try:
+            dados_do_item = item.to_dict()
+            email_service.enviar_notificacao_planejamento(
+                assunto="Novo Item Adicionado ao Planejamento",
+                nome_template="email/novo_item_planejamento.html.j2",
+                contexto={"item": dados_do_item},
+            )
+        except Exception as e:
+            current_app.logger.error(
+                f"Falha ao enviar e-mail de notificação de novo item: {e}"
+            )
         return jsonify(item.to_dict()), 201
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -425,6 +437,17 @@ def atualizar_item(item_id):
 
     try:
         db.session.commit()
+        try:
+            dados_do_item = item.to_dict()
+            email_service.enviar_notificacao_planejamento(
+                assunto="Item do Planejamento foi Atualizado",
+                nome_template="email/item_planejamento_atualizado.html.j2",
+                contexto={"item": dados_do_item},
+            )
+        except Exception as e:
+            current_app.logger.error(
+                f"Falha ao enviar e-mail de notificação de atualização de item {item_id}: {e}"
+            )
         return jsonify(item.to_dict())
     except SQLAlchemyError as e:
         db.session.rollback()

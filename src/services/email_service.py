@@ -82,6 +82,41 @@ def render_email_template(name: str, **ctx: Any) -> str:
     return template.render(**ctx)
 
 
+def enviar_notificacao_planejamento(
+    assunto: str, nome_template: str, contexto: Dict[str, Any]
+) -> None:
+    """Envia notificações de planejamento para todos os e-mails cadastrados."""
+    from src.models import EmailSecretaria  # import lazy to evitar ciclo
+
+    try:
+        emails = EmailSecretaria.query.all()
+    except Exception as exc:  # pragma: no cover - log e retorna
+        log.error(f"Erro ao buscar e-mails da secretaria: {exc}")
+        return
+
+    try:
+        template = current_app.jinja_env.get_or_select_template(nome_template)
+        html = template.render(**contexto)
+    except Exception as exc:
+        log.error(f"Erro ao renderizar template de e-mail {nome_template}: {exc}")
+        return
+
+    for registro in emails:
+        destinatario = getattr(registro, "email", None)
+        if not destinatario:
+            continue
+        try:
+            send_email(to=destinatario, subject=assunto, html=html)
+            log.info(
+                "EMAIL_PLANEJAMENTO_NOTIFICACAO_SUCESSO",
+                extra={"destinatario": destinatario, "assunto": assunto},
+            )
+        except Exception as exc:  # pragma: no cover - apenas log
+            log.error(
+                f"Falha ao enviar notificação de planejamento para {destinatario}: {exc}"
+            )
+
+
 def _build_convocacao_context(
     turma: Any, treinamento: Any, inscricao: Any
 ) -> Dict[str, Any]:

@@ -1,61 +1,31 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <title>Convocação de Treinamento</title>
-</head>
 <body style="font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333;">
 
-    <h3>Olá {{ user.name }},</h3>
+<p>Olá {{ nome }},</p>
 
-    <p>Você está convocado(a) para o treinamento <strong>{{ turma.treinamento.nome }}</strong>.</p>
+<p>Você está convocado(a) para o treinamento <strong>{{ nome_do_treinamento }}</strong>.</p>
+<ul>
+    <li><strong>Data(s):</strong> {{ periodo }}</li>
+    <li><strong>Horário:</strong> {{ horario }}</li>
+    <li><strong>Carga horária:</strong> {{ carga_horaria }}</li>
+    <li><strong>Instrutor:</strong> {{ instrutor }}</li>
+    <li><strong>Local de Realização:</strong> {{ local_de_realizacao }}</li>
+</ul>
 
-    <h4 style="margin-bottom: 5px;">Detalhes do Treinamento:</h4>
-    <ul style="list-style-type: none; padding-left: 0;">
-        <li>
-            <strong>Data(s):</strong>
-            De {{ turma.data_inicio.strftime('%d/%m/%Y') }} a
-            {{ turma.data_termino.strftime('%d/%m/%Y') }}
-        </li>
-        <li>
-            <strong>Horário:</strong>
-            Das {{ turma.horario_inicio.strftime('%H:%M') }} às
-            {{ turma.horario_fim.strftime('%H:%M') }}
-        </li>
-        <li><strong>Carga Horária:</strong> {{ turma.treinamento.carga_horaria }} horas</li>
-        <li><strong>Instrutor:</strong> {{ turma.instrutor.nome if turma.instrutor else 'A definir' }}</li>
-        <li><strong>Local de Realização (Referência):</strong> {{ turma.local }}</li>
-    </ul>
+{% if teoria_online and tem_pratica %}
+    <p><strong>Teoria:</strong> Online na plataforma <a href="https://mg.ead.senai.br/">https://mg.ead.senai.br/</a> (usuário: {{ email_fornecido_na_inscricao }} | senha inicial: 123456).</p>
+    <p><strong>Prática:</strong> Presencial no Local de Realização: {{ local_da_pratica }}</p>
+{% elif not teoria_online and tem_pratica %}
+    <p><strong>Teoria:</strong> Presencial no Local de Realização: {{ local_da_pratica }}</p>
+    <p><strong>Prática:</strong> Presencial no Local de Realização: {{ local_da_pratica }}</p>
+{% elif not teoria_online and not tem_pratica %}
+    <p>Treinamento 100% Presencial no Local de Realização: {{ local_da_pratica }}</p>
+{% elif teoria_online and not tem_pratica %}
+    <p>Treinamento 100% Online na plataforma <a href="https://mg.ead.senai.br/">https://mg.ead.senai.br/</a> (usuário: {{ email_fornecido_na_inscricao }} | senha inicial: 123456).</p>
+{% endif %}
 
-    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-
-    {# --- LÓGICA CONDICIONAL PARA O CORPO DO E-MAIL --- #}
-
-    {# 1. Teoria Online com Prática Presencial #}
-    {% if turma.teoria_online and turma.treinamento.tem_pratica %}
-    <p><strong>Teoria:</strong> Online na plataforma <a href="https://mg.ead.senai.br/">https://mg.ead.senai.br/</a>.<br>
-       (Usuário: {{ user.email }} | Senha inicial: 123456).</p>
-    <p><strong>Prática:</strong> Presencial no Local de Realização: {{ turma.local }}</p>
-
-    {# 2. Teoria Presencial com Prática Presencial #}
-    {% elif not turma.teoria_online and turma.treinamento.tem_pratica %}
-    <p><strong>Teoria:</strong> Presencial no Local de Realização: {{ turma.local }}</p>
-    <p><strong>Prática:</strong> Presencial no Local de Realização: {{ turma.local }}</p>
-
-    {# 3. Treinamento 100% Presencial (sem prática) #}
-    {% elif not turma.teoria_online and not turma.treinamento.tem_pratica %}
-    <p><strong>Treinamento 100% Presencial</strong> no Local de Realização: {{ turma.local }}</p>
-
-    {# 4. Treinamento 100% Online (sem prática) #}
-    {% elif turma.teoria_online and not turma.treinamento.tem_pratica %}
-    <p><strong>Treinamento 100% Online</strong> na plataforma <a href="https://mg.ead.senai.br/">https://mg.ead.senai.br/</a>.<br>
-       (Usuário: {{ user.email }} | Senha inicial: 123456).</p>
-    {% endif %}
-    
-    {# --- FIM DA LÓGICA CONDICIONAL --- #}
-
-    {% include 'email/_signature.html.j2' %}
+{% include 'email/_signature.html.j2' %}
 
 </body>
 </html>
-

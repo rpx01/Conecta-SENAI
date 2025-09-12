@@ -48,8 +48,8 @@ from reportlab.platypus import (
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from src.services.email_service import (
+    enviar_convocacao,
     send_email,
-    render_email_template,
     notificar_nova_turma,
     notificar_atualizacao_turma,
     build_turma_context,
@@ -57,22 +57,7 @@ from src.services.email_service import (
     listar_emails_secretaria,
 )
 
-PLATAFORMA_URL = "https://mg.ead.senai.br/"
-SENHA_INICIAL = "123456"
-
 log = logging.getLogger(__name__)
-
-
-def build_convocacao_conteudo(turma, treinamento, inscricao):
-    """Monta variáveis para o e-mail de convocação."""
-    return {
-        "teoria_online": bool(getattr(turma, "teoria_online", False)),
-        "tem_pratica": bool(getattr(treinamento, "tem_pratica", False)),
-        "local_realizacao": getattr(turma, "local_realizacao", "-") or "-",
-        "usuario_login": getattr(inscricao, "email", ""),
-        "senha_inicial": SENHA_INICIAL,
-        "plataforma_url": PLATAFORMA_URL,
-    }
 
 treinamento_bp = Blueprint("treinamento", __name__)
 
@@ -1380,19 +1365,7 @@ def convocar_inscrito(inscricao_id: int):
     if not treino:
         return jsonify({"erro": "Treinamento não encontrado"}), 404
 
-    ctx_extra = build_convocacao_conteudo(turma, treino, insc)
-
-    from src.services.email_service import build_turma_context, build_user_context
-
-    turma_ctx = build_turma_context(turma)
-    user_ctx = build_user_context(insc.nome)
-    html = render_email_template(
-        "convocacao.html.j2", user=user_ctx, turma=turma_ctx, **ctx_extra
-    )
-
-    data_inicio = turma_ctx.data_inicio.strftime("%d/%m/%Y") if turma_ctx.data_inicio else ""
-    subject = f"Convocação: {treino.nome} — {data_inicio}"
-    send_email(to=insc.email, subject=subject, html=html)
+    enviar_convocacao(insc, turma, send_email_fn=send_email)
 
     if hasattr(insc, "convocado_em"):
         insc.convocado_em = datetime.utcnow()

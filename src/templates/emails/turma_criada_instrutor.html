@@ -1,0 +1,9 @@
+<p>Olá {{ instrutor.nome }},</p>
+<p>Você foi designado para a Turma #{{ turma.id }} – {{ turma.treinamento_nome }}.</p>
+<p>Data: {{ turma.data_inicio_fmt }}{% if turma.data_fim_fmt and turma.data_fim_fmt != '-' %} a {{ turma.data_fim_fmt }}{% endif %}</p>
+<p>Horário: {{ turma.horario or '-' }}</p>
+<p>Local: {{ turma.local_realizacao or '-' }}</p>
+<p>Teoria online? {{ turma.teoria_online_fmt }}</p>
+{% if turma.teoria_online and turma.link_teoria %}<p>Link: {{ turma.link_teoria }}</p>{% endif %}
+{% if turma.observacoes %}<p>Observações: {{ turma.observacoes }}</p>{% endif %}
+<p>Atenciosamente,<br/>Secretaria de Treinamentos</p>

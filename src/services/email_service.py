@@ -1,16 +1,20 @@
 from __future__ import annotations
 import os
 import base64
-from typing import Iterable, Optional, Dict, Any, List, Union
+from typing import Iterable, Optional, Dict, Any, List, Union, TYPE_CHECKING
 import logging
 import re
 
 import resend
 from flask import current_app
 from types import SimpleNamespace
-from datetime import datetime, time
+from datetime import time
 
 log = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from src.models.treinamento import TurmaTreinamento
+    from src.models.instrutor import Instrutor
 
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 if RESEND_API_KEY:
@@ -169,7 +173,11 @@ def enviar_notificacao_planejamento(
         template = current_app.jinja_env.get_or_select_template(nome_template)
         html = template.render(**contexto)
     except Exception as exc:
-        log.error(f"Erro ao renderizar template de e-mail {nome_template}: {exc}")
+        log.error(
+            "Erro ao renderizar template de e-mail %s: %s",
+            nome_template,
+            exc,
+        )
         return
 
     for registro in emails:
@@ -184,7 +192,9 @@ def enviar_notificacao_planejamento(
             )
         except Exception as exc:  # pragma: no cover - apenas log
             log.error(
-                f"Falha ao enviar notificação de planejamento para {destinatario}: {exc}"
+                "Falha ao enviar notificação de planejamento para %s: %s",
+                destinatario,
+                exc,
             )
 
 
@@ -220,16 +230,44 @@ def enviar_convocacao(inscricao: Any, turma: Any) -> None:
         **ctx_extra,
     )
 
-    subject = f"Convocação: {getattr(treinamento, 'nome', '')} — {turma_ctx.data_inicio.strftime('%d/%m/%Y') if turma_ctx.data_inicio else ''}"
+    data_inicio_str = (
+        turma_ctx.data_inicio.strftime("%d/%m/%Y")
+        if turma_ctx.data_inicio
+        else ""
+    )
+    subject = (
+        f"Convocação: {getattr(treinamento, 'nome', '')} — {data_inicio_str}"
+    )
     send_email(to=destinatario, subject=subject, html=html)
     log.info(f"E-mail de convocação enviado com sucesso para {destinatario}")
 
+
 def listar_emails_secretaria() -> List[str]:
-    """Retorna todos os e-mails cadastrados para a secretaria de treinamentos."""
-    from src.models.secretaria_treinamentos import SecretariaTreinamentos  # lazy import
+    """Retorna e-mails da secretaria de treinamentos."""
+    from src.models.secretaria_treinamentos import (
+        SecretariaTreinamentos,
+    )  # lazy import
 
     registros = SecretariaTreinamentos.query.all()
     return [r.email for r in registros if getattr(r, "email", None)]
+
+
+def send_turma_alterada_secretaria(
+    emails: Iterable[str], dados_antigos: Dict[str, Any], turma: Any
+) -> None:
+    """Envia e-mail comparando dados antigos e novos de uma turma."""
+    turma_ctx = build_turma_context(turma)
+    subject = (
+        "Alteração de Agendamento de Turma: "
+        f"{turma_ctx.treinamento.nome} - Turma {turma_ctx.nome}"
+    )
+    html = render_email_template(
+        "turma_alterada_secretaria.html.j2",
+        dados_antigos=dados_antigos,
+        turma=turma_ctx,
+    )
+    for email in emails:
+        send_email(email, subject, html)
 
 
 def notificar_nova_turma(turma: "TurmaTreinamento") -> None:
@@ -239,8 +277,16 @@ def notificar_nova_turma(turma: "TurmaTreinamento") -> None:
         return
 
     fmt = "%d/%m/%Y"
-    data_inicio = turma.data_inicio.strftime(fmt) if getattr(turma, "data_inicio", None) else ""
-    data_fim = turma.data_fim.strftime(fmt) if getattr(turma, "data_fim", None) else None
+    data_inicio = (
+        turma.data_inicio.strftime(fmt)
+        if getattr(turma, "data_inicio", None)
+        else ""
+    )
+    data_fim = (
+        turma.data_fim.strftime(fmt)
+        if getattr(turma, "data_fim", None)
+        else None
+    )
     ctx = {
         "treinamento_nome": getattr(treinamento, "nome", ""),
         "data_inicio": data_inicio,
@@ -252,7 +298,9 @@ def notificar_nova_turma(turma: "TurmaTreinamento") -> None:
     instrutor = getattr(turma, "instrutor", None)
     if instrutor and getattr(instrutor, "email", None):
         html = render_email_template(
-            "nova_turma_instrutor.html.j2", **ctx, instrutor_nome=instrutor.nome
+            "nova_turma_instrutor.html.j2",
+            **ctx,
+            instrutor_nome=instrutor.nome,
         )
         subject = f"Nova turma designada - {ctx['treinamento_nome']}"
         send_email(instrutor.email, subject, html)
@@ -261,7 +309,8 @@ def notificar_nova_turma(turma: "TurmaTreinamento") -> None:
     if emails_secretaria:
         turma_ctx = build_turma_context(turma)
         html_sec = render_email_template(
-            "nova_turma_secretaria.html.j2", turma=turma_ctx
+            "nova_turma_secretaria.html.j2",
+            turma=turma_ctx,
         )
         subject_sec = f"Nova turma cadastrada - {ctx['treinamento_nome']}"
         for email in emails_secretaria:
@@ -269,21 +318,67 @@ def notificar_nova_turma(turma: "TurmaTreinamento") -> None:
 
 
 def notificar_atualizacao_turma(
-    turma: "TurmaTreinamento", diff: Dict[str, Any], instrutor_antigo: "Instrutor" | None
+    turma: "TurmaTreinamento",
+    diff: Dict[str, Any],
+    instrutor_antigo: "Instrutor" | None,
+    *,
+    notificar_secretaria: bool = True,
 ) -> None:
     """Notifica secretaria e instrutores sobre alterações em uma turma."""
     treinamento = getattr(turma, "treinamento", None)
     nome_treinamento = getattr(treinamento, "nome", "")
 
     emails_secretaria = listar_emails_secretaria()
-    if emails_secretaria and diff:
+    if notificar_secretaria and emails_secretaria and diff:
         turma_ctx = build_turma_context(turma)
-        html_sec = render_email_template(
-            "turma_atualizada_secretaria.html.j2", turma=turma_ctx
-        )
-        subject_sec = f"Turma atualizada - {nome_treinamento}"
-        for email in emails_secretaria:
-            send_email(email, subject_sec, html_sec)
+        fmt = "%d/%m/%Y"
+        # Monta dados antigos com base no diff
+        dados_antigos = {
+            "nome": turma_ctx.nome,
+            "data_inicio": diff.get(
+                "data_inicio",
+                (
+                    turma_ctx.data_inicio.strftime(fmt)
+                    if turma_ctx.data_inicio
+                    else None,
+                    None,
+                ),
+            )[0],
+            "data_termino": diff.get(
+                "data_fim",
+                (
+                    turma_ctx.data_termino.strftime(fmt)
+                    if turma_ctx.data_termino
+                    else None,
+                    None,
+                ),
+            )[0],
+            "local": diff.get("local_realizacao", (turma_ctx.local, None))[0],
+            "instrutor_nome": diff.get(
+                "instrutor",
+                (
+                    turma_ctx.instrutor.nome
+                    if turma_ctx.instrutor
+                    else "A definir",
+                    None,
+                ),
+            )[0],
+        }
+        old_horario = diff.get("horario", (None, None))[0]
+        if old_horario:
+            partes = str(old_horario).split("-")
+            hora_ini = _parse_time(partes[0]) or turma_ctx.horario_inicio
+            hora_fim = (
+                _parse_time(partes[1]) if len(partes) > 1 else None
+            )
+            hora_fim = hora_fim or turma_ctx.horario_fim
+        else:
+            hora_ini = turma_ctx.horario_inicio
+            hora_fim = turma_ctx.horario_fim
+        dados_antigos["horario_inicio"] = hora_ini.strftime("%H:%M")
+        dados_antigos["horario_fim"] = hora_fim.strftime("%H:%M")
+
+        send_turma_alterada_secretaria(emails_secretaria, dados_antigos, turma)
 
     instrutor_atual = getattr(turma, "instrutor", None)
     if instrutor_antigo != instrutor_atual:
@@ -292,7 +387,11 @@ def notificar_atualizacao_turma(
                 "instrutor_removido.html.j2",
                 instrutor_nome=getattr(instrutor_antigo, "nome", ""),
                 treinamento_nome=nome_treinamento,
-                data_inicio=turma.data_inicio.strftime("%d/%m/%Y") if getattr(turma, "data_inicio", None) else "",
+                data_inicio=(
+                    turma.data_inicio.strftime("%d/%m/%Y")
+                    if getattr(turma, "data_inicio", None)
+                    else ""
+                ),
             )
             subject_rem = f"Remoção de turma - {nome_treinamento}"
             send_email(instrutor_antigo.email, subject_rem, html_rem)
@@ -301,10 +400,20 @@ def notificar_atualizacao_turma(
                 "instrutor_designado.html.j2",
                 instrutor_nome=getattr(instrutor_atual, "nome", ""),
                 treinamento_nome=nome_treinamento,
-                data_inicio=turma.data_inicio.strftime("%d/%m/%Y") if getattr(turma, "data_inicio", None) else "",
-                data_fim=turma.data_fim.strftime("%d/%m/%Y") if getattr(turma, "data_fim", None) else None,
+                data_inicio=(
+                    turma.data_inicio.strftime("%d/%m/%Y")
+                    if getattr(turma, "data_inicio", None)
+                    else ""
+                ),
+                data_fim=(
+                    turma.data_fim.strftime("%d/%m/%Y")
+                    if getattr(turma, "data_fim", None)
+                    else None
+                ),
                 horario=getattr(turma, "horario", "-") or "-",
-                local_realizacao=getattr(turma, "local_realizacao", "-") or "-",
+                local_realizacao=getattr(
+                    turma, "local_realizacao", "-"
+                ) or "-",
             )
             subject_des = f"Nova turma designada - {nome_treinamento}"
             send_email(instrutor_atual.email, subject_des, html_des)

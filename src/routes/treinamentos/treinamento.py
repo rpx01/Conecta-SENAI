@@ -52,6 +52,9 @@ from src.services.email_service import (
     render_email_template,
     notificar_nova_turma,
     notificar_atualizacao_turma,
+    build_turma_context,
+    send_turma_alterada_secretaria,
+    listar_emails_secretaria,
 )
 
 PLATAFORMA_URL = "https://mg.ead.senai.br/"
@@ -495,6 +498,24 @@ def atualizar_turma_treinamento(turma_id):
     except ValidationError as e:
         return jsonify({"erro": e.errors()}), 400
 
+    # Captura dos dados antigos antes de qualquer alteração
+    turma_ctx_antes = build_turma_context(turma)
+    dados_antigos = {
+        "nome": turma_ctx_antes.nome,
+        "data_inicio": turma_ctx_antes.data_inicio.strftime("%d/%m/%Y")
+        if turma_ctx_antes.data_inicio
+        else "",
+        "data_termino": turma_ctx_antes.data_termino.strftime("%d/%m/%Y")
+        if turma_ctx_antes.data_termino
+        else "",
+        "horario_inicio": turma_ctx_antes.horario_inicio.strftime("%H:%M"),
+        "horario_fim": turma_ctx_antes.horario_fim.strftime("%H:%M"),
+        "local": turma_ctx_antes.local,
+        "instrutor_nome": turma_ctx_antes.instrutor.nome
+        if turma_ctx_antes.instrutor
+        else "A definir",
+    }
+
     treinamento_id = (
         payload.treinamento_id
         if payload.treinamento_id is not None
@@ -581,8 +602,15 @@ def atualizar_turma_treinamento(turma_id):
                 turma.instrutor.nome if turma.instrutor else None,
             )
         if diff:
+            emails_secretaria = listar_emails_secretaria()
+            if emails_secretaria:
+                send_turma_alterada_secretaria(
+                    emails_secretaria, dados_antigos, turma
+                )
             try:
-                notificar_atualizacao_turma(turma, diff, instrutor_antigo)
+                notificar_atualizacao_turma(
+                    turma, diff, instrutor_antigo, notificar_secretaria=False
+                )
             except Exception as exc:  # pragma: no cover - log apenas
                 log.error(f"Erro ao notificar atualização de turma: {exc}")
         log_action(

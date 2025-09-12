@@ -27,6 +27,9 @@ from src.routes.planejamento import planejamento_bp, basedados_bp
 from src.routes.horario import horario_bp
 from src.routes.rateio.rateio import rateio_bp
 from src.blueprints.auth import auth_bp
+from src.routes.treinamentos.basedados import (
+    secretaria_bp as treinamentos_basedados_bp,
+)
 
 @pytest.fixture
 def app():
@@ -56,6 +59,9 @@ def app():
     app.register_blueprint(rateio_bp, url_prefix='/api')
     app.register_blueprint(planejamento_bp, url_prefix='/api')
     app.register_blueprint(basedados_bp, url_prefix='/api')
+    app.register_blueprint(
+        treinamentos_basedados_bp, url_prefix='/api/treinamentos'
+    )
     app.register_blueprint(auth_bp)
 
     with app.app_context():

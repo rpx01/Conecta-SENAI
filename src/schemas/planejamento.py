@@ -1,6 +1,7 @@
 from datetime import date, datetime
 from typing import List, Optional
-from pydantic import BaseModel, Field, field_validator, ConfigDict, constr
+from pydantic import BaseModel, Field, field_validator
+from marshmallow import Schema, fields
 
 
 class PolosSchema(BaseModel):
@@ -56,3 +57,8 @@ class PlanejamentoCreateSchema(BaseModel):
         populate_by_name = True
 
 
+class EmailSecretariaSchema(Schema):
+    """Schema for serializing EmailSecretaria model."""
+    id = fields.Int(dump_only=True)
+    nome = fields.Str(required=True)
+    email = fields.Email(required=True)

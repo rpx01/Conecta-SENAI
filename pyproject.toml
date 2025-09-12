@@ -77,6 +77,7 @@ opentelemetry-sdk = "*"
 opentelemetry-instrumentation-flask = "*"
 opentelemetry-exporter-otlp = "*"
 resend = "2.13.1"
+marshmallow = "3.21.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "8.4.1"

@@ -1,12 +1,21 @@
 from __future__ import annotations
 import os
 import base64
-from typing import Iterable, Optional, Dict, Any, List, Union, TYPE_CHECKING
+from typing import (
+    Iterable,
+    Optional,
+    Dict,
+    Any,
+    List,
+    Union,
+    TYPE_CHECKING,
+    Callable,
+)
 import logging
 import re
 
 import resend
-from flask import current_app
+from flask import current_app, render_template
 from types import SimpleNamespace
 from datetime import time
 
@@ -26,9 +35,6 @@ DEFAULT_FROM = os.getenv("MAIL_FROM") or os.getenv(
 DEFAULT_REPLY_TO = os.getenv("RESEND_REPLY_TO")
 
 Address = Union[str, Iterable[str]]
-
-PLATAFORMA_URL = "https://mg.ead.senai.br/"
-SENHA_INICIAL = "123456"
 
 
 def _normalize(addr: Address | None) -> Optional[List[str]]:
@@ -198,47 +204,75 @@ def enviar_notificacao_planejamento(
             )
 
 
-def _build_convocacao_context(
-    turma: Any, treinamento: Any, inscricao: Any
-) -> Dict[str, Any]:
-    return {
-        "teoria_online": bool(getattr(turma, "teoria_online", False)),
-        "tem_pratica": bool(getattr(treinamento, "tem_pratica", False)),
-        "local_realizacao": getattr(turma, "local_realizacao", "-") or "-",
-        "usuario_login": getattr(inscricao, "email", ""),
-        "senha_inicial": SENHA_INICIAL,
-        "plataforma_url": PLATAFORMA_URL,
-    }
-
-
-def enviar_convocacao(inscricao: Any, turma: Any) -> None:
+def enviar_convocacao(
+    inscricao: Any, turma: Any, send_email_fn: Callable[..., Any] = send_email
+) -> None:
     """Envia e-mail de convocação para um inscrito."""
     treinamento = getattr(turma, "treinamento", None)
     if treinamento is None:
         raise ValueError("Turma sem treinamento associado")
 
-    ctx_extra = _build_convocacao_context(turma, treinamento, inscricao)
     destinatario = getattr(inscricao, "email", "")
     log.info(f"Tentando enviar e-mail de convocação para {destinatario}")
 
-    turma_ctx = build_turma_context(turma)
-    user_ctx = build_user_context(getattr(inscricao, "nome", ""))
-    html = render_email_template(
-        "convocacao.html.j2",
-        user=user_ctx,
-        turma=turma_ctx,
-        **ctx_extra,
+    is_teoria_online = bool(getattr(turma, "teoria_online", False))
+    has_tem_pratica = bool(getattr(treinamento, "tem_pratica", False))
+
+    data_inicio = getattr(turma, "data_inicio", None)
+    data_fim = getattr(turma, "data_fim", None)
+    periodo = ""
+    if data_inicio and data_fim:
+        periodo = (
+            f"De {data_inicio.strftime('%d/%m/%Y')} "
+            f"a {data_fim.strftime('%d/%m/%Y')}"
+        )
+
+    instrutor = getattr(getattr(turma, "instrutor", None), "nome", "A definir")
+    local_realizacao = getattr(turma, "local_realizacao", "")
+
+    html = render_template(
+        "email/convocacao.html.j2",
+        nome=getattr(inscricao, "nome", ""),
+        nome_do_treinamento=getattr(treinamento, "nome", ""),
+        periodo=periodo,
+        horario=getattr(turma, "horario", ""),
+        carga_horaria=getattr(treinamento, "carga_horaria", ""),
+        instrutor=instrutor,
+        local_de_realizacao=local_realizacao,
+        email_fornecido_na_inscricao=destinatario,
+        local_da_pratica=local_realizacao,
+        teoria_online=is_teoria_online,
+        tem_pratica=has_tem_pratica,
     )
 
-    data_inicio_str = (
-        turma_ctx.data_inicio.strftime("%d/%m/%Y")
-        if turma_ctx.data_inicio
-        else ""
-    )
+    attachments: List[Dict[str, Any]] = []
+    if is_teoria_online:
+        try:
+            file_path = os.path.join(
+                current_app.static_folder,
+                "docs",
+                "Tutorial de Acesso e Navegação - Aluno Anglo.pdf",
+            )
+            file_name = "Tutorial de Acesso e Navegação - Aluno Anglo.pdf"
+            with open(file_path, "rb") as f:
+                encoded = base64.b64encode(f.read()).decode()
+            attachments.append({"filename": file_name, "content": encoded})
+        except FileNotFoundError:
+            current_app.logger.error("Arquivo de tutorial não encontrado.")
+
+    data_inicio_str = data_inicio.strftime("%d/%m/%Y") if data_inicio else ""
     subject = (
         f"Convocação: {getattr(treinamento, 'nome', '')} — {data_inicio_str}"
     )
-    send_email(to=destinatario, subject=subject, html=html)
+    if send_email_fn is send_email:
+        send_email_fn(
+            to=destinatario,
+            subject=subject,
+            html=html,
+            attachments=attachments,
+        )
+    else:
+        send_email_fn(to=destinatario, subject=subject, html=html)
     log.info(f"E-mail de convocação enviado com sucesso para {destinatario}")
 
 

@@ -176,3 +176,90 @@ def enviar_convocacao(inscricao: Any, turma: Any) -> None:
     subject = f"Convocação: {getattr(treinamento, 'nome', '')} — {data_inicio}"
     send_email(to=destinatario, subject=subject, html=html)
     log.info(f"E-mail de convocação enviado com sucesso para {destinatario}")
+
+def listar_emails_secretaria() -> List[str]:
+    """Retorna todos os e-mails cadastrados para a secretaria de treinamentos."""
+    from src.models.secretaria_treinamentos import SecretariaTreinamentos  # lazy import
+
+    registros = SecretariaTreinamentos.query.all()
+    return [r.email for r in registros if getattr(r, "email", None)]
+
+
+def notificar_nova_turma(turma: "TurmaTreinamento") -> None:
+    """Notifica instrutor e secretaria sobre criação de nova turma."""
+    treinamento = getattr(turma, "treinamento", None)
+    if not treinamento:
+        return
+
+    fmt = "%d/%m/%Y"
+    data_inicio = turma.data_inicio.strftime(fmt) if getattr(turma, "data_inicio", None) else ""
+    data_fim = turma.data_fim.strftime(fmt) if getattr(turma, "data_fim", None) else None
+    ctx = {
+        "treinamento_nome": getattr(treinamento, "nome", ""),
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "horario": getattr(turma, "horario", "-") or "-",
+        "local_realizacao": getattr(turma, "local_realizacao", "-") or "-",
+    }
+
+    instrutor = getattr(turma, "instrutor", None)
+    if instrutor and getattr(instrutor, "email", None):
+        html = render_email_template(
+            "nova_turma_instrutor.html.j2", **ctx, instrutor_nome=instrutor.nome
+        )
+        subject = f"Nova turma designada - {ctx['treinamento_nome']}"
+        send_email(instrutor.email, subject, html)
+
+    emails_secretaria = listar_emails_secretaria()
+    if emails_secretaria:
+        html_sec = render_email_template(
+            "nova_turma_secretaria.html.j2",
+            **ctx,
+            instrutor_nome=getattr(instrutor, "nome", None),
+        )
+        subject_sec = f"Nova turma cadastrada - {ctx['treinamento_nome']}"
+        for email in emails_secretaria:
+            send_email(email, subject_sec, html_sec)
+
+
+def notificar_atualizacao_turma(
+    turma: "TurmaTreinamento", diff: Dict[str, Any], instrutor_antigo: "Instrutor" | None
+) -> None:
+    """Notifica secretaria e instrutores sobre alterações em uma turma."""
+    treinamento = getattr(turma, "treinamento", None)
+    nome_treinamento = getattr(treinamento, "nome", "")
+
+    emails_secretaria = listar_emails_secretaria()
+    if emails_secretaria and diff:
+        html_sec = render_email_template(
+            "turma_atualizada_secretaria.html.j2",
+            treinamento_nome=nome_treinamento,
+            diff=diff,
+        )
+        subject_sec = f"Turma atualizada - {nome_treinamento}"
+        for email in emails_secretaria:
+            send_email(email, subject_sec, html_sec)
+
+    instrutor_atual = getattr(turma, "instrutor", None)
+    if instrutor_antigo != instrutor_atual:
+        if instrutor_antigo and getattr(instrutor_antigo, "email", None):
+            html_rem = render_email_template(
+                "instrutor_removido.html.j2",
+                instrutor_nome=getattr(instrutor_antigo, "nome", ""),
+                treinamento_nome=nome_treinamento,
+                data_inicio=turma.data_inicio.strftime("%d/%m/%Y") if getattr(turma, "data_inicio", None) else "",
+            )
+            subject_rem = f"Remoção de turma - {nome_treinamento}"
+            send_email(instrutor_antigo.email, subject_rem, html_rem)
+        if instrutor_atual and getattr(instrutor_atual, "email", None):
+            html_des = render_email_template(
+                "instrutor_designado.html.j2",
+                instrutor_nome=getattr(instrutor_atual, "nome", ""),
+                treinamento_nome=nome_treinamento,
+                data_inicio=turma.data_inicio.strftime("%d/%m/%Y") if getattr(turma, "data_inicio", None) else "",
+                data_fim=turma.data_fim.strftime("%d/%m/%Y") if getattr(turma, "data_fim", None) else None,
+                horario=getattr(turma, "horario", "-") or "-",
+                local_realizacao=getattr(turma, "local_realizacao", "-") or "-",
+            )
+            subject_des = f"Nova turma designada - {nome_treinamento}"
+            send_email(instrutor_atual.email, subject_des, html_des)

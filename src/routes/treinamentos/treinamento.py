@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify, g
 from sqlalchemy.exc import SQLAlchemyError
 import math
 from datetime import date, datetime, timedelta
+import logging
 
 from src.models import (
     db,
@@ -46,10 +47,17 @@ from reportlab.platypus import (
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
-from src.services.email_service import send_email, render_email_template
+from src.services.email_service import (
+    send_email,
+    render_email_template,
+    notificar_nova_turma,
+    notificar_atualizacao_turma,
+)
 
 PLATAFORMA_URL = "https://mg.ead.senai.br/"
 SENHA_INICIAL = "123456"
+
+log = logging.getLogger(__name__)
 
 
 def build_convocacao_conteudo(turma, treinamento, inscricao):
@@ -451,6 +459,10 @@ def criar_turma_treinamento():
     try:
         db.session.add(turma)
         db.session.commit()
+        try:
+            notificar_nova_turma(turma)
+        except Exception as exc:  # pragma: no cover - log apenas
+            log.error(f"Erro ao notificar nova turma: {exc}")
         return jsonify(turma.to_dict()), 201
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -497,6 +509,15 @@ def atualizar_turma_treinamento(turma_id):
     )
     data_fim = payload.data_fim if payload.data_fim is not None else turma.data_fim
 
+    valores_antes = {
+        "data_inicio": turma.data_inicio,
+        "data_fim": turma.data_fim,
+        "local_realizacao": turma.local_realizacao,
+        "horario": turma.horario,
+        "teoria_online": turma.teoria_online,
+    }
+    instrutor_antigo = turma.instrutor
+
     if treinamento.carga_horaria and treinamento.carga_horaria > 0:
         dias_minimos = math.ceil(treinamento.carga_horaria / 8)
         data_fim_minima = data_inicio + timedelta(days=dias_minimos - 1)
@@ -526,6 +547,44 @@ def atualizar_turma_treinamento(turma_id):
         turma.teoria_online = payload.teoria_online
     try:
         db.session.commit()
+        diff = {}
+        fmt = "%d/%m/%Y"
+        if valores_antes["data_inicio"] != turma.data_inicio:
+            diff["data_inicio"] = (
+                valores_antes["data_inicio"].strftime(fmt)
+                if valores_antes["data_inicio"]
+                else None,
+                turma.data_inicio.strftime(fmt) if turma.data_inicio else None,
+            )
+        if valores_antes["data_fim"] != turma.data_fim:
+            diff["data_fim"] = (
+                valores_antes["data_fim"].strftime(fmt)
+                if valores_antes["data_fim"]
+                else None,
+                turma.data_fim.strftime(fmt) if turma.data_fim else None,
+            )
+        if valores_antes["local_realizacao"] != turma.local_realizacao:
+            diff["local_realizacao"] = (
+                valores_antes["local_realizacao"],
+                turma.local_realizacao,
+            )
+        if valores_antes["horario"] != turma.horario:
+            diff["horario"] = (valores_antes["horario"], turma.horario)
+        if valores_antes["teoria_online"] != turma.teoria_online:
+            diff["teoria_online"] = (
+                valores_antes["teoria_online"],
+                turma.teoria_online,
+            )
+        if instrutor_antigo != turma.instrutor:
+            diff["instrutor"] = (
+                instrutor_antigo.nome if instrutor_antigo else None,
+                turma.instrutor.nome if turma.instrutor else None,
+            )
+        if diff:
+            try:
+                notificar_atualizacao_turma(turma, diff, instrutor_antigo)
+            except Exception as exc:  # pragma: no cover - log apenas
+                log.error(f"Erro ao notificar atualização de turma: {exc}")
         log_action(
             g.current_user.id,
             'update',

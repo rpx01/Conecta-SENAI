@@ -10,6 +10,7 @@ from src.models.treinamento import TurmaTreinamento, InscricaoTreinamento
 from src.services.email_service import enviar_convocacao
 from src.auth import admin_required
 from datetime import datetime
+import time
 
 turma_bp = Blueprint("turma", __name__)
 
@@ -182,6 +183,8 @@ def convocar_todos_da_turma(turma_id: int):
     convocados_sucesso = 0
     for inscricao in inscricoes_para_convocar:
         try:
+            # Pausa para respeitar o limite de taxa do provedor de e-mail (2 req/s)
+            time.sleep(0.6)
             enviar_convocacao(inscricao, turma)
             inscricao.convocado_em = datetime.utcnow()
             convocados_sucesso += 1

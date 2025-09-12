@@ -47,6 +47,8 @@ class BaseConfig:
     RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
     RESEND_FROM = os.getenv("RESEND_FROM", "no-reply@example.com")
     RESEND_REPLY_TO = os.getenv("RESEND_REPLY_TO")
+    NOTIFY_FROM_EMAIL = os.getenv("NOTIFY_FROM_EMAIL")
+    NOTIFY_REPLY_TO = os.getenv("NOTIFY_REPLY_TO")
 
     SECURITY_PASSWORD_SALT = os.environ.get(
         'SECURITY_PASSWORD_SALT', 'change-me'

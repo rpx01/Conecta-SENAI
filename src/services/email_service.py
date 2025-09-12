@@ -11,11 +11,16 @@ log = logging.getLogger(__name__)
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 if RESEND_API_KEY:
     resend.api_key = RESEND_API_KEY
-# Permite definir o remetente tanto via MAIL_FROM quanto RESEND_FROM
-DEFAULT_FROM = os.getenv("MAIL_FROM") or os.getenv(
-    "RESEND_FROM", "no-reply@example.com"
+
+# Permite definir o remetente via variáveis específicas ou valores antigos
+DEFAULT_FROM = (
+    os.getenv("NOTIFY_FROM_EMAIL")
+    or os.getenv("MAIL_FROM")
+    or os.getenv("RESEND_FROM", "no-reply@example.com")
 )
-DEFAULT_REPLY_TO = os.getenv("RESEND_REPLY_TO")
+DEFAULT_REPLY_TO = (
+    os.getenv("NOTIFY_REPLY_TO") or os.getenv("RESEND_REPLY_TO")
+)
 
 Address = Union[str, Iterable[str]]
 
@@ -69,6 +74,15 @@ def send_email(
     log.debug(
         "EMAIL_SEND_START", extra={"to": params["to"], "subject": subject}
     )
+
+    if not RESEND_API_KEY:
+        # Em ambientes sem API key, apenas registra o envio para fins de debug
+        log.info(
+            "EMAIL_SEND_SKIPPED",
+            extra={"reason": "missing_api_key", "params": params},
+        )
+        return {"status": "logged", **params}
+
     result = resend.Emails.send(params)
     log.info(
         "EMAIL_SEND_SUCCESS",

@@ -498,13 +498,36 @@ def atualizar_turma_treinamento(turma_id):
             ),
             403,
         )
+
+    # Captura o estado ANTES de qualquer modificação
+    periodo_antigo = ""
+    if turma.data_inicio and turma.data_fim:
+        periodo_antigo = (
+            f"De {turma.data_inicio.strftime('%d/%m/%Y')} a {turma.data_fim.strftime('%d/%m/%Y')}"
+        )
+    dados_antigos = {
+        "treinamento_nome": turma.treinamento.nome if turma.treinamento else "",
+        "treinamento_codigo": turma.treinamento.codigo if turma.treinamento else "",
+        "periodo": periodo_antigo,
+        "horario": turma.horario,
+        "carga_horaria": turma.treinamento.carga_horaria if turma.treinamento else None,
+        "instrutor_nome": turma.instrutor.nome if turma.instrutor else "A definir",
+        "local_realizacao": turma.local_realizacao,
+        "teoria_online": turma.teoria_online,
+        "tem_pratica": turma.treinamento.tem_pratica if turma.treinamento else False,
+        "local_pratica": (
+            turma.treinamento.local_pratica
+            if turma.treinamento and turma.treinamento.tem_pratica
+            else None
+        ),
+    }
+
     data = request.json or {}
     try:
         payload = TurmaTreinamentoUpdateSchema(**data)
     except ValidationError as e:
         return jsonify({"erro": e.errors()}), 400
 
-    dados_antigos = coletar_dados_turma(turma)
     valores_antes = {
         "data_inicio": turma.data_inicio,
         "data_fim": turma.data_fim,
@@ -552,8 +575,29 @@ def atualizar_turma_treinamento(turma_id):
     if payload.teoria_online is not None:
         turma.teoria_online = payload.teoria_online
     try:
-        db.session.flush()
-        dados_novos = coletar_dados_turma(turma)
+        db.session.commit()
+        db.session.refresh(turma)
+        periodo_novo = ""
+        if turma.data_inicio and turma.data_fim:
+            periodo_novo = (
+                f"De {turma.data_inicio.strftime('%d/%m/%Y')} a {turma.data_fim.strftime('%d/%m/%Y')}"
+            )
+        dados_novos = {
+            "treinamento_nome": turma.treinamento.nome if turma.treinamento else "",
+            "treinamento_codigo": turma.treinamento.codigo if turma.treinamento else "",
+            "periodo": periodo_novo,
+            "horario": turma.horario,
+            "carga_horaria": turma.treinamento.carga_horaria if turma.treinamento else None,
+            "instrutor_nome": turma.instrutor.nome if turma.instrutor else "A definir",
+            "local_realizacao": turma.local_realizacao,
+            "teoria_online": turma.teoria_online,
+            "tem_pratica": turma.treinamento.tem_pratica if turma.treinamento else False,
+            "local_pratica": (
+                turma.treinamento.local_pratica
+                if turma.treinamento and turma.treinamento.tem_pratica
+                else None
+            ),
+        }
         diff = {}
         fmt = "%d/%m/%Y"
         if valores_antes["data_inicio"] != turma.data_inicio:
@@ -600,7 +644,6 @@ def atualizar_turma_treinamento(turma_id):
                 )
             except Exception as exc:  # pragma: no cover - log apenas
                 log.error(f"Erro ao notificar atualização de turma: {exc}")
-        db.session.commit()
         log_action(
             g.current_user.id,
             'update',

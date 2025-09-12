@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from sqlalchemy import inspect
+from src.auth import admin_required
 from src.models import db
 from src.models.planejamento import (
     PlanejamentoBDItem,
@@ -11,6 +12,8 @@ from src.models.planejamento import (
     PlanejamentoTreinamento,
     TurnoEnum,
 )
+from src.models import EmailSecretaria
+from src.schemas.planejamento import EmailSecretariaSchema
 
 basedados_bp = Blueprint(
     "planejamento_basedados",
@@ -27,6 +30,9 @@ MODELOS = {
     "publico-alvo": PublicoAlvo,
 }
 
+email_schema = EmailSecretariaSchema()
+emails_schema = EmailSecretariaSchema(many=True)
+
 
 def ensure_table_exists(model):
     """Cria a tabela do modelo se ela ainda não existir."""
@@ -41,6 +47,69 @@ def get_planejamento_itens():
     ensure_table_exists(PlanejamentoBDItem)
     itens = PlanejamentoBDItem.query.all()
     return jsonify([item.to_dict() for item in itens])
+
+
+@basedados_bp.route("/emails-secretaria", methods=["GET"])
+@admin_required
+def listar_emails_secretaria():
+    """Lista todos os emails da secretaria."""
+    ensure_table_exists(EmailSecretaria)
+    emails = EmailSecretaria.query.order_by(EmailSecretaria.id).all()
+    return jsonify(emails_schema.dump(emails))
+
+
+@basedados_bp.route("/emails-secretaria", methods=["POST"])
+@admin_required
+def criar_email_secretaria():
+    """Cria um novo email da secretaria."""
+    ensure_table_exists(EmailSecretaria)
+    data = request.json or {}
+    nome = data.get("nome")
+    email = data.get("email")
+    if not nome or not email:
+        return jsonify({"erro": "Nome e e-mail são obrigatórios"}), 400
+    if EmailSecretaria.query.filter_by(email=email).first():
+        return jsonify({"erro": "E-mail já cadastrado"}), 409
+    item = EmailSecretaria(nome=nome, email=email)
+    db.session.add(item)
+    db.session.commit()
+    return email_schema.dump(item), 201
+
+
+@basedados_bp.route("/emails-secretaria/<int:item_id>", methods=["PUT"])
+@admin_required
+def atualizar_email_secretaria(item_id):
+    """Atualiza um email existente."""
+    ensure_table_exists(EmailSecretaria)
+    item = db.session.get(EmailSecretaria, item_id)
+    if not item:
+        return jsonify({"erro": "E-mail não encontrado"}), 404
+    data = request.json or {}
+    nome = data.get("nome")
+    email = data.get("email")
+    if not nome or not email:
+        return jsonify({"erro": "Nome e e-mail são obrigatórios"}), 400
+    if EmailSecretaria.query.filter(
+        EmailSecretaria.email == email, EmailSecretaria.id != item_id
+    ).first():
+        return jsonify({"erro": "E-mail já cadastrado"}), 409
+    item.nome = nome
+    item.email = email
+    db.session.commit()
+    return email_schema.dump(item)
+
+
+@basedados_bp.route("/emails-secretaria/<int:item_id>", methods=["DELETE"])
+@admin_required
+def deletar_email_secretaria(item_id):
+    """Exclui um email da secretaria."""
+    ensure_table_exists(EmailSecretaria)
+    item = db.session.get(EmailSecretaria, item_id)
+    if not item:
+        return jsonify({"erro": "E-mail não encontrado"}), 404
+    db.session.delete(item)
+    db.session.commit()
+    return jsonify({"mensagem": "E-mail excluído com sucesso"}), 200
 
 
 @basedados_bp.route("/itens", methods=["POST"])

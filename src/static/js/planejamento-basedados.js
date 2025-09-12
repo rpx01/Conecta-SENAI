@@ -15,6 +15,7 @@ const NOMES_TIPO = {
 let geralModal;
 let instrutorModal;
 let confirmacaoModal;
+let emailModal;
 let itemParaExcluir = { id: null, tipo: null };
 
 /**
@@ -25,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function () {
     geralModal = new bootstrap.Modal(document.getElementById('geralModal'));
     instrutorModal = new bootstrap.Modal(document.getElementById('instrutorModal'));
     confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
+    emailModal = new bootstrap.Modal(document.getElementById('emailModal'));
     
     // Adiciona os listeners (ouvintes de eventos) aos botões de salvar e confirmar
     document.getElementById('btnSalvarGeral').addEventListener('click', salvarItemGeral);
@@ -35,9 +37,15 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     document.getElementById('btnSalvarInstrutor').addEventListener('click', salvarInstrutor);
     document.getElementById('btnConfirmarExclusao').addEventListener('click', executarExclusao);
+    document.getElementById('btnSalvarEmail').addEventListener('click', salvarEmail);
+    document.getElementById('emailForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        salvarEmail();
+    });
 
     // Carrega todos os dados iniciais das tabelas
     carregarTodosOsDados();
+    carregarEmails();
 });
 
 /**
@@ -62,6 +70,75 @@ async function carregarTodosOsDados() {
             console.error(`Falha ao carregar ${tipo}:`, error);
             showToast(`Não foi possível carregar dados de ${NOMES_TIPO[tipo]}.`, 'danger');
         }
+    }
+}
+
+async function carregarEmails() {
+    try {
+        const dados = await chamarAPI('/planejamento-basedados/emails-secretaria');
+        const tbody = document.getElementById('emailsTableBody');
+        tbody.innerHTML = '';
+        if (!dados || dados.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center">Nenhum e-mail cadastrado.</td></tr>';
+            return;
+        }
+        dados.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${item.id}</td>
+                <td>${escapeHTML(item.nome)}</td>
+                <td>${escapeHTML(item.email)}</td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary edit-btn"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-sm btn-outline-danger delete-btn"><i class="bi bi-trash"></i></button>
+                </td>`;
+            tr.querySelector('.edit-btn').addEventListener('click', () => abrirModalEmail(item));
+            tr.querySelector('.delete-btn').addEventListener('click', () => excluirEmail(item.id));
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        showToast('Erro ao carregar e-mails.', 'danger');
+    }
+}
+
+function abrirModalEmail(item = null) {
+    document.getElementById('emailId').value = item ? item.id : '';
+    document.getElementById('emailNome').value = item ? item.nome : '';
+    document.getElementById('emailEndereco').value = item ? item.email : '';
+    document.getElementById('emailModalLabel').textContent = item ? 'Editar E-mail' : 'Novo E-mail';
+    emailModal.show();
+}
+window.abrirModalEmail = abrirModalEmail;
+
+async function salvarEmail() {
+    const id = document.getElementById('emailId').value;
+    const nome = document.getElementById('emailNome').value.trim();
+    const email = document.getElementById('emailEndereco').value.trim();
+    if (!nome || !email) {
+        showToast('Nome e e-mail são obrigatórios.', 'warning');
+        return;
+    }
+    const payload = { nome, email };
+    const endpoint = id ? `/planejamento-basedados/emails-secretaria/${id}` : '/planejamento-basedados/emails-secretaria';
+    const method = id ? 'PUT' : 'POST';
+    try {
+        await chamarAPI(endpoint, method, payload);
+        showToast(`E-mail ${id ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
+        emailModal.hide();
+        carregarEmails();
+    } catch (error) {
+        showToast(error.message || 'Erro ao salvar e-mail.', 'danger');
+    }
+}
+
+async function excluirEmail(id) {
+    if (!confirm('Deseja excluir este e-mail?')) return;
+    try {
+        await chamarAPI(`/planejamento-basedados/emails-secretaria/${id}`, 'DELETE');
+        showToast('E-mail excluído com sucesso!', 'success');
+        carregarEmails();
+    } catch (error) {
+        showToast(error.message || 'Erro ao excluir e-mail.', 'danger');
     }
 }
 

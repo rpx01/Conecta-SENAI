@@ -30,6 +30,7 @@ from .planejamento import (  # noqa: E402
     PublicoAlvo,
     PlanejamentoTreinamento,
 )
+from .email_secretaria import EmailSecretaria  # noqa: E402
 
 __all__ = [
     "db",
@@ -57,4 +58,5 @@ __all__ = [
     "CargaHoraria",
     "PublicoAlvo",
     "PlanejamentoTreinamento",
+    "EmailSecretaria",
 ]

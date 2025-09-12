@@ -192,6 +192,22 @@
                 </div>
             </div>
         </div>
+        <div class="card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3>E-mails da Secretaria</h3>
+                <button class="btn btn-primary btn-sm" onclick="abrirModalEmail()"><i class="bi bi-plus-circle me-1"></i> Adicionar E-mail</button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr><th>ID</th><th>Nome</th><th>E-mail</th><th>Ações</th></tr>
+                        </thead>
+                        <tbody id="emailsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </main>
     <div class="modal fade" id="geralModal" tabindex="-1">
         <div class="modal-dialog">
@@ -301,6 +317,34 @@
                         <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                         <span class="btn-text">Salvar</span>
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="emailModalLabel">Novo E-mail</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="emailForm">
+                        <input type="hidden" id="emailId">
+                        <div class="mb-3">
+                            <label for="emailNome" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="emailNome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="emailEndereco" class="form-label">E-mail</label>
+                            <input type="email" class="form-control" id="emailEndereco" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnSalvarEmail">Salvar</button>
                 </div>
             </div>
         </div>

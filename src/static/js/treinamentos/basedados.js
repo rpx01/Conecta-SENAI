@@ -53,7 +53,7 @@ async function salvarContatoSecretaria() {
         nome: document.getElementById('secretariaNome').value,
         email: document.getElementById('secretariaEmail').value,
     };
-    const btn = document.querySelector('#secretariaForm button[type="submit"]');
+    const btn = document.querySelector('button[form="secretariaForm"]');
     await executarAcaoComFeedback(btn, async () => {
         try {
             const endpoint = id ? `/treinamentos/secretaria/${id}` : '/treinamentos/secretaria';

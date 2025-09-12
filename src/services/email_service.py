@@ -417,3 +417,63 @@ def notificar_atualizacao_turma(
             )
             subject_des = f"Nova turma designada - {nome_treinamento}"
             send_email(instrutor_atual.email, subject_des, html_des)
+
+
+class EmailService:
+    """Serviço de envio de e-mails com suporte a anexos."""
+
+    def _send_mail(
+        self,
+        subject: str,
+        recipients: Iterable[str],
+        template: str,
+        context: Dict[str, Any],
+        attachment_path: str | None = None,
+    ) -> None:
+        """Renderiza o template e envia o e-mail.
+
+        Se ``attachment_path`` for fornecido e existir, o arquivo será anexado
+        ao e-mail.
+        """
+
+        template_obj = current_app.jinja_env.get_or_select_template(template)
+        html = template_obj.render(**context)
+
+        attachments: List[Dict[str, Any]] = []
+        if attachment_path and os.path.exists(attachment_path):
+            with open(attachment_path, "rb") as f:
+                encoded = base64.b64encode(f.read()).decode()
+            file_name = os.path.basename(attachment_path)
+            attachments.append({"filename": file_name, "content": encoded})
+            current_app.logger.info(f"Anexando '{file_name}' ao e-mail.")
+
+        send_email(
+            to=list(recipients),
+            subject=subject,
+            html=html,
+            attachments=attachments,
+        )
+
+    def send_convocacao_email(self, user: Any, turma: Any) -> None:
+        """Envia e-mail de convocação com anexo quando necessário."""
+
+        subject = (
+            f"Convocação: {turma.treinamento.nome} — "
+            f"{turma.data_inicio.strftime('%d/%m/%Y')}"
+        )
+
+        attachment: str | None = None
+        if getattr(turma, "teoria_online", False):
+            attachment = os.path.join(
+                current_app.static_folder,
+                "docs",
+                "Tutorial de Acesso e Navegação - Aluno Anglo.pdf",
+            )
+
+        self._send_mail(
+            subject=subject,
+            recipients=[user.email],
+            template="email/convocacao.html.j2",
+            context={"user": user, "turma": turma},
+            attachment_path=attachment,
+        )

@@ -1,7 +1,7 @@
 # flake8: noqa
 """Rotas para gerenciamento de treinamentos e inscricoes."""
 
-from flask import Blueprint, request, jsonify, g
+from flask import Blueprint, request, jsonify, g, current_app
 from sqlalchemy.exc import SQLAlchemyError
 import math
 from datetime import date, datetime, timedelta
@@ -53,13 +53,34 @@ from src.services.email_service import (
     notificar_nova_turma,
     notificar_atualizacao_turma,
     build_turma_context,
-    send_turma_alterada_secretaria,
     listar_emails_secretaria,
+    send_turma_alterada_email,
 )
 
 log = logging.getLogger(__name__)
 
 treinamento_bp = Blueprint("treinamento", __name__)
+
+
+# Função auxiliar para coletar dados da turma
+def coletar_dados_turma(turma: TurmaTreinamento) -> dict:
+    """Coleta e formata os dados de um objeto TurmaTreinamento em um dicionário."""
+    periodo = ""
+    if turma.data_inicio and turma.data_fim:
+        periodo = f"{turma.data_inicio.strftime('%d/%m/%Y')} a {turma.data_fim.strftime('%d/%m/%Y')}"
+    treinamento = turma.treinamento
+    return {
+        "treinamento_nome": treinamento.nome if treinamento else "",
+        "treinamento_codigo": treinamento.codigo if treinamento else "",
+        "periodo": periodo,
+        "horario": turma.horario,
+        "carga_horaria": treinamento.carga_horaria if treinamento else None,
+        "instrutor_nome": turma.instrutor.nome if turma.instrutor else "Não definido",
+        "local_realizacao": turma.local_realizacao,
+        "teoria_online": turma.teoria_online,
+        "tem_pratica": treinamento.tem_pratica if treinamento else False,
+        "local_pratica": getattr(turma, "local_pratica", None),
+    }
 
 
 # NOVO: Endpoint para listar turmas futuras (agendadas)
@@ -430,7 +451,7 @@ def criar_turma_treinamento():
             return (
                 jsonify(
                     {
-                        "erro": f"Data de término inválida. Com base na carga horária, a data mínima é {data_fim_minima.strftime('%d/%m/%Y')}."
+                        "erro": f"Data de término inválida. Com base na carga horária, a data mínima é {data_fim_minima.strftime('%d/%m/%Y')}.",
                     }
                 ),
                 400,
@@ -483,38 +504,7 @@ def atualizar_turma_treinamento(turma_id):
     except ValidationError as e:
         return jsonify({"erro": e.errors()}), 400
 
-    # Captura dos dados antigos antes de qualquer alteração
-    turma_ctx_antes = build_turma_context(turma)
-    dados_antigos = {
-        "nome": turma_ctx_antes.nome,
-        "data_inicio": turma_ctx_antes.data_inicio.strftime("%d/%m/%Y")
-        if turma_ctx_antes.data_inicio
-        else "",
-        "data_termino": turma_ctx_antes.data_termino.strftime("%d/%m/%Y")
-        if turma_ctx_antes.data_termino
-        else "",
-        "horario_inicio": turma_ctx_antes.horario_inicio.strftime("%H:%M"),
-        "horario_fim": turma_ctx_antes.horario_fim.strftime("%H:%M"),
-        "local": turma_ctx_antes.local,
-        "instrutor_nome": turma_ctx_antes.instrutor.nome
-        if turma_ctx_antes.instrutor
-        else "A definir",
-    }
-
-    treinamento_id = (
-        payload.treinamento_id
-        if payload.treinamento_id is not None
-        else turma.treinamento_id
-    )
-    treinamento = db.session.get(Treinamento, treinamento_id)
-    if not treinamento:
-        return jsonify({"erro": "Treinamento não encontrado"}), 404
-
-    data_inicio = (
-        payload.data_inicio if payload.data_inicio is not None else turma.data_inicio
-    )
-    data_fim = payload.data_fim if payload.data_fim is not None else turma.data_fim
-
+    dados_antigos = coletar_dados_turma(turma)
     valores_antes = {
         "data_inicio": turma.data_inicio,
         "data_fim": turma.data_fim,
@@ -524,6 +514,16 @@ def atualizar_turma_treinamento(turma_id):
     }
     instrutor_antigo = turma.instrutor
 
+    treinamento_id = (
+        payload.treinamento_id if payload.treinamento_id is not None else turma.treinamento_id
+    )
+    treinamento = db.session.get(Treinamento, treinamento_id)
+    if not treinamento:
+        return jsonify({"erro": "Treinamento não encontrado"}), 404
+
+    data_inicio = payload.data_inicio if payload.data_inicio is not None else turma.data_inicio
+    data_fim = payload.data_fim if payload.data_fim is not None else turma.data_fim
+
     if treinamento.carga_horaria and treinamento.carga_horaria > 0:
         dias_minimos = math.ceil(treinamento.carga_horaria / 8)
         data_fim_minima = data_inicio + timedelta(days=dias_minimos - 1)
@@ -531,7 +531,7 @@ def atualizar_turma_treinamento(turma_id):
             return (
                 jsonify(
                     {
-                        "erro": f"Data de término inválida. Com base na carga horária, a data mínima é {data_fim_minima.strftime('%d/%m/%Y')}."
+                        "erro": f"Data de término inválida. Com base na carga horária, a data mínima é {data_fim_minima.strftime('%d/%m/%Y')}.",
                     }
                 ),
                 400,
@@ -552,7 +552,8 @@ def atualizar_turma_treinamento(turma_id):
     if payload.teoria_online is not None:
         turma.teoria_online = payload.teoria_online
     try:
-        db.session.commit()
+        db.session.flush()
+        dados_novos = coletar_dados_turma(turma)
         diff = {}
         fmt = "%d/%m/%Y"
         if valores_antes["data_inicio"] != turma.data_inicio:
@@ -587,10 +588,11 @@ def atualizar_turma_treinamento(turma_id):
                 turma.instrutor.nome if turma.instrutor else None,
             )
         if diff:
-            emails_secretaria = listar_emails_secretaria()
-            if emails_secretaria:
-                send_turma_alterada_secretaria(
-                    emails_secretaria, dados_antigos, turma
+            try:
+                send_turma_alterada_email(dados_antigos, dados_novos)
+            except Exception as e:  # pragma: no cover - log apenas
+                current_app.logger.error(
+                    f"Erro ao enfileirar e-mail de alteração para turma {turma_id}: {e}"
                 )
             try:
                 notificar_atualizacao_turma(
@@ -598,6 +600,7 @@ def atualizar_turma_treinamento(turma_id):
                 )
             except Exception as exc:  # pragma: no cover - log apenas
                 log.error(f"Erro ao notificar atualização de turma: {exc}")
+        db.session.commit()
         log_action(
             g.current_user.id,
             'update',

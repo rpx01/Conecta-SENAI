@@ -516,7 +516,7 @@ def atualizar_turma_treinamento(turma_id):
         "teoria_online": turma.teoria_online,
         "tem_pratica": turma.treinamento.tem_pratica if turma.treinamento else False,
         "local_pratica": (
-            turma.treinamento.local_pratica
+            getattr(turma.treinamento, "local_pratica", None)
             if turma.treinamento and turma.treinamento.tem_pratica
             else None
         ),
@@ -593,7 +593,7 @@ def atualizar_turma_treinamento(turma_id):
             "teoria_online": turma.teoria_online,
             "tem_pratica": turma.treinamento.tem_pratica if turma.treinamento else False,
             "local_pratica": (
-                turma.treinamento.local_pratica
+                getattr(turma.treinamento, "local_pratica", None)
                 if turma.treinamento and turma.treinamento.tem_pratica
                 else None
             ),

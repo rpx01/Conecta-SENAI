@@ -1,35 +1,26 @@
 <!doctype html>
 <html>
   <body style="font-family:Arial,Helvetica,sans-serif;">
-    <p>Olá {{ nome_inscrito }},</p>
-
-    <p>Você está convocado(a) para o treinamento <strong>{{ nome_treinamento }}</strong>.</p>
-
+    <h3>Prezado(a) {{ user.name }},</h3>
+    <p>
+        Temos uma ótima notícia! Você foi convocado(a) para participar da turma do treinamento <strong>"{{ turma.treinamento.nome }}"</strong>.
+    </p>
+    <p>
+        Para garantir sua vaga, é fundamental que você confirme sua participação o mais breve possível.
+    </p>
+    <h4>Detalhes da Turma:</h4>
     <ul>
-      <li><strong>Data(s):</strong> {{ data_inicio }}{% if data_fim and data_fim != data_inicio %} a {{ data_fim }}{% endif %}</li>
-      <li><strong>Horário:</strong> {{ horario }}</li>
-      <li><strong>Carga horária:</strong> {{ carga_horaria }} horas</li>
-      <li><strong>Instrutor:</strong> {{ instrutor }}</li>
-      <li><strong>Local de Realização:</strong> {{ local_realizacao }}</li>
+        <li><strong>Treinamento:</strong> {{ turma.treinamento.nome }}</li>
+        <li><strong>Turma:</strong> {{ turma.nome }}</li>
+        <li><strong>Instrutor(a):</strong> {{ turma.instrutor.nome if turma.instrutor else 'A definir' }}</li>
+        <li><strong>Período:</strong> De {{ turma.data_inicio.strftime('%d/%m/%Y') }} a {{ turma.data_termino.strftime('%d/%m/%Y') }}</li>
+        <li><strong>Horário:</strong> Das {{ turma.horario_inicio.strftime('%H:%M') }} às {{ turma.horario_fim.strftime('%H:%M') }}</li>
+        <li><strong>Local:</strong> {{ turma.local }}</li>
     </ul>
-
-    {% if teoria_online %}
-      <p><strong>Teoria:</strong> Online na plataforma
-      <a href="{{ plataforma_url }}">{{ plataforma_url }}</a>
-      (usuário: {{ usuario_login }} | senha inicial: {{ senha_inicial }}).</p>
-      {% if tem_pratica %}
-        <p><strong>Prática:</strong> Presencial no Local de Realização: {{ local_realizacao }}.</p>
-      {% endif %}
-    {% else %}
-      {% if tem_pratica %}
-        <p><strong>Teoria:</strong> Presencial no Local de Realização: {{ local_realizacao }}.</p>
-        <p><strong>Prática:</strong> Presencial no Local de Realização: {{ local_realizacao }}.</p>
-      {% else %}
-        <p><strong>Treinamento:</strong> Presencial no Local de Realização: {{ local_realizacao }}.</p>
-      {% endif %}
-    {% endif %}
-
-    <p>Em caso de dúvidas, responda este e-mail.</p>
-    <p>Atenciosamente,<br/>SENAI — Sistema FIEMG | Cursos e Treinamentos</p>
+    <p>
+        Caso tenha alguma dúvida ou precise de mais informações, por favor, entre em contato.
+    </p>
+    {% include 'email/_signature.html.j2' %}
   </body>
 </html>
+

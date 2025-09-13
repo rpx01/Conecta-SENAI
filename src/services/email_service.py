@@ -310,7 +310,8 @@ def send_turma_alterada_email(dados_antigos: dict, dados_novos: dict):
         recipients = listar_emails_secretaria()
         if not recipients:
             current_app.logger.warning(
-                "Nenhum e-mail de secretaria encontrado para notificação de turma alterada."
+                "Nenhum e-mail de secretaria encontrado para "
+                "notificação de turma alterada."
             )
             return
 
@@ -320,11 +321,18 @@ def send_turma_alterada_email(dados_antigos: dict, dados_novos: dict):
             dados_novos=dados_novos,
         )
 
-        subject = f"Alteração de Agendamento de Turma: {dados_novos.get('treinamento_nome')}"
+        subject = (
+            "Alteração de Agendamento de Turma: "
+            f"{dados_novos.get('treinamento_nome')}"
+        )
         for email in recipients:
             send_email(email, subject, html_body)
         current_app.logger.info(
-            f"E-mail de alteração da turma '{dados_novos.get('treinamento_nome')}' enviado para a secretaria."
+            (
+                "E-mail de alteração da turma "
+                f"'{dados_novos.get('treinamento_nome')}' "
+                "enviado para a secretaria."
+            )
         )
     except Exception as e:  # pragma: no cover - log de erro
         current_app.logger.error(
@@ -444,14 +452,17 @@ def notificar_atualizacao_turma(
             "treinamento_nome": turma_ctx.treinamento.nome,
             "treinamento_codigo": getattr(treinamento, "codigo", ""),
             "periodo": (
-                f"{turma_ctx.data_inicio.strftime('%d/%m/%Y')} a {turma_ctx.data_termino.strftime('%d/%m/%Y')}"
+                f"{turma_ctx.data_inicio.strftime('%d/%m/%Y')} a "
+                f"{turma_ctx.data_termino.strftime('%d/%m/%Y')}"
                 if turma_ctx.data_inicio and turma_ctx.data_termino
                 else ""
             ),
             "horario": getattr(turma, "horario", ""),
             "carga_horaria": getattr(treinamento, "carga_horaria", None),
             "instrutor_nome": (
-                turma_ctx.instrutor.nome if turma_ctx.instrutor else "Não definido"
+                turma_ctx.instrutor.nome
+                if turma_ctx.instrutor
+                else "Não definido"
             ),
             "local_realizacao": turma_ctx.local,
             "teoria_online": getattr(turma, "teoria_online", False),
@@ -464,21 +475,31 @@ def notificar_atualizacao_turma(
     instrutor_atual = getattr(turma, "instrutor", None)
     if instrutor_antigo != instrutor_atual:
         if instrutor_antigo and getattr(instrutor_antigo, "email", None):
+            turma_ctx = SimpleNamespace(
+                treinamento=SimpleNamespace(
+                    nome=getattr(treinamento, "nome", ""),
+                    codigo=getattr(treinamento, "codigo", ""),
+                    carga_horaria=getattr(treinamento, "carga_horaria", None),
+                    tem_pratica=getattr(treinamento, "tem_pratica", False),
+                ),
+                data_inicio=getattr(turma, "data_inicio", None),
+                data_termino=getattr(turma, "data_fim", None),
+                horario=getattr(turma, "horario", ""),
+                local=getattr(turma, "local_realizacao", ""),
+                teoria_online=getattr(turma, "teoria_online", False),
+                local_pratica=getattr(turma, "local_pratica", None),
+            )
+
             html_rem = render_email_template(
                 "instrutor_removido.html.j2",
                 instrutor_nome=getattr(instrutor_antigo, "nome", ""),
-                treinamento_nome=nome_treinamento,
-                data_inicio=(
-                    turma.data_inicio.strftime("%d/%m/%Y")
-                    if getattr(turma, "data_inicio", None)
-                    else ""
-                ),
+                turma=turma_ctx,
             )
-            subject_rem = f"Remoção de turma - {nome_treinamento}"
+            subject_rem = f"Remanejamento de Turma - {nome_treinamento}"
             send_email(instrutor_antigo.email, subject_rem, html_rem)
         if instrutor_atual and getattr(instrutor_atual, "email", None):
             html_des = render_email_template(
-                "instrutor_designado.html.j2",
+                "nova_turma_instrutor.html.j2",
                 instrutor_nome=getattr(instrutor_atual, "nome", ""),
                 treinamento_nome=nome_treinamento,
                 data_inicio=(

@@ -7,7 +7,7 @@ from src.utils.error_handler import handle_internal_error
 from src.models.laboratorio_turma import Turma
 from src.routes.user import verificar_autenticacao, verificar_admin
 from src.models.treinamento import TurmaTreinamento, InscricaoTreinamento
-from src.services.email_service import enviar_convocacao
+from src.services.email_service import enviar_convocacao, notificar_atualizacao_turma
 from src.auth import admin_required
 from datetime import datetime
 import time
@@ -115,8 +115,21 @@ def atualizar_turma(id):
 
     # Atualiza a turma
     try:
+        instrutor_antigo = getattr(turma, "instrutor", None)
+        diff = {}
+        if turma.nome != nome:
+            diff["nome"] = (turma.nome, nome)
+
         turma.nome = nome
         db.session.commit()
+
+        try:
+            notificar_atualizacao_turma(turma, diff, instrutor_antigo)
+        except Exception as exc:  # pragma: no cover - log apenas
+            current_app.logger.error(
+                "Erro ao notificar atualização de turma %s: %s", id, exc
+            )
+
         return jsonify(turma.to_dict())
     except SQLAlchemyError as e:
         db.session.rollback()

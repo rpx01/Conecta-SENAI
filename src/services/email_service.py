@@ -13,6 +13,7 @@ from typing import (
 )
 import logging
 import re
+import time as time_module
 
 import resend
 from flask import current_app, render_template
@@ -325,8 +326,10 @@ def send_turma_alterada_email(dados_antigos: dict, dados_novos: dict):
             "Alteração de Agendamento de Turma: "
             f"{dados_novos.get('treinamento_nome')}"
         )
-        for email in recipients:
+        for idx, email in enumerate(recipients):
             send_email(email, subject, html_body)
+            if idx < len(recipients) - 1:
+                time_module.sleep(0.5)
         current_app.logger.info(
             (
                 "E-mail de alteração da turma "
@@ -495,6 +498,7 @@ def notificar_atualizacao_turma(
         }
 
         send_turma_alterada_email(dados_antigos, dados_novos)
+        time_module.sleep(0.5)
 
     instrutor_atual = getattr(turma, "instrutor", None)
 
@@ -540,6 +544,7 @@ def notificar_atualizacao_turma(
             )
             subject_rem = f"Remanejamento de Turma - {nome_treinamento}"
             send_email(instrutor_antigo_obj.email, subject_rem, html_rem)
+            time_module.sleep(0.5)
 
     if (
         atual_id

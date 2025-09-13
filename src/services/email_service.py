@@ -340,6 +340,33 @@ def send_turma_alterada_email(dados_antigos: dict, dados_novos: dict):
         )
 
 
+def send_nova_turma_instrutor_email(turma: "TurmaTreinamento", instrutor: "Instrutor") -> None:
+    """Envia um e-mail para o instrutor informando sobre a nova turma."""
+    if not instrutor or not getattr(instrutor, "email", None):
+        return
+
+    treinamento = getattr(turma, "treinamento", None)
+    html = render_email_template(
+        "nova_turma_instrutor.html.j2",
+        instrutor_nome=getattr(instrutor, "nome", ""),
+        treinamento_nome=getattr(treinamento, "nome", ""),
+        data_inicio=(
+            turma.data_inicio.strftime("%d/%m/%Y")
+            if getattr(turma, "data_inicio", None)
+            else ""
+        ),
+        data_fim=(
+            turma.data_fim.strftime("%d/%m/%Y")
+            if getattr(turma, "data_fim", None)
+            else None
+        ),
+        horario=getattr(turma, "horario", "-") or "-",
+        local_realizacao=getattr(turma, "local_realizacao", "-") or "-",
+    )
+    subject = f"Nova turma designada - {getattr(treinamento, 'nome', '')}"
+    send_email(instrutor.email, subject, html)
+
+
 def notificar_nova_turma(turma: "TurmaTreinamento") -> None:
     """Notifica instrutor e secretaria sobre criação de nova turma."""
     treinamento = getattr(turma, "treinamento", None)
@@ -367,13 +394,7 @@ def notificar_nova_turma(turma: "TurmaTreinamento") -> None:
 
     instrutor = getattr(turma, "instrutor", None)
     if instrutor and getattr(instrutor, "email", None):
-        html = render_email_template(
-            "nova_turma_instrutor.html.j2",
-            **ctx,
-            instrutor_nome=instrutor.nome,
-        )
-        subject = f"Nova turma designada - {ctx['treinamento_nome']}"
-        send_email(instrutor.email, subject, html)
+        send_nova_turma_instrutor_email(turma, instrutor)
 
     emails_secretaria = listar_emails_secretaria()
     if emails_secretaria:
@@ -498,27 +519,7 @@ def notificar_atualizacao_turma(
             subject_rem = f"Remanejamento de Turma - {nome_treinamento}"
             send_email(instrutor_antigo.email, subject_rem, html_rem)
         if instrutor_atual and getattr(instrutor_atual, "email", None):
-            html_des = render_email_template(
-                "nova_turma_instrutor.html.j2",
-                instrutor_nome=getattr(instrutor_atual, "nome", ""),
-                treinamento_nome=nome_treinamento,
-                data_inicio=(
-                    turma.data_inicio.strftime("%d/%m/%Y")
-                    if getattr(turma, "data_inicio", None)
-                    else ""
-                ),
-                data_fim=(
-                    turma.data_fim.strftime("%d/%m/%Y")
-                    if getattr(turma, "data_fim", None)
-                    else None
-                ),
-                horario=getattr(turma, "horario", "-") or "-",
-                local_realizacao=getattr(
-                    turma, "local_realizacao", "-"
-                ) or "-",
-            )
-            subject_des = f"Nova turma designada - {nome_treinamento}"
-            send_email(instrutor_atual.email, subject_des, html_des)
+            send_nova_turma_instrutor_email(turma, instrutor_atual)
 
 
 class EmailService:

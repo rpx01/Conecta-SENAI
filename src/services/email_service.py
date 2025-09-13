@@ -340,7 +340,10 @@ def send_turma_alterada_email(dados_antigos: dict, dados_novos: dict):
         )
 
 
-def send_nova_turma_instrutor_email(turma: "TurmaTreinamento", instrutor: "Instrutor") -> None:
+def send_nova_turma_instrutor_email(
+    turma: "TurmaTreinamento",
+    instrutor: "Instrutor",
+) -> None:
     """Envia um e-mail para o instrutor informando sobre a nova turma."""
     if not instrutor or not getattr(instrutor, "email", None):
         return
@@ -494,8 +497,27 @@ def notificar_atualizacao_turma(
         send_turma_alterada_email(dados_antigos, dados_novos)
 
     instrutor_atual = getattr(turma, "instrutor", None)
-    if instrutor_antigo != instrutor_atual:
-        if instrutor_antigo and getattr(instrutor_antigo, "email", None):
+
+    # ``instrutor_antigo`` pode ser uma instância ou apenas o ID.
+    instrutor_antigo_obj = instrutor_antigo
+    if instrutor_antigo_obj and not getattr(
+        instrutor_antigo_obj, "email", None
+    ):
+        try:  # tenta carregar o instrutor a partir do ID
+            from src.models.instrutor import Instrutor  # lazy import
+            from src.models import db
+
+            instrutor_antigo_obj = db.session.get(
+                Instrutor, instrutor_antigo_obj
+            )
+        except Exception:  # pragma: no cover - fallback silencioso
+            instrutor_antigo_obj = None
+
+    antigo_id = getattr(instrutor_antigo_obj, "id", None)
+    atual_id = getattr(instrutor_atual, "id", None)
+
+    if antigo_id and antigo_id != atual_id:
+        if getattr(instrutor_antigo_obj, "email", None):
             turma_ctx = SimpleNamespace(
                 treinamento=SimpleNamespace(
                     nome=getattr(treinamento, "nome", ""),
@@ -513,13 +535,18 @@ def notificar_atualizacao_turma(
 
             html_rem = render_email_template(
                 "instrutor_removido.html.j2",
-                instrutor_nome=getattr(instrutor_antigo, "nome", ""),
+                instrutor_nome=getattr(instrutor_antigo_obj, "nome", ""),
                 turma=turma_ctx,
             )
             subject_rem = f"Remanejamento de Turma - {nome_treinamento}"
-            send_email(instrutor_antigo.email, subject_rem, html_rem)
-        if instrutor_atual and getattr(instrutor_atual, "email", None):
-            send_nova_turma_instrutor_email(turma, instrutor_atual)
+            send_email(instrutor_antigo_obj.email, subject_rem, html_rem)
+
+    if (
+        atual_id
+        and antigo_id != atual_id
+        and getattr(instrutor_atual, "email", None)
+    ):
+        send_nova_turma_instrutor_email(turma, instrutor_atual)
 
 
 class EmailService:

@@ -43,7 +43,7 @@ Address = Union[str, Iterable[str]]
 # Intervalo mínimo entre notificações para respeitar o limite de 2 requisições
 # por segundo imposto pelo provedor externo.
 RATE_LIMIT_DELAY = 0.5
-MAX_EMAIL_RETRIES = 3
+MAX_EMAIL_RETRIES = 2
 
 
 class RateLimiter:

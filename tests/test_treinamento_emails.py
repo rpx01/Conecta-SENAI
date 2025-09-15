@@ -155,6 +155,31 @@ def test_notificar_atualizacao_instrutor_id(app):
             }  # nosec B101
 
 
+def test_notificar_atualizacao_instrutor_inalterado_recebe_email(app):
+    with app.app_context():
+        treino = Treinamento(nome='T6', codigo='C6')
+        instrutor = Instrutor(nome='Inst', email='inst@example.com')
+        turma = TurmaTreinamento(
+            treinamento=treino,
+            data_inicio=date.today(),
+            data_fim=date.today() + timedelta(days=1),
+            instrutor=instrutor,
+            local_realizacao='Local Atual',
+        )
+        sec = SecretariaTreinamentos(nome='Sec4', email='sec4@example.com')
+        db.session.add_all([treino, instrutor, turma, sec])
+        db.session.commit()
+
+        diff = {'local_realizacao': ('Local Antigo', 'Local Atual')}
+
+        with patch('src.services.email_service.send_email') as mock_send:
+            notificar_atualizacao_turma(turma, diff, instrutor)
+
+        destinatarios = [call.args[0] for call in mock_send.call_args_list]
+        assert 'inst@example.com' in destinatarios  # nosec B101
+        assert destinatarios.count('inst@example.com') == 1  # nosec B101
+
+
 def test_atualizar_turma_notifica_instrutor_uma_vez(client, app):
     headers = admin_headers(app)
     r = client.post(

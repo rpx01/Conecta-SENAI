@@ -2,6 +2,7 @@ import importlib
 from unittest.mock import patch
 
 import pytest
+from resend.exceptions import ResendError
 
 import src.services.email_service as email_service
 
@@ -65,3 +66,29 @@ def test_error_propagation(monkeypatch):
     ):
         with pytest.raises(Boom):
             svc.send_email("a@example.com", "Oi", "<p>hi</p>")
+
+
+def test_send_email_retries_on_rate_limit(monkeypatch, app):
+    svc = reload_service(monkeypatch)
+    monkeypatch.setattr(email_service.time_module, "sleep", lambda *_: None)
+
+    calls = {"n": 0}
+
+    def fake_send(params):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise ResendError(
+                code=429,
+                error_type="rate_limit",
+                message="Too many requests",
+                suggested_action="",
+            )
+        return {"id": "123"}
+
+    with patch(
+        "src.services.email_service.resend.Emails.send", side_effect=fake_send
+    ) as mock_send:
+        with app.app_context():
+            result = svc.send_email("a@example.com", "Oi", "<p>oi</p>")
+        assert result["id"] == "123"  # nosec B101
+        assert mock_send.call_count == 2  # nosec B101

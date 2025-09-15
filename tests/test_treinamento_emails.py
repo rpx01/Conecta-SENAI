@@ -153,3 +153,45 @@ def test_notificar_atualizacao_instrutor_id(app):
                 'old2@example.com',
                 'new2@example.com',
             }  # nosec B101
+
+
+def test_atualizar_turma_notifica_instrutor_uma_vez(client, app):
+    headers = admin_headers(app)
+    r = client.post(
+        '/api/treinamentos/catalogo',
+        json={'nome': 'T5', 'codigo': 'C5'},
+        headers=headers,
+    )
+    treino_id = r.get_json()['id']
+    with app.app_context():
+        inst_old = Instrutor(nome='Old', email='old@example.com')
+        inst_new = Instrutor(nome='New', email='new@example.com')
+        sec = SecretariaTreinamentos(nome='Sec', email='sec@example.com')
+        db.session.add_all([inst_old, inst_new, sec])
+        db.session.commit()
+        old_id, new_id = inst_old.id, inst_new.id
+    hoje = date.today()
+    resp = client.post(
+        '/api/treinamentos/turmas',
+        json={
+            'treinamento_id': treino_id,
+            'data_inicio': hoje.isoformat(),
+            'data_fim': (hoje + timedelta(days=1)).isoformat(),
+            'instrutor_id': old_id,
+        },
+        headers=headers,
+    )
+    turma_id = resp.get_json()['id']
+    patch_path = 'src.services.email_service.send_nova_turma_instrutor_email'
+    with (
+        patch(patch_path) as mock_send,
+        patch('src.routes.treinamentos.treinamento.send_turma_alterada_email'),
+        patch('src.services.email_service.send_email'),
+    ):
+        r_up = client.put(
+            f'/api/treinamentos/turmas/{turma_id}',
+            json={'instrutor_id': new_id},
+            headers=headers,
+        )
+        assert r_up.status_code == 200  # nosec B101
+        assert mock_send.call_count == 1  # nosec B101

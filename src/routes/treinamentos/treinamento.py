@@ -55,7 +55,6 @@ from src.services.email_service import (
     build_turma_context,
     listar_emails_secretaria,
     send_turma_alterada_email,
-    send_nova_turma_instrutor_email,
 )
 
 log = logging.getLogger(__name__)
@@ -578,11 +577,6 @@ def atualizar_turma_treinamento(turma_id):
     try:
         db.session.commit()
         db.session.refresh(turma)
-        if instrutor_antigo != turma.instrutor and turma.instrutor:
-            try:
-                send_nova_turma_instrutor_email(turma, turma.instrutor)
-            except Exception as exc:  # pragma: no cover - log apenas
-                log.error(f"Erro ao notificar novo instrutor: {exc}")
         periodo_novo = ""
         if turma.data_inicio and turma.data_fim:
             periodo_novo = (

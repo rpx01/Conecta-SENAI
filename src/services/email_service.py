@@ -524,81 +524,82 @@ def notificar_atualizacao_turma(
     notificar_secretaria: bool = True,
 ) -> None:
     """Notifica secretaria e instrutores sobre alterações em uma turma."""
+    if not diff:
+        return
+
     treinamento = getattr(turma, "treinamento", None)
     nome_treinamento = getattr(treinamento, "nome", "")
 
-    emails_secretaria = listar_emails_secretaria()
-    if notificar_secretaria and emails_secretaria and diff:
-        turma_ctx = build_turma_context(turma)
-        fmt = "%d/%m/%Y"
-        # Monta dados antigos com base no diff
-        dados_antigos = {
-            "nome": turma_ctx.nome,
-            "data_inicio": diff.get(
-                "data_inicio",
-                (
-                    turma_ctx.data_inicio.strftime(fmt)
-                    if turma_ctx.data_inicio
-                    else None,
-                    None,
-                ),
-            )[0],
-            "data_termino": diff.get(
-                "data_fim",
-                (
-                    turma_ctx.data_termino.strftime(fmt)
-                    if turma_ctx.data_termino
-                    else None,
-                    None,
-                ),
-            )[0],
-            "local": diff.get("local_realizacao", (turma_ctx.local, None))[0],
-            "instrutor_nome": diff.get(
-                "instrutor",
-                (
-                    turma_ctx.instrutor.nome
-                    if turma_ctx.instrutor
-                    else "A definir",
-                    None,
-                ),
-            )[0],
-        }
-        old_horario = diff.get("horario", (None, None))[0]
-        if old_horario:
-            partes = str(old_horario).split("-")
-            hora_ini = _parse_time(partes[0]) or turma_ctx.horario_inicio
-            hora_fim = (
-                _parse_time(partes[1]) if len(partes) > 1 else None
-            )
-            hora_fim = hora_fim or turma_ctx.horario_fim
-        else:
-            hora_ini = turma_ctx.horario_inicio
-            hora_fim = turma_ctx.horario_fim
-        dados_antigos["horario_inicio"] = hora_ini.strftime("%H:%M")
-        dados_antigos["horario_fim"] = hora_fim.strftime("%H:%M")
+    turma_ctx = build_turma_context(turma)
+    fmt = "%d/%m/%Y"
 
-        dados_novos = {
-            "treinamento_nome": turma_ctx.treinamento.nome,
-            "treinamento_codigo": getattr(treinamento, "codigo", ""),
-            "periodo": (
-                f"{turma_ctx.data_inicio.strftime('%d/%m/%Y')} a "
-                f"{turma_ctx.data_termino.strftime('%d/%m/%Y')}"
-                if turma_ctx.data_inicio and turma_ctx.data_termino
-                else ""
+    dados_antigos = {
+        "nome": turma_ctx.nome,
+        "data_inicio": diff.get(
+            "data_inicio",
+            (
+                turma_ctx.data_inicio.strftime(fmt)
+                if turma_ctx.data_inicio
+                else None,
+                None,
             ),
-            "horario": getattr(turma, "horario", ""),
-            "carga_horaria": getattr(treinamento, "carga_horaria", None),
-            "instrutor_nome": (
+        )[0],
+        "data_termino": diff.get(
+            "data_fim",
+            (
+                turma_ctx.data_termino.strftime(fmt)
+                if turma_ctx.data_termino
+                else None,
+                None,
+            ),
+        )[0],
+        "local": diff.get("local_realizacao", (turma_ctx.local, None))[0],
+        "instrutor_nome": diff.get(
+            "instrutor",
+            (
                 turma_ctx.instrutor.nome
                 if turma_ctx.instrutor
-                else "Não definido"
+                else "A definir",
+                None,
             ),
-            "local_realizacao": turma_ctx.local,
-            "teoria_online": getattr(turma, "teoria_online", False),
-            "tem_pratica": getattr(treinamento, "tem_pratica", False),
-            "local_pratica": getattr(turma, "local_pratica", None),
-        }
+        )[0],
+    }
+    old_horario = diff.get("horario", (None, None))[0]
+    if old_horario:
+        partes = str(old_horario).split("-")
+        hora_ini = _parse_time(partes[0]) or turma_ctx.horario_inicio
+        hora_fim = _parse_time(partes[1]) if len(partes) > 1 else None
+        hora_fim = hora_fim or turma_ctx.horario_fim
+    else:
+        hora_ini = turma_ctx.horario_inicio
+        hora_fim = turma_ctx.horario_fim
+    dados_antigos["horario_inicio"] = hora_ini.strftime("%H:%M")
+    dados_antigos["horario_fim"] = hora_fim.strftime("%H:%M")
 
+    dados_novos = {
+        "treinamento_nome": turma_ctx.treinamento.nome,
+        "treinamento_codigo": getattr(treinamento, "codigo", ""),
+        "periodo": (
+            f"{turma_ctx.data_inicio.strftime('%d/%m/%Y')} a "
+            f"{turma_ctx.data_termino.strftime('%d/%m/%Y')}"
+            if turma_ctx.data_inicio and turma_ctx.data_termino
+            else ""
+        ),
+        "horario": getattr(turma, "horario", ""),
+        "carga_horaria": getattr(treinamento, "carga_horaria", None),
+        "instrutor_nome": (
+            turma_ctx.instrutor.nome
+            if turma_ctx.instrutor
+            else "Não definido"
+        ),
+        "local_realizacao": turma_ctx.local,
+        "teoria_online": getattr(turma, "teoria_online", False),
+        "tem_pratica": getattr(treinamento, "tem_pratica", False),
+        "local_pratica": getattr(turma, "local_pratica", None),
+    }
+
+    emails_secretaria = listar_emails_secretaria()
+    if notificar_secretaria and emails_secretaria:
         send_turma_alterada_email(dados_antigos, dados_novos)
         time_module.sleep(RATE_LIMIT_DELAY)
 
@@ -654,6 +655,22 @@ def notificar_atualizacao_turma(
         and getattr(instrutor_atual, "email", None)
     ):
         send_nova_turma_instrutor_email(turma, instrutor_atual)
+        time_module.sleep(RATE_LIMIT_DELAY)
+    elif (
+        atual_id
+        and antigo_id == atual_id
+        and getattr(instrutor_atual, "email", None)
+    ):
+        subject = (
+            "Alteração de Agendamento de Turma: "
+            f"{dados_novos.get('treinamento_nome')}"
+        )
+        html_body = render_template(
+            "email/turma_alterada_secretaria.html.j2",
+            dados_antigos=dados_antigos,
+            dados_novos=dados_novos,
+        )
+        send_email(instrutor_atual.email, subject, html_body)
         time_module.sleep(RATE_LIMIT_DELAY)
 
 

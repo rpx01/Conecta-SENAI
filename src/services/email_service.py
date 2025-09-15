@@ -57,7 +57,7 @@ class RateLimiter:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             with self.lock:
                 now = time_module.monotonic()
-                while self.calls and now - self.calls[0] > self.period:
+                while self.calls and now - self.calls[0] >= self.period:
                     self.calls.popleft()
 
                 if len(self.calls) >= self.max_calls:
@@ -65,7 +65,7 @@ class RateLimiter:
                     if sleep_for > 0:
                         time_module.sleep(sleep_for)
                         now = time_module.monotonic()
-                        while self.calls and now - self.calls[0] > self.period:
+                        while self.calls and now - self.calls[0] >= self.period:
                             self.calls.popleft()
 
                 self.calls.append(time_module.monotonic())

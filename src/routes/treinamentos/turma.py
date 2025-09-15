@@ -1,7 +1,7 @@
 """Rotas para gerenciamento de turmas."""
 
 from flask import Blueprint, request, jsonify, current_app
-from src.models import db
+from src.models import db, EmailSecretaria
 from sqlalchemy.exc import SQLAlchemyError
 from src.utils.error_handler import handle_internal_error
 from src.models.laboratorio_turma import Turma
@@ -10,8 +10,7 @@ from src.models.treinamento import TurmaTreinamento, InscricaoTreinamento
 from src.services.email_service import (
     enviar_convocacao,
     notificar_atualizacao_turma,
-    send_treinamento_desmarcado_email,
-    listar_emails_secretaria,
+    EmailService,
 )
 from src.auth import admin_required
 from datetime import datetime
@@ -155,22 +154,48 @@ def remover_turma(turma_id):
     if not turma:
         return jsonify({"erro": "Turma não encontrada"}), 404
 
-    recipients = listar_emails_secretaria()
-    instrutor_email = getattr(getattr(turma, "instrutor", None), "email", None)
-    if instrutor_email:
-        recipients.append(instrutor_email)
+    email_service = EmailService()
 
+    # --- Bloco de código adicionado ---
+    # Coleta os e-mails da secretaria
+    emails_secretaria = [
+        result.email for result in db.session.query(EmailSecretaria.email).all()
+    ]
+
+    # Prepara os dados para o template do e-mail
+    template_data = {
+        "turma": turma.nome if hasattr(turma, "nome") else f"Turma {turma.id}",
+        "treinamento": turma.treinamento.nome,
+        "instrutor": turma.instrutor.nome if turma.instrutor else "Não definido",
+        "data_inicio": turma.data_inicio.strftime('%d/%m/%Y'),
+        "data_fim": turma.data_fim.strftime('%d/%m/%Y'),
+    }
+
+    # Envia e-mail para a secretaria, se houver e-mails cadastrados
     try:
-        send_treinamento_desmarcado_email(recipients, turma)
+        if emails_secretaria:
+            email_service.send_email(
+                to=emails_secretaria,
+                subject=f"Turma Removida: {turma.nome if hasattr(turma, 'nome') else turma.id}",
+                template="email/turma_removida_secretaria.html.j2",
+                **template_data,
+            )
+
+        # Envia e-mail para o instrutor, se ele existir
+        if turma.instrutor and turma.instrutor.email:
+            email_service.send_email(
+                to=turma.instrutor.email,
+                subject=f"Aviso de Remoção de Turma: {turma.nome if hasattr(turma, 'nome') else turma.id}",
+                template="email/turma_removida_secretaria.html.j2",  # Reutilizando o mesmo template
+                **template_data,
+            )
     except Exception as exc:  # pragma: no cover - log apenas
         current_app.logger.error(
-            (
-                "Erro ao enviar notificação de treinamento desmarcado "
-                "da turma %s: %s"
-            ),
+            "Erro ao enviar notificação de remoção da turma %s: %s",
             turma_id,
             exc,
         )
+    # --- Fim do bloco ---
 
     try:
         InscricaoTreinamento.query.filter_by(turma_id=turma_id).delete()

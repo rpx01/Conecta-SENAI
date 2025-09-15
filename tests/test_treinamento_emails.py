@@ -195,3 +195,46 @@ def test_atualizar_turma_notifica_instrutor_uma_vez(client, app):
         )
         assert r_up.status_code == 200  # nosec B101
         assert mock_send.call_count == 1  # nosec B101
+
+
+def test_remover_turma_envia_email_desmarcado(client, app):
+    headers = admin_headers(app)
+    resp = client.post(
+        '/api/treinamentos/catalogo',
+        json={'nome': 'TR', 'codigo': 'TR1'},
+        headers=headers,
+    )
+    treino_id = resp.get_json()['id']
+
+    with app.app_context():
+        instrutor = Instrutor(nome='Instr', email='inst@example.com')
+        secretaria = SecretariaTreinamentos(nome='Sec', email='sec@example.com')
+        db.session.add_all([instrutor, secretaria])
+        db.session.commit()
+        instrutor_id = instrutor.id
+
+    inicio = date.today() + timedelta(days=5)
+    payload = {
+        'treinamento_id': treino_id,
+        'data_inicio': inicio.isoformat(),
+        'data_fim': (inicio + timedelta(days=1)).isoformat(),
+        'instrutor_id': instrutor_id,
+    }
+    turma_resp = client.post(
+        '/api/treinamentos/turmas',
+        json=payload,
+        headers=headers,
+    )
+    turma_id = turma_resp.get_json()['id']
+
+    with patch(
+        'src.routes.treinamentos.treinamento.send_treinamento_desmarcado_email'
+    ) as mock_send:
+        delete_resp = client.delete(
+            f'/api/treinamentos/turmas/{turma_id}', headers=headers
+        )
+        assert delete_resp.status_code == 200  # nosec B101
+        mock_send.assert_called_once()  # nosec B101
+        recipients, turma_ctx = mock_send.call_args[0]
+        assert {'sec@example.com', 'inst@example.com'} <= set(recipients)  # nosec B101
+        assert turma_ctx.treinamento.nome == 'TR'  # nosec B101

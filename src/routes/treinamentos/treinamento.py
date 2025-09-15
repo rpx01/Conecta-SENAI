@@ -6,6 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 import math
 from datetime import date, datetime, timedelta
 import logging
+from types import SimpleNamespace
 
 from src.models import (
     db,
@@ -54,6 +55,7 @@ from src.services.email_service import (
     notificar_atualizacao_turma,
     build_turma_context,
     listar_emails_secretaria,
+    send_treinamento_desmarcado_email,
     send_turma_alterada_email,
 )
 
@@ -680,9 +682,70 @@ def remover_turma_treinamento(turma_id):
             403,
         )
     try:
+        emails_secretaria = listar_emails_secretaria()
+        instrutor_email = (
+            turma.instrutor.email
+            if turma.instrutor and getattr(turma.instrutor, "email", None)
+            else None
+        )
+        recipients = []
+        if emails_secretaria:
+            recipients.extend(emails_secretaria)
+        if instrutor_email:
+            recipients.append(instrutor_email)
+        unique_recipients = list(dict.fromkeys(recipients))
+
+        treinamento = turma.treinamento
+        turma_email_ctx = SimpleNamespace(
+            treinamento=SimpleNamespace(
+                nome=getattr(treinamento, "nome", ""),
+                codigo=getattr(treinamento, "codigo", ""),
+                carga_horaria=getattr(treinamento, "carga_horaria", None),
+                tem_pratica=getattr(treinamento, "tem_pratica", False),
+            ),
+            data_inicio=turma.data_inicio,
+            data_fim=turma.data_fim,
+            horario=turma.horario,
+            instrutor=turma.instrutor,
+            local_realizacao=turma.local_realizacao,
+            local_pratica=getattr(turma, "local_pratica", None),
+            teoria_online=turma.teoria_online,
+        )
+
+        dados_log = {
+            "id": turma.id,
+            "treinamento_id": turma.treinamento_id,
+            "treinamento_nome": (
+                turma.treinamento.nome if turma.treinamento else None
+            ),
+            "data_inicio": turma.data_inicio.isoformat()
+            if turma.data_inicio
+            else None,
+            "data_fim": turma.data_fim.isoformat() if turma.data_fim else None,
+            "instrutor_id": turma.instrutor_id,
+            "instrutor_nome": turma.instrutor.nome if turma.instrutor else None,
+        }
+
         InscricaoTreinamento.query.filter_by(turma_id=turma_id).delete()
         db.session.delete(turma)
         db.session.commit()
+
+        log_action(
+            g.current_user.id,
+            'delete',
+            'TurmaTreinamento',
+            dados_log["id"],
+            dados_log,
+        )
+
+        if unique_recipients:
+            try:
+                send_treinamento_desmarcado_email(unique_recipients, turma_email_ctx)
+            except Exception as exc:  # pragma: no cover - log apenas
+                log.error(
+                    "Erro ao enviar e-mail de treinamento desmarcado: %s", exc
+                )
+
         return jsonify({"mensagem": "Turma removida com sucesso"})
     except SQLAlchemyError as e:
         db.session.rollback()

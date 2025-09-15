@@ -7,6 +7,10 @@ const API_URL = '/api';
 // Overlay de carregamento reutilizável
 let loadingOverlay;
 
+// Cache para resultado de verificação de autenticação
+let autenticacaoCache = null;
+let verificacaoAutenticacaoPromise = null;
+
 function criarLoadingOverlay() {
     if (loadingOverlay) return;
     loadingOverlay = document.createElement('div');
@@ -256,21 +260,36 @@ function ajustarVisibilidadePorPapel() {
  * @returns {Promise<boolean>} - True se autenticado, false caso contrário
  */
 async function verificarAutenticacao() {
-    const usuario = getUsuarioLogado();
-    if (!usuario) {
-        window.location.href = '/admin/login.html';
-        return false;
+    if (autenticacaoCache !== null) {
+        return autenticacaoCache;
+    }
+    if (verificacaoAutenticacaoPromise) {
+        return verificacaoAutenticacaoPromise;
     }
 
-    try {
-        // Valida o token acessando os dados do próprio usuário
-        await chamarAPI(`/usuarios/${usuario.id}`);
-        return true;
-    } catch (error) {
-        console.warn('Sessão inválida. Redirecionando para login.');
-        realizarLogout();
-        return false;
-    }
+    verificacaoAutenticacaoPromise = (async () => {
+        const usuario = getUsuarioLogado();
+        if (!usuario) {
+            window.location.href = '/admin/login.html';
+            return false;
+        }
+
+        try {
+            // Valida o token acessando os dados do próprio usuário
+            await chamarAPI(`/usuarios/${usuario.id}`);
+            autenticacaoCache = true;
+            return true;
+        } catch (error) {
+            console.warn('Sessão inválida. Redirecionando para login.');
+            realizarLogout();
+            autenticacaoCache = false;
+            return false;
+        } finally {
+            verificacaoAutenticacaoPromise = null;
+        }
+    })();
+
+    return verificacaoAutenticacaoPromise;
 }
 
 /**

@@ -14,6 +14,8 @@ from typing import (
 import logging
 import re
 import time as time_module
+import threading
+from collections import deque
 
 import resend
 from flask import current_app, render_template
@@ -36,6 +38,37 @@ DEFAULT_FROM = os.getenv("MAIL_FROM") or os.getenv(
 DEFAULT_REPLY_TO = os.getenv("RESEND_REPLY_TO")
 
 Address = Union[str, Iterable[str]]
+
+
+class RateLimiter:
+    """Decorator que limita a taxa de execução de uma função."""
+
+    def __init__(self, max_calls: int, period: int = 1) -> None:
+        self.calls: deque[float] = deque()
+        self.period = period
+        self.max_calls = max_calls
+        self.lock = threading.Lock()
+
+    def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            with self.lock:
+                now = time_module.monotonic()
+                while self.calls and now - self.calls[0] > self.period:
+                    self.calls.popleft()
+
+                if len(self.calls) >= self.max_calls:
+                    sleep_for = (self.calls[0] + self.period) - now
+                    if sleep_for > 0:
+                        time_module.sleep(sleep_for)
+                        now = time_module.monotonic()
+                        while self.calls and now - self.calls[0] > self.period:
+                            self.calls.popleft()
+
+                self.calls.append(time_module.monotonic())
+
+            return func(*args, **kwargs)
+
+        return wrapper
 
 
 def _normalize(addr: Address | None) -> Optional[List[str]]:
@@ -86,6 +119,7 @@ def build_user_context(nome: str) -> SimpleNamespace:
     return SimpleNamespace(name=nome)
 
 
+@RateLimiter(max_calls=2, period=1)
 def send_email(
     to: Address,
     subject: str,

@@ -21,6 +21,7 @@ import resend
 from flask import current_app, render_template
 from types import SimpleNamespace
 from datetime import time
+from resend.exceptions import ResendError
 
 log = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ Address = Union[str, Iterable[str]]
 # Intervalo mínimo entre notificações para respeitar o limite de 2 requisições
 # por segundo imposto pelo provedor externo.
 RATE_LIMIT_DELAY = 0.5
+MAX_EMAIL_RETRIES = 3
 
 
 class RateLimiter:
@@ -189,12 +191,27 @@ def send_email(
     log.debug(
         "EMAIL_SEND_START", extra={"to": params["to"], "subject": subject}
     )
-    result = resend.Emails.send(params)
-    log.info(
-        "EMAIL_SEND_SUCCESS",
-        extra={"email_id": result.get("id"), "subject": subject},
-    )
-    return result
+    for attempt in range(1, MAX_EMAIL_RETRIES + 1):
+        try:
+            result = resend.Emails.send(params)
+            log.info(
+                "EMAIL_SEND_SUCCESS",
+                extra={"email_id": result.get("id"), "subject": subject},
+            )
+            return result
+        except ResendError as exc:  # pragma: no cover - network failure
+            if getattr(exc, "code", None) == 429 and attempt < MAX_EMAIL_RETRIES:
+                log.warning(
+                    "EMAIL_RATE_LIMIT_HIT",
+                    extra={"subject": subject, "attempt": attempt},
+                )
+                time_module.sleep(RATE_LIMIT_DELAY)
+                continue
+            log.error(
+                "EMAIL_SEND_FAILURE",
+                extra={"subject": subject, "error": str(exc)},
+            )
+            raise
 
 
 def render_email_template(name: str, **ctx: Any) -> str:

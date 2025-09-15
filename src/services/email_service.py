@@ -692,6 +692,22 @@ class EmailService:
             attachments=attachments,
         )
 
+    def send_email(
+        self,
+        to: Address,
+        subject: str,
+        template: str,
+        **context: Any,
+    ) -> None:
+        """Interface simples para envio de e-mails usando templates."""
+        recipients = [to] if isinstance(to, str) else list(to)
+        self._send_mail(
+            subject=subject,
+            recipients=recipients,
+            template=template,
+            context=context,
+        )
+
     def send_convocacao_email(self, user: Any, turma: Any) -> None:
         """Envia e-mail de convocação com anexo quando necessário."""
 

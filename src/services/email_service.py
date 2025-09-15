@@ -39,6 +39,10 @@ DEFAULT_REPLY_TO = os.getenv("RESEND_REPLY_TO")
 
 Address = Union[str, Iterable[str]]
 
+# Intervalo mínimo entre notificações para respeitar o limite de 2 requisições
+# por segundo imposto pelo provedor externo.
+RATE_LIMIT_DELAY = 0.5
+
 
 class RateLimiter:
     """Decorator que limita a taxa de execução de uma função."""
@@ -363,7 +367,7 @@ def send_turma_alterada_email(dados_antigos: dict, dados_novos: dict):
         for idx, email in enumerate(recipients):
             send_email(email, subject, html_body)
             if idx < len(recipients) - 1:
-                time_module.sleep(0.5)
+                time_module.sleep(RATE_LIMIT_DELAY)
         current_app.logger.info(
             (
                 "E-mail de alteração da turma "
@@ -532,7 +536,7 @@ def notificar_atualizacao_turma(
         }
 
         send_turma_alterada_email(dados_antigos, dados_novos)
-        time_module.sleep(0.5)
+        time_module.sleep(RATE_LIMIT_DELAY)
 
     instrutor_atual = getattr(turma, "instrutor", None)
 
@@ -578,7 +582,7 @@ def notificar_atualizacao_turma(
             )
             subject_rem = f"Remanejamento de Turma - {nome_treinamento}"
             send_email(instrutor_antigo_obj.email, subject_rem, html_rem)
-            time_module.sleep(0.5)
+            time_module.sleep(RATE_LIMIT_DELAY)
 
     if (
         atual_id
@@ -586,6 +590,7 @@ def notificar_atualizacao_turma(
         and getattr(instrutor_atual, "email", None)
     ):
         send_nova_turma_instrutor_email(turma, instrutor_atual)
+        time_module.sleep(RATE_LIMIT_DELAY)
 
 
 class EmailService:

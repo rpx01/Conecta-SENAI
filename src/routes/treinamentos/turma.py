@@ -7,7 +7,12 @@ from src.utils.error_handler import handle_internal_error
 from src.models.laboratorio_turma import Turma
 from src.routes.user import verificar_autenticacao, verificar_admin
 from src.models.treinamento import TurmaTreinamento, InscricaoTreinamento
-from src.services.email_service import enviar_convocacao, notificar_atualizacao_turma
+from src.services.email_service import (
+    enviar_convocacao,
+    notificar_atualizacao_turma,
+    send_treinamento_desmarcado_email,
+    listar_emails_secretaria,
+)
 from src.auth import admin_required
 from datetime import datetime
 import time
@@ -136,25 +141,39 @@ def atualizar_turma(id):
         return handle_internal_error(e)
 
 
-@turma_bp.route("/turmas/<int:id>", methods=["DELETE"])
-def remover_turma(id):
-    """
-    Remove uma turma.
-    Apenas administradores podem remover turmas.
-    """
+@turma_bp.route("/turma/<int:turma_id>", methods=["DELETE"])
+def remover_turma(turma_id):
+    """Remove uma turma de treinamento e notifica os responsáveis."""
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
         return jsonify({"erro": "Não autenticado"}), 401
 
-    # Verifica permissões de administrador
     if not verificar_admin(user):
         return jsonify({"erro": "Permissão negada"}), 403
 
-    turma = db.session.get(Turma, id)
+    turma = db.session.get(TurmaTreinamento, turma_id)
     if not turma:
         return jsonify({"erro": "Turma não encontrada"}), 404
 
+    recipients = listar_emails_secretaria()
+    instrutor_email = getattr(getattr(turma, "instrutor", None), "email", None)
+    if instrutor_email:
+        recipients.append(instrutor_email)
+
     try:
+        send_treinamento_desmarcado_email(recipients, turma)
+    except Exception as exc:  # pragma: no cover - log apenas
+        current_app.logger.error(
+            (
+                "Erro ao enviar notificação de treinamento desmarcado "
+                "da turma %s: %s"
+            ),
+            turma_id,
+            exc,
+        )
+
+    try:
+        InscricaoTreinamento.query.filter_by(turma_id=turma_id).delete()
         db.session.delete(turma)
         db.session.commit()
         return jsonify({"mensagem": "Turma removida com sucesso"})
@@ -166,7 +185,8 @@ def remover_turma(id):
 @turma_bp.post("/treinamentos/turmas/<int:turma_id>/convocar-todos")
 @admin_required
 def convocar_todos_da_turma(turma_id: int):
-    """Convoca todos os participantes de uma turma, independente do status anterior."""
+    """Convoca todos os participantes de uma turma,
+    independente do status anterior."""
     current_app.logger.info(
         "Iniciando convocação para todos os participantes da turma %s.",
         turma_id,
@@ -196,7 +216,7 @@ def convocar_todos_da_turma(turma_id: int):
     convocados_sucesso = 0
     for inscricao in inscricoes_para_convocar:
         try:
-            # Pausa para respeitar o limite de taxa do provedor de e-mail (2 req/s)
+            # Pausa para respeitar o limite do provedor de e-mail (2 req/s)
             time.sleep(0.6)
             enviar_convocacao(inscricao, turma)
             inscricao.convocado_em = datetime.utcnow()
@@ -222,7 +242,13 @@ def convocar_todos_da_turma(turma_id: int):
             e,
         )
         return (
-            jsonify({"error": ("Ocorreu um erro ao salvar o estado das convocações.")}),
+            jsonify(
+                {
+                    "error": (
+                        "Ocorreu um erro ao salvar o estado das convocações."
+                    )
+                }
+            ),
             500,
         )
 

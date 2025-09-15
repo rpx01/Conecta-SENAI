@@ -67,7 +67,9 @@ class RateLimiter:
                     if sleep_for > 0:
                         time_module.sleep(sleep_for)
                         now = time_module.monotonic()
-                        while self.calls and now - self.calls[0] >= self.period:
+                        while (
+                            self.calls and now - self.calls[0] >= self.period
+                        ):
                             self.calls.popleft()
 
                 self.calls.append(time_module.monotonic())
@@ -200,7 +202,10 @@ def send_email(
             )
             return result
         except ResendError as exc:  # pragma: no cover - network failure
-            if getattr(exc, "code", None) == 429 and attempt < MAX_EMAIL_RETRIES:
+            if (
+                getattr(exc, "code", None) == 429
+                and attempt < MAX_EMAIL_RETRIES
+            ):
                 log.warning(
                     "EMAIL_RATE_LIMIT_HIT",
                     extra={"subject": subject, "attempt": attempt},
@@ -396,6 +401,48 @@ def send_turma_alterada_email(dados_antigos: dict, dados_novos: dict):
         current_app.logger.error(
             f"Falha ao enviar e-mail de turma alterada: {e}", exc_info=True
         )
+
+
+def send_treinamento_desmarcado_email(
+    recipients: Iterable[str], turma: "TurmaTreinamento"
+) -> None:
+    """Envia e-mail informando sobre o cancelamento de um treinamento."""
+    if not recipients:
+        return
+
+    treinamento = getattr(turma, "treinamento", None)
+    periodo = ""
+    if getattr(turma, "data_inicio", None) and getattr(
+        turma, "data_fim", None
+    ):
+        periodo = (
+            f"{turma.data_inicio.strftime('%d/%m/%Y')} a "
+            f"{turma.data_fim.strftime('%d/%m/%Y')}"
+        )
+    elif getattr(turma, "data_inicio", None):
+        periodo = turma.data_inicio.strftime("%d/%m/%Y")
+
+    turma_ctx = SimpleNamespace(
+        treinamento=SimpleNamespace(
+            nome=getattr(treinamento, "nome", ""),
+            codigo=getattr(treinamento, "codigo", ""),
+            carga_horaria=getattr(treinamento, "carga_horaria", None),
+            tem_pratica=getattr(treinamento, "tem_pratica", False),
+        ),
+        periodo=periodo,
+        horario=getattr(turma, "horario", ""),
+        instrutor=getattr(turma, "instrutor", None),
+        local=getattr(turma, "local_realizacao", ""),
+        local_pratica=getattr(turma, "local_pratica", None),
+        teoria_online=getattr(turma, "teoria_online", False),
+    )
+
+    subject = f"Treinamento desmarcado - {turma_ctx.treinamento.nome}"
+    html = render_email_template(
+        "treinamento_desmarcado.html.j2", turma=turma_ctx
+    )
+    for email in recipients:
+        send_email(email, subject, html)
 
 
 def send_nova_turma_instrutor_email(

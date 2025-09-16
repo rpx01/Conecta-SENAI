@@ -13,6 +13,7 @@ from .agendamento import Agendamento, Notificacao  # noqa: E402
 from .instrutor import Instrutor  # noqa: E402
 from .ocupacao import Ocupacao  # noqa: E402
 from .treinamento import (  # noqa: E402
+    LocalRealizacao,
     Treinamento,
     TurmaTreinamento,
     InscricaoTreinamento,
@@ -47,6 +48,7 @@ __all__ = [
     "Notificacao",
     "Instrutor",
     "Ocupacao",
+    "LocalRealizacao",
     "Treinamento",
     "TurmaTreinamento",
     "InscricaoTreinamento",

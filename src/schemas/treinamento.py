@@ -1,6 +1,6 @@
 """Esquemas Pydantic para o módulo de treinamentos."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
 from datetime import date
 
@@ -75,3 +75,12 @@ class TreinamentoSchema(BaseModel):
     links_materiais: Optional[List[str]] = None
     tipo: Optional[str] = None
     conteudo_programatico: Optional[str] = None
+
+
+class LocalRealizacaoSchema(BaseModel):
+    """Schema para validação e serialização de locais de realização."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: Optional[int] = None
+    nome: str = Field(..., min_length=1, max_length=255)

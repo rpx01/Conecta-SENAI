@@ -1,7 +1,7 @@
 from urllib.parse import quote
 
-from conectasenai_api.models import db
-from conectasenai_api.models.log_rateio import LogLancamentoRateio
+from src.models import db
+from src.models.log_rateio import LogLancamentoRateio
 
 
 def test_listar_logs_rateio_paginado(client, login_admin):

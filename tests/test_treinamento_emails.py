@@ -2,16 +2,16 @@ import jwt
 from datetime import datetime, timedelta, date
 from unittest.mock import patch
 
-from conectasenai_api.models import db
-from conectasenai_api.models.instrutor import Instrutor
-from conectasenai_api.models.secretaria_treinamentos import SecretariaTreinamentos
-from conectasenai_api.models.treinamento import Treinamento, TurmaTreinamento
-from conectasenai_api.services.email_service import notificar_atualizacao_turma
+from src.models import db
+from src.models.instrutor import Instrutor
+from src.models.secretaria_treinamentos import SecretariaTreinamentos
+from src.models.treinamento import Treinamento, TurmaTreinamento
+from src.services.email_service import notificar_atualizacao_turma
 
 
 def admin_headers(app):
     with app.app_context():
-        from conectasenai_api.models.user import User
+        from src.models.user import User
         user = User.query.filter_by(email='admin@example.com').first()
         token = jwt.encode({
             'user_id': user.id,
@@ -43,7 +43,7 @@ def test_notificar_nova_turma_enviada(client, app):
         'data_fim': (hoje + timedelta(days=1)).isoformat(),
         'instrutor_id': inst_id,
     }
-    with patch('conectasenai_api.services.email_service.send_email') as mock_send:
+    with patch('src.services.email_service.send_email') as mock_send:
         r = client.post(
             '/api/treinamentos/turmas',
             json=payload,
@@ -83,7 +83,7 @@ def test_atualizar_turma_genera_diff(client, app):
     turma_id = resp.get_json()['id']
     novo_inicio = hoje + timedelta(days=1)
     with patch(
-        'conectasenai_api.routes.treinamentos.treinamento.notificar_atualizacao_turma'
+        'src.routes.treinamentos.treinamento.notificar_atualizacao_turma'
     ) as mock_notify:
         resp_up = client.put(
             f'/api/treinamentos/turmas/{turma_id}',
@@ -118,7 +118,7 @@ def test_notificar_atualizacao_envia_emails_instrutores(app):
         db.session.add_all([treino, inst_old, inst_new, turma, sec])
         db.session.commit()
         diff = {'instrutor': (inst_old.nome, inst_new.nome)}
-        with patch('conectasenai_api.services.email_service.send_email') as mock_send:
+        with patch('src.services.email_service.send_email') as mock_send:
             notificar_atualizacao_turma(turma, diff, inst_old)
             destinatarios = {c.args[0] for c in mock_send.call_args_list}
             assert destinatarios == {
@@ -145,7 +145,7 @@ def test_notificar_atualizacao_instrutor_id(app):
         db.session.add_all([treino, inst_old, inst_new, turma, sec])
         db.session.commit()
         diff = {'instrutor': (inst_old.nome, inst_new.nome)}
-        with patch('conectasenai_api.services.email_service.send_email') as mock_send:
+        with patch('src.services.email_service.send_email') as mock_send:
             notificar_atualizacao_turma(turma, diff, inst_old.id)
             destinatarios = {c.args[0] for c in mock_send.call_args_list}
             assert destinatarios == {
@@ -172,7 +172,7 @@ def test_notificar_atualizacao_instrutor_inalterado_recebe_email(app):
 
         diff = {'local_realizacao': ('Local Antigo', 'Local Atual')}
 
-        with patch('conectasenai_api.services.email_service.send_email') as mock_send:
+        with patch('src.services.email_service.send_email') as mock_send:
             notificar_atualizacao_turma(turma, diff, instrutor)
 
         destinatarios = [call.args[0] for call in mock_send.call_args_list]
@@ -207,11 +207,11 @@ def test_atualizar_turma_notifica_instrutor_uma_vez(client, app):
         headers=headers,
     )
     turma_id = resp.get_json()['id']
-    patch_path = 'conectasenai_api.services.email_service.send_nova_turma_instrutor_email'
+    patch_path = 'src.services.email_service.send_nova_turma_instrutor_email'
     with (
         patch(patch_path) as mock_send,
-        patch('conectasenai_api.routes.treinamentos.treinamento.send_turma_alterada_email'),
-        patch('conectasenai_api.services.email_service.send_email'),
+        patch('src.routes.treinamentos.treinamento.send_turma_alterada_email'),
+        patch('src.services.email_service.send_email'),
     ):
         r_up = client.put(
             f'/api/treinamentos/turmas/{turma_id}',
@@ -253,7 +253,7 @@ def test_remover_turma_envia_email_desmarcado(client, app):
     turma_id = turma_resp.get_json()['id']
 
     with patch(
-        'conectasenai_api.routes.treinamentos.treinamento.send_treinamento_desmarcado_email'
+        'src.routes.treinamentos.treinamento.send_treinamento_desmarcado_email'
     ) as mock_send:
         delete_resp = client.delete(
             f'/api/treinamentos/turmas/{turma_id}', headers=headers

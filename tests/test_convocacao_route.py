@@ -1,12 +1,12 @@
 from datetime import date, datetime, timedelta
 import jwt
 
-from conectasenai_api.models import db, Treinamento, TurmaTreinamento, InscricaoTreinamento
+from src.models import db, Treinamento, TurmaTreinamento, InscricaoTreinamento
 
 
 def admin_headers(app):
     with app.app_context():
-        from conectasenai_api.models.user import User
+        from src.models.user import User
         user = User.query.filter_by(email='admin@example.com').first()
         token = jwt.encode(
             {'user_id': user.id, 'nome': user.nome, 'perfil': user.tipo, 'exp': datetime.utcnow() + timedelta(hours=1)},
@@ -49,7 +49,7 @@ def test_convocar_inscrito(client, app, monkeypatch):
         called['subject'] = subject
         called['html'] = html
 
-    monkeypatch.setattr('conectasenai_api.routes.treinamentos.treinamento.send_email', fake_send_email)
+    monkeypatch.setattr('src.routes.treinamentos.treinamento.send_email', fake_send_email)
 
     resp = client.post(f'/api/inscricoes/{iid}/convocar', headers=headers)
     assert resp.status_code == 200

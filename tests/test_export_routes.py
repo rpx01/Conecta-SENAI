@@ -8,12 +8,12 @@ from flask import Flask
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from conectasenai_api.models import db
-from conectasenai_api.models.sala import Sala
-from conectasenai_api.models.user import User
-from conectasenai_api.routes.user import user_bp
-from conectasenai_api.routes.laboratorios import agendamento_bp
-from conectasenai_api.routes.ocupacao import ocupacao_bp
+from src.models import db
+from src.models.sala import Sala
+from src.models.user import User
+from src.routes.user import user_bp
+from src.routes.laboratorios import agendamento_bp
+from src.routes.ocupacao import ocupacao_bp
 
 
 @pytest.fixture

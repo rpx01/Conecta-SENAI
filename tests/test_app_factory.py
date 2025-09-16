@@ -1,5 +1,5 @@
 import os
-from conectasenai_api.main import create_app
+from src.main import create_app
 
 
 def test_create_app():

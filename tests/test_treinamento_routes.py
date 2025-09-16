@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 def admin_headers(app):
     with app.app_context():
-        from conectasenai_api.models.user import User
+        from src.models.user import User
         user = User.query.filter_by(email='admin@example.com').first()
         token = jwt.encode({
             'user_id': user.id,

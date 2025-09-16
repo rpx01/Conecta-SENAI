@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 from resend.exceptions import ResendError
 
-import conectasenai_api.services.email_service as email_service
+import src.services.email_service as email_service
 
 
 def reload_service(
@@ -20,7 +20,7 @@ def reload_service(
 
 def test_address_normalization(monkeypatch):
     svc = reload_service(monkeypatch)
-    with patch("conectasenai_api.services.email_service.resend.Emails.send") as mock_send:
+    with patch("src.services.email_service.resend.Emails.send") as mock_send:
         mock_send.return_value = {"id": "1"}
         svc.send_email(
             "a@example.com",
@@ -38,7 +38,7 @@ def test_address_normalization(monkeypatch):
 
 def test_attachments(monkeypatch):
     svc = reload_service(monkeypatch)
-    with patch("conectasenai_api.services.email_service.resend.Emails.send") as mock_send:
+    with patch("src.services.email_service.resend.Emails.send") as mock_send:
         mock_send.return_value = {"id": "1"}
         attachments = [
             {"filename": "man.pdf", "path": "https://ex.com/man.pdf"},
@@ -61,7 +61,7 @@ def test_error_propagation(monkeypatch):
         pass
 
     with patch(
-        "conectasenai_api.services.email_service.resend.Emails.send",
+        "src.services.email_service.resend.Emails.send",
         side_effect=Boom("bad"),
     ):
         with pytest.raises(Boom):
@@ -86,7 +86,7 @@ def test_send_email_retries_on_rate_limit(monkeypatch, app):
         return {"id": "123"}
 
     with patch(
-        "conectasenai_api.services.email_service.resend.Emails.send", side_effect=fake_send
+        "src.services.email_service.resend.Emails.send", side_effect=fake_send
     ) as mock_send:
         with app.app_context():
             result = svc.send_email("a@example.com", "Oi", "<p>oi</p>")

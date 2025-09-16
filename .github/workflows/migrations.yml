@@ -4,36 +4,34 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - "apps/api/src/conectasenai_api/models/**"
-      - "apps/api/alembic.ini"
-      - "apps/api/migrations/env.py"
+      - "src/models/**"
+      - "alembic.ini"
+      - "migrations/env.py"
   pull_request:
     paths:
-      - "apps/api/src/conectasenai_api/models/**"
-      - "apps/api/alembic.ini"
-      - "apps/api/migrations/env.py"
+      - "src/models/**"
+      - "alembic.ini"
+      - "migrations/env.py"
 
 jobs:
   migrate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install Poetry
-        run: pip install "poetry==1.8.3"
       - name: Install dependencies
         run: |
-          cd apps/api
-          poetry install
+          python -m pip install --upgrade pip
+          pip install .
       - name: Run automated migrations
         run: |
-          cd apps/api
-          poetry run bash ../../scripts/auto_migrate.sh "CI auto migration"
+          ./scripts/auto_migrate.sh "CI auto migration"
       - name: Check for uncommitted migrations
         run: |
-          git status --porcelain apps/api/migrations/versions
-          if [ -n "$(git status --porcelain apps/api/migrations/versions)" ]; then
+          git status --porcelain
+          if [ -n "$(git status --porcelain migrations/versions)" ]; then
             echo "New migrations detected. Commit them to the repository." && exit 1
           fi

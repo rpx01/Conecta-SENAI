@@ -14,20 +14,20 @@ from flask_wtf.csrf import CSRFProtect
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from conectasenai_api.models import db
-from conectasenai_api.models.user import User
-from conectasenai_api.models.sala import Sala
-from conectasenai_api.models.log_rateio import LogLancamentoRateio
-from conectasenai_api.extensions import limiter
-from conectasenai_api.routes.user import user_bp, gerar_token_acesso, gerar_refresh_token
-from conectasenai_api.routes.ocupacao import sala_bp, instrutor_bp, ocupacao_bp
-from conectasenai_api.routes.treinamentos import turma_bp, treinamento_bp
-from conectasenai_api.routes.laboratorios import agendamento_bp, laboratorio_bp
-from conectasenai_api.routes.planejamento import planejamento_bp, basedados_bp
-from conectasenai_api.routes.horario import horario_bp
-from conectasenai_api.routes.rateio.rateio import rateio_bp
-from conectasenai_api.blueprints.auth import auth_bp
-from conectasenai_api.routes.treinamentos.basedados import (
+from src.models import db
+from src.models.user import User
+from src.models.sala import Sala
+from src.models.log_rateio import LogLancamentoRateio
+from src.extensions import limiter
+from src.routes.user import user_bp, gerar_token_acesso, gerar_refresh_token
+from src.routes.ocupacao import sala_bp, instrutor_bp, ocupacao_bp
+from src.routes.treinamentos import turma_bp, treinamento_bp
+from src.routes.laboratorios import agendamento_bp, laboratorio_bp
+from src.routes.planejamento import planejamento_bp, basedados_bp
+from src.routes.horario import horario_bp
+from src.routes.rateio.rateio import rateio_bp
+from src.blueprints.auth import auth_bp
+from src.routes.treinamentos.basedados import (
     secretaria_bp as treinamentos_basedados_bp,
 )
 
@@ -36,12 +36,8 @@ def app():
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     app = Flask(
         __name__,
-        template_folder=os.path.join(
-            base_dir, 'apps', 'api', 'src', 'conectasenai_api', 'templates'
-        ),
-        static_folder=os.path.join(
-            base_dir, 'apps', 'api', 'src', 'conectasenai_api', 'static'
-        )
+        template_folder=os.path.join(base_dir, 'src', 'templates'),
+        static_folder=os.path.join(base_dir, 'src', 'static')
     )
     app.config['TESTING'] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'

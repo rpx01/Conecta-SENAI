@@ -1,5 +1,5 @@
 from datetime import date
-from src.models.audit_log import AuditLog
+from conectasenai_api.models.audit_log import AuditLog
 
 
 def test_audit_log_criacao_e_atualizacao(client, login_admin, app):

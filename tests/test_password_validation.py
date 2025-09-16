@@ -1,5 +1,5 @@
 import pytest
-from src.routes.user import PASSWORD_REGEX
+from conectasenai_api.routes.user import PASSWORD_REGEX
 
 @pytest.mark.parametrize("senha", [
     "Abcdef1!",

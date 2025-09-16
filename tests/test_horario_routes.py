@@ -1,6 +1,6 @@
 import pytest
 from sqlalchemy import text
-from src.models import db
+from conectasenai_api.models import db
 
 
 @pytest.mark.usefixtures("app")

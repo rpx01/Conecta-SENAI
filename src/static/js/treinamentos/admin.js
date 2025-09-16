@@ -3,6 +3,7 @@
 // Armazena a lista de treinamentos e instrutores para não ter que recarregar
 let catalogoDeTreinamentos = [];
 let listaDeInstrutores = [];
+let listaDeLocaisRealizacao = [];
 let turmaParaExcluirId = null;
 let turmaParaConvocarId = null;
 let confirmacaoModal;
@@ -255,6 +256,17 @@ async function carregarInstrutores() {
     }
 }
 
+// Carrega locais de realização para o select
+async function carregarLocaisRealizacao() {
+    if (listaDeLocaisRealizacao.length > 0) return; // Evita recarregar
+    try {
+        listaDeLocaisRealizacao = await chamarAPI('/treinamentos/locais-realizacao');
+    } catch(e) {
+        console.error("Falha ao carregar locais de realização", e);
+        showToast('Não foi possível carregar os locais de realização.', 'danger');
+    }
+}
+
 /**
  * Função centralizada para abrir o modal de turma, seja para criar ou editar.
  * @param {number|null} id - O ID da turma para editar, ou null para criar uma nova.
@@ -283,6 +295,16 @@ async function abrirModalTurma(id = null) {
     }
     listaDeInstrutores.forEach(i => {
         selectInstrutor.innerHTML += `<option value="${i.id}">${escapeHTML(i.nome)}</option>`;
+    });
+
+    // Popula o select de locais de realização
+    const selectLocal = document.getElementById('localRealizacao');
+    selectLocal.innerHTML = '<option value="">Selecione...</option>';
+    if (listaDeLocaisRealizacao.length === 0) {
+        await carregarLocaisRealizacao();
+    }
+    listaDeLocaisRealizacao.forEach(local => {
+        selectLocal.innerHTML += `<option value="${escapeHTML(local.nome)}">${escapeHTML(local.nome)}</option>`;
     });
 
     // Se for edição, busca os dados da turma

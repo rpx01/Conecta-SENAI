@@ -8,11 +8,11 @@ from flask import Flask
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.models import db
-from src.models.sala import Sala
-from src.models.user import User
-from src.models.ocupacao import Ocupacao
-from src.routes.ocupacao import ocupacao_bp
+from conectasenai_api.models import db
+from conectasenai_api.models.sala import Sala
+from conectasenai_api.models.user import User
+from conectasenai_api.models.ocupacao import Ocupacao
+from conectasenai_api.routes.ocupacao import ocupacao_bp
 
 @pytest.fixture
 def app():

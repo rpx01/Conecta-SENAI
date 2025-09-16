@@ -1,6 +1,6 @@
 import pytest
-from src.models import db
-from src.models.planejamento import (
+from conectasenai_api.models import db
+from conectasenai_api.models.planejamento import (
     Horario,
     CargaHoraria,
     Modalidade,
@@ -8,7 +8,7 @@ from src.models.planejamento import (
     Local,
     PublicoAlvo,
 )
-from src.models.instrutor import Instrutor
+from conectasenai_api.models.instrutor import Instrutor
 
 
 def auth_headers(client, login_admin, csrf_token):

@@ -1,8 +1,8 @@
 import pytest
 import sqlalchemy as sa
-from src.models import db
-from src.models.treinamento import Treinamento
-from src.models.instrutor import Instrutor
+from conectasenai_api.models import db
+from conectasenai_api.models.treinamento import Treinamento
+from conectasenai_api.models.instrutor import Instrutor
 
 
 @pytest.fixture
@@ -127,8 +127,8 @@ def test_cria_tabela_quando_ausente(
     client, setup_dados, login_admin, csrf_token
 ):
     treinamento_nome, instrutor_nome = setup_dados
-    from src.models.planejamento import PlanejamentoItem
-    from src.models import db
+    from conectasenai_api.models.planejamento import PlanejamentoItem
+    from conectasenai_api.models import db
     with client.application.app_context():
         PlanejamentoItem.__table__.drop(db.engine)
 

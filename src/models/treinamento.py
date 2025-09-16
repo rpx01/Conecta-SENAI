@@ -5,6 +5,21 @@ from datetime import datetime
 from sqlalchemy import text
 from src.models import db
 
+
+class LocalRealizacao(db.Model):
+    """Locais disponíveis para realização de treinamentos."""
+
+    __tablename__ = "locais_realizacao"
+
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(255), unique=True, nullable=False)
+
+    def to_dict(self):
+        return {"id": self.id, "nome": self.nome}
+
+    def __repr__(self):
+        return f"<LocalRealizacao {self.nome}>"
+
 class Treinamento(db.Model):
     """Modelo de treinamento oferecido."""
 

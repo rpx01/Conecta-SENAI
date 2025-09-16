@@ -88,6 +88,29 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="card mt-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">Locais de Realização</h2>
+                        <button class="btn btn-primary btn-sm" onclick="abrirModalLocalRealizacao()">
+                            <i class="bi bi-plus-lg me-1"></i> Novo Local
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nome</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="locaisRealizacaoTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </main>
         </div>
     </div>
@@ -114,6 +137,30 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" form="secretariaForm" class="btn btn-primary">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="localRealizacaoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Local de Realização</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="localRealizacaoForm">
+                        <input type="hidden" id="localRealizacaoId">
+                        <div class="mb-3">
+                            <label class="form-label" for="localRealizacaoNome">Nome</label>
+                            <input type="text" class="form-control" id="localRealizacaoNome" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="localRealizacaoForm" class="btn btn-primary">Salvar</button>
                 </div>
             </div>
         </div>

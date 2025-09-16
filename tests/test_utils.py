@@ -1,7 +1,7 @@
-from conectasenai_api.utils.audit import log_action
-from conectasenai_api.utils.error_handler import handle_internal_error
-from conectasenai_api.schemas.user import _is_cpf_valid
-from conectasenai_api.models.audit_log import AuditLog
+from src.utils.audit import log_action
+from src.utils.error_handler import handle_internal_error
+from src.schemas.user import _is_cpf_valid
+from src.models.audit_log import AuditLog
 
 
 def test_is_cpf_valid():

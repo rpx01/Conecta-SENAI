@@ -44,7 +44,7 @@ Todas as variáveis disponíveis estão listadas em `.env.example`.
    será criado automaticamente caso ainda não exista:
 
    ```bash
-   flask --app conectasenai_api.main db upgrade
+   flask --app src.main db upgrade
    ```
 
    Sempre que atualizar o projeto, rode novamente este comando para
@@ -60,7 +60,7 @@ Todas as variáveis disponíveis estão listadas em `.env.example`.
 5. Para iniciar a aplicação em modo de desenvolvimento, execute:
 
    ```bash
-   flask --app conectasenai_api.main run
+   flask --app src.main run
    ```
 
    As tabelas do banco estarão disponíveis após rodar as migrações. O usuário
@@ -85,15 +85,15 @@ Todas as variáveis disponíveis estão listadas em `.env.example`.
 
 - **Executar com Gunicorn**:
   ```bash
-  gunicorn --config apps/api/gunicorn.conf.py conectasenai_api.main:create_app
+  gunicorn --config gunicorn.conf.py src.main:create_app
   ```
 - **Executar com Uvicorn**:
   ```bash
-  uvicorn conectasenai_api.main:create_app --factory
+  uvicorn src.main:create_app --factory
   ```
 - Os logs são emitidos em JSON. Para visualizá-los formatados:
   ```bash
-  gunicorn --config apps/api/gunicorn.conf.py conectasenai_api.main:create_app 2>&1 | jq '.'
+  gunicorn --config gunicorn.conf.py src.main:create_app 2>&1 | jq '.'
   ```
 - Cada requisição gera um `request_id` retornado no cabeçalho `X-Request-ID`.
   Utilize esse valor para filtrar os logs:
@@ -130,33 +130,30 @@ Todas as variáveis disponíveis estão listadas em `.env.example`.
 Uma alternativa é rodar a aplicação em um container Docker. Para construir a imagem execute:
 
    ```bash
-docker compose -f infra/docker-compose.yml up --build
+docker build -t agenda-senai .
 ```
 
-O serviço principal ficará disponível em [http://localhost:8000](http://localhost:8000).
-O compose utiliza o arquivo `infra/env/api.env.example` como base para as
-variáveis de ambiente da API.
+As migrações não são mais distribuídas no repositório. O diretório será criado
+automaticamente quando a aplicação rodar o comando de upgrade. O Dockerfile já
+executa `flask db upgrade` antes de iniciar o Gunicorn, garantindo que o banco
+esteja sempre na versão correta.
 
-## Estrutura do Monorepo
+Em seguida, inicie o container usando as variáveis definidas em um arquivo `.env`:
 
-```
-/
-├─ apps/
-│  └─ api/
-│     ├─ src/conectasenai_api/    # Código-fonte da aplicação Flask
-│     ├─ migrations/              # Histórico do Alembic
-│     ├─ pyproject.toml           # Manifesto Poetry do app
-│     └─ Dockerfile               # Dockerfile específico do serviço
-├─ packages/
-│  └─ common/                     # Biblioteca compartilhada
-├─ infra/                         # Orquestração e arquivos de infraestrutura
-└─ tests/                         # Testes automatizados do backend
+   ```bash
+docker run -p 8000:8000 --env-file .env agenda-senai
 ```
 
-- `apps/api/src/conectasenai_api/routes/` - Blueprints com as rotas REST de cada recurso.
-- `apps/api/src/conectasenai_api/models/` - Definições das tabelas e regras de negócios.
-- `apps/api/src/conectasenai_api/static/` - Assets de frontend servidos pelo Flask.
-- `packages/common/` - Utilitários reutilizados por múltiplos serviços.
+A aplicação ficará disponível em [http://localhost:8000](http://localhost:8000).
+
+## Estrutura do Projeto
+
+- `src/` - Código-fonte da aplicação Flask.
+- `src/routes/` - Blueprints com as rotas REST de cada recurso.
+- `src/models/` - Definições das tabelas e regras de negócios.
+- `src/static/` - Arquivos estáticos de frontend (HTML, CSS e JavaScript).
+- `migrations/` - Criado automaticamente em tempo de execução para armazenar as
+  migrações do banco de dados.
 - `tests/` - Casos de teste automatizados.
 
 ## Principais Endpoints da API
@@ -197,7 +194,7 @@ zero se encontrar vulnerabilidades de severidade alta ou crítica.
 
 Para evitar divergências entre os modelos do SQLAlchemy e o esquema do banco de dados, o repositório disponibiliza o script `scripts/auto_migrate.sh`. Ele gera e aplica migrations de forma automática.
 
-Execute o script sempre que alterar arquivos em `apps/api/src/conectasenai_api/models/`:
+Execute o script sempre que alterar arquivos em `src/models/`:
 
 ```bash
 ./scripts/auto_migrate.sh "Mensagem da migration"
@@ -217,14 +214,14 @@ Um workflow opcional (`.github/workflows/migrations.yml`) executa o mesmo proces
 2. Aplique as migrations pendentes executando:
 
 ```bash
-flask --app conectasenai_api.main db upgrade
+flask --app src.main db upgrade
 ```
 
 3. Caso tenha alterado algum modelo, gere uma nova migration automática e aplique-a:
 
 ```bash
-flask --app conectasenai_api.main db migrate -m "Descricao da mudança"
-flask --app conectasenai_api.main db upgrade
+flask --app src.main db migrate -m "Descricao da mudança"
+flask --app src.main db upgrade
 ```
 
 Você também pode usar o script que já realiza essas etapas de uma vez:
@@ -235,14 +232,14 @@ Você também pode usar o script que já realiza essas etapas de uma vez:
 
 ### Checklist após alterar modelos
 
-- [ ] Atualize ou crie os arquivos em `apps/api/src/conectasenai_api/models/`.
+- [ ] Atualize ou crie os arquivos em `src/models/`.
 - [ ] Rode `./scripts/auto_migrate.sh "Descrição"` para gerar e aplicar a migration.
-- [ ] Inclua os arquivos de migration em `apps/api/migrations/versions/` no commit.
+- [ ] Inclua os arquivos de migration em `migrations/versions/` no commit.
 - [ ] Execute `pytest` para garantir que todos os testes continuam passando.
 
 ### Evitando cliques múltiplos em botões
 
-Use a função `executarAcaoComFeedback` definida em `apps/api/src/conectasenai_api/static/js/app.js` para
+Use a função `executarAcaoComFeedback` definida em `src/static/js/app.js` para
 desabilitar botões enquanto uma ação assíncrona é executada, evitando que o
 usuário clique várias vezes.
 

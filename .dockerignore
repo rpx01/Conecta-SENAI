@@ -8,6 +8,3 @@ dist
 build
 .env
 .env.*
-tests/
-infra/
-docs/

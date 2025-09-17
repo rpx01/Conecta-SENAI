@@ -1,4 +1,52 @@
 // Gestão de usuários com paginação
+/* global bootstrap, chamarAPI, showToast, verificarAutenticacao, verificarPermissaoAdmin, escapeHTML */
+
+function obterConfiguracaoTipoUsuario(tipo) {
+    switch (tipo) {
+        case 'admin':
+            return { classe: 'bg-danger', rotulo: 'Administrador' };
+        case 'secretaria':
+            return { classe: 'bg-secondary', rotulo: 'Secretaria' };
+        default:
+            return { classe: 'bg-primary', rotulo: 'Comum' };
+    }
+}
+
+function criarLinhaUsuario(usuario = {}) {
+    const idNumerico = Number.parseInt(usuario.id, 10);
+    const possuiIdValido = !Number.isNaN(idNumerico);
+    const valorId = possuiIdValido ? idNumerico : '';
+    const idParaAcao = possuiIdValido ? idNumerico : 'null';
+    const nomeEscapado = escapeHTML(usuario.nome ?? '');
+    const emailEscapado = escapeHTML(usuario.email ?? '');
+    const { classe, rotulo } = obterConfiguracaoTipoUsuario(usuario.tipo);
+
+    return `
+        <tr>
+            <td>${valorId}</td>
+            <td>${nomeEscapado}</td>
+            <td>${emailEscapado}</td>
+            <td>
+                <span class="badge ${classe}">
+                    ${rotulo}
+                </span>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary me-1" onclick="editarUsuario(${idParaAcao})">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusao(${idParaAcao})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `;
+}
+
+if (typeof window !== 'undefined') {
+    window.__usuariosAdmin = window.__usuariosAdmin || {};
+    window.__usuariosAdmin.criarLinhaUsuario = criarLinhaUsuario;
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     verificarAutenticacao();
@@ -39,31 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            let html = '';
-            usuarios.forEach(usuario => {
-                html += `
-                    <tr>
-                        <td>${usuario.id}</td>
-                        <td>${usuario.nome}</td>
-                        <td>${usuario.email}</td>
-                        <td>
-                            <span class="badge ${usuario.tipo === 'admin' ? 'bg-danger' : (usuario.tipo === 'secretaria' ? 'bg-secondary' : 'bg-primary')}">
-                                ${usuario.tipo === 'admin' ? 'Administrador' : (usuario.tipo === 'secretaria' ? 'Secretaria' : 'Comum')}
-                            </span>
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editarUsuario(${usuario.id})">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusao(${usuario.id})">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            tableBody.innerHTML = html;
+            tableBody.innerHTML = usuarios.map(criarLinhaUsuario).join('');
             paginaAtual = resp.page;
             atualizarPaginacao(resp.pages);
         } catch (error) {

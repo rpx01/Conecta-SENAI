@@ -67,6 +67,18 @@ if any(is_high(v) for d in data.get('dependencies', []) for v in d.get('vulns', 
     sys.exit(1)
 PY
 
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install frontend dependencies
+      run: npm ci
+
+    - name: Run frontend tests
+      run: npm test
+
     - name: Run tests
       run: pytest
 

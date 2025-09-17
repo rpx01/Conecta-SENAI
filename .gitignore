@@ -17,6 +17,9 @@ env/
 .DS_Store
 *.swp
 
+# Node.js dependencies
+node_modules/
+
 # Database files
 agenda_laboratorio.db
 instance/

@@ -31,30 +31,57 @@
                     <h1 class="h3 mb-3 fw-normal">Crie sua Conta</h1>
                     <p class="text-muted mb-4">Preencha os dados para se registrar no sistema.</p>
 
-                    <form id="form-registro" method="POST" action="/api/registrar">
+                    <form id="form-registro" method="POST" action="/api/registrar" novalidate data-js-validate>
+                        <div class="alert alert-danger d-none mb-4" role="alert" aria-live="assertive" tabindex="-1" data-error-summary></div>
+
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="nome" name="nome" placeholder="Nome Completo" required aria-required="true" aria-describedby="nome-help nome-error">
+                            <input type="text" class="form-control" id="nome" name="nome" placeholder="Nome Completo" required aria-required="true" aria-describedby="nome-help nome-error" data-error-target="nome-error" data-required-message="Informe seu nome completo.">
                             <label for="nome"><i class="bi bi-person me-2"></i>Nome Completo</label>
                             <div id="nome-error" class="invalid-feedback">Por favor, informe seu nome completo.</div>
                         </div>
                         <div id="nome-help" class="form-text">Informe seu nome completo.</div>
 
                         <div class="form-floating mb-3">
-                            <input type="email" class="form-control" id="email" name="email" placeholder="seu@email.com" required aria-required="true" aria-describedby="email-help email-error">
+                            <input type="email" class="form-control" id="email" name="email" placeholder="seu@email.com" required aria-required="true" aria-describedby="email-help email-error" data-error-target="email-error" data-required-message="Informe um email válido." data-validate="email">
                             <label for="email"><i class="bi bi-envelope me-2"></i>Email</label>
                             <div id="email-error" class="invalid-feedback">Por favor, informe um email válido.</div>
                         </div>
                         <div id="email-help" class="form-text">Informe um endereço de email válido.</div>
 
                         <div class="form-floating mb-3">
-                            <input type="password" class="form-control" id="senha" name="senha" placeholder="Senha" required aria-required="true" aria-describedby="senha-help senha-error">
+                            <input type="text" class="form-control" id="telefone" name="telefone" placeholder="(31) 99999-9999" inputmode="tel" data-mask="telefone" data-validate="telefone" data-error-target="telefone-error" aria-describedby="telefone-help telefone-error">
+                            <label for="telefone"><i class="bi bi-telephone me-2"></i>Telefone (com DDD)</label>
+                            <div id="telefone-error" class="invalid-feedback">Informe um telefone válido com DDD.</div>
+                        </div>
+                        <div id="telefone-help" class="form-text">Opcional, mas facilita o contato da equipe.</div>
+
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="cpf" name="cpf" placeholder="000.000.000-00" inputmode="numeric" data-mask="cpf" data-validate="cpf" data-error-target="cpf-error" aria-describedby="cpf-error">
+                            <label for="cpf"><i class="bi bi-card-text me-2"></i>CPF</label>
+                            <div id="cpf-error" class="invalid-feedback">Informe um CPF válido.</div>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="dataNascimento" name="dataNascimento" placeholder="DD/MM/AAAA" inputmode="numeric" data-mask="date" data-validate="date" data-error-target="dataNascimento-error" aria-describedby="dataNascimento-error">
+                            <label for="dataNascimento"><i class="bi bi-calendar-date me-2"></i>Data de Nascimento</label>
+                            <div id="dataNascimento-error" class="invalid-feedback">Informe uma data válida no formato DD/MM/AAAA.</div>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="cnpj" name="cnpj" placeholder="00.000.000/0000-00" inputmode="numeric" data-mask="cnpj" data-validate="cnpj" data-error-target="cnpj-error" aria-describedby="cnpj-error">
+                            <label for="cnpj"><i class="bi bi-building me-2"></i>CNPJ da Empresa</label>
+                            <div id="cnpj-error" class="invalid-feedback">Informe um CNPJ válido.</div>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control" id="senha" name="senha" placeholder="Senha" required aria-required="true" aria-describedby="senha-help senha-error" data-error-target="senha-error" data-required-message="Informe uma senha válida.">
                             <label for="senha"><i class="bi bi-lock me-2"></i>Senha</label>
                             <div id="senha-error" class="invalid-feedback">A senha não atende aos requisitos.</div>
                         </div>
                         <div id="senha-help" class="form-text text-danger">A senha deve ter pelo menos 8 caracteres, incluindo letra maiúscula, letra minúscula, número e caractere especial.</div>
 
                         <div class="form-floating mb-3">
-                            <input type="password" class="form-control" id="confirmarSenha" name="confirmarSenha" placeholder="Confirmar Senha" required aria-required="true" aria-describedby="confirmarSenha-help confirmarSenha-error">
+                            <input type="password" class="form-control" id="confirmarSenha" name="confirmarSenha" placeholder="Confirmar Senha" required aria-required="true" aria-describedby="confirmarSenha-help confirmarSenha-error" data-error-target="confirmarSenha-error" data-required-message="Confirme a senha informada.">
                             <label for="confirmarSenha"><i class="bi bi-lock-fill me-2"></i>Confirmar Senha</label>
                             <div id="confirmarSenha-error" class="invalid-feedback">As senhas não coincidem.</div>
                         </div>
@@ -85,6 +112,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/app.js"></script>
+    <script src="/js/forms/validation.js"></script>
 
     <script>
       document.addEventListener('DOMContentLoaded', function () {
@@ -93,6 +121,11 @@
 
         form.addEventListener('submit', function (event) {
           event.preventDefault();
+
+          const validator = window.FormValidation?.get(form);
+          if (validator && !validator.validate()) {
+            return;
+          }
 
           const dadosForm = {
             nome: document.getElementById('nome').value,

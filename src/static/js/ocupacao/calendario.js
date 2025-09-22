@@ -11,6 +11,30 @@ let diaResumoAtual = null;
 
 const rootStyle = getComputedStyle(document.documentElement);
 
+function getFiltroElements(baseId) {
+    const ids = [baseId];
+    if (!baseId.endsWith('Mobile')) {
+        ids.push(`${baseId}Mobile`);
+    }
+    return ids
+        .map(id => document.getElementById(id))
+        .filter(elemento => elemento);
+}
+
+function getFiltroValor(baseId) {
+    const elementos = getFiltroElements(baseId);
+    if (!elementos.length) {
+        return '';
+    }
+    return elementos[0].value;
+}
+
+function setFiltroValor(baseId, valor) {
+    getFiltroElements(baseId).forEach(elemento => {
+        elemento.value = valor;
+    });
+}
+
 // Converte o nome do turno em um identificador CSS sem acentos
 function slugifyTurno(turno) {
     return turno
@@ -79,9 +103,9 @@ async function carregarOcupacoes(dataInicio, dataFim) {
         });
         
         // Aplica filtros ativos
-        const salaId = document.getElementById('filtroSala').value;
-        const instrutorId = document.getElementById('filtroInstrutor').value;
-        const turno = document.getElementById('filtroTurno').value;
+        const salaId = getFiltroValor('filtroSala');
+        const instrutorId = getFiltroValor('filtroInstrutor');
+        const turno = getFiltroValor('filtroTurno');
         
         if (salaId) params.append('sala_id', salaId);
         if (instrutorId) params.append('instrutor_id', instrutorId);
@@ -121,9 +145,9 @@ async function carregarResumoPeriodo(dataInicio, dataFim) {
             data_fim: dataFim.split('T')[0]
         });
 
-        const salaId = document.getElementById('filtroSala').value;
-        const instrutorId = document.getElementById('filtroInstrutor').value;
-        const turno = document.getElementById('filtroTurno').value;
+        const salaId = getFiltroValor('filtroSala');
+        const instrutorId = getFiltroValor('filtroInstrutor');
+        const turno = getFiltroValor('filtroTurno');
 
         if (salaId) params.append('sala_id', salaId);
         if (instrutorId) params.append('instrutor_id', instrutorId);
@@ -307,12 +331,19 @@ async function carregarSalasParaFiltro() {
         if (response.ok) {
             salasData = await response.json();
             
-            const select = document.getElementById('filtroSala');
-            select.innerHTML = '<option value="">Todas as salas</option>';
-            
+            const selects = getFiltroElements('filtroSala');
+            const selectedValue = getFiltroValor('filtroSala');
+            let options = '<option value="">Todas as salas</option>';
+
             salasData.forEach(sala => {
-                select.innerHTML += `<option value="${sala.id}">${sala.nome}</option>`;
+                options += `<option value="${sala.id}">${sala.nome}</option>`;
             });
+
+            selects.forEach(select => {
+                select.innerHTML = options;
+            });
+
+            setFiltroValor('filtroSala', selectedValue);
         }
     } catch (error) {
         console.error('Erro ao carregar salas:', error);
@@ -330,12 +361,19 @@ async function carregarInstrutoresParaFiltro() {
         if (response.ok) {
             instrutoresData = await response.json();
             
-            const select = document.getElementById('filtroInstrutor');
-            select.innerHTML = '<option value="">Todos os instrutores</option>';
-            
+            const selects = getFiltroElements('filtroInstrutor');
+            const selectedValue = getFiltroValor('filtroInstrutor');
+            let options = '<option value="">Todos os instrutores</option>';
+
             instrutoresData.forEach(instrutor => {
-                select.innerHTML += `<option value="${instrutor.id}">${instrutor.nome}</option>`;
+                options += `<option value="${instrutor.id}">${instrutor.nome}</option>`;
             });
+
+            selects.forEach(select => {
+                select.innerHTML = options;
+            });
+
+            setFiltroValor('filtroInstrutor', selectedValue);
         }
     } catch (error) {
         console.error('Erro ao carregar instrutores:', error);
@@ -381,9 +419,9 @@ function configurarFiltros() {
     if (form) {
         form.addEventListener('submit', e => {
             e.preventDefault();
-            document.getElementById('filtroSalaMobile').value = document.getElementById('filtroSala').value;
-            document.getElementById('filtroInstrutorMobile').value = document.getElementById('filtroInstrutor').value;
-            document.getElementById('filtroTurnoMobile').value = document.getElementById('filtroTurno').value;
+            setFiltroValor('filtroSala', document.getElementById('filtroSala')?.value || '');
+            setFiltroValor('filtroInstrutor', document.getElementById('filtroInstrutor')?.value || '');
+            setFiltroValor('filtroTurno', document.getElementById('filtroTurno')?.value || '');
             aplicarFiltrosCalendario();
         });
     }
@@ -391,9 +429,9 @@ function configurarFiltros() {
     if (formMobile) {
         formMobile.addEventListener('submit', e => {
             e.preventDefault();
-            document.getElementById('filtroSala').value = document.getElementById('filtroSalaMobile').value;
-            document.getElementById('filtroInstrutor').value = document.getElementById('filtroInstrutorMobile').value;
-            document.getElementById('filtroTurno').value = document.getElementById('filtroTurnoMobile').value;
+            setFiltroValor('filtroSala', document.getElementById('filtroSalaMobile')?.value || '');
+            setFiltroValor('filtroInstrutor', document.getElementById('filtroInstrutorMobile')?.value || '');
+            setFiltroValor('filtroTurno', document.getElementById('filtroTurnoMobile')?.value || '');
             aplicarFiltrosCalendario();
         });
     }
@@ -409,15 +447,15 @@ function aplicarFiltrosURL() {
     const mesParam = urlParams.get('mes');
     
     if (salaId) {
-        document.getElementById('filtroSala').value = salaId;
+        setFiltroValor('filtroSala', salaId);
     }
-    
+
     if (instrutorId) {
-        document.getElementById('filtroInstrutor').value = instrutorId;
+        setFiltroValor('filtroInstrutor', instrutorId);
     }
 
     if (turnoParam) {
-        document.getElementById('filtroTurno').value = turnoParam;
+        setFiltroValor('filtroTurno', turnoParam);
     }
 
     if (mesParam && calendar) {

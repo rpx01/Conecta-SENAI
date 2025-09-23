@@ -94,8 +94,15 @@ async function carregarOcupacoes(dataInicio, dataFim) {
         
         if (response.ok) {
             const eventos = await response.json();
-            ocupacoesData = eventos.map(evento => evento.extendedProps);
-            return eventos;
+            ocupacoesData = eventos;
+            return eventos.map(evento => ({
+                id: evento.id,
+                title: evento.title,
+                start: evento.start,
+                end: evento.end,
+                className: getClasseTurno(evento.extendedProps.turno),
+                extendedProps: evento.extendedProps
+            }));
         } else {
             throw new Error('Erro ao carregar ocupações');
         }

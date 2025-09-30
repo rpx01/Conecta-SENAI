@@ -129,8 +129,7 @@ function obterModulosDisponiveis(usuario) {
     const modulos = [
         '/laboratorios/dashboard.html',
         '/treinamentos/index.html',
-        '/ocupacao/dashboard.html',
-        '/planejamento-treinamentos.html' // Adiciona módulo de planejamento
+        '/ocupacao/dashboard.html'
     ];
 
     if (usuario.tipo === 'admin') {

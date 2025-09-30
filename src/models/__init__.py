@@ -21,16 +21,6 @@ from .treinamento import (  # noqa: E402
 from .inscricao_treinamento import (
     InscricaoTreinamentoFormulario,
 )  # noqa: E402
-from .planejamento import (  # noqa: E402
-    PlanejamentoItem,
-    PlanejamentoBDItem,
-    Local,
-    Modalidade,
-    Horario,
-    CargaHoraria,
-    PublicoAlvo,
-    PlanejamentoTreinamento,
-)
 from .email_secretaria import EmailSecretaria  # noqa: E402
 from .secretaria_treinamentos import SecretariaTreinamentos  # noqa: E402
 
@@ -53,14 +43,6 @@ __all__ = [
     "TurmaTreinamento",
     "InscricaoTreinamento",
     "InscricaoTreinamentoFormulario",
-    "PlanejamentoItem",
-    "PlanejamentoBDItem",
-    "Local",
-    "Modalidade",
-    "Horario",
-    "CargaHoraria",
-    "PublicoAlvo",
-    "PlanejamentoTreinamento",
     "EmailSecretaria",
     "SecretariaTreinamentos",
 ]

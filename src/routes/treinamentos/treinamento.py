@@ -305,32 +305,6 @@ def listar_catalogo_treinamentos():
     """Lista os treinamentos cadastrados."""
     treins = Treinamento.query.order_by(Treinamento.nome).all()
     return jsonify([t.to_dict() for t in treins])
-
-
-@treinamento_bp.get("/treinamentos_planejamento")
-@login_required
-def get_treinamentos_planejamento():
-    """Lista treinamentos disponíveis para o planejamento."""
-    treins = Treinamento.query.order_by(Treinamento.nome.asc()).all()
-    itens = [
-        {
-            "id": t.id,
-            "nome": t.nome,
-            "modalidade": getattr(t, "modalidade", None),
-            "carga_horaria": t.carga_horaria,
-        }
-        for t in treins
-    ]
-    return jsonify({"itens": itens}), 200
-
-
-@treinamento_bp.get("/treinamentos/planejamento")
-@login_required
-def get_treinamentos_planejamento_alias():
-    """Alias RESTful para a rota de treinamentos do planejamento."""
-    return get_treinamentos_planejamento()
-
-
 @treinamento_bp.route("/treinamentos/catalogo", methods=["POST"])
 @admin_required
 def criar_treinamento():

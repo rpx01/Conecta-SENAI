@@ -1,5 +1,7 @@
 """Funcoes de autenticacao e autorizacao."""
 from functools import wraps
+from typing import Callable
+
 from flask import request, jsonify, current_app, g
 import jwt
 
@@ -76,3 +78,10 @@ def admin_required(func):
         return func(*args, **kwargs)
 
     return wrapper
+
+
+def is_public(func: Callable) -> Callable:
+    """Marca uma view como pública, isentando-a de autenticação automática."""
+
+    setattr(func, "_is_public", True)
+    return func

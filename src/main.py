@@ -63,7 +63,8 @@ from src.routes.inscricoes_treinamento import bp as inscricoes_treinamento_bp
 from src.blueprints.auth_reset import auth_reset_bp
 from src.blueprints.auth import auth_bp
 from src.scheduler import start_scheduler
-from src.routes.noticias import noticias_bp
+from src.routes.noticias_api import noticias_api_bp
+from src.routes.noticias import noticias_bp as noticias_pages_bp
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -261,7 +262,7 @@ def create_app():
     app.register_blueprint(ocupacao_bp, url_prefix='/api')
     app.register_blueprint(rateio_bp, url_prefix='/api')
     app.register_blueprint(treinamento_bp, url_prefix='/api')
-    app.register_blueprint(noticias_bp, url_prefix='/api')
+    app.register_blueprint(noticias_api_bp, url_prefix='/api')
     app.register_blueprint(
         treinamentos_basedados_bp, url_prefix='/api/treinamentos/secretaria'
     )
@@ -272,6 +273,7 @@ def create_app():
     app.register_blueprint(inscricoes_treinamento_bp)
     app.register_blueprint(auth_reset_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(noticias_pages_bp)
 
     # Inicia scheduler para notificações
     if os.getenv("SCHEDULER_ENABLED", "0") == "1":

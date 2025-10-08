@@ -12,7 +12,10 @@ def _parse_datetime(value: Optional[str | datetime]) -> Optional[datetime]:
     if isinstance(value, datetime):
         return value
     try:
-        return datetime.fromisoformat(str(value))
+        str_value = str(value).strip()
+        if str_value.endswith("Z"):
+            str_value = f"{str_value[:-1]}+00:00"
+        return datetime.fromisoformat(str_value)
     except (TypeError, ValueError) as exc:  # pragma: no cover - validação explícita
         raise ValueError("Data de publicação inválida. Use o formato ISO 8601.") from exc
 

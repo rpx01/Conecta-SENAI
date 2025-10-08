@@ -323,17 +323,19 @@ async function verificarPermissaoAdmin() {
 // evitando loops na página de login ou registro.
 (async function() {
     const currentPage = window.location.pathname;
-    // Adiciona '/forgot' e '/reset' à lista de páginas públicas
+    // Lista completa de páginas que não exigem autenticação
     const paginasPublicas = ['/admin/login.html', '/register', '/forgot', '/reset', '/noticias/index.html'];
+    // Páginas públicas que devem redirecionar usuários autenticados
+    const paginasRedirecionamento = ['/admin/login.html', '/register', '/forgot', '/reset'];
 
     // Se a página não for pública, valida a sessão no servidor
     if (!paginasPublicas.includes(currentPage)) {
         await verificarAutenticacao();
     }
 
-    // Usuário logado tentando acessar página pública
+    // Usuário logado tentando acessar página pública que deve redirecionar
     const usuario = getUsuarioLogado();
-    if (usuario && paginasPublicas.includes(currentPage)) {
+    if (usuario && paginasRedirecionamento.includes(currentPage)) {
         window.location.href = '/selecao-sistema.html';
     }
 

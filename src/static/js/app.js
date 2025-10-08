@@ -129,12 +129,14 @@ function obterModulosDisponiveis(usuario) {
     const modulos = [
         '/laboratorios/dashboard.html',
         '/treinamentos/index.html',
-        '/ocupacao/dashboard.html'
+        '/ocupacao/dashboard.html',
+        '/noticias/index.html'
     ];
 
     if (usuario.tipo === 'admin') {
         modulos.push('/rateio/dashboard.html');
         modulos.push('/admin/usuarios.html');
+        modulos.push('/noticias/gerenciamento.html');
     }
 
     return modulos;
@@ -322,7 +324,7 @@ async function verificarPermissaoAdmin() {
 (async function() {
     const currentPage = window.location.pathname;
     // Adiciona '/forgot' e '/reset' à lista de páginas públicas
-    const paginasPublicas = ['/admin/login.html', '/register', '/forgot', '/reset'];
+    const paginasPublicas = ['/admin/login.html', '/register', '/forgot', '/reset', '/noticias/index.html'];
 
     // Se a página não for pública, valida a sessão no servidor
     if (!paginasPublicas.includes(currentPage)) {
@@ -728,7 +730,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Verifica autenticação em todas as páginas exceto as públicas
     const paginaAtual = window.location.pathname;
-    const paginasPublicas = ['/admin/login.html', '/register', '/forgot', '/reset'];
+    const paginasPublicas = ['/admin/login.html', '/register', '/forgot', '/reset', '/noticias/index.html'];
 
     // Limpa escolha salva ao retornar para a seleção de sistema
     document.querySelectorAll('a[href="/selecao-sistema.html"]').forEach(link => {

@@ -168,6 +168,11 @@ A aplicação ficará disponível em [http://localhost:8000](http://localhost:80
 | `POST` | `/api/ocupacoes` | Criação de ocupação de sala |
 | `GET` | `/api/ocupacoes` | Consulta de ocupações |
 | `DELETE` | `/api/ocupacoes/<id>` | Remoção de ocupação |
+| `GET` | `/api/noticias` | Lista notícias publicadas |
+| `GET` | `/api/noticias/<id>` | Detalhes de uma notícia |
+| `POST` | `/api/noticias` | Cria notícia (administradores) |
+| `PUT` | `/api/noticias/<id>` | Atualiza notícia (administradores) |
+| `DELETE` | `/api/noticias/<id>` | Remove notícia (administradores) |
 
 ## Integração Contínua
 

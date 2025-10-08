@@ -201,6 +201,58 @@ p, input, textarea {
 }
 ```
 
+## Componentes do Módulo de Notícias
+
+O módulo utiliza estilos específicos organizados em `static/css/noticias.css`. Os tokens de cor respeitam a paleta FIEMG com destaques em `--primary-color`, `--accent-color` e neutros de `--background-color`.
+
+### Hero de Destaque
+
+```html
+<section class="news-hero text-white">
+  <div class="container">
+    <p class="news-hero__kicker">Destaque</p>
+    <h1 class="news-hero__title">Título chamativo</h1>
+    <p class="news-hero__summary">Resumo com até três linhas apresentando a notícia principal.</p>
+    <button class="btn btn-light">Leia mais</button>
+  </div>
+</section>
+```
+
+- Utilize texto alternativo nas imagens do banner (`alt=""`) e garanta contraste mínimo de 4.5:1.
+- O botão principal deve permanecer alcançável via teclado (`tabindex="0"`).
+
+### Carrossel Horizontal de Destaques
+
+```html
+<div class="news-highlights" role="list">
+  <article class="news-highlight" role="listitem">
+    <h2 class="news-highlight__title">Título</h2>
+    <p class="news-highlight__date">12/03/2025</p>
+    <p class="news-highlight__excerpt">Resumo curto da notícia.</p>
+  </article>
+</div>
+```
+
+- Estruture o container com `role="list"` e cada item com `role="listitem"` para leitores de tela.
+- Permita rolagem horizontal com foco visível (`outline`) nos itens.
+
+### Card de Notícia
+
+```html
+<article class="news-card h-100">
+  <img class="news-card__image" src="/static/img/exemplo.jpg" alt="Descrição da imagem">
+  <div class="news-card__body">
+    <time class="news-card__date" datetime="2025-03-12">12 mar 2025</time>
+    <h2 class="news-card__title">Título da notícia</h2>
+    <p class="news-card__summary">Resumo com 2 a 3 linhas.</p>
+    <button class="btn btn-outline-primary">Ler notícia</button>
+  </div>
+</article>
+```
+
+- Adicione `aria-label` ao botão quando o texto não for autoexplicativo.
+- Garanta que o resumo seja truncado com `line-clamp` para manter consistência das alturas.
+
 ## Modais
 
 ```html

@@ -298,11 +298,16 @@ async function verificarAutenticacao() {
  * Redireciona para o dashboard se não tiver
  */
 async function verificarPermissaoAdmin() {
+    const paginaAtual = window.location.pathname;
+
+    if (paginaAtual.startsWith('/noticias/')) {
+        return true;
+    }
+
     // Passo 1: Verifica se o usuário está autenticado. Se não, a função já redireciona.
     if (!(await verificarAutenticacao())) return false;
 
     // Passo 2: Verifica se a página atual é a de seleção de sistema.
-    const paginaAtual = window.location.pathname;
     if (paginaAtual === '/selecao-sistema.html') {
         // Se for a página de seleção, NÃO FAÇA NADA. Permita o acesso.
         return true;
@@ -325,11 +330,12 @@ async function verificarPermissaoAdmin() {
     const currentPage = window.location.pathname;
     // Lista completa de páginas que não exigem autenticação
     const paginasPublicas = ['/admin/login.html', '/register', '/forgot', '/reset', '/noticias/index.html'];
+    const isNoticiasPage = currentPage.startsWith('/noticias/');
     // Páginas públicas que devem redirecionar usuários autenticados
     const paginasRedirecionamento = ['/admin/login.html', '/register', '/forgot', '/reset'];
 
     // Se a página não for pública, valida a sessão no servidor
-    if (!paginasPublicas.includes(currentPage)) {
+    if (!paginasPublicas.includes(currentPage) && !isNoticiasPage) {
         await verificarAutenticacao();
     }
 
@@ -733,6 +739,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Verifica autenticação em todas as páginas exceto as públicas
     const paginaAtual = window.location.pathname;
     const paginasPublicas = ['/admin/login.html', '/register', '/forgot', '/reset', '/noticias/index.html'];
+    const isPaginaNoticias = paginaAtual.startsWith('/noticias/');
 
     // Limpa escolha salva ao retornar para a seleção de sistema
     document.querySelectorAll('a[href="/selecao-sistema.html"]').forEach(link => {
@@ -748,7 +755,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
 
-    if (paginasPublicas.includes(paginaAtual)) {
+    if (paginasPublicas.includes(paginaAtual) || isPaginaNoticias) {
         return;
     }
 

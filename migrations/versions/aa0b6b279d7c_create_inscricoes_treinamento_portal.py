@@ -1,7 +1,7 @@
 """create inscricoes_treinamento_portal table
 
 Revision ID: aa0b6b279d7c
-Revises: e5a1fcf7485d
+Revises: 9f1c4e5a4b6a
 Create Date: 2024-08-21 00:00:00.000000
 
 """
@@ -10,7 +10,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision: str = 'aa0b6b279d7c'
-down_revision: Union[str, Sequence[str], None] = 'e5a1fcf7485d'
+down_revision: Union[str, Sequence[str], None] = '9f1c4e5a4b6a'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

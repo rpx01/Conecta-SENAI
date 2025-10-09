@@ -324,7 +324,15 @@ async function verificarPermissaoAdmin() {
 (async function() {
     const currentPage = window.location.pathname;
     // Lista completa de páginas que não exigem autenticação
-    const paginasPublicas = ['/admin/login.html', '/register', '/forgot', '/reset', '/noticias/index.html'];
+    const paginasPublicas = [
+        '/admin/login.html',
+        '/register',
+        '/forgot',
+        '/reset',
+        '/noticias',
+        '/noticias/',
+        '/noticias/index.html'
+    ];
     // Páginas públicas que devem redirecionar usuários autenticados
     const paginasRedirecionamento = ['/admin/login.html', '/register', '/forgot', '/reset'];
 
@@ -732,7 +740,15 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Verifica autenticação em todas as páginas exceto as públicas
     const paginaAtual = window.location.pathname;
-    const paginasPublicas = ['/admin/login.html', '/register', '/forgot', '/reset', '/noticias/index.html'];
+    const paginasPublicas = [
+        '/admin/login.html',
+        '/register',
+        '/forgot',
+        '/reset',
+        '/noticias',
+        '/noticias/',
+        '/noticias/index.html'
+    ];
 
     // Limpa escolha salva ao retornar para a seleção de sistema
     document.querySelectorAll('a[href="/selecao-sistema.html"]').forEach(link => {

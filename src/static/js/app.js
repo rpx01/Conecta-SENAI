@@ -55,6 +55,27 @@ async function executarComLoading(acao) {
     }
 }
 
+// Páginas públicas acessíveis sem autenticação
+const PAGINAS_PUBLICAS = new Set([
+    '/admin/login.html',
+    '/register',
+    '/forgot',
+    '/reset',
+    '/noticias',
+    '/noticias/',
+    '/noticias/index.html'
+]);
+const PREFIXOS_PUBLICOS = ['/noticias/'];
+
+function ehPaginaPublica(pathname) {
+    if (!pathname) return false;
+    const normalizado = pathname.toLowerCase();
+    if (PAGINAS_PUBLICAS.has(normalizado)) {
+        return true;
+    }
+    return PREFIXOS_PUBLICOS.some(prefix => normalizado.startsWith(prefix));
+}
+
 // Variável global para armazenar o token CSRF e evitar múltiplas buscas
 let csrfToken = null;
 
@@ -322,22 +343,12 @@ async function verificarPermissaoAdmin() {
 // Esta IIFE garante que o redirecionamento ocorra apenas quando necessário,
 // evitando loops na página de login ou registro.
 (async function() {
-    const currentPage = window.location.pathname;
-    // Lista completa de páginas que não exigem autenticação
-    const paginasPublicas = [
-        '/admin/login.html',
-        '/register',
-        '/forgot',
-        '/reset',
-        '/noticias',
-        '/noticias/',
-        '/noticias/index.html'
-    ];
+    const currentPage = window.location.pathname.toLowerCase();
     // Páginas públicas que devem redirecionar usuários autenticados
     const paginasRedirecionamento = ['/admin/login.html', '/register', '/forgot', '/reset'];
 
     // Se a página não for pública, valida a sessão no servidor
-    if (!paginasPublicas.includes(currentPage)) {
+    if (!ehPaginaPublica(currentPage)) {
         await verificarAutenticacao();
     }
 
@@ -739,16 +750,7 @@ function configurarNavbarOffcanvas() {
 document.addEventListener('DOMContentLoaded', async function() {
 
     // Verifica autenticação em todas as páginas exceto as públicas
-    const paginaAtual = window.location.pathname;
-    const paginasPublicas = [
-        '/admin/login.html',
-        '/register',
-        '/forgot',
-        '/reset',
-        '/noticias',
-        '/noticias/',
-        '/noticias/index.html'
-    ];
+    const paginaAtual = window.location.pathname.toLowerCase();
 
     // Limpa escolha salva ao retornar para a seleção de sistema
     document.querySelectorAll('a[href="/selecao-sistema.html"]').forEach(link => {
@@ -764,7 +766,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
 
-    if (paginasPublicas.includes(paginaAtual)) {
+    if (ehPaginaPublica(paginaAtual)) {
         return;
     }
 

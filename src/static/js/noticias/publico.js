@@ -25,12 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const itensPorPagina = 6;
     let termoBusca = '';
     let destaqueAtual = null;
-    let destaquesRotativos = [];
-    let intervaloRotacaoId = null;
-    let indiceRotacaoAtual = 0;
-
-    const INTERVALO_ROTACAO_MS = 10000;
-    const DIAS_UTEIS_DESTAQUE = 5;
 
     const usuario = getUsuarioLogado?.();
     if (usuario) {
@@ -61,18 +55,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function carregarDestaques() {
         setAriaBusy(highlightsContainer, true);
-        pararRotacaoDestaques();
         try {
-            const resposta = await chamarAPI(`/noticias?destaque=true&per_page=12`);
-            const noticias = filtrarDestaquesRecentes(resposta.items || []);
-            renderizarHighlights(noticias);
-            iniciarRotacaoDestaques(noticias);
+            const resposta = await chamarAPI(`/noticias?destaque=true&per_page=5`);
+            const noticias = resposta.items || [];
+            if (noticias.length > 0) {
+                destaqueAtual = noticias[0];
+                atualizarHero(destaqueAtual);
+                renderizarHighlights(noticias.slice(1));
+            } else {
+                destaqueAtual = null;
+                atualizarHero();
+                renderizarHighlights([]);
+                mostrarEstadoVazioHighlights();
+            }
         } catch (error) {
             console.error('Erro ao carregar destaques', error);
             showToast('Não foi possível carregar os destaques de notícias.', 'danger');
             destaqueAtual = null;
             atualizarHero();
             renderizarHighlights([]);
+            mostrarEstadoVazioHighlights();
             tentarRenovarCSRF();
         } finally {
             setAriaBusy(highlightsContainer, false);
@@ -145,7 +147,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderizarHighlights(noticias) {
         if (!noticias || noticias.length === 0) {
-            mostrarEstadoVazioHighlights();
+            highlightsContainer.innerHTML = '';
+            highlightsEmptyState.classList.remove('visually-hidden');
             return;
         }
         highlightsEmptyState.classList.add('visually-hidden');
@@ -273,9 +276,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function mostrarEstadoVazioHighlights() {
         highlightsContainer.innerHTML = '';
         highlightsEmptyState.classList.remove('visually-hidden');
-        pararRotacaoDestaques();
-        destaqueAtual = null;
-        atualizarHero();
     }
 
     function tentarRenovarCSRF() {
@@ -288,94 +288,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const div = document.createElement('div');
         div.textContent = texto;
         return div.innerHTML;
-    }
-
-    function iniciarRotacaoDestaques(noticias) {
-        destaquesRotativos = Array.isArray(noticias) ? noticias.slice() : [];
-        if (destaquesRotativos.length === 0) {
-            pararRotacaoDestaques();
-            destaqueAtual = null;
-            atualizarHero();
-            return;
-        }
-        indiceRotacaoAtual = 0;
-        definirDestaqueAtual(destaquesRotativos[indiceRotacaoAtual]);
-        if (destaquesRotativos.length > 1) {
-            intervaloRotacaoId = window.setInterval(() => {
-                indiceRotacaoAtual = (indiceRotacaoAtual + 1) % destaquesRotativos.length;
-                definirDestaqueAtual(destaquesRotativos[indiceRotacaoAtual]);
-            }, INTERVALO_ROTACAO_MS);
-        }
-    }
-
-    function definirDestaqueAtual(noticia) {
-        destaqueAtual = noticia || null;
-        atualizarHero(destaqueAtual);
-    }
-
-    function pararRotacaoDestaques(limparLista = true) {
-        if (intervaloRotacaoId !== null) {
-            window.clearInterval(intervaloRotacaoId);
-            intervaloRotacaoId = null;
-        }
-        if (limparLista) {
-            destaquesRotativos = [];
-        }
-    }
-
-    function filtrarDestaquesRecentes(noticias) {
-        if (!Array.isArray(noticias)) {
-            return [];
-        }
-        return noticias.filter(item => estaDentroDoPeriodoDeDestaque(item?.data_publicacao));
-    }
-
-    function estaDentroDoPeriodoDeDestaque(dataISO, diasUteisMaximo = DIAS_UTEIS_DESTAQUE) {
-        if (!dataISO) {
-            return false;
-        }
-        const dataPublicacao = new Date(dataISO);
-        if (Number.isNaN(dataPublicacao.getTime())) {
-            return false;
-        }
-
-        const hoje = new Date();
-        const referenciaPublicacao = new Date(
-            dataPublicacao.getFullYear(),
-            dataPublicacao.getMonth(),
-            dataPublicacao.getDate(),
-            12,
-            0,
-            0,
-            0
-        );
-        const referenciaHoje = new Date(
-            hoje.getFullYear(),
-            hoje.getMonth(),
-            hoje.getDate(),
-            12,
-            0,
-            0,
-            0
-        );
-
-        if (referenciaPublicacao > referenciaHoje) {
-            return true;
-        }
-
-        let diasUteisDecorridos = 0;
-        const cursor = new Date(referenciaPublicacao.getTime());
-        while (cursor < referenciaHoje) {
-            cursor.setDate(cursor.getDate() + 1);
-            const diaSemana = cursor.getDay();
-            if (diaSemana !== 0 && diaSemana !== 6) {
-                diasUteisDecorridos += 1;
-                if (diasUteisDecorridos >= diasUteisMaximo) {
-                    return false;
-                }
-            }
-        }
-        return true;
     }
 
     carregarDestaques();

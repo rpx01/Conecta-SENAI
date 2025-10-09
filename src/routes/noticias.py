@@ -25,6 +25,17 @@ noticia_schema = NoticiaSchema()
 noticias_schema = NoticiaSchema(many=True)
 
 
+def _serialize_validation_errors(err: ValidationError) -> list[dict]:
+    """Converte erros de validação do Pydantic em estruturas JSON serializáveis."""
+    serialized: list[dict] = []
+    for error in err.errors():
+        ctx = error.get("ctx")
+        if isinstance(ctx, dict):
+            error = {**error, "ctx": {k: str(v) if isinstance(v, Exception) else v for k, v in ctx.items()}}
+        serialized.append(error)
+    return serialized
+
+
 @api_noticias_bp.before_request
 def proteger_csrf():
     """Valida o token CSRF em requisições mutáveis."""
@@ -131,7 +142,7 @@ def criar():
     try:
         payload = NoticiaCreateSchema.model_validate(request.get_json(silent=True) or {})
     except ValidationError as err:
-        return jsonify({"erros": err.errors()}), 400
+        return jsonify({"erros": _serialize_validation_errors(err)}), 400
 
     dados = payload.model_dump(mode="python")
     if not dados.get("data_publicacao"):
@@ -157,7 +168,7 @@ def atualizar(noticia_id: int):
     try:
         payload = NoticiaUpdateSchema.model_validate(request.get_json(silent=True) or {})
     except ValidationError as err:
-        return jsonify({"erros": err.errors()}), 400
+        return jsonify({"erros": _serialize_validation_errors(err)}), 400
 
     dados = payload.model_dump(mode="python", exclude_unset=True)
     if not dados:

@@ -276,9 +276,30 @@ def create_app():
 
     register_cli(app)
 
-    # Inicia scheduler para notificações
-    if os.getenv("SCHEDULER_ENABLED", "0") == "1":
+    scheduler_env = os.getenv("SCHEDULER_ENABLED")
+    scheduler_enabled = False
+    if not app.config.get("TESTING", False):
+        if scheduler_env is None:
+            scheduler_enabled = True
+        else:
+            scheduler_enabled = scheduler_env.strip().lower() in {
+                "1",
+                "true",
+                "t",
+                "on",
+                "yes",
+            }
+
+    app.config["SCHEDULER_ENABLED"] = scheduler_enabled
+
+    if scheduler_enabled:
         start_scheduler(app)
+    else:
+        motivo = "modo de teste" if app.config.get("TESTING", False) else f"SCHEDULER_ENABLED={scheduler_env or '0'}"
+        app.logger.info(
+            "Scheduler de tarefas desativado (%s). Defina SCHEDULER_ENABLED=1 para habilitar.",
+            motivo,
+        )
 
 
     @app.route('/')

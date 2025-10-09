@@ -2,6 +2,7 @@
 
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.base import STATE_RUNNING
 
 
 scheduler = BackgroundScheduler()
@@ -62,5 +63,14 @@ def start_scheduler(app):
         misfire_grace_time=60,
     )
 
-    scheduler.start()
+    if scheduler.state != STATE_RUNNING:
+        scheduler.start()
+        app.logger.info(
+            "Scheduler de tarefas iniciado com %d jobs agendados.",
+            len(scheduler.get_jobs()),
+        )
+    else:
+        app.logger.debug("Scheduler já estava em execução; jobs atualizados.")
+
+    app.extensions.setdefault("apscheduler", scheduler)
     return scheduler

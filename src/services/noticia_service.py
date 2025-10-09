@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Tuple
 from uuid import uuid4
@@ -20,6 +22,9 @@ from src.repositories.noticia_repository import NoticiaRepository
 UPLOAD_SUBDIR = Path("uploads") / "noticias"
 
 _TABELA_IMAGENS_DISPONIVEL: bool | None = None
+
+
+log = logging.getLogger(__name__)
 
 
 def _obter_pasta_upload() -> Path:
@@ -232,3 +237,46 @@ def excluir_noticia(noticia: Noticia) -> None:
     except SQLAlchemyError as exc:  # pragma: no cover
         NoticiaRepository.rollback()
         raise exc
+
+
+def publicar_noticias_agendadas() -> dict[str, int]:
+    """Ativa notícias agendadas cuja data de publicação já passou."""
+
+    agora = datetime.now(timezone.utc)
+    noticias_para_publicar = Noticia.query.filter(
+        Noticia.ativo.is_(False),
+        Noticia.data_publicacao <= agora,
+    ).all()
+
+    total = len(noticias_para_publicar)
+    if total == 0:
+        log.info("Nenhuma notícia agendada para publicar no momento.")
+        return {"total": 0, "publicadas": 0, "falhas": 0}
+
+    sucesso_count = 0
+    falha_count = 0
+
+    for noticia in noticias_para_publicar:
+        try:
+            noticia.ativo = True
+            db.session.add(noticia)
+            sucesso_count += 1
+        except SQLAlchemyError:
+            falha_count += 1
+            log.exception(
+                "Falha ao tentar publicar a notícia agendada com ID %s",
+                noticia.id,
+            )
+
+    if sucesso_count > 0:
+        try:
+            db.session.commit()
+        except SQLAlchemyError:
+            db.session.rollback()
+            log.exception(
+                "Erro ao commitar a publicação de notícias. Nenhuma alteração foi salva."
+            )
+            falha_count += sucesso_count
+            sucesso_count = 0
+
+    return {"total": total, "publicadas": sucesso_count, "falhas": falha_count}

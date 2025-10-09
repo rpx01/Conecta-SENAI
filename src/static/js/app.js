@@ -410,7 +410,12 @@ async function chamarAPI(endpoint, method = 'GET', body = null) {
             let json = null;
             try { json = await response.json(); } catch (_) {}
             const mensagem = json?.erro || json?.message || response.statusText;
-            throw new Error(mensagem);
+            const error = new Error(mensagem);
+            error.status = response.status;
+            if (json !== null) {
+                error.payload = json;
+            }
+            throw error;
         }
 
         const contentType = response.headers.get('Content-Type') || '';

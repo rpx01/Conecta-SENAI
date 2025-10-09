@@ -18,6 +18,115 @@ document.addEventListener('DOMContentLoaded', async () => {
     const form = document.getElementById('noticiaForm');
     const btnSalvar = document.getElementById('btnSalvarNoticia');
 
+    const camposFormulario = {
+        titulo: document.getElementById('noticiaTitulo'),
+        resumo: document.getElementById('noticiaResumo'),
+        conteudo: document.getElementById('noticiaConteudo'),
+        dataPublicacao: document.getElementById('noticiaDataPublicacao')
+    };
+
+    const feedbacks = {
+        titulo: document.getElementById('feedbackTitulo'),
+        resumo: document.getElementById('feedbackResumo'),
+        conteudo: document.getElementById('feedbackConteudo'),
+        dataPublicacao: document.getElementById('feedbackDataPublicacao')
+    };
+
+    let focoAplicado = false;
+
+    function limparValidacaoCampos() {
+        focoAplicado = false;
+        Object.values(camposFormulario).forEach(campo => {
+            if (!campo) return;
+            campo.classList.remove('is-invalid');
+            campo.removeAttribute('aria-invalid');
+        });
+        Object.values(feedbacks).forEach(feedback => {
+            if (feedback) {
+                feedback.textContent = '';
+            }
+        });
+    }
+
+    function registrarErroCampo(chave, mensagem) {
+        const campo = camposFormulario[chave];
+        const feedback = feedbacks[chave];
+        if (campo) {
+            campo.classList.add('is-invalid');
+            campo.setAttribute('aria-invalid', 'true');
+            if (!focoAplicado && typeof campo.focus === 'function') {
+                campo.focus({ preventScroll: true });
+                focoAplicado = true;
+            }
+        }
+        if (feedback) {
+            feedback.textContent = mensagem;
+        }
+    }
+
+    function validarCamposObrigatorios(payload) {
+        const erros = [];
+        const titulo = payload.titulo || '';
+        if (!titulo || titulo.length < 3) {
+            const mensagem = 'Informe um título com pelo menos 3 caracteres.';
+            registrarErroCampo('titulo', mensagem);
+            erros.push(mensagem);
+        }
+
+        const resumo = payload.resumo || '';
+        if (!resumo || resumo.length < 10) {
+            const mensagem = 'O resumo deve possuir ao menos 10 caracteres.';
+            registrarErroCampo('resumo', mensagem);
+            erros.push(mensagem);
+        }
+
+        const conteudo = payload.conteudo || '';
+        if (!conteudo || conteudo.length < 20) {
+            const mensagem = 'O conteúdo deve possuir ao menos 20 caracteres.';
+            registrarErroCampo('conteudo', mensagem);
+            erros.push(mensagem);
+        }
+
+        const dataPublicacao = payload.dataPublicacao;
+        if (dataPublicacao) {
+            const data = new Date(dataPublicacao);
+            if (Number.isNaN(data.getTime())) {
+                const mensagem = 'Informe uma data de publicação válida ou deixe o campo vazio.';
+                registrarErroCampo('dataPublicacao', mensagem);
+                erros.push(mensagem);
+            }
+        }
+
+        return erros;
+    }
+
+    function normalizarCampoErro(loc) {
+        if (!loc) return null;
+        if (Array.isArray(loc) && loc.length > 0) {
+            return normalizarCampoErro(loc[0]);
+        }
+        if (typeof loc !== 'string') return null;
+        const mapa = {
+            data_publicacao: 'dataPublicacao',
+            dataPublicacao: 'dataPublicacao'
+        };
+        return mapa[loc] || loc;
+    }
+
+    function aplicarErrosServidor(erros) {
+        if (!Array.isArray(erros)) return [];
+        const mensagens = [];
+        erros.forEach(erro => {
+            const campo = normalizarCampoErro(erro.loc);
+            const mensagem = erro.msg || erro.message || 'Dados inválidos.';
+            if (campo && camposFormulario[campo]) {
+                registrarErroCampo(campo, mensagem);
+            }
+            mensagens.push(mensagem);
+        });
+        return mensagens;
+    }
+
     const inputBusca = document.getElementById('newsAdminSearch');
     const selectStatus = document.getElementById('newsAdminStatus');
     const selectDestaque = document.getElementById('newsAdminDestaque');
@@ -167,9 +276,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         form.reset();
         document.getElementById('noticiaId').value = '';
         document.getElementById('noticiaModalLabel').textContent = 'Nova notícia';
+        limparValidacaoCampos();
     }
 
     async function salvarNoticia() {
+        limparValidacaoCampos();
         const dados = new FormData(form);
         const payload = {
             titulo: dados.get('titulo')?.toString().trim(),
@@ -180,9 +291,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             destaque: form.querySelector('#noticiaDestaque').checked,
             ativo: form.querySelector('#noticiaAtivo').checked
         };
+        if (!payload.resumo) {
+            payload.resumo = null;
+        }
         const dataPublicacao = dados.get('dataPublicacao');
         if (dataPublicacao) {
-            const data = new Date(dataPublicacao);
+            payload.dataPublicacao = dataPublicacao.toString();
+        }
+        const errosFormulario = validarCamposObrigatorios(payload);
+        if (errosFormulario.length > 0) {
+            showToast(errosFormulario.join(' '), 'warning');
+            return;
+        }
+        if (payload.dataPublicacao) {
+            const data = new Date(payload.dataPublicacao);
             payload.dataPublicacao = data.toISOString();
         }
         const noticiaId = document.getElementById('noticiaId').value;
@@ -197,7 +319,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             carregarNoticias(paginaAtual);
         } catch (error) {
             console.error('Erro ao salvar notícia', error);
-            const mensagem = error?.message || 'Não foi possível salvar a notícia.';
+            let mensagem = error?.message || 'Não foi possível salvar a notícia.';
+            if (error?.payload?.erros) {
+                const mensagensDetalhadas = aplicarErrosServidor(error.payload.erros);
+                if (mensagensDetalhadas.length > 0) {
+                    mensagem = mensagensDetalhadas.join(' ');
+                }
+            }
             showToast(mensagem, 'danger');
             tentarRenovarCSRF();
         } finally {

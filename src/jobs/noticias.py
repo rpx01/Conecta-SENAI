@@ -1,8 +1,11 @@
-"""Job para publicação de notícias agendadas."""
+"""Jobs relacionados a notícias."""
 
 import logging
 
-from src.services.noticia_service import publicar_noticias_agendadas as _publicar_noticias_agendadas
+from src.services.noticia_service import (
+    publicar_noticias_agendadas as _publicar_noticias_agendadas,
+    remover_destaques_expirados as _remover_destaques_expirados,
+)
 
 log = logging.getLogger(__name__)
 
@@ -26,5 +29,19 @@ def publicar_noticias_agendadas() -> dict[str, int]:
             "%d notícias agendadas não puderam ser publicadas devido a erros.",
             resultado["falhas"],
         )
+
+    return resultado
+
+
+def remover_destaques_expirados() -> dict[str, int]:
+    """Remove destaques expirados registrando o total afetado."""
+
+    resultado = _remover_destaques_expirados()
+
+    ajustados = resultado.get("ajustados", 0)
+    if ajustados:
+        log.info("Removidos %d destaques expirados de notícias.", ajustados)
+    else:
+        log.debug("Nenhum destaque expirado precisou ser removido no ciclo atual.")
 
     return resultado

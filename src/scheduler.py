@@ -63,6 +63,24 @@ def start_scheduler(app):
         misfire_grace_time=60,
     )
 
+    def limpeza_destaques_job():
+        from src.jobs.noticias import remover_destaques_expirados
+
+        with app.app_context():
+            remover_destaques_expirados()
+
+    scheduler.add_job(
+        limpeza_destaques_job,
+        "cron",
+        hour=3,
+        minute=0,
+        id="remover_destaques_expirados",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=3600,
+    )
+
     if scheduler.state != STATE_RUNNING:
         scheduler.start()
         app.logger.info(

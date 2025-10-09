@@ -168,26 +168,30 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="noticiaForm">
+                    <form id="noticiaForm" novalidate>
                         <input type="hidden" id="noticiaId">
                         <div class="row g-3">
                             <div class="col-md-8">
                                 <label for="noticiaTitulo" class="form-label">Título</label>
-                                <input type="text" class="form-control" id="noticiaTitulo" name="titulo" required maxlength="200">
+                                <input type="text" class="form-control" id="noticiaTitulo" name="titulo" required minlength="3" maxlength="200" aria-describedby="feedbackTitulo">
+                                <div class="invalid-feedback" id="feedbackTitulo" role="alert"></div>
                             </div>
                             <div class="col-md-4">
                                 <label for="noticiaDataPublicacao" class="form-label">Data de publicação</label>
-                                <input type="datetime-local" class="form-control" id="noticiaDataPublicacao" name="dataPublicacao">
+                                <input type="datetime-local" class="form-control" id="noticiaDataPublicacao" name="dataPublicacao" aria-describedby="feedbackDataPublicacao">
                                 <div class="form-text">Se vazio, a data atual será aplicada.</div>
+                                <div class="invalid-feedback" id="feedbackDataPublicacao" role="alert"></div>
                             </div>
                             <div class="col-12">
                                 <label for="noticiaResumo" class="form-label">Resumo</label>
-                                <textarea class="form-control" id="noticiaResumo" name="resumo" rows="2" maxlength="400" required></textarea>
+                                <textarea class="form-control" id="noticiaResumo" name="resumo" rows="2" minlength="10" maxlength="400" required aria-describedby="feedbackResumo"></textarea>
                                 <div class="form-text">O resumo é exibido nos cards e pode ter até 400 caracteres.</div>
+                                <div class="invalid-feedback" id="feedbackResumo" role="alert"></div>
                             </div>
                             <div class="col-12">
                                 <label for="noticiaConteudo" class="form-label">Conteúdo</label>
-                                <textarea class="form-control" id="noticiaConteudo" name="conteudo" rows="6" required></textarea>
+                                <textarea class="form-control" id="noticiaConteudo" name="conteudo" rows="6" required minlength="20" aria-describedby="feedbackConteudo"></textarea>
+                                <div class="invalid-feedback" id="feedbackConteudo" role="alert"></div>
                             </div>
                             <div class="col-md-6">
                                 <label for="noticiaAutor" class="form-label">Autor (opcional)</label>

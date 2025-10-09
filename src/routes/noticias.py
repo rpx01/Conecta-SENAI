@@ -18,10 +18,10 @@ from src.utils.error_handler import handle_internal_error
 
 log = logging.getLogger(__name__)
 
-noticias_bp = Blueprint("noticias", __name__)
+api_noticias_bp = Blueprint("api_noticias", __name__)
 
 
-@noticias_bp.before_request
+@api_noticias_bp.before_request
 def proteger_csrf():
     """Valida o token CSRF em requisições mutáveis."""
     if request.method not in {"POST", "PUT", "DELETE"}:
@@ -33,7 +33,7 @@ def proteger_csrf():
     return None
 
 
-@noticias_bp.route("/noticias", methods=["GET"])
+@api_noticias_bp.route("/noticias", methods=["GET"])
 def listar_noticias():
     """Lista notícias paginadas, permitindo filtros básicos."""
     page = request.args.get("page", 1, type=int)
@@ -77,7 +77,7 @@ def listar_noticias():
     )
 
 
-@noticias_bp.route("/noticias/<int:noticia_id>", methods=["GET"])
+@api_noticias_bp.route("/noticias/<int:noticia_id>", methods=["GET"])
 def obter_noticia(noticia_id: int):
     """Retorna os detalhes de uma notícia específica."""
     incluir_inativas = request.args.get("include_inativas", "false").lower() == "true"
@@ -89,7 +89,7 @@ def obter_noticia(noticia_id: int):
     return jsonify(noticia.to_dict())
 
 
-@noticias_bp.route("/noticias", methods=["POST"])
+@api_noticias_bp.route("/noticias", methods=["POST"])
 @admin_required
 def criar():
     """Cria uma nova notícia."""
@@ -111,7 +111,7 @@ def criar():
     return jsonify(noticia.to_dict()), 201
 
 
-@noticias_bp.route("/noticias/<int:noticia_id>", methods=["PUT"])
+@api_noticias_bp.route("/noticias/<int:noticia_id>", methods=["PUT"])
 @admin_required
 def atualizar(noticia_id: int):
     """Atualiza os dados de uma notícia existente."""
@@ -137,7 +137,7 @@ def atualizar(noticia_id: int):
     return jsonify(noticia_atualizada.to_dict())
 
 
-@noticias_bp.route("/noticias/<int:noticia_id>", methods=["DELETE"])
+@api_noticias_bp.route("/noticias/<int:noticia_id>", methods=["DELETE"])
 @admin_required
 def remover(noticia_id: int):
     """Remove uma notícia."""

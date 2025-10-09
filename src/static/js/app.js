@@ -65,11 +65,17 @@ const PAGINAS_PUBLICAS = new Set([
     '/noticias/',
     '/noticias/index.html'
 ]);
+const PAGINAS_RESTRITAS = new Set([
+    '/noticias/gerenciamento.html'
+]);
 const PREFIXOS_PUBLICOS = ['/noticias/'];
 
 function ehPaginaPublica(pathname) {
     if (!pathname) return false;
     const normalizado = pathname.toLowerCase();
+    if (PAGINAS_RESTRITAS.has(normalizado)) {
+        return false;
+    }
     if (PAGINAS_PUBLICAS.has(normalizado)) {
         return true;
     }

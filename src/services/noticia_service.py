@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, Tuple
 from uuid import uuid4
@@ -280,3 +280,73 @@ def publicar_noticias_agendadas() -> dict[str, int]:
             sucesso_count = 0
 
     return {"total": total, "publicadas": sucesso_count, "falhas": falha_count}
+
+
+def _normalizar_para_utc(data: datetime) -> datetime:
+    if data.tzinfo is None:
+        return data.replace(tzinfo=timezone.utc)
+    return data.astimezone(timezone.utc)
+
+
+def _dias_uteis_decorridos(inicio: datetime, fim: datetime) -> int:
+    data_inicio = _normalizar_para_utc(inicio).date()
+    data_fim = _normalizar_para_utc(fim).date()
+
+    if data_fim <= data_inicio:
+        return 0
+
+    dias_uteis = 0
+    dia_atual = data_inicio
+
+    while dia_atual < data_fim:
+        if dia_atual.weekday() < 5:
+            dias_uteis += 1
+        dia_atual += timedelta(days=1)
+
+    return dias_uteis
+
+
+def remover_destaques_expirados() -> dict[str, int]:
+    """Remove o destaque de notícias cuja data ultrapassou cinco dias úteis."""
+
+    try:
+        noticias_em_destaque = (
+            Noticia.query.filter(
+                Noticia.destaque.is_(True),
+                Noticia.data_publicacao.isnot(None),
+            ).all()
+        )
+    except SQLAlchemyError:
+        db.session.rollback()
+        log.exception("Erro ao buscar notícias em destaque para verificação de expiração.")
+        return {"total": 0, "ajustados": 0, "falhas": 0}
+
+    total = len(noticias_em_destaque)
+    if total == 0:
+        return {"total": 0, "ajustados": 0, "falhas": 0}
+
+    agora = datetime.now(timezone.utc)
+    ajustados = 0
+
+    for noticia in noticias_em_destaque:
+        data_publicacao = noticia.data_publicacao
+        if not data_publicacao:
+            continue
+
+        dias_uteis = _dias_uteis_decorridos(data_publicacao, agora)
+        if dias_uteis >= 5:
+            noticia.destaque = False
+            ajustados += 1
+
+    if ajustados == 0:
+        return {"total": total, "ajustados": 0, "falhas": 0}
+
+    try:
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        log.exception("Erro ao remover destaques expirados de notícias.")
+        return {"total": total, "ajustados": 0, "falhas": ajustados}
+
+    log.info("Removidos %d destaques de notícias expiradas.", ajustados)
+    return {"total": total, "ajustados": ajustados, "falhas": 0}

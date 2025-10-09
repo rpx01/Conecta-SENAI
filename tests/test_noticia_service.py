@@ -80,3 +80,34 @@ def test_publicar_noticias_agendadas_altera_status_para_ativo(app):
         assert resultado == {"total": 1, "publicadas": 1, "falhas": 0}
         assert publicada.ativo is True
         assert pendente.ativo is False
+
+
+def test_remover_destaques_expirados_considera_dias_uteis(app):
+    with app.app_context():
+        db.create_all()
+
+        agora = datetime.now(timezone.utc)
+        noticia_expirada = Noticia(
+            titulo="Notícia expirada",
+            conteudo="Conteúdo",  # noqa: E501 - texto simplificado
+            destaque=True,
+            data_publicacao=agora - timedelta(days=10),
+        )
+        noticia_recente = Noticia(
+            titulo="Notícia recente",
+            conteudo="Conteúdo",
+            destaque=True,
+            data_publicacao=agora - timedelta(days=1),
+        )
+
+        db.session.add_all([noticia_expirada, noticia_recente])
+        db.session.commit()
+
+        resultado = noticia_service.remover_destaques_expirados()
+
+        expirada = db.session.get(Noticia, noticia_expirada.id)
+        recente = db.session.get(Noticia, noticia_recente.id)
+
+        assert resultado == {"total": 2, "ajustados": 1, "falhas": 0}
+        assert expirada.destaque is False
+        assert recente.destaque is True

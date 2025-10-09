@@ -162,11 +162,14 @@ def _aplicar_imagem(noticia: Noticia, arquivo: FileStorage | None) -> Tuple[str 
             )
         except (ProgrammingError, SQLAlchemyError) as exc:
             _registrar_tabela_imagens_indisponivel(exc)
+            tabela_disponivel = False
+            noticia.imagem = None
         else:
             noticia.imagem_url = noticia.imagem.url_publica
             return caminho_antigo, caminho_relativo
 
-    noticia.imagem = None
+    if tabela_disponivel:
+        noticia.imagem = None
     noticia.imagem_url = _construir_url_publica(caminho_relativo)
     current_app.logger.debug(
         "Persistindo caminho da imagem no campo 'imagem_url' por indisponibilidade da tabela 'imagens_noticias'."

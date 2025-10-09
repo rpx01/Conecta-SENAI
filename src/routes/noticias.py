@@ -2,23 +2,27 @@
 
 import hmac
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 from pydantic import ValidationError
 from sqlalchemy import or_
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import ProgrammingError, SQLAlchemyError
 
 from src.auth import admin_required
 from src.models.noticia import Noticia
 from src.repositories.noticia_repository import NoticiaRepository
-from src.schemas.noticia import NoticiaCreateSchema, NoticiaUpdateSchema
+from src.schemas.noticia import NoticiaSchema
+from src.schemas.noticia_validacao import NoticiaCreateSchema, NoticiaUpdateSchema
 from src.services.noticia_service import criar_noticia, atualizar_noticia, excluir_noticia
 from src.utils.error_handler import handle_internal_error
 
 log = logging.getLogger(__name__)
 
 api_noticias_bp = Blueprint("api_noticias", __name__)
+
+noticia_schema = NoticiaSchema()
+noticias_schema = NoticiaSchema(many=True)
 
 
 @api_noticias_bp.before_request
@@ -64,17 +68,38 @@ def listar_noticias():
         consulta = consulta.filter(or_(Noticia.titulo.ilike(like), Noticia.resumo.ilike(like)))
 
     consulta = consulta.order_by(Noticia.data_publicacao.desc(), Noticia.id.desc())
-    paginacao = consulta.paginate(page=page, per_page=per_page, error_out=False)
-
-    return jsonify(
-        {
-            "items": [noticia.to_dict() for noticia in paginacao.items],
-            "page": paginacao.page,
-            "per_page": paginacao.per_page,
-            "total": paginacao.total,
-            "pages": paginacao.pages,
-        }
-    )
+    try:
+        paginacao = consulta.paginate(page=page, per_page=per_page, error_out=False)
+        itens = noticias_schema.dump(paginacao.items)
+        return jsonify(
+            {
+                "items": itens,
+                "page": paginacao.page,
+                "per_page": paginacao.per_page,
+                "total": paginacao.total,
+                "pages": paginacao.pages,
+            }
+        ), 200
+    except (ProgrammingError, SQLAlchemyError) as exc:
+        mensagem = str(exc).lower()
+        if isinstance(exc, ProgrammingError) or "no such table" in mensagem:
+            current_app.logger.error(
+                "Tabela 'noticias' ausente. Rode as migrações.",
+                exc_info=True,
+            )
+            return (
+                jsonify(
+                    {
+                        "items": [],
+                        "page": page,
+                        "per_page": per_page,
+                        "total": 0,
+                        "pages": 0,
+                    }
+                ),
+                200,
+            )
+        raise
 
 
 @api_noticias_bp.route("/noticias/<int:noticia_id>", methods=["GET"])
@@ -86,7 +111,17 @@ def obter_noticia(noticia_id: int):
         return jsonify({"erro": "Notícia não encontrada"}), 404
     if not incluir_inativas and not noticia.ativo:
         return jsonify({"erro": "Notícia não encontrada"}), 404
-    return jsonify(noticia.to_dict())
+    try:
+        return jsonify(noticia_schema.dump(noticia)), 200
+    except (ProgrammingError, SQLAlchemyError) as exc:
+        mensagem = str(exc).lower()
+        if isinstance(exc, ProgrammingError) or "no such table" in mensagem:
+            current_app.logger.error(
+                "Tabela 'noticias' ausente ao buscar notícia.",
+                exc_info=True,
+            )
+            return jsonify({"erro": "Notícia não encontrada"}), 404
+        raise
 
 
 @api_noticias_bp.route("/noticias", methods=["POST"])
@@ -100,7 +135,7 @@ def criar():
 
     dados = payload.model_dump(mode="python")
     if not dados.get("data_publicacao"):
-        dados["data_publicacao"] = datetime.utcnow()
+        dados["data_publicacao"] = datetime.now(timezone.utc)
 
     try:
         noticia = criar_noticia(dados)
@@ -108,7 +143,7 @@ def criar():
         log.exception("Erro ao criar notícia")
         return handle_internal_error(exc)
 
-    return jsonify(noticia.to_dict()), 201
+    return jsonify(noticia_schema.dump(noticia)), 201
 
 
 @api_noticias_bp.route("/noticias/<int:noticia_id>", methods=["PUT"])
@@ -134,7 +169,7 @@ def atualizar(noticia_id: int):
         log.exception("Erro ao atualizar notícia %s", noticia_id)
         return handle_internal_error(exc)
 
-    return jsonify(noticia_atualizada.to_dict())
+    return jsonify(noticia_schema.dump(noticia_atualizada)), 200
 
 
 @api_noticias_bp.route("/noticias/<int:noticia_id>", methods=["DELETE"])

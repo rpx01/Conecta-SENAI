@@ -66,10 +66,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 destaqueAtual = null;
                 atualizarHero();
                 renderizarHighlights([]);
+                mostrarEstadoVazioHighlights();
             }
         } catch (error) {
             console.error('Erro ao carregar destaques', error);
             showToast('Não foi possível carregar os destaques de notícias.', 'danger');
+            destaqueAtual = null;
+            atualizarHero();
+            renderizarHighlights([]);
+            mostrarEstadoVazioHighlights();
+            tentarRenovarCSRF();
         } finally {
             setAriaBusy(highlightsContainer, false);
         }
@@ -89,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const noticias = resposta.items || [];
             if (noticias.length === 0) {
                 listContainer.innerHTML = '';
+                listEmptyState.textContent = 'Nenhuma notícia cadastrada ainda.';
                 listEmptyState.classList.remove('visually-hidden');
             } else {
                 listEmptyState.classList.add('visually-hidden');
@@ -108,6 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Erro ao carregar notícias', error);
             showToast('Erro ao carregar notícias. Tente novamente em instantes.', 'danger');
+            renderizarPlaceholdersLista();
+            tentarRenovarCSRF();
         } finally {
             setAriaBusy(listContainer, false);
         }
@@ -244,6 +253,35 @@ document.addEventListener('DOMContentLoaded', () => {
     function setAriaBusy(elemento, ocupado) {
         if (!elemento) return;
         elemento.setAttribute('aria-busy', ocupado ? 'true' : 'false');
+    }
+
+    function renderizarPlaceholdersLista() {
+        const skeleton = `
+            <article class="news-card placeholder-glow" aria-hidden="true">
+                <div class="news-card__image placeholder"></div>
+                <div class="news-card__body">
+                    <p class="news-card__date placeholder col-6"></p>
+                    <h3 class="news-card__title placeholder col-8"></h3>
+                    <p class="news-card__summary placeholder col-10"></p>
+                    <div class="news-card__actions mt-3">
+                        <span class="btn btn-outline-primary disabled placeholder col-5"></span>
+                    </div>
+                </div>
+            </article>
+        `;
+        listEmptyState.classList.add('visually-hidden');
+        listContainer.innerHTML = skeleton.repeat(3);
+    }
+
+    function mostrarEstadoVazioHighlights() {
+        highlightsContainer.innerHTML = '';
+        highlightsEmptyState.classList.remove('visually-hidden');
+    }
+
+    function tentarRenovarCSRF() {
+        if (typeof obterCSRFToken === 'function') {
+            obterCSRFToken(true).catch(() => {});
+        }
     }
 
     function escapeHTML(texto = '') {

@@ -5,7 +5,7 @@ import logging
 import traceback
 import sys
 import re
-from flask import Flask, redirect
+from flask import Flask, redirect, send_from_directory
 from flasgger import Swagger
 from flask_wtf.csrf import CSRFProtect
 from sentry_sdk.integrations.flask import FlaskIntegration
@@ -64,6 +64,7 @@ from src.blueprints.auth_reset import auth_reset_bp
 from src.blueprints.auth import auth_bp
 from src.scheduler import start_scheduler
 from src.routes.noticias import api_noticias_bp
+from src.cli import register_cli
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -273,6 +274,8 @@ def create_app():
     app.register_blueprint(auth_reset_bp)
     app.register_blueprint(auth_bp)
 
+    register_cli(app)
+
     # Inicia scheduler para notificações
     if os.getenv("SCHEDULER_ENABLED", "0") == "1":
         start_scheduler(app)
@@ -289,6 +292,15 @@ def create_app():
     @app.route('/<path:path>')
     def static_file(path):
         return app.send_static_file(path)
+
+    @app.route('/favicon.ico')
+    @app.route('/admin/favicon.ico')
+    def favicon():
+        static_img_dir = os.path.join(app.static_folder, 'img')
+        try:
+            return send_from_directory(static_img_dir, 'senai-logo.png', mimetype='image/png')
+        except FileNotFoundError:
+            return '', 204
 
     @app.route('/health')
     def health_check():

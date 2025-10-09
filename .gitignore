@@ -23,3 +23,7 @@ node_modules/
 # Database files
 agenda_laboratorio.db
 instance/
+
+# Uploaded media
+src/static/uploads/noticias/*
+!src/static/uploads/noticias/.gitkeep

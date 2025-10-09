@@ -380,16 +380,23 @@ async function chamarAPI(endpoint, method = 'GET', body = null) {
     };
 
     const mutativo = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase());
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
     if (mutativo) {
         const token = await obterCSRFToken();
-        opts.headers['Content-Type'] = 'application/json';
         opts.headers['X-CSRF-Token'] = token;
-        if (body !== null) {
+        if (isFormData) {
+            opts.body = body;
+        } else if (body !== null) {
+            opts.headers['Content-Type'] = 'application/json';
             opts.body = JSON.stringify(body);
         }
     } else if (body !== null) {
-        opts.headers['Content-Type'] = 'application/json';
-        opts.body = JSON.stringify(body);
+        if (isFormData) {
+            opts.body = body;
+        } else {
+            opts.headers['Content-Type'] = 'application/json';
+            opts.body = JSON.stringify(body);
+        }
     }
 
     return await executarComLoading(async () => {

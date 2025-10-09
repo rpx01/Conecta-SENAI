@@ -3,6 +3,7 @@
 import hmac
 import logging
 from datetime import datetime, timezone
+from typing import Any, Dict, Tuple
 
 from flask import Blueprint, current_app, jsonify, request
 from pydantic import ValidationError
@@ -23,6 +24,73 @@ api_noticias_bp = Blueprint("api_noticias", __name__)
 
 noticia_schema = NoticiaSchema()
 noticias_schema = NoticiaSchema(many=True)
+
+BOOLEAN_TRUES = {"1", "true", "t", "on", "yes", "y", "sim"}
+BOOLEAN_FALSES = {"0", "false", "f", "off", "no", "n", "nao", "não"}
+
+
+def _normalizar_booleano(valor: Any, default: bool | None = None) -> bool | None:
+    if valor is None:
+        return default
+    if isinstance(valor, bool):
+        return valor
+    texto = str(valor).strip().lower()
+    if not texto:
+        return default
+    if texto in BOOLEAN_TRUES:
+        return True
+    if texto in BOOLEAN_FALSES:
+        return False
+    return default
+
+
+def _extrair_dados_form(expect_update: bool = False) -> Tuple[Dict[str, Any], Any]:
+    if request.mimetype and "application/json" in request.mimetype:
+        dados_brutos: Dict[str, Any] = request.get_json(silent=True) or {}
+        arquivo = None
+    else:
+        dados_brutos = {chave: valor for chave, valor in request.form.items()}
+        arquivo = request.files.get("imagem")
+
+    dados_brutos.pop("csrf_token", None)
+    dados_brutos.pop("csrfmiddlewaretoken", None)
+    dados_brutos.pop("_method", None)
+
+    data_agendamento = dados_brutos.pop("dataAgendamento", None) or dados_brutos.pop("data_agendamento", None)
+
+    if "destaque" in dados_brutos:
+        valor = _normalizar_booleano(dados_brutos.get("destaque"), False if not expect_update else None)
+        if valor is None and expect_update:
+            dados_brutos.pop("destaque", None)
+        else:
+            dados_brutos["destaque"] = valor if valor is not None else False
+    elif not expect_update:
+        dados_brutos["destaque"] = False
+
+    if "ativo" in dados_brutos:
+        valor = _normalizar_booleano(dados_brutos.get("ativo"), True if not expect_update else None)
+        if valor is None and expect_update:
+            dados_brutos.pop("ativo", None)
+        else:
+            dados_brutos["ativo"] = valor if valor is not None else True
+    elif not expect_update:
+        dados_brutos["ativo"] = True
+
+    dados_brutos.pop("imagem", None)
+
+    imagem_url = dados_brutos.get("imagem_url")
+    if not expect_update:
+        dados_brutos.setdefault("imagem_url", imagem_url if imagem_url is not None else None)
+    else:
+        dados_brutos.pop("imagem_url", None)
+
+    data_publicacao = dados_brutos.get("dataPublicacao") or dados_brutos.pop("data_publicacao", None)
+    if data_publicacao:
+        dados_brutos["dataPublicacao"] = data_publicacao
+    if data_agendamento:
+        dados_brutos["dataAgendamento"] = data_agendamento
+
+    return dados_brutos, arquivo
 
 
 def _serialize_validation_errors(err: ValidationError) -> list[dict]:
@@ -152,17 +220,21 @@ def obter_noticia(noticia_id: int):
 @admin_required
 def criar():
     """Cria uma nova notícia."""
+    dados_brutos, arquivo_imagem = _extrair_dados_form()
     try:
-        payload = NoticiaCreateSchema.model_validate(request.get_json(silent=True) or {})
+        payload = NoticiaCreateSchema.model_validate(dados_brutos)
     except ValidationError as err:
         return jsonify({"erros": _serialize_validation_errors(err)}), 400
 
     dados = payload.model_dump(mode="python")
-    if not dados.get("data_publicacao"):
+    data_agendamento = dados.pop("data_agendamento", None)
+    if data_agendamento and not dados.get("data_publicacao"):
+        dados["data_publicacao"] = data_agendamento
+    if dados.get("data_publicacao") is None and dados.get("ativo", True):
         dados["data_publicacao"] = datetime.now(timezone.utc)
 
     try:
-        noticia = criar_noticia(dados)
+        noticia = criar_noticia(dados, arquivo_imagem=arquivo_imagem)
     except SQLAlchemyError as exc:  # pragma: no cover
         log.exception("Erro ao criar notícia")
         return handle_internal_error(exc)
@@ -178,17 +250,26 @@ def atualizar(noticia_id: int):
     if not noticia:
         return jsonify({"erro": "Notícia não encontrada"}), 404
 
+    dados_brutos, arquivo_imagem = _extrair_dados_form(expect_update=True)
     try:
-        payload = NoticiaUpdateSchema.model_validate(request.get_json(silent=True) or {})
+        payload = NoticiaUpdateSchema.model_validate(dados_brutos)
     except ValidationError as err:
         return jsonify({"erros": _serialize_validation_errors(err)}), 400
 
     dados = payload.model_dump(mode="python", exclude_unset=True)
-    if not dados:
+    data_agendamento = dados.pop("data_agendamento", None)
+    if data_agendamento is not None:
+        dados["data_publicacao"] = data_agendamento
+
+    if not dados and arquivo_imagem is None:
         return jsonify({"erro": "Nenhum dado fornecido para atualização"}), 400
 
     try:
-        noticia_atualizada = atualizar_noticia(noticia, dados)
+        noticia_atualizada = atualizar_noticia(
+            noticia,
+            dados,
+            arquivo_imagem=arquivo_imagem,
+        )
     except SQLAlchemyError as exc:  # pragma: no cover
         log.exception("Erro ao atualizar notícia %s", noticia_id)
         return handle_internal_error(exc)

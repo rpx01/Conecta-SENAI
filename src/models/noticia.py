@@ -1,6 +1,9 @@
 """Modelo de dados para notícias institucionais."""
 
+from __future__ import annotations
+
 from datetime import datetime, timezone
+
 from sqlalchemy import text
 
 from src.models import db
@@ -32,6 +35,12 @@ class Noticia(db.Model):
     destaque = db.Column(db.Boolean, nullable=False, default=False, server_default=text("false"))
     ativo = db.Column(db.Boolean, nullable=False, default=True, server_default=text("true"))
     data_publicacao = db.Column(db.DateTime(timezone=True), nullable=True)
+    imagem = db.relationship(
+        "ImagemNoticia",
+        back_populates="noticia",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
     criado_em = db.Column(
         db.DateTime(timezone=True),
         nullable=False,
@@ -48,13 +57,16 @@ class Noticia(db.Model):
 
     def to_dict(self) -> dict:
         """Serializa a instância para dicionário pronto para JSON."""
+        imagem_relacionada = self.imagem.to_dict() if getattr(self, "imagem", None) else None
+        imagem_url = imagem_relacionada["url"] if imagem_relacionada else self.imagem_url
         return {
             "id": self.id,
             "titulo": self.titulo,
             "resumo": self.resumo,
             "conteudo": self.conteudo,
             "autor": self.autor,
-            "imagem_url": self.imagem_url,
+            "imagem_url": imagem_url,
+            "imagem": imagem_relacionada,
             "destaque": bool(self.destaque),
             "ativo": bool(self.ativo),
             "data_publicacao": self.data_publicacao.isoformat() if self.data_publicacao else None,

@@ -34,6 +34,7 @@ class NoticiaBaseSchema(BaseModel):
     destaque: bool = False
     ativo: bool = True
     data_publicacao: Optional[datetime] = Field(default=None, alias="dataPublicacao")
+    data_agendamento: Optional[datetime] = Field(default=None, alias="dataAgendamento")
 
     @field_validator("titulo", "resumo", "conteudo", "autor", "imagem_url", mode="before")
     @classmethod
@@ -52,7 +53,7 @@ class NoticiaBaseSchema(BaseModel):
             raise ValueError("O resumo deve conter ao menos 10 caracteres ou ser omitido.")
         return value
 
-    @field_validator("data_publicacao", mode="before")
+    @field_validator("data_publicacao", "data_agendamento", mode="before")
     @classmethod
     def validar_data_publicacao(cls, value):
         return _parse_datetime(value)
@@ -74,6 +75,7 @@ class NoticiaUpdateSchema(BaseModel):
     destaque: Optional[bool] = None
     ativo: Optional[bool] = None
     data_publicacao: Optional[datetime] = Field(default=None, alias="dataPublicacao")
+    data_agendamento: Optional[datetime] = Field(default=None, alias="dataAgendamento")
 
     @field_validator("titulo", "resumo", "conteudo", "autor", "imagem_url", mode="before")
     @classmethod
@@ -92,7 +94,7 @@ class NoticiaUpdateSchema(BaseModel):
             raise ValueError("O resumo deve conter ao menos 10 caracteres ou ser omitido.")
         return value
 
-    @field_validator("data_publicacao", mode="before")
+    @field_validator("data_publicacao", "data_agendamento", mode="before")
     @classmethod
     def validar_data_publicacao(cls, value):
         return _parse_datetime(value)

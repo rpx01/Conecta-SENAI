@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const itensPorPagina = 6;
     let termoBusca = '';
     let destaqueAtual = null;
+    let destaquesHero = [];
+    let indiceDestaqueAtual = 0;
+    let intervaloRotacaoId = null;
+    const TEMPO_ROTACAO_MS = 10000;
 
     const usuario = getUsuarioLogado?.();
     if (usuario) {
@@ -55,15 +59,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function carregarDestaques() {
         setAriaBusy(highlightsContainer, true);
+        pararRotacaoDestaques();
+        destaquesHero = [];
         try {
             const resposta = await chamarAPI(`/noticias?destaque=true&per_page=5`);
             const noticias = resposta.items || [];
             if (noticias.length > 0) {
-                destaqueAtual = noticias[0];
-                atualizarHero(destaqueAtual);
-                renderizarHighlights(noticias.slice(1));
+                destaquesHero = noticias;
+                indiceDestaqueAtual = 0;
+                atualizarHeroEDestaques();
+                iniciarRotacaoDestaques();
             } else {
                 destaqueAtual = null;
+                destaquesHero = [];
+                pararRotacaoDestaques();
                 atualizarHero();
                 renderizarHighlights([]);
                 mostrarEstadoVazioHighlights();
@@ -72,6 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Erro ao carregar destaques', error);
             showToast('Não foi possível carregar os destaques de notícias.', 'danger');
             destaqueAtual = null;
+            destaquesHero = [];
+            pararRotacaoDestaques();
             atualizarHero();
             renderizarHighlights([]);
             mostrarEstadoVazioHighlights();
@@ -276,6 +287,36 @@ document.addEventListener('DOMContentLoaded', () => {
     function mostrarEstadoVazioHighlights() {
         highlightsContainer.innerHTML = '';
         highlightsEmptyState.classList.remove('visually-hidden');
+    }
+
+    function atualizarHeroEDestaques() {
+        destaqueAtual = destaquesHero[indiceDestaqueAtual] ?? null;
+        if (destaqueAtual) {
+            atualizarHero(destaqueAtual);
+            const demaisDestaques = destaquesHero.filter((_, index) => index !== indiceDestaqueAtual);
+            renderizarHighlights(demaisDestaques);
+        } else {
+            atualizarHero();
+            renderizarHighlights([]);
+        }
+    }
+
+    function iniciarRotacaoDestaques() {
+        pararRotacaoDestaques();
+        if (destaquesHero.length <= 1) {
+            return;
+        }
+        intervaloRotacaoId = window.setInterval(() => {
+            indiceDestaqueAtual = (indiceDestaqueAtual + 1) % destaquesHero.length;
+            atualizarHeroEDestaques();
+        }, TEMPO_ROTACAO_MS);
+    }
+
+    function pararRotacaoDestaques() {
+        if (intervaloRotacaoId) {
+            window.clearInterval(intervaloRotacaoId);
+            intervaloRotacaoId = null;
+        }
     }
 
     function tentarRenovarCSRF() {

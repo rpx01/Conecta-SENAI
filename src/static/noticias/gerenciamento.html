@@ -198,8 +198,8 @@
                                 <input type="text" class="form-control" id="noticiaAutor" name="autor" maxlength="120">
                             </div>
                             <div class="col-md-6">
-                                <label for="noticiaImagemUrl" class="form-label">URL da imagem (opcional)</label>
-                                <input type="url" class="form-control" id="noticiaImagemUrl" name="imagem_url" maxlength="500" placeholder="https://exemplo.com/imagem.jpg">
+                                <label for="noticiaImagem" class="form-label">Imagem da notícia</label>
+                                <input type="file" class="form-control" id="noticiaImagem" name="imagem" accept="image/*">
                             </div>
                             <div class="col-md-6">
                                 <div class="form-check form-switch mt-4">
@@ -212,6 +212,11 @@
                                     <input class="form-check-input" type="checkbox" role="switch" id="noticiaAtivo" name="ativo" checked>
                                     <label class="form-check-label" for="noticiaAtivo">Publicar imediatamente</label>
                                 </div>
+                            </div>
+                            <div class="col-12" id="agendamentoPublicacao" style="display: none;">
+                                <label for="noticiaDataAgendamento" class="form-label">Agendar publicação para</label>
+                                <input type="datetime-local" class="form-control" id="noticiaDataAgendamento" name="dataAgendamento" aria-describedby="feedbackDataAgendamento">
+                                <div class="invalid-feedback" id="feedbackDataAgendamento" role="alert"></div>
                             </div>
                         </div>
                     </form>

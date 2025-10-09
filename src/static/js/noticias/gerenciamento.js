@@ -17,19 +17,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     const confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoExclusaoModal'));
     const form = document.getElementById('noticiaForm');
     const btnSalvar = document.getElementById('btnSalvarNoticia');
+    const publicarImediatamenteCheckbox = document.getElementById('noticiaAtivo');
+    const agendamentoDiv = document.getElementById('agendamentoPublicacao');
+    const dataAgendamentoInput = document.getElementById('noticiaDataAgendamento');
+    const imagemInput = document.getElementById('noticiaImagem');
 
     const camposFormulario = {
         titulo: document.getElementById('noticiaTitulo'),
         resumo: document.getElementById('noticiaResumo'),
         conteudo: document.getElementById('noticiaConteudo'),
-        dataPublicacao: document.getElementById('noticiaDataPublicacao')
+        dataPublicacao: document.getElementById('noticiaDataPublicacao'),
+        dataAgendamento: dataAgendamentoInput
     };
 
     const feedbacks = {
         titulo: document.getElementById('feedbackTitulo'),
         resumo: document.getElementById('feedbackResumo'),
         conteudo: document.getElementById('feedbackConteudo'),
-        dataPublicacao: document.getElementById('feedbackDataPublicacao')
+        dataPublicacao: document.getElementById('feedbackDataPublicacao'),
+        dataAgendamento: document.getElementById('feedbackDataAgendamento')
     };
 
     let focoAplicado = false;
@@ -46,6 +52,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 feedback.textContent = '';
             }
         });
+    }
+
+    function limparErroCampoEspecifico(chave) {
+        const campo = camposFormulario[chave];
+        const feedback = feedbacks[chave];
+        if (campo) {
+            campo.classList.remove('is-invalid');
+            campo.removeAttribute('aria-invalid');
+        }
+        if (feedback) {
+            feedback.textContent = '';
+        }
     }
 
     function registrarErroCampo(chave, mensagem) {
@@ -97,7 +115,49 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
+        if (payload.publicarImediatamente === false) {
+            const dataAgendamento = payload.dataAgendamento;
+            if (!dataAgendamento) {
+                const mensagem = 'Informe uma data e hora para o agendamento da publicação.';
+                registrarErroCampo('dataAgendamento', mensagem);
+                erros.push(mensagem);
+            } else {
+                const data = new Date(dataAgendamento);
+                if (Number.isNaN(data.getTime())) {
+                    const mensagem = 'Informe uma data de agendamento válida ou marque a publicação imediata.';
+                    registrarErroCampo('dataAgendamento', mensagem);
+                    erros.push(mensagem);
+                }
+            }
+        } else if (payload.dataAgendamento) {
+            const data = new Date(payload.dataAgendamento);
+            if (Number.isNaN(data.getTime())) {
+                const mensagem = 'Informe uma data de agendamento válida.';
+                registrarErroCampo('dataAgendamento', mensagem);
+                erros.push(mensagem);
+            }
+        }
+
         return erros;
+    }
+
+    function atualizarEstadoAgendamento() {
+        if (!agendamentoDiv) {
+            return;
+        }
+        const deveExibir = publicarImediatamenteCheckbox ? !publicarImediatamenteCheckbox.checked : false;
+        if (deveExibir) {
+            agendamentoDiv.style.display = 'block';
+            if (dataAgendamentoInput && !dataAgendamentoInput.value) {
+                dataAgendamentoInput.value = camposFormulario.dataPublicacao?.value || '';
+            }
+        } else {
+            agendamentoDiv.style.display = 'none';
+            if (dataAgendamentoInput) {
+                dataAgendamentoInput.value = '';
+                limparErroCampoEspecifico('dataAgendamento');
+            }
+        }
     }
 
     function normalizarCampoErro(loc) {
@@ -108,7 +168,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (typeof loc !== 'string') return null;
         const mapa = {
             data_publicacao: 'dataPublicacao',
-            dataPublicacao: 'dataPublicacao'
+            dataPublicacao: 'dataPublicacao',
+            data_agendamento: 'dataAgendamento',
+            dataAgendamento: 'dataAgendamento'
         };
         return mapa[loc] || loc;
     }
@@ -205,7 +267,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${destaqueBadge}</td>
                 <td>${statusBadge}</td>
                 <td class="text-end">
-                    <button class="btn btn-sm btn-outline-primary me-2" data-acao="editar" data-id="${noticia.id}" aria-label="Editar notícia ${escapeHTML(noticia.titulo)}">
+                    <button class="btn btn-sm btn-outline-primary me-2" data-acao="editar" data-id="${noticia.id}" data-bs-noticia-id="${noticia.id}" aria-label="Editar notícia ${escapeHTML(noticia.titulo)}">
                         <i class="bi bi-pencil"></i>
                     </button>
                     <button class="btn btn-sm btn-outline-danger" data-acao="excluir" data-id="${noticia.id}" aria-label="Excluir notícia ${escapeHTML(noticia.titulo)}">
@@ -260,59 +322,106 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('noticiaResumo').value = noticia.resumo || '';
         document.getElementById('noticiaConteudo').value = noticia.conteudo || '';
         document.getElementById('noticiaAutor').value = noticia.autor || '';
-        document.getElementById('noticiaImagemUrl').value = noticia.imagem_url || '';
         document.getElementById('noticiaDestaque').checked = Boolean(noticia.destaque);
-        document.getElementById('noticiaAtivo').checked = Boolean(noticia.ativo);
-        if (noticia.data_publicacao) {
-            const data = new Date(noticia.data_publicacao);
-            const local = new Date(data.getTime() - data.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-            document.getElementById('noticiaDataPublicacao').value = local;
-        } else {
-            document.getElementById('noticiaDataPublicacao').value = '';
+        if (publicarImediatamenteCheckbox) {
+            publicarImediatamenteCheckbox.checked = Boolean(noticia.ativo);
         }
+        const campoDataPublicacao = camposFormulario.dataPublicacao;
+        if (campoDataPublicacao) {
+            campoDataPublicacao.value = converterDataParaInputLocal(noticia.data_publicacao);
+        }
+        if (dataAgendamentoInput) {
+            if (noticia.ativo) {
+                dataAgendamentoInput.value = '';
+            } else {
+                dataAgendamentoInput.value = converterDataParaInputLocal(noticia.data_publicacao);
+            }
+        }
+        atualizarEstadoAgendamento();
     }
 
     function limparFormulario() {
         form.reset();
         document.getElementById('noticiaId').value = '';
         document.getElementById('noticiaModalLabel').textContent = 'Nova notícia';
+        if (publicarImediatamenteCheckbox) {
+            publicarImediatamenteCheckbox.checked = true;
+        }
+        if (dataAgendamentoInput) {
+            dataAgendamentoInput.value = '';
+        }
+        if (imagemInput) {
+            imagemInput.value = '';
+        }
+        atualizarEstadoAgendamento();
         limparValidacaoCampos();
     }
 
     async function salvarNoticia() {
         limparValidacaoCampos();
-        const dados = new FormData(form);
-        const payload = {
-            titulo: dados.get('titulo')?.toString().trim(),
-            resumo: dados.get('resumo')?.toString().trim(),
-            conteudo: dados.get('conteudo')?.toString().trim(),
-            autor: dados.get('autor')?.toString().trim() || null,
-            imagem_url: dados.get('imagem_url')?.toString().trim() || null,
-            destaque: form.querySelector('#noticiaDestaque').checked,
-            ativo: form.querySelector('#noticiaAtivo').checked
+        const dadosFormulario = new FormData(form);
+        const titulo = dadosFormulario.get('titulo')?.toString().trim() || '';
+        const resumo = dadosFormulario.get('resumo')?.toString().trim() || '';
+        const conteudo = dadosFormulario.get('conteudo')?.toString().trim() || '';
+        const autor = dadosFormulario.get('autor')?.toString().trim() || '';
+        const dataPublicacaoBruta = dadosFormulario.get('dataPublicacao')?.toString().trim() || '';
+        const dataAgendamentoBruta = dadosFormulario.get('dataAgendamento')?.toString().trim() || '';
+        const publicarImediatamente = publicarImediatamenteCheckbox ? publicarImediatamenteCheckbox.checked : true;
+
+        const payloadValidacao = {
+            titulo,
+            resumo,
+            conteudo,
+            dataPublicacao: dataPublicacaoBruta,
+            dataAgendamento: dataAgendamentoBruta,
+            publicarImediatamente
         };
-        if (!payload.resumo) {
-            payload.resumo = null;
-        }
-        const dataPublicacao = dados.get('dataPublicacao');
-        if (dataPublicacao) {
-            payload.dataPublicacao = dataPublicacao.toString();
-        }
-        const errosFormulario = validarCamposObrigatorios(payload);
+
+        const errosFormulario = validarCamposObrigatorios(payloadValidacao);
         if (errosFormulario.length > 0) {
             showToast(errosFormulario.join(' '), 'warning');
             return;
         }
-        if (payload.dataPublicacao) {
-            const data = new Date(payload.dataPublicacao);
-            payload.dataPublicacao = data.toISOString();
+
+        const dadosEnvio = new FormData();
+        dadosEnvio.append('titulo', titulo);
+        dadosEnvio.append('resumo', resumo);
+        dadosEnvio.append('conteudo', conteudo);
+        dadosEnvio.append('autor', autor);
+        dadosEnvio.append('destaque', form.querySelector('#noticiaDestaque').checked ? 'true' : 'false');
+        dadosEnvio.append('ativo', publicarImediatamente ? 'true' : 'false');
+
+        const arquivoImagem = dadosFormulario.get('imagem');
+        if (arquivoImagem instanceof File && arquivoImagem.name) {
+            dadosEnvio.append('imagem', arquivoImagem);
         }
+
+        const dataPrincipal = publicarImediatamente ? dataPublicacaoBruta : dataAgendamentoBruta;
+        if (dataPrincipal) {
+            const data = new Date(dataPrincipal);
+            if (!Number.isNaN(data.getTime())) {
+                dadosEnvio.append('dataPublicacao', data.toISOString());
+            }
+        } else if (dataPublicacaoBruta) {
+            const data = new Date(dataPublicacaoBruta);
+            if (!Number.isNaN(data.getTime())) {
+                dadosEnvio.append('dataPublicacao', data.toISOString());
+            }
+        }
+
+        if (!publicarImediatamente && dataAgendamentoBruta) {
+            const data = new Date(dataAgendamentoBruta);
+            if (!Number.isNaN(data.getTime())) {
+                dadosEnvio.append('dataAgendamento', data.toISOString());
+            }
+        }
+
         const noticiaId = document.getElementById('noticiaId').value;
         const metodo = noticiaId ? 'PUT' : 'POST';
         const endpoint = noticiaId ? `/noticias/${noticiaId}` : '/noticias';
         try {
             btnSalvar.disabled = true;
-            await chamarAPI(endpoint, metodo, payload);
+            await chamarAPI(endpoint, metodo, dadosEnvio);
             showToast('Notícia salva com sucesso!', 'success');
             noticiaModal.hide();
             limparFormulario();
@@ -400,6 +509,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         return div.textContent || '';
     }
 
+    function converterDataParaInputLocal(dataISO) {
+        if (!dataISO) return '';
+        try {
+            const data = new Date(dataISO);
+            if (Number.isNaN(data.getTime())) {
+                return '';
+            }
+            const local = new Date(data.getTime() - data.getTimezoneOffset() * 60000);
+            return local.toISOString().slice(0, 16);
+        } catch (error) {
+            return '';
+        }
+    }
+
+    function obterDataAtualFormatada() {
+        const agora = new Date();
+        const ano = agora.getFullYear();
+        const mes = String(agora.getMonth() + 1).padStart(2, '0');
+        const dia = String(agora.getDate()).padStart(2, '0');
+        const horas = String(agora.getHours()).padStart(2, '0');
+        const minutos = String(agora.getMinutes()).padStart(2, '0');
+        return `${ano}-${mes}-${dia}T${horas}:${minutos}`;
+    }
+
     function formatarDataTabela(dataISO) {
         if (!dataISO) return '<span class="text-muted">Sem data</span>';
         try {
@@ -422,6 +555,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    if (publicarImediatamenteCheckbox) {
+        publicarImediatamenteCheckbox.addEventListener('change', atualizarEstadoAgendamento);
+    }
+
+    modalEl.addEventListener('show.bs.modal', () => {
+        const idAtual = document.getElementById('noticiaId').value;
+        if (idAtual) {
+            return;
+        }
+        const campoDataPublicacao = camposFormulario.dataPublicacao;
+        if (campoDataPublicacao) {
+            campoDataPublicacao.value = obterDataAtualFormatada();
+        }
+        if (publicarImediatamenteCheckbox) {
+            publicarImediatamenteCheckbox.checked = true;
+        }
+        atualizarEstadoAgendamento();
+    });
+
     modalEl.addEventListener('hidden.bs.modal', limparFormulario);
     btnSalvar.addEventListener('click', salvarNoticia);
     searchForm.addEventListener('submit', event => {
@@ -439,5 +591,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnConfirmarExclusao').addEventListener('click', excluirNoticia);
     exportarButton.addEventListener('click', exportarNoticias);
 
+    atualizarEstadoAgendamento();
     carregarNoticias(paginaAtual);
 });

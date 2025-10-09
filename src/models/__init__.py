@@ -24,6 +24,7 @@ from .inscricao_treinamento import (
 from .email_secretaria import EmailSecretaria  # noqa: E402
 from .secretaria_treinamentos import SecretariaTreinamentos  # noqa: E402
 from .noticia import Noticia  # noqa: E402
+from .imagem_noticia import ImagemNoticia  # noqa: E402
 
 __all__ = [
     "db",
@@ -47,4 +48,5 @@ __all__ = [
     "EmailSecretaria", 
     "SecretariaTreinamentos", 
     "Noticia",
+    "ImagemNoticia",
 ]

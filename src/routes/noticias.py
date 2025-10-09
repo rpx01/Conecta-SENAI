@@ -2,7 +2,7 @@
 
 import hmac
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Any, Dict, Tuple
 
 from flask import Blueprint, current_app, jsonify, request
@@ -27,19 +27,6 @@ noticias_schema = NoticiaSchema(many=True)
 
 BOOLEAN_TRUES = {"1", "true", "t", "on", "yes", "y", "sim"}
 BOOLEAN_FALSES = {"0", "false", "f", "off", "no", "n", "nao", "não"}
-
-
-def _calcular_data_limite_destaque(dias_uteis: int) -> datetime:
-    """Calcula a data mínima permitida para manter uma notícia em destaque."""
-
-    hoje = datetime.now(timezone.utc)
-    limite = hoje.replace(hour=0, minute=0, second=0, microsecond=0)
-    dias_restantes = max(0, dias_uteis - 1)
-    while dias_restantes > 0:
-        limite -= timedelta(days=1)
-        if limite.weekday() < 5:  # 0 = segunda, 6 = domingo
-            dias_restantes -= 1
-    return limite
 
 
 def _normalizar_booleano(valor: Any, default: bool | None = None) -> bool | None:
@@ -153,12 +140,7 @@ def listar_noticias():
         if destaque_param:
             destaque_normalizado = destaque_param.lower()
             if destaque_normalizado in {"true", "1", "sim", "destaque"}:
-                limite_destaque = _calcular_data_limite_destaque(5)
-                consulta = consulta.filter(
-                    Noticia.destaque.is_(True),
-                    Noticia.data_publicacao.isnot(None),
-                    Noticia.data_publicacao >= limite_destaque,
-                )
+                consulta = consulta.filter(Noticia.destaque.is_(True))
             elif destaque_normalizado in {"false", "0", "nao", "não", "comum"}:
                 consulta = consulta.filter(Noticia.destaque.is_(False))
         if termo_busca:

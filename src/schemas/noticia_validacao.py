@@ -1,6 +1,6 @@
 """Esquemas de validação para o módulo de notícias."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
@@ -11,10 +11,18 @@ def _parse_datetime(value: Optional[str | datetime]) -> Optional[datetime]:
         return None
     if isinstance(value, datetime):
         return value
+    texto = str(value).strip()
+    if not texto:
+        return None
+    if texto.endswith("Z"):
+        texto = f"{texto[:-1]}+00:00"
     try:
-        return datetime.fromisoformat(str(value))
+        parsed = datetime.fromisoformat(texto)
     except (TypeError, ValueError) as exc:  # pragma: no cover - validação explícita
         raise ValueError("Data de publicação inválida. Use o formato ISO 8601.") from exc
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
 
 
 class NoticiaBaseSchema(BaseModel):

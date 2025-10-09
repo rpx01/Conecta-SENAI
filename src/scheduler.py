@@ -45,5 +45,22 @@ def start_scheduler(app):
         misfire_grace_time=300,
     )
 
+    def publicacao_noticias_job():
+        from src.jobs.noticias import publicar_noticias_agendadas
+
+        with app.app_context():
+            publicar_noticias_agendadas()
+
+    scheduler.add_job(
+        publicacao_noticias_job,
+        "interval",
+        minutes=5,
+        id="publicar_noticias_agendadas",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=60,
+    )
+
     scheduler.start()
     return scheduler

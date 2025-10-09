@@ -1,32 +1,75 @@
 """Repositório com operações de banco para notícias."""
 
+from __future__ import annotations
+
+import logging
 from typing import Optional
 
+from sqlalchemy import inspect
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.models import db
 from src.models.noticia import Noticia
 
 
+log = logging.getLogger(__name__)
+
+
 class NoticiaRepository:
     """Encapsula o acesso ao banco para o modelo :class:`Noticia`."""
 
+    _table_checked: bool = False
+
+    @classmethod
+    def ensure_table_exists(cls, force_refresh: bool = False) -> bool:
+        """Garante que a tabela de notícias esteja disponível.
+
+        Em ambientes recém configurados as migrações podem não ter sido
+        executadas, o que provocaria erros de ``ProgrammingError`` em todas as
+        requisições. Para manter a API funcional garantimos que a tabela seja
+        criada dinamicamente caso ainda não exista.
+        """
+
+        if cls._table_checked and not force_refresh:
+            return True
+
+        engine = db.engine
+        inspector = inspect(engine)
+        if inspector.has_table(Noticia.__tablename__):
+            cls._table_checked = True
+            return True
+
+        try:
+            Noticia.__table__.create(engine)
+            log.info("Tabela 'noticias' criada automaticamente por ausência prévia.")
+        except SQLAlchemyError:
+            cls._table_checked = False
+            log.exception("Falha ao criar a tabela 'noticias'.")
+            raise
+
+        cls._table_checked = True
+        return True
+
     @staticmethod
     def base_query():
+        NoticiaRepository.ensure_table_exists()
         return Noticia.query
 
     @staticmethod
     def get_by_id(noticia_id: int) -> Optional[Noticia]:
+        NoticiaRepository.ensure_table_exists()
         return db.session.get(Noticia, noticia_id)
 
     @staticmethod
     def add(noticia: Noticia) -> Noticia:
+        NoticiaRepository.ensure_table_exists()
         db.session.add(noticia)
         db.session.commit()
         return noticia
 
     @staticmethod
     def delete(noticia: Noticia) -> None:
+        NoticiaRepository.ensure_table_exists()
         db.session.delete(noticia)
         db.session.commit()
 
@@ -40,6 +83,7 @@ class NoticiaRepository:
 
     @staticmethod
     def save(noticia: Noticia) -> Noticia:
+        NoticiaRepository.ensure_table_exists()
         try:
             db.session.add(noticia)
             db.session.commit()

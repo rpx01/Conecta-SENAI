@@ -25,6 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const itensPorPagina = 6;
     let termoBusca = '';
     let destaqueAtual = null;
+    let destaquesCarregados = [];
+    let indiceDestaqueAtual = 0;
+    let temporizadorDestaquesId = null;
 
     const usuario = getUsuarioLogado?.();
     if (usuario) {
@@ -55,15 +58,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function carregarDestaques() {
         setAriaBusy(highlightsContainer, true);
+        pararCarrosselDestaques();
         try {
             const resposta = await chamarAPI(`/noticias?destaque=true&per_page=5`);
             const noticias = resposta.items || [];
+            destaquesCarregados = noticias;
+            indiceDestaqueAtual = 0;
             if (noticias.length > 0) {
                 destaqueAtual = noticias[0];
                 atualizarHero(destaqueAtual);
-                renderizarHighlights(noticias.slice(1));
+                renderizarHighlights(obterDestaquesSecundarios());
+                reiniciarCarrosselDestaques();
             } else {
                 destaqueAtual = null;
+                destaquesCarregados = [];
                 atualizarHero();
                 renderizarHighlights([]);
                 mostrarEstadoVazioHighlights();
@@ -72,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Erro ao carregar destaques', error);
             showToast('Não foi possível carregar os destaques de notícias.', 'danger');
             destaqueAtual = null;
+            destaquesCarregados = [];
             atualizarHero();
             renderizarHighlights([]);
             mostrarEstadoVazioHighlights();
@@ -128,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
             heroSummaryEl.textContent = 'Volte em breve para conferir as novidades da unidade.';
             heroDateEl.textContent = '';
             heroButton.disabled = true;
+            heroButton.setAttribute('aria-disabled', 'true');
             heroSection.style.backgroundImage = '';
             return;
         }
@@ -136,6 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
         heroDateEl.textContent = formatarDataHumana(noticia.data_publicacao);
         heroDateEl.classList.remove('visually-hidden');
         heroButton.disabled = false;
+        heroButton.setAttribute('aria-disabled', 'false');
         if (noticia.imagem_url) {
             heroSection.style.backgroundImage = `linear-gradient(135deg, rgba(22, 65, 148, 0.75), rgba(0, 139, 210, 0.65)), url('${encodeURI(noticia.imagem_url)}')`;
             heroSection.style.backgroundSize = 'cover';
@@ -149,6 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!noticias || noticias.length === 0) {
             highlightsContainer.innerHTML = '';
             highlightsEmptyState.classList.remove('visually-hidden');
+            pararCarrosselDestaques();
             return;
         }
         highlightsEmptyState.classList.add('visually-hidden');
@@ -163,6 +175,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+    }
+
+    function obterDestaquesSecundarios() {
+        if (!Array.isArray(destaquesCarregados) || destaquesCarregados.length <= 1) {
+            return [];
+        }
+        return destaquesCarregados.filter((_, indice) => indice !== indiceDestaqueAtual);
+    }
+
+    function mostrarProximoDestaque() {
+        if (!Array.isArray(destaquesCarregados) || destaquesCarregados.length <= 1) {
+            pararCarrosselDestaques();
+            return;
+        }
+        indiceDestaqueAtual = (indiceDestaqueAtual + 1) % destaquesCarregados.length;
+        destaqueAtual = destaquesCarregados[indiceDestaqueAtual];
+        atualizarHero(destaqueAtual);
+        renderizarHighlights(obterDestaquesSecundarios());
+    }
+
+    function reiniciarCarrosselDestaques() {
+        pararCarrosselDestaques();
+        if (destaquesCarregados.length > 1) {
+            temporizadorDestaquesId = window.setInterval(mostrarProximoDestaque, 10000);
+        }
+    }
+
+    function pararCarrosselDestaques() {
+        if (temporizadorDestaquesId !== null) {
+            window.clearInterval(temporizadorDestaquesId);
+            temporizadorDestaquesId = null;
+        }
     }
 
     function criarHighlightNoticia(noticia) {
@@ -276,6 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function mostrarEstadoVazioHighlights() {
         highlightsContainer.innerHTML = '';
         highlightsEmptyState.classList.remove('visually-hidden');
+        pararCarrosselDestaques();
     }
 
     function tentarRenovarCSRF() {

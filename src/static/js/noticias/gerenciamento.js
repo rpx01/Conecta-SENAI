@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const noticias = resposta.items || [];
             totalBadge.textContent = `${resposta.total || noticias.length} registros`;
             if (noticias.length === 0) {
-                tabelaBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Nenhuma notícia encontrada.</td></tr>';
+                tabelaBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Nenhuma notícia cadastrada ainda.</td></tr>';
             } else {
                 tabelaBody.innerHTML = noticias.map(criarLinhaNoticia).join('');
                 tabelaBody.querySelectorAll('[data-acao="editar"]').forEach(botao => {
@@ -81,6 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (error) {
             console.error('Erro ao carregar notícias', error);
             tabelaBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Erro ao carregar notícias.</td></tr>';
+            tentarRenovarCSRF();
         }
     }
 
@@ -198,6 +199,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('Erro ao salvar notícia', error);
             const mensagem = error?.message || 'Não foi possível salvar a notícia.';
             showToast(mensagem, 'danger');
+            tentarRenovarCSRF();
         } finally {
             btnSalvar.disabled = false;
         }
@@ -213,6 +215,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (error) {
             console.error('Erro ao excluir notícia', error);
             showToast('Não foi possível excluir a notícia.', 'danger');
+            tentarRenovarCSRF();
         } finally {
             noticiaParaExcluir = null;
         }
@@ -254,6 +257,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (error) {
             console.error('Erro ao exportar notícias', error);
             showToast('Falha ao exportar as notícias.', 'danger');
+            tentarRenovarCSRF();
         }
     }
 
@@ -282,6 +286,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const div = document.createElement('div');
         div.textContent = texto;
         return div.innerHTML;
+    }
+
+    function tentarRenovarCSRF() {
+        if (typeof obterCSRFToken === 'function') {
+            obterCSRFToken(true).catch(() => {});
+        }
     }
 
     modalEl.addEventListener('hidden.bs.modal', limparFormulario);

@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
+export FLASK_APP="${FLASK_APP:-src.main}"
 echo "[start] Running DB migrations..."
-SCHEDULER_ENABLED=0 flask --app src.main db upgrade
+SCHEDULER_ENABLED=${SCHEDULER_ENABLED:-0} flask db upgrade || true
 echo "[start] Starting Gunicorn..."
 exec gunicorn "src.main:create_app()" \
   --bind 0.0.0.0:${PORT:-8080} \

@@ -6,6 +6,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Tuple
 
+try:  # pragma: no cover - import opcional para ambientes sem psycopg2
+    from psycopg2 import errors as psycopg2_errors
+except Exception:  # pragma: no cover - fallback se psycopg2 não estiver disponível
+    psycopg2_errors = None
+
 from flask import Blueprint, current_app, jsonify, request, send_file
 from pydantic import ValidationError
 from sqlalchemy import or_
@@ -154,6 +159,25 @@ def obter_imagem(imagem_id: int):
     return jsonify({"erro": "Imagem não disponível"}), 404
 
 
+def _estrutura_noticias_desatualizada(exc: BaseException) -> bool:
+    """Detecta erros decorrentes de schema desatualizado da tabela de notícias."""
+
+    mensagem = str(exc).lower()
+    if "no such table" in mensagem:
+        return True
+    if "undefined column" in mensagem:
+        return True
+    orig = getattr(exc, "orig", None)
+    if psycopg2_errors is not None and orig is not None:
+        undefined_table = getattr(psycopg2_errors, "UndefinedTable", None)
+        undefined_column = getattr(psycopg2_errors, "UndefinedColumn", None)
+        if undefined_table is not None and isinstance(orig, undefined_table):
+            return True
+        if undefined_column is not None and isinstance(orig, undefined_column):
+            return True
+    return False
+
+
 @api_noticias_bp.route("/noticias", methods=["GET"])
 def listar_noticias():
     """Lista notícias paginadas, permitindo filtros básicos."""
@@ -200,10 +224,9 @@ def listar_noticias():
             }
         ), 200
     except (ProgrammingError, SQLAlchemyError) as exc:
-        mensagem = str(exc).lower()
-        if isinstance(exc, ProgrammingError) or "no such table" in mensagem:
+        if _estrutura_noticias_desatualizada(exc):
             current_app.logger.error(
-                "Tabela 'noticias' ausente. Rode as migrações.",
+                "Estrutura da tabela 'noticias' desatualizada. Rode as migrações.",
                 exc_info=True,
             )
             return (
@@ -228,10 +251,9 @@ def obter_noticia(noticia_id: int):
     try:
         noticia = NoticiaRepository.get_by_id(noticia_id)
     except (ProgrammingError, SQLAlchemyError) as exc:
-        mensagem = str(exc).lower()
-        if isinstance(exc, ProgrammingError) or "no such table" in mensagem:
+        if _estrutura_noticias_desatualizada(exc):
             current_app.logger.error(
-                "Tabela 'noticias' ausente ao buscar notícia.",
+                "Estrutura da tabela 'noticias' desatualizada ao buscar notícia.",
                 exc_info=True,
             )
             return jsonify({"erro": "Notícia não encontrada"}), 404

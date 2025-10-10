@@ -105,15 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!isVisitante) {
         refreshButton?.addEventListener('click', handleRefreshClick);
         searchForm?.addEventListener('submit', handleSearchSubmit);
-    } else {
-        refreshButton?.addEventListener('click', event => {
-            event.preventDefault();
-            event.stopPropagation();
-        });
-        searchForm?.addEventListener('submit', event => {
-            event.preventDefault();
-            event.stopPropagation();
-        });
     }
 
     function handleRefreshClick() {
@@ -591,22 +582,46 @@ document.addEventListener('DOMContentLoaded', () => {
             refreshButton.disabled = true;
             refreshButton.setAttribute('aria-disabled', 'true');
             refreshButton.classList.add('disabled');
+            refreshButton.addEventListener('click', event => {
+                event.preventDefault();
+                event.stopPropagation();
+            });
         }
+
         if (searchForm) {
             searchForm.setAttribute('aria-disabled', 'true');
+            searchForm.addEventListener('submit', event => {
+                event.preventDefault();
+                event.stopPropagation();
+            });
         }
+
         if (searchInput) {
             searchInput.value = '';
             searchInput.disabled = true;
             searchInput.setAttribute('aria-disabled', 'true');
         }
+
         if (searchSubmitButton) {
             searchSubmitButton.disabled = true;
             searchSubmitButton.setAttribute('aria-disabled', 'true');
             searchSubmitButton.classList.add('disabled');
         }
+
         if (paginationContainer) {
             paginationContainer.setAttribute('aria-disabled', 'true');
+            const links = paginationContainer.querySelectorAll('a.page-link');
+            links.forEach(link => {
+                link.setAttribute('aria-disabled', 'true');
+                link.setAttribute('tabindex', '-1');
+                link.classList.add('disabled');
+                const item = link.closest('li');
+                item?.classList.add('disabled');
+                link.addEventListener('click', event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                });
+            });
         }
     }
 

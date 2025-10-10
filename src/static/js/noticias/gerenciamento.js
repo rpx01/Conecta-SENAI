@@ -1,9 +1,24 @@
-/* global bootstrap, chamarAPI, showToast, verificarPermissaoAdmin, sanitizeHTML */
+/* global bootstrap, chamarAPI, showToast, verificarPermissaoAdmin, sanitizeHTML, getUsuarioLogado, verificarAutenticacao */
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const possuiPermissao = await verificarPermissaoAdmin();
-    if (!possuiPermissao) {
+    const usuario = typeof getUsuarioLogado === 'function' ? getUsuarioLogado() : null;
+
+    if (!usuario || (usuario.tipo !== 'admin' && usuario.tipo !== 'secretaria')) {
+        alert('Você não tem permissão para acessar esta página. Redirecionando...');
+        window.location.href = '/noticias/index.html';
         return;
+    }
+
+    if (usuario.tipo === 'admin') {
+        const possuiPermissao = await verificarPermissaoAdmin();
+        if (!possuiPermissao) {
+            return;
+        }
+    } else if (typeof verificarAutenticacao === 'function') {
+        const autenticado = await verificarAutenticacao();
+        if (!autenticado) {
+            return;
+        }
     }
 
     const tabelaBody = document.getElementById('newsAdminTableBody');

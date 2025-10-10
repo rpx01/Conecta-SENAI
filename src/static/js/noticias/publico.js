@@ -63,6 +63,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalMeta = document.getElementById('newsModalMeta');
     const modalImage = document.getElementById('newsModalImage');
     const modalContent = document.getElementById('newsModalContent');
+    const modalElement = document.getElementById('newsModal');
+    const modalInstance = modalElement && window.bootstrap
+        ? window.bootstrap.Modal.getOrCreateInstance(modalElement)
+        : null;
 
     let paginaAtual = 1;
     const itensPorPagina = 6;
@@ -310,6 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
             modalImage.removeAttribute('src');
         }
         modalContent.innerHTML = sanitizeHTML?.(noticia.conteudo ?? '') || escapeHTML(noticia.conteudo ?? '');
+        modalInstance?.show();
     }
 
     function formatarDataHumana(dataISO) {

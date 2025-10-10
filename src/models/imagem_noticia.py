@@ -7,6 +7,7 @@ from io import BytesIO
 
 from flask import send_file, url_for
 from sqlalchemy import text
+from sqlalchemy.orm import deferred
 
 from src.models import db
 
@@ -31,8 +32,14 @@ class ImagemNoticia(db.Model):
     )
     nome_arquivo = db.Column(db.String(255), nullable=False)
     caminho_relativo = db.Column(db.String(255), nullable=False)
-    conteudo = db.Column(db.LargeBinary, nullable=True)
+    conteudo = deferred(db.Column(db.LargeBinary, nullable=True))
     content_type = db.Column(db.String(255), nullable=False, default="application/octet-stream")
+    tem_conteudo = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("false"),
+    )
     criado_em = db.Column(
         db.DateTime(timezone=True),
         nullable=False,
@@ -46,7 +53,7 @@ class ImagemNoticia(db.Model):
     def url_publica(self) -> str:
         """Retorna a URL pública do arquivo armazenado."""
 
-        if self.id is not None and self.conteudo:
+        if self.id is not None and self.tem_conteudo:
             try:
                 return url_for("api_noticias.obter_imagem", imagem_id=self.id, _external=False)
             except RuntimeError:
@@ -57,6 +64,9 @@ class ImagemNoticia(db.Model):
 
     def enviar_arquivo(self):
         """Retorna uma resposta Flask com o conteúdo binário da imagem."""
+
+        if not self.tem_conteudo:
+            return None
 
         if self.conteudo:
             return send_file(

@@ -55,6 +55,29 @@ def upgrade() -> None:
             server_default=None,
         )
 
+    if "tem_conteudo" not in colunas:
+        op.add_column(
+            "imagens_noticias",
+            sa.Column(
+                "tem_conteudo",
+                sa.Boolean(),
+                nullable=False,
+                server_default=text("false"),
+            ),
+        )
+        op.execute(
+            text(
+                "UPDATE imagens_noticias SET tem_conteudo = 1 WHERE conteudo IS NOT NULL"
+            )
+        )
+        op.alter_column(
+            "imagens_noticias",
+            "tem_conteudo",
+            existing_type=sa.Boolean(),
+            nullable=False,
+            server_default=None,
+        )
+
 
 def downgrade() -> None:
     bind = op.get_bind()
@@ -66,6 +89,9 @@ def downgrade() -> None:
 
     if "content_type" in colunas:
         op.drop_column("imagens_noticias", "content_type")
+
+    if "tem_conteudo" in colunas:
+        op.drop_column("imagens_noticias", "tem_conteudo")
 
     if "conteudo" in colunas:
         op.drop_column("imagens_noticias", "conteudo")

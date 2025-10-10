@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.models import db
@@ -36,6 +36,7 @@ class NoticiaRepository:
         engine = db.engine
         inspector = inspect(engine)
         if inspector.has_table(Noticia.__tablename__):
+            cls._ensure_marcar_calendario_column(engine, inspector)
             cls._table_checked = True
             return True
 
@@ -49,6 +50,45 @@ class NoticiaRepository:
 
         cls._table_checked = True
         return True
+
+    @classmethod
+    def _ensure_marcar_calendario_column(cls, engine, inspector) -> None:
+        """Garante a existência da coluna ``marcar_calendario``.
+
+        Ambientes que ainda não executaram a migração correspondente lançam
+        erros de ``UndefinedColumn`` ao consultar o modelo ``Noticia``. Para
+        garantir retrocompatibilidade, criamos a coluna dinamicamente quando
+        ela ainda não está presente na tabela.
+        """
+
+        table_name = Noticia.__tablename__
+        columns = {column["name"] for column in inspector.get_columns(table_name)}
+        if "marcar_calendario" in columns:
+            return
+
+        default_literal = "false"
+        if engine.dialect.name == "sqlite":
+            # SQLite não reconhece ``false`` como literal booleano.
+            default_literal = "0"
+
+        try:
+            with engine.begin() as connection:
+                connection.execute(
+                    text(
+                        f"ALTER TABLE {table_name} "
+                        f"ADD COLUMN marcar_calendario BOOLEAN "
+                        f"NOT NULL DEFAULT {default_literal}"
+                    )
+                )
+            log.info(
+                "Coluna 'marcar_calendario' criada automaticamente na tabela 'noticias'."
+            )
+        except SQLAlchemyError:
+            cls._table_checked = False
+            log.exception(
+                "Falha ao atualizar a tabela 'noticias' com a coluna 'marcar_calendario'."
+            )
+            raise
 
     @staticmethod
     def base_query():

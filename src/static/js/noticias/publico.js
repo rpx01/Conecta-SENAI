@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p class="news-highlight__date mb-1">${formatarDataHumana(noticia.data_publicacao)}</p>
                 <h3 class="news-highlight__title">${escapeHTML(noticia.titulo)}</h3>
                 <p class="news-highlight__excerpt">${escapeHTML(resumo)}</p>
-                <button class="btn btn-link p-0 mt-2" data-news-id="${noticia.id}" aria-label="Ler notícia ${escapeHTML(noticia.titulo)}">
+                <button class="btn btn-link p-0 mt-2" data-news-id="${noticia.id}" aria-label="Ler notícia ${escapeHTML(noticia.titulo)}" data-bs-toggle="modal" data-bs-target="#newsModal">
                     Ler mais <i class="bi bi-arrow-right-short"></i>
                 </button>
             </article>
@@ -260,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h3 class="news-card__title">${escapeHTML(noticia.titulo)}</h3>
                     <p class="news-card__summary">${escapeHTML(noticia.resumo ?? '')}</p>
                     <div class="news-card__actions">
-                        <button class="btn btn-outline-primary" type="button" data-news-id="${noticia.id}" aria-label="Abrir notícia ${escapeHTML(noticia.titulo)}">
+                        <button class="btn btn-outline-primary" type="button" data-news-id="${noticia.id}" aria-label="Abrir notícia ${escapeHTML(noticia.titulo)}" data-bs-toggle="modal" data-bs-target="#newsModal">
                             <i class="bi bi-journal-text me-1"></i> Ler notícia
                         </button>
                     </div>

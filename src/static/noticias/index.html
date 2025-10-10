@@ -13,7 +13,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top" aria-label="Menu principal">
         <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="/selecao-sistema.html">
+            <a class="navbar-brand d-flex align-items-center" href="/selecao-sistema.html" data-testid="system-selection-button">
                 <img src="/img/senai-logo.png" alt="SENAI" height="28" class="me-2">
                 <span class="navbar-brand-text" title="Portal de Notícias">Sistema FIEMG | Portal de Notícias</span>
             </a>
@@ -26,12 +26,12 @@
                         <a class="nav-link active" href="/noticias/index.html"><i class="bi bi-newspaper me-1"></i> Notícias</a>
                     </li>
                     <li class="nav-item admin-only">
-                        <a class="nav-link" href="/noticias/gerenciamento.html"><i class="bi bi-gear-wide-connected me-1"></i> Gerenciar</a>
+                        <a class="nav-link" href="/noticias/gerenciamento.html" data-testid="management-button"><i class="bi bi-gear-wide-connected me-1"></i> Gerenciar</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav ms-lg-3">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <li class="nav-item dropdown user-menu">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-testid="user-profile-button">
                             <i class="bi bi-person-circle me-1"></i>
                             <span id="userName">Visitante</span>
                         </a>

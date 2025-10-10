@@ -581,7 +581,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (refreshButton) {
             refreshButton.disabled = true;
             refreshButton.setAttribute('aria-disabled', 'true');
-            refreshButton.classList.add('disabled');
+            refreshButton.classList.add('d-none');
             refreshButton.addEventListener('click', event => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -590,6 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (searchForm) {
             searchForm.setAttribute('aria-disabled', 'true');
+            searchForm.classList.add('d-none');
             searchForm.addEventListener('submit', event => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -605,11 +606,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (searchSubmitButton) {
             searchSubmitButton.disabled = true;
             searchSubmitButton.setAttribute('aria-disabled', 'true');
-            searchSubmitButton.classList.add('disabled');
+            searchSubmitButton.classList.add('d-none');
         }
 
         if (paginationContainer) {
             paginationContainer.setAttribute('aria-disabled', 'true');
+            paginationContainer.classList.add('d-none');
             const links = paginationContainer.querySelectorAll('a.page-link');
             links.forEach(link => {
                 link.setAttribute('aria-disabled', 'true');

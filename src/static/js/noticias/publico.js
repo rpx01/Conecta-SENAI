@@ -6,6 +6,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const heroSummaryEl = document.getElementById('newsHeroSummary');
     const heroDateEl = document.getElementById('newsHeroDate');
     const heroButton = document.getElementById('newsHeroReadMore');
+    const heroContainer = heroSection?.querySelector('.container');
+    let heroControlsWrapper = null;
+    let heroPrevButton = null;
+    let heroNextButton = null;
+    let heroProgressBar = null;
+
+    if (heroContainer) {
+        heroControlsWrapper = document.createElement('div');
+        heroControlsWrapper.className = 'd-flex align-items-center gap-2 flex-wrap mt-4';
+        heroControlsWrapper.setAttribute('role', 'group');
+        heroControlsWrapper.setAttribute('aria-label', 'Controles do destaque');
+
+        heroPrevButton = document.createElement('button');
+        heroPrevButton.type = 'button';
+        heroPrevButton.className = 'btn btn-outline-light btn-sm';
+        heroPrevButton.setAttribute('aria-label', 'Mostrar destaque anterior');
+        heroPrevButton.innerHTML = '<i class="bi bi-chevron-left" aria-hidden="true"></i><span class="visually-hidden">Anterior</span>';
+        heroControlsWrapper.appendChild(heroPrevButton);
+
+        const progressWrapper = document.createElement('div');
+        progressWrapper.className = 'flex-grow-1 position-relative overflow-hidden';
+        progressWrapper.style.height = '4px';
+        progressWrapper.style.background = 'rgba(255, 255, 255, 0.35)';
+        progressWrapper.style.borderRadius = '999px';
+        progressWrapper.setAttribute('aria-hidden', 'true');
+
+        heroProgressBar = document.createElement('span');
+        heroProgressBar.className = 'position-absolute top-0 start-0 h-100 bg-white';
+        heroProgressBar.style.width = '0%';
+        heroProgressBar.style.borderRadius = 'inherit';
+        heroProgressBar.style.transition = 'width 0.2s linear';
+        progressWrapper.appendChild(heroProgressBar);
+        heroControlsWrapper.appendChild(progressWrapper);
+
+        heroNextButton = document.createElement('button');
+        heroNextButton.type = 'button';
+        heroNextButton.className = 'btn btn-outline-light btn-sm';
+        heroNextButton.setAttribute('aria-label', 'Mostrar próximo destaque');
+        heroNextButton.innerHTML = '<i class="bi bi-chevron-right" aria-hidden="true"></i><span class="visually-hidden">Próximo</span>';
+        heroControlsWrapper.appendChild(heroNextButton);
+
+        heroContainer.appendChild(heroControlsWrapper);
+    }
 
     const highlightsContainer = document.getElementById('newsHighlights');
     const highlightsEmptyState = document.getElementById('newsHighlightsEmpty');
@@ -28,6 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let destaquesHero = [];
     let indiceDestaqueAtual = 0;
     let intervaloRotacaoId = null;
+    let progressoRotacaoId = null;
+    let animacaoHeroAtual = null;
     const TEMPO_ROTACAO_MS = 10000;
 
     const usuario = getUsuarioLogado?.();
@@ -68,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 destaquesHero = noticias;
                 indiceDestaqueAtual = 0;
                 atualizarHeroEDestaques();
-                iniciarRotacaoDestaques();
+                reiniciarRotacaoDestaques();
             } else {
                 destaqueAtual = null;
                 destaquesHero = [];
@@ -289,26 +334,36 @@ document.addEventListener('DOMContentLoaded', () => {
         highlightsEmptyState.classList.remove('visually-hidden');
     }
 
-    function atualizarHeroEDestaques() {
+    function atualizarHeroEDestaques({ animarHero = false } = {}) {
         destaqueAtual = destaquesHero[indiceDestaqueAtual] ?? null;
-        if (destaqueAtual) {
-            atualizarHero(destaqueAtual);
-            const demaisDestaques = destaquesHero.filter((_, index) => index !== indiceDestaqueAtual);
-            renderizarHighlights(demaisDestaques);
+        const atualizarConteudo = () => {
+            if (destaqueAtual) {
+                atualizarHero(destaqueAtual);
+                const demaisDestaques = destaquesHero.filter((_, index) => index !== indiceDestaqueAtual);
+                renderizarHighlights(demaisDestaques);
+            } else {
+                atualizarHero();
+                renderizarHighlights([]);
+            }
+            atualizarEstadoControlesHero();
+        };
+
+        if (animarHero && destaqueAtual) {
+            animarTransicaoHero(atualizarConteudo);
         } else {
-            atualizarHero();
-            renderizarHighlights([]);
+            atualizarConteudo();
         }
     }
 
     function iniciarRotacaoDestaques() {
         pararRotacaoDestaques();
         if (destaquesHero.length <= 1) {
+            pararProgressoRotacao();
             return;
         }
+        reiniciarProgressoRotacao();
         intervaloRotacaoId = window.setInterval(() => {
-            indiceDestaqueAtual = (indiceDestaqueAtual + 1) % destaquesHero.length;
-            atualizarHeroEDestaques();
+            avancarDestaque(true);
         }, TEMPO_ROTACAO_MS);
     }
 
@@ -317,6 +372,147 @@ document.addEventListener('DOMContentLoaded', () => {
             window.clearInterval(intervaloRotacaoId);
             intervaloRotacaoId = null;
         }
+        pararProgressoRotacao();
+    }
+
+    function reiniciarRotacaoDestaques() {
+        const deveRotacionar = destaquesHero.length > 1;
+        pararRotacaoDestaques();
+        if (deveRotacionar) {
+            iniciarRotacaoDestaques();
+        } else {
+            atualizarEstadoControlesHero();
+        }
+    }
+
+    function avancarDestaque(animar = true) {
+        if (destaquesHero.length === 0) {
+            return;
+        }
+        indiceDestaqueAtual = (indiceDestaqueAtual + 1) % destaquesHero.length;
+        atualizarHeroEDestaques({ animarHero: animar });
+        reiniciarProgressoRotacao();
+    }
+
+    function retrocederDestaque(animar = true) {
+        if (destaquesHero.length === 0) {
+            return;
+        }
+        indiceDestaqueAtual = (indiceDestaqueAtual - 1 + destaquesHero.length) % destaquesHero.length;
+        atualizarHeroEDestaques({ animarHero: animar });
+        reiniciarProgressoRotacao();
+    }
+
+    function atualizarEstadoControlesHero() {
+        if (!heroControlsWrapper) {
+            return;
+        }
+        const possuiDestaques = destaquesHero.length > 0;
+        heroControlsWrapper.classList.toggle('visually-hidden', !possuiDestaques);
+        const unicoDestaque = destaquesHero.length <= 1;
+        if (heroPrevButton) {
+            heroPrevButton.disabled = unicoDestaque;
+        }
+        if (heroNextButton) {
+            heroNextButton.disabled = unicoDestaque;
+        }
+        if (!possuiDestaques) {
+            atualizarBarraProgresso(0);
+        }
+    }
+
+    function podeAnimarHero() {
+        return Boolean(heroSection && typeof heroSection.animate === 'function');
+    }
+
+    function animarTransicaoHero(callback) {
+        if (!podeAnimarHero()) {
+            callback?.();
+            return;
+        }
+
+        if (animacaoHeroAtual) {
+            animacaoHeroAtual.cancel();
+        }
+
+        const fadeOut = heroSection.animate(
+            [
+                { opacity: 1, transform: 'translateY(0)' },
+                { opacity: 0, transform: 'translateY(16px)' }
+            ],
+            {
+                duration: 280,
+                easing: 'ease',
+                fill: 'forwards'
+            }
+        );
+        animacaoHeroAtual = fadeOut;
+
+        const aoFinalizarFadeOut = () => {
+            callback?.();
+            const fadeIn = heroSection.animate(
+                [
+                    { opacity: 0, transform: 'translateY(-16px)' },
+                    { opacity: 1, transform: 'translateY(0)' }
+                ],
+                {
+                    duration: 280,
+                    easing: 'ease',
+                    fill: 'forwards'
+                }
+            );
+            animacaoHeroAtual = fadeIn;
+            fadeIn.addEventListener('finish', () => {
+                animacaoHeroAtual = null;
+            }, { once: true });
+            fadeIn.addEventListener('cancel', () => {
+                animacaoHeroAtual = null;
+            }, { once: true });
+        };
+
+        fadeOut.addEventListener('finish', aoFinalizarFadeOut, { once: true });
+        fadeOut.addEventListener('cancel', () => {
+            animacaoHeroAtual = null;
+            callback?.();
+        }, { once: true });
+    }
+
+    function iniciarProgressoRotacao() {
+        pararProgressoRotacao();
+        if (!heroProgressBar || destaquesHero.length <= 1) {
+            atualizarBarraProgresso(0);
+            return;
+        }
+        atualizarBarraProgresso(0);
+        let tempoDecorrido = 0;
+        const passoMs = 80;
+        progressoRotacaoId = window.setInterval(() => {
+            tempoDecorrido += passoMs;
+            const percentual = Math.min((tempoDecorrido / TEMPO_ROTACAO_MS) * 100, 100);
+            atualizarBarraProgresso(percentual);
+            if (percentual >= 100) {
+                pararProgressoRotacao();
+            }
+        }, passoMs);
+    }
+
+    function pararProgressoRotacao() {
+        if (progressoRotacaoId) {
+            window.clearInterval(progressoRotacaoId);
+            progressoRotacaoId = null;
+        }
+    }
+
+    function reiniciarProgressoRotacao() {
+        iniciarProgressoRotacao();
+    }
+
+    function atualizarBarraProgresso(percentual) {
+        if (!heroProgressBar) {
+            return;
+        }
+        const valorNormalizado = Math.max(0, Math.min(100, percentual));
+        heroProgressBar.style.width = `${valorNormalizado}%`;
     }
 
     function tentarRenovarCSRF() {
@@ -330,6 +526,51 @@ document.addEventListener('DOMContentLoaded', () => {
         div.textContent = texto;
         return div.innerHTML;
     }
+
+    if (heroPrevButton) {
+        heroPrevButton.addEventListener('click', () => {
+            retrocederDestaque(true);
+            reiniciarRotacaoDestaques();
+        });
+    }
+
+    if (heroNextButton) {
+        heroNextButton.addEventListener('click', () => {
+            avancarDestaque(true);
+            reiniciarRotacaoDestaques();
+        });
+    }
+
+    if (heroSection) {
+        heroSection.addEventListener('mouseenter', () => {
+            if (destaquesHero.length > 1) {
+                pararRotacaoDestaques();
+            }
+        });
+        heroSection.addEventListener('mouseleave', () => {
+            if (destaquesHero.length > 1) {
+                iniciarRotacaoDestaques();
+            }
+        });
+        heroSection.addEventListener('focusin', () => {
+            if (destaquesHero.length > 1) {
+                pararRotacaoDestaques();
+            }
+        });
+        heroSection.addEventListener('focusout', event => {
+            if (destaquesHero.length > 1 && !heroSection.contains(event.relatedTarget)) {
+                iniciarRotacaoDestaques();
+            }
+        });
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            pararRotacaoDestaques();
+        } else if (destaquesHero.length > 1) {
+            iniciarRotacaoDestaques();
+        }
+    });
 
     carregarDestaques();
     carregarLista(paginaAtual);

@@ -99,6 +99,18 @@ def _tabela_imagens_disponivel(force_refresh: bool = False) -> bool:
     try:
         inspector = inspect(bind)
         resultado = inspector.has_table(ImagemNoticia.__tablename__)
+        if not resultado:
+            try:
+                current_app.logger.warning(
+                    "Tabela 'imagens_noticias' ausente; criando automaticamente."
+                )
+            except RuntimeError:  # pragma: no cover - logger fora do contexto Flask
+                log.warning("Tabela 'imagens_noticias' ausente; criando automaticamente.")
+
+            ImagemNoticia.__table__.create(bind, checkfirst=True)
+
+            inspector = inspect(bind)
+            resultado = inspector.has_table(ImagemNoticia.__tablename__)
     except SQLAlchemyError as exc:  # pragma: no cover - introspecção defensiva
         _registrar_tabela_imagens_indisponivel(exc)
         return False

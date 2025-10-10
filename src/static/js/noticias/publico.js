@@ -69,6 +69,11 @@ document.addEventListener('DOMContentLoaded', () => {
         ? window.bootstrap.Modal.getOrCreateInstance(modalElement)
         : null;
 
+    const managementButton = document.querySelector('[data-testid="management-button"]');
+    const systemSelectionButton = document.querySelector('[data-testid="system-selection-button"]');
+    const userProfileButton = document.querySelector('[data-testid="user-profile-button"]');
+    const userMenu = document.querySelector('.user-menu');
+
     let paginaAtual = 1;
     const itensPorPagina = 6;
     let termoBusca = '';
@@ -81,7 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const TEMPO_ROTACAO_MS = 10000;
 
     const usuario = getUsuarioLogado?.();
-    const isVisitante = !usuario;
+    const token = window.localStorage?.getItem('token');
+    const isVisitante = !usuario && !token;
 
     if (usuario) {
         const userNameEl = document.getElementById('userName');
@@ -92,8 +98,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (loginLink) {
             loginLink.classList.add('d-none');
         }
-    } else {
+    }
+
+    if (isVisitante) {
         aplicarRestricoesParaVisitante();
+    } else {
+        removerRestricoesParaVisitante();
     }
 
     heroButton?.addEventListener('click', () => {
@@ -578,6 +588,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function aplicarRestricoesParaVisitante() {
+        if (managementButton) {
+            managementButton.style.display = 'none';
+            managementButton.setAttribute('aria-hidden', 'true');
+        }
+
+        if (systemSelectionButton) {
+            systemSelectionButton.style.pointerEvents = 'none';
+            systemSelectionButton.style.opacity = '0.6';
+            systemSelectionButton.style.cursor = 'not-allowed';
+            systemSelectionButton.setAttribute('aria-disabled', 'true');
+            systemSelectionButton.setAttribute('tabindex', '-1');
+        }
+
+        if (userProfileButton) {
+            userProfileButton.style.pointerEvents = 'none';
+            userProfileButton.style.cursor = 'not-allowed';
+            userProfileButton.setAttribute('aria-disabled', 'true');
+            userProfileButton.setAttribute('tabindex', '-1');
+            userProfileButton.classList.add('disabled');
+        }
+
+        if (userMenu) {
+            userMenu.style.pointerEvents = 'none';
+            userMenu.style.opacity = '0.6';
+        }
+
         if (refreshButton) {
             refreshButton.disabled = true;
             refreshButton.setAttribute('aria-disabled', 'true');
@@ -624,6 +660,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     event.stopPropagation();
                 });
             });
+        }
+    }
+
+    function removerRestricoesParaVisitante() {
+        if (managementButton) {
+            managementButton.style.display = '';
+            managementButton.removeAttribute('aria-hidden');
+        }
+
+        if (systemSelectionButton) {
+            systemSelectionButton.style.pointerEvents = '';
+            systemSelectionButton.style.opacity = '';
+            systemSelectionButton.style.cursor = '';
+            systemSelectionButton.removeAttribute('aria-disabled');
+            systemSelectionButton.removeAttribute('tabindex');
+        }
+
+        if (userProfileButton) {
+            userProfileButton.style.pointerEvents = '';
+            userProfileButton.style.cursor = '';
+            userProfileButton.removeAttribute('aria-disabled');
+            userProfileButton.removeAttribute('tabindex');
+            userProfileButton.classList.remove('disabled');
+        }
+
+        if (userMenu) {
+            userMenu.style.pointerEvents = '';
+            userMenu.style.opacity = '';
         }
     }
 

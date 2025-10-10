@@ -33,6 +33,7 @@ class NoticiaBaseSchema(BaseModel):
     imagem_url: Optional[str] = Field(default=None, max_length=500)
     destaque: bool = False
     ativo: bool = True
+    marcar_calendario: bool = Field(default=False, alias="marcarCalendario")
     data_publicacao: Optional[datetime] = Field(default=None, alias="dataPublicacao")
     data_agendamento: Optional[datetime] = Field(default=None, alias="dataAgendamento")
 
@@ -74,6 +75,7 @@ class NoticiaUpdateSchema(BaseModel):
     imagem_url: Optional[str] = Field(default=None, max_length=500)
     destaque: Optional[bool] = None
     ativo: Optional[bool] = None
+    marcar_calendario: Optional[bool] = Field(default=None, alias="marcarCalendario")
     data_publicacao: Optional[datetime] = Field(default=None, alias="dataPublicacao")
     data_agendamento: Optional[datetime] = Field(default=None, alias="dataAgendamento")
 

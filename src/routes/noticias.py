@@ -78,6 +78,16 @@ def _extrair_dados_form(expect_update: bool = False) -> Tuple[Dict[str, Any], An
     elif not expect_update:
         dados_brutos["ativo"] = True
 
+    marcar_calendario = dados_brutos.pop("marcarCalendario", None)
+    if marcar_calendario is None:
+        marcar_calendario = dados_brutos.pop("marcar_calendario", None)
+    if marcar_calendario is not None or not expect_update:
+        valor = _normalizar_booleano(marcar_calendario, False if not expect_update else None)
+        if valor is None and expect_update:
+            dados_brutos.pop("marcar_calendario", None)
+        else:
+            dados_brutos["marcarCalendario"] = valor if valor is not None else False
+
     dados_brutos.pop("imagem", None)
 
     imagem_url = dados_brutos.get("imagem_url")

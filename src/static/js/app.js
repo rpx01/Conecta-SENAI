@@ -66,12 +66,18 @@ const PAGINAS_PUBLICAS = new Set([
     '/noticias/index.html'
 ]);
 const PREFIXOS_PUBLICOS = ['/noticias/'];
+const EXCECOES_PREFIXOS_PUBLICOS = new Set([
+    '/noticias/gerenciamento.html'
+]);
 
 function ehPaginaPublica(pathname) {
     if (!pathname) return false;
     const normalizado = pathname.toLowerCase();
     if (PAGINAS_PUBLICAS.has(normalizado)) {
         return true;
+    }
+    if (EXCECOES_PREFIXOS_PUBLICOS.has(normalizado)) {
+        return false;
     }
     return PREFIXOS_PUBLICOS.some(prefix => normalizado.startsWith(prefix));
 }

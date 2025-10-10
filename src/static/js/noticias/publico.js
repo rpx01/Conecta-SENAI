@@ -58,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchForm = document.getElementById('newsSearchForm');
     const searchInput = document.getElementById('newsSearchInput');
     const refreshButton = document.getElementById('refreshNewsBtn');
+    const searchSubmitButton = searchForm?.querySelector('button[type="submit"]');
 
     const modalTitle = document.getElementById('newsModalTitle');
     const modalMeta = document.getElementById('newsModalMeta');
@@ -80,31 +81,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const TEMPO_ROTACAO_MS = 10000;
 
     const usuario = getUsuarioLogado?.();
+    const isVisitante = !usuario;
+
     if (usuario) {
-        document.getElementById('userName').textContent = usuario.nome;
+        const userNameEl = document.getElementById('userName');
+        if (userNameEl) {
+            userNameEl.textContent = usuario.nome;
+        }
         const loginLink = document.querySelector('a.dropdown-item[href="/admin/login.html"]');
         if (loginLink) {
             loginLink.classList.add('d-none');
         }
+    } else {
+        aplicarRestricoesParaVisitante();
     }
 
-    heroButton.addEventListener('click', () => {
+    heroButton?.addEventListener('click', () => {
         if (destaqueAtual) {
             abrirModal(destaqueAtual);
         }
     });
 
-    refreshButton.addEventListener('click', () => {
+    if (!isVisitante) {
+        refreshButton?.addEventListener('click', handleRefreshClick);
+        searchForm?.addEventListener('submit', handleSearchSubmit);
+    } else {
+        refreshButton?.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+        });
+        searchForm?.addEventListener('submit', event => {
+            event.preventDefault();
+            event.stopPropagation();
+        });
+    }
+
+    function handleRefreshClick() {
         carregarDestaques();
         carregarLista(paginaAtual);
-    });
+    }
 
-    searchForm.addEventListener('submit', event => {
+    function handleSearchSubmit(event) {
         event.preventDefault();
-        termoBusca = searchInput.value.trim();
+        termoBusca = searchInput?.value.trim() ?? '';
         paginaAtual = 1;
         carregarLista(paginaAtual);
-    });
+    }
 
     async function carregarDestaques() {
         setAriaBusy(highlightsContainer, true);
@@ -286,7 +308,23 @@ document.addEventListener('DOMContentLoaded', () => {
             paginationContainer.insertAdjacentHTML('beforeend', criarItem(i, i, false, i === pagina));
         }
         paginationContainer.insertAdjacentHTML('beforeend', criarItem('Próxima', pagina + 1, pagina >= totalPaginas));
-        paginationContainer.querySelectorAll('a[data-page]').forEach(link => {
+        const links = paginationContainer.querySelectorAll('a[data-page]');
+        if (isVisitante) {
+            links.forEach(link => {
+                link.setAttribute('aria-disabled', 'true');
+                link.setAttribute('tabindex', '-1');
+                link.classList.add('disabled');
+                const item = link.closest('li');
+                item?.classList.add('disabled');
+                link.addEventListener('click', event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                });
+            });
+            return;
+        }
+
+        links.forEach(link => {
             link.addEventListener('click', event => {
                 event.preventDefault();
                 const alvo = Number.parseInt(link.getAttribute('data-page'), 10);
@@ -546,6 +584,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const div = document.createElement('div');
         div.textContent = texto;
         return div.innerHTML;
+    }
+
+    function aplicarRestricoesParaVisitante() {
+        if (refreshButton) {
+            refreshButton.disabled = true;
+            refreshButton.setAttribute('aria-disabled', 'true');
+            refreshButton.classList.add('disabled');
+        }
+        if (searchForm) {
+            searchForm.setAttribute('aria-disabled', 'true');
+        }
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.disabled = true;
+            searchInput.setAttribute('aria-disabled', 'true');
+        }
+        if (searchSubmitButton) {
+            searchSubmitButton.disabled = true;
+            searchSubmitButton.setAttribute('aria-disabled', 'true');
+            searchSubmitButton.classList.add('disabled');
+        }
+        if (paginationContainer) {
+            paginationContainer.setAttribute('aria-disabled', 'true');
+        }
     }
 
     if (heroPrevButton) {

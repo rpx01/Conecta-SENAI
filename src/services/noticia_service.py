@@ -40,13 +40,17 @@ def _gerar_nome_arquivo(arquivo: FileStorage) -> str:
     return f"{uuid4().hex}{extensao}" if extensao else uuid4().hex
 
 
-def _salvar_arquivo_imagem(arquivo: FileStorage) -> Tuple[str, str]:
+def _salvar_arquivo_imagem(arquivo: FileStorage) -> Tuple[str, str, bytes, str]:
     pasta = _obter_pasta_upload()
     nome_arquivo = _gerar_nome_arquivo(arquivo)
     caminho_absoluto = pasta / nome_arquivo
-    arquivo.save(caminho_absoluto)
+    arquivo.stream.seek(0)
+    conteudo = arquivo.read()
+    arquivo.stream.seek(0)
+    caminho_absoluto.write_bytes(conteudo)
     caminho_relativo = (UPLOAD_SUBDIR / nome_arquivo).as_posix()
-    return nome_arquivo, caminho_relativo
+    content_type = arquivo.mimetype or "application/octet-stream"
+    return nome_arquivo, caminho_relativo, conteudo, content_type
 
 
 def _remover_arquivo(caminho_relativo: str | None) -> None:
@@ -150,12 +154,14 @@ def _aplicar_imagem(noticia: Noticia, arquivo: FileStorage | None) -> Tuple[str 
     if not arquivo or not arquivo.filename:
         return None, None
 
-    nome_arquivo, caminho_relativo = _salvar_arquivo_imagem(arquivo)
+    nome_arquivo, caminho_relativo, conteudo, content_type = _salvar_arquivo_imagem(arquivo)
     imagem_relacionada, caminho_antigo, tabela_disponivel = _carregar_imagem_relacionada(noticia)
 
     if tabela_disponivel and imagem_relacionada is not None:
         imagem_relacionada.nome_arquivo = nome_arquivo
         imagem_relacionada.caminho_relativo = caminho_relativo
+        imagem_relacionada.conteudo = conteudo
+        imagem_relacionada.content_type = content_type
         noticia.imagem_url = imagem_relacionada.url_publica
         return caminho_antigo, caminho_relativo
 
@@ -164,6 +170,8 @@ def _aplicar_imagem(noticia: Noticia, arquivo: FileStorage | None) -> Tuple[str 
             noticia.imagem = ImagemNoticia(
                 nome_arquivo=nome_arquivo,
                 caminho_relativo=caminho_relativo,
+                conteudo=conteudo,
+                content_type=content_type,
             )
         except (ProgrammingError, SQLAlchemyError) as exc:
             _registrar_tabela_imagens_indisponivel(exc)

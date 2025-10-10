@@ -51,6 +51,48 @@ def test_atualizar_noticia_quando_tabela_imagens_indisponivel(app, tmp_path):
         assert db.inspect(atualizada).attrs.imagem.loaded_value is LoaderCallableStatus.NO_VALUE
 
 
+def test_imagem_persistida_fica_disponivel_apos_redeploy(app, tmp_path):
+    """Garante que o binário permanece acessível mesmo após remover o arquivo físico."""
+
+    with app.app_context():
+        db.create_all()
+
+        noticia_service._TABELA_IMAGENS_DISPONIVEL = None
+
+        current_app.static_folder = tmp_path.as_posix()
+
+        noticia = Noticia(titulo="Notícia com imagem", conteudo="Conteúdo de teste")
+        db.session.add(noticia)
+        db.session.commit()
+
+        arquivo = FileStorage(
+            stream=io.BytesIO(b"conteudo-imagem"),
+            filename="imagem.jpg",
+            content_type="image/jpeg",
+        )
+
+        noticia = db.session.get(Noticia, noticia.id)
+        atualizada = noticia_service.atualizar_noticia(noticia, {}, arquivo)
+
+        assert atualizada.imagem is not None
+        assert atualizada.imagem.conteudo == b"conteudo-imagem"
+        assert atualizada.imagem.content_type == "image/jpeg"
+
+        url = atualizada.imagem.url_publica
+        assert url.startswith("/api/noticias/imagens/")
+
+        caminho = Path(current_app.static_folder) / atualizada.imagem.caminho_relativo
+        assert caminho.exists()
+        caminho.unlink()
+        assert not caminho.exists()
+
+        client = app.test_client()
+        resposta = client.get(url)
+
+        assert resposta.status_code == 200
+        assert resposta.data == b"conteudo-imagem"
+        assert resposta.mimetype == "image/jpeg"
+
 def test_publicar_noticias_agendadas_altera_status_para_ativo(app):
     with app.app_context():
         db.create_all()

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from io import BytesIO
 
+from flask import send_file, url_for
 from sqlalchemy import text
 
 from src.models import db
@@ -29,6 +31,8 @@ class ImagemNoticia(db.Model):
     )
     nome_arquivo = db.Column(db.String(255), nullable=False)
     caminho_relativo = db.Column(db.String(255), nullable=False)
+    conteudo = db.Column(db.LargeBinary, nullable=True)
+    content_type = db.Column(db.String(255), nullable=False, default="application/octet-stream")
     criado_em = db.Column(
         db.DateTime(timezone=True),
         nullable=False,
@@ -42,8 +46,25 @@ class ImagemNoticia(db.Model):
     def url_publica(self) -> str:
         """Retorna a URL pública do arquivo armazenado."""
 
-        caminho = self.caminho_relativo.lstrip("/")
+        if self.id is not None and self.conteudo:
+            try:
+                return url_for("api_noticias.obter_imagem", imagem_id=self.id, _external=False)
+            except RuntimeError:
+                return f"/api/noticias/imagens/{self.id}"
+
+        caminho = (self.caminho_relativo or "").lstrip("/")
         return f"/static/{caminho}" if caminho else None
+
+    def enviar_arquivo(self):
+        """Retorna uma resposta Flask com o conteúdo binário da imagem."""
+
+        if self.conteudo:
+            return send_file(
+                BytesIO(self.conteudo),
+                mimetype=self.content_type or "application/octet-stream",
+                download_name=self.nome_arquivo,
+            )
+        return None
 
     def to_dict(self) -> dict:
         """Serializa a imagem para um dicionário simples."""
@@ -53,4 +74,5 @@ class ImagemNoticia(db.Model):
             "nome_arquivo": self.nome_arquivo,
             "caminho_relativo": self.caminho_relativo,
             "url": self.url_publica,
+            "content_type": self.content_type,
         }

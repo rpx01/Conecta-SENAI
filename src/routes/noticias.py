@@ -3,14 +3,16 @@
 import hmac
 import logging
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, Tuple
 
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, request, send_file
 from pydantic import ValidationError
 from sqlalchemy import or_
 from sqlalchemy.exc import ProgrammingError, SQLAlchemyError
 
 from src.auth import admin_required
+from src.models.imagem_noticia import ImagemNoticia
 from src.models.noticia import Noticia
 from src.repositories.noticia_repository import NoticiaRepository
 from src.schemas.noticia import NoticiaSchema
@@ -114,6 +116,32 @@ def proteger_csrf():
     if not token_cookie or not token_header or not hmac.compare_digest(token_cookie, token_header):
         return jsonify({"erro": "CSRF token inválido"}), 403
     return None
+
+
+@api_noticias_bp.route("/noticias/imagens/<int:imagem_id>", methods=["GET"])
+def obter_imagem(imagem_id: int):
+    """Retorna o binário da imagem associada à notícia."""
+
+    imagem = ImagemNoticia.query.get(imagem_id)
+    if not imagem:
+        return jsonify({"erro": "Imagem não encontrada"}), 404
+
+    resposta = imagem.enviar_arquivo()
+    if resposta is not None:
+        return resposta
+
+    caminho_relativo = (imagem.caminho_relativo or "").lstrip("/")
+    if caminho_relativo:
+        static_folder = Path(current_app.static_folder).resolve()
+        caminho = (static_folder / caminho_relativo).resolve()
+        if caminho.exists() and (static_folder in caminho.parents or caminho == static_folder):
+            return send_file(
+                caminho,
+                mimetype=imagem.content_type or "application/octet-stream",
+                download_name=imagem.nome_arquivo,
+            )
+
+    return jsonify({"erro": "Imagem não disponível"}), 404
 
 
 @api_noticias_bp.route("/noticias", methods=["GET"])

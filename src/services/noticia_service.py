@@ -161,6 +161,7 @@ def _aplicar_imagem(noticia: Noticia, arquivo: FileStorage | None) -> Tuple[str 
         imagem_relacionada.nome_arquivo = nome_arquivo
         imagem_relacionada.caminho_relativo = caminho_relativo
         imagem_relacionada.conteudo = conteudo
+        imagem_relacionada.tem_conteudo = bool(conteudo)
         imagem_relacionada.content_type = content_type
         noticia.imagem_url = imagem_relacionada.url_publica
         return caminho_antigo, caminho_relativo
@@ -171,6 +172,7 @@ def _aplicar_imagem(noticia: Noticia, arquivo: FileStorage | None) -> Tuple[str 
                 nome_arquivo=nome_arquivo,
                 caminho_relativo=caminho_relativo,
                 conteudo=conteudo,
+                tem_conteudo=bool(conteudo),
                 content_type=content_type,
             )
         except (ProgrammingError, SQLAlchemyError) as exc:

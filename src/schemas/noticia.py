@@ -36,6 +36,7 @@ class NoticiaSchema(Schema):
     imagem = fields.Method("get_imagem", allow_none=True)
     destaque = fields.Bool()
     ativo = fields.Bool()
+    marcar_calendario = fields.Bool(attribute="marcar_calendario")
     data_publicacao = fields.DateTime(allow_none=True)
     criado_em = fields.DateTime()
     atualizado_em = fields.DateTime()

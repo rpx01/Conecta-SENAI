@@ -34,6 +34,12 @@ class Noticia(db.Model):
     imagem_url = db.Column(db.String(500), nullable=True)
     destaque = db.Column(db.Boolean, nullable=False, default=False, server_default=text("false"))
     ativo = db.Column(db.Boolean, nullable=False, default=True, server_default=text("true"))
+    marcar_calendario = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("false"),
+    )
     data_publicacao = db.Column(db.DateTime(timezone=True), nullable=True)
     imagem = db.relationship(
         "ImagemNoticia",
@@ -69,6 +75,7 @@ class Noticia(db.Model):
             "imagem": imagem_relacionada,
             "destaque": bool(self.destaque),
             "ativo": bool(self.ativo),
+            "marcar_calendario": bool(self.marcar_calendario),
             "data_publicacao": self.data_publicacao.isoformat() if self.data_publicacao else None,
             "criado_em": self.criado_em.isoformat() if self.criado_em else None,
             "atualizado_em": self.atualizado_em.isoformat() if self.atualizado_em else None,

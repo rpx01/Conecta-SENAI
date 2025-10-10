@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const form = document.getElementById('noticiaForm');
     const btnSalvar = document.getElementById('btnSalvarNoticia');
     const publicarImediatamenteCheckbox = document.getElementById('noticiaAtivo');
+    const marcarCalendarioCheckbox = document.getElementById('noticiaCalendario');
     const agendamentoDiv = document.getElementById('agendamentoPublicacao');
     const dataAgendamentoInput = document.getElementById('noticiaDataAgendamento');
     const imagemInput = document.getElementById('noticiaImagem');
@@ -42,7 +43,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         resumo: document.getElementById('noticiaResumo'),
         conteudo: document.getElementById('noticiaConteudo'),
         dataPublicacao: document.getElementById('noticiaDataPublicacao'),
-        dataAgendamento: dataAgendamentoInput
+        dataAgendamento: dataAgendamentoInput,
+        marcarCalendario: marcarCalendarioCheckbox
     };
 
     const feedbacks = {
@@ -185,7 +187,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             data_publicacao: 'dataPublicacao',
             dataPublicacao: 'dataPublicacao',
             data_agendamento: 'dataAgendamento',
-            dataAgendamento: 'dataAgendamento'
+            dataAgendamento: 'dataAgendamento',
+            marcar_calendario: 'marcarCalendario',
+            marcarCalendario: 'marcarCalendario'
         };
         return mapa[loc] || loc;
     }
@@ -341,6 +345,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (publicarImediatamenteCheckbox) {
             publicarImediatamenteCheckbox.checked = Boolean(noticia.ativo);
         }
+        if (marcarCalendarioCheckbox) {
+            marcarCalendarioCheckbox.checked = Boolean(noticia.marcar_calendario);
+        }
         const campoDataPublicacao = camposFormulario.dataPublicacao;
         if (campoDataPublicacao) {
             campoDataPublicacao.value = converterDataParaInputLocal(noticia.data_publicacao);
@@ -362,6 +369,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (publicarImediatamenteCheckbox) {
             publicarImediatamenteCheckbox.checked = true;
         }
+        if (marcarCalendarioCheckbox) {
+            marcarCalendarioCheckbox.checked = false;
+        }
         if (dataAgendamentoInput) {
             dataAgendamentoInput.value = '';
         }
@@ -382,6 +392,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const dataPublicacaoBruta = dadosFormulario.get('dataPublicacao')?.toString().trim() || '';
         const dataAgendamentoBruta = dadosFormulario.get('dataAgendamento')?.toString().trim() || '';
         const publicarImediatamente = publicarImediatamenteCheckbox ? publicarImediatamenteCheckbox.checked : true;
+        const marcarCalendario = marcarCalendarioCheckbox ? marcarCalendarioCheckbox.checked : false;
 
         const payloadValidacao = {
             titulo,
@@ -389,7 +400,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             conteudo,
             dataPublicacao: dataPublicacaoBruta,
             dataAgendamento: dataAgendamentoBruta,
-            publicarImediatamente
+            publicarImediatamente,
+            marcarCalendario
         };
 
         const errosFormulario = validarCamposObrigatorios(payloadValidacao);
@@ -405,6 +417,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         dadosEnvio.append('autor', autor);
         dadosEnvio.append('destaque', form.querySelector('#noticiaDestaque').checked ? 'true' : 'false');
         dadosEnvio.append('ativo', publicarImediatamente ? 'true' : 'false');
+        dadosEnvio.append('marcarCalendario', marcarCalendario ? 'true' : 'false');
 
         const arquivoImagem = dadosFormulario.get('imagem');
         if (arquivoImagem instanceof File && arquivoImagem.name) {
@@ -481,7 +494,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showToast('Nenhuma notícia para exportar.', 'info');
                 return;
             }
-            const cabecalho = ['id', 'titulo', 'resumo', 'conteudo', 'autor', 'imagem_url', 'destaque', 'ativo', 'data_publicacao'];
+            const cabecalho = ['id', 'titulo', 'resumo', 'conteudo', 'autor', 'imagem_url', 'destaque', 'ativo', 'marcar_calendario', 'data_publicacao'];
             const linhas = [cabecalho.join(';')];
             itens.forEach(item => {
                 const linha = [
@@ -493,6 +506,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     protegerCSV(item.imagem_url || ''),
                     item.destaque ? '1' : '0',
                     item.ativo ? '1' : '0',
+                    item.marcar_calendario ? '1' : '0',
                     item.data_publicacao || ''
                 ];
                 linhas.push(linha.join(';'));

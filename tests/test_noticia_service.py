@@ -13,18 +13,17 @@ from werkzeug.datastructures import FileStorage
 
 from src.models import db
 from src.models.noticia import Noticia
+from src.schemas.noticia import NoticiaSchema
 from src.services import noticia_service
 
 
-def test_atualizar_noticia_quando_tabela_imagens_indisponivel(app, tmp_path):
-    """Garante que a atualização persiste apenas o caminho quando a tabela não existe."""
+def test_atualizar_noticia_cria_tabela_imagens_quando_ausente(app, tmp_path):
+    """Garante que a tabela de imagens é criada automaticamente e o binário é persistido."""
 
     with app.app_context():
-        # Remove a tabela de imagens para simular ambientes ainda não migrados.
         with db.engine.begin() as conn:
             conn.execute(text("DROP TABLE IF EXISTS imagens_noticias"))
 
-        # Força o serviço a reavaliar a disponibilidade da tabela.
         noticia_service._TABELA_IMAGENS_DISPONIVEL = None
 
         noticia = Noticia(titulo="Titulo teste", conteudo="Conteudo teste")
@@ -33,22 +32,34 @@ def test_atualizar_noticia_quando_tabela_imagens_indisponivel(app, tmp_path):
 
         current_app.static_folder = tmp_path.as_posix()
 
-        arquivo = FileStorage(stream=io.BytesIO(b"dados"), filename="imagem.png")
+        arquivo = FileStorage(
+            stream=io.BytesIO(b"dados"),
+            filename="imagem.png",
+            content_type="image/png",
+        )
 
         noticia = Noticia.query.get(noticia.id)
         atualizada = noticia_service.atualizar_noticia(noticia, {}, arquivo)
 
-        assert atualizada.imagem_url is not None
-        assert atualizada.imagem_url.startswith("/static/uploads/noticias/")
+        assert noticia_service._TABELA_IMAGENS_DISPONIVEL is True
+        assert atualizada.imagem is not None
+        assert atualizada.imagem.tem_conteudo is True
+        assert atualizada.imagem.conteudo == b"dados"
+        assert atualizada.imagem.content_type == "image/png"
 
-        caminho_relativo = atualizada.imagem_url.replace("/static/", "", 1)
+        assert atualizada.imagem_url is not None
+        assert atualizada.imagem.url_publica.startswith("/api/noticias/imagens/")
+
+        serializada = NoticiaSchema().dump(atualizada)
+        assert serializada["imagem_url"].startswith("/api/noticias/imagens/")
+
+        caminho_relativo = atualizada.imagem.caminho_relativo
         caminho_final = Path(current_app.static_folder) / caminho_relativo
 
         assert caminho_final.exists()
 
-        # A tabela continua indisponível e a relação não deve ser carregada.
-        assert noticia_service._TABELA_IMAGENS_DISPONIVEL is False
-        assert db.inspect(atualizada).attrs.imagem.loaded_value is LoaderCallableStatus.NO_VALUE
+        estado_relacionamento = db.inspect(atualizada).attrs.imagem.loaded_value
+        assert estado_relacionamento is not LoaderCallableStatus.NO_VALUE
 
 
 def test_imagem_persistida_fica_disponivel_apos_redeploy(app, tmp_path):

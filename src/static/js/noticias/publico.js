@@ -178,6 +178,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function obterUrlImagem(noticia) {
+        if (!noticia) {
+            return null;
+        }
+        if (noticia.imagem_url) {
+            return noticia.imagem_url;
+        }
+        if (noticia.imagem && noticia.imagem.url) {
+            return noticia.imagem.url;
+        }
+        return null;
+    }
+
     function atualizarHero(noticia) {
         if (!noticia) {
             heroTitleEl.textContent = 'Nenhum destaque disponível por enquanto';
@@ -192,8 +205,9 @@ document.addEventListener('DOMContentLoaded', () => {
         heroDateEl.textContent = formatarDataHumana(noticia.data_publicacao);
         heroDateEl.classList.remove('visually-hidden');
         heroButton.disabled = false;
-        if (noticia.imagem_url) {
-            heroSection.style.backgroundImage = `linear-gradient(135deg, rgba(22, 65, 148, 0.75), rgba(0, 139, 210, 0.65)), url('${encodeURI(noticia.imagem_url)}')`;
+        const urlImagem = obterUrlImagem(noticia);
+        if (urlImagem) {
+            heroSection.style.backgroundImage = `linear-gradient(135deg, rgba(22, 65, 148, 0.75), rgba(0, 139, 210, 0.65)), url('${encodeURI(urlImagem)}')`;
             heroSection.style.backgroundSize = 'cover';
             heroSection.style.backgroundPosition = 'center';
         } else {
@@ -236,7 +250,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function criarCardNoticia(noticia) {
-        const imagem = noticia.imagem_url ? `<img class="news-card__image" src="${encodeURI(noticia.imagem_url)}" alt="Imagem ilustrativa da notícia">` : '<div class="news-card__image" role="presentation"></div>';
+        const urlImagem = obterUrlImagem(noticia);
+        const imagem = urlImagem ? `<img class="news-card__image" src="${encodeURI(urlImagem)}" alt="Imagem ilustrativa da notícia">` : '<div class="news-card__image" role="presentation"></div>';
         return `
             <article class="news-card" role="listitem">
                 ${imagem}
@@ -285,8 +300,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const dataPublicacao = formatarDataHumana(noticia.data_publicacao);
         const autor = noticia.autor ? ` | ${escapeHTML(noticia.autor)}` : '';
         modalMeta.textContent = `${dataPublicacao}${autor}`;
-        if (noticia.imagem_url) {
-            modalImage.src = noticia.imagem_url;
+        const urlImagem = obterUrlImagem(noticia);
+        if (urlImagem) {
+            modalImage.src = urlImagem;
             modalImage.alt = `Imagem ilustrativa da notícia ${noticia.titulo}`;
             modalImage.classList.remove('d-none');
         } else {

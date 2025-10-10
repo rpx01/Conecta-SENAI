@@ -20,7 +20,7 @@ from collections import deque
 import resend
 from flask import current_app, render_template
 from types import SimpleNamespace
-from datetime import time
+from datetime import time, date
 from resend.exceptions import ResendError
 
 log = logging.getLogger(__name__)
@@ -222,6 +222,59 @@ def send_email(
 def render_email_template(name: str, **ctx: Any) -> str:
     template = current_app.jinja_env.get_or_select_template(f"email/{name}")
     return template.render(**ctx)
+
+
+def _resolve_participante_nome(inscricao: Any) -> str:
+    """Retorna o nome do participante priorizando o registro da inscrição."""
+
+    if getattr(inscricao, "nome", None):
+        return inscricao.nome
+
+    usuario = getattr(inscricao, "usuario", None)
+    if usuario is None:
+        return ""
+
+    return (
+        getattr(usuario, "nome", None)
+        or getattr(usuario, "name", None)
+        or ""
+    )
+
+
+def _resolve_participante_email(inscricao: Any) -> str:
+    """Obtém o e-mail do participante a partir da inscrição ou do usuário."""
+
+    email = getattr(inscricao, "email", "") or ""
+    if email:
+        return email
+
+    usuario = getattr(inscricao, "usuario", None)
+    if usuario:
+        return getattr(usuario, "email", "") or ""
+
+    return ""
+
+
+def _formatar_periodo(
+    data_inicio: date | None, data_fim: date | None
+) -> str:
+    """Gera o texto do período apresentado no e-mail de convocação."""
+
+    if data_inicio and data_fim:
+        return (
+            f"De {data_inicio.strftime('%d/%m/%Y')} "
+            f"a {data_fim.strftime('%d/%m/%Y')}"
+        )
+
+    if data_inicio:
+        return data_inicio.strftime("%d/%m/%Y")
+
+    if data_fim:
+        return data_fim.strftime("%d/%m/%Y")
+
+    return ""
+
+
 def enviar_convocacao(
     inscricao: Any, turma: Any, send_email_fn: Callable[..., Any] = send_email
 ) -> None:
@@ -230,7 +283,11 @@ def enviar_convocacao(
     if treinamento is None:
         raise ValueError("Turma sem treinamento associado")
 
-    destinatario = getattr(inscricao, "email", "")
+    destinatario = _resolve_participante_email(inscricao)
+    if not destinatario:
+        raise ValueError("Inscrição sem e-mail cadastrado")
+
+    participante_nome = _resolve_participante_nome(inscricao)
     log.info(f"Tentando enviar e-mail de convocação para {destinatario}")
 
     is_teoria_online = bool(getattr(turma, "teoria_online", False))
@@ -238,19 +295,14 @@ def enviar_convocacao(
 
     data_inicio = getattr(turma, "data_inicio", None)
     data_fim = getattr(turma, "data_fim", None)
-    periodo = ""
-    if data_inicio and data_fim:
-        periodo = (
-            f"De {data_inicio.strftime('%d/%m/%Y')} "
-            f"a {data_fim.strftime('%d/%m/%Y')}"
-        )
+    periodo = _formatar_periodo(data_inicio, data_fim)
 
     instrutor = getattr(getattr(turma, "instrutor", None), "nome", "A definir")
     local_realizacao = getattr(turma, "local_realizacao", "")
 
     html = render_template(
         "email/convocacao.html.j2",
-        nome=getattr(inscricao, "nome", ""),
+        nome=participante_nome,
         nome_do_treinamento=getattr(treinamento, "nome", ""),
         periodo=periodo,
         horario=getattr(turma, "horario", ""),

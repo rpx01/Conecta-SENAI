@@ -280,6 +280,65 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function fetchNoticiasDoCalendario(ano, mes) {
+        const params = new URLSearchParams({
+            ano: String(ano),
+            mes: String(mes),
+            per_page: '100',
+            marcar_calendario: 'true'
+        });
+
+        const resposta = await chamarAPI(`/noticias?${params.toString()}`);
+        if (!resposta) {
+            return [];
+        }
+
+        const { items } = resposta;
+        return Array.isArray(items) ? items : [];
+    }
+
+    async function popularCalendario(date) {
+        if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+            return;
+        }
+
+        const calendario = document.querySelector('[data-calendario]');
+        if (!calendario) {
+            return;
+        }
+
+        calendario.querySelectorAll('[data-dia]').forEach(diaElement => {
+            diaElement.classList.remove('evento');
+            diaElement.querySelectorAll('.evento-marcador').forEach(marcador => marcador.remove());
+        });
+
+        try {
+            const noticiasDoMes = await fetchNoticiasDoCalendario(date.getFullYear(), date.getMonth() + 1);
+
+            noticiasDoMes.forEach((noticia) => {
+                // A data_evento vem como 'YYYY-MM-DDTHH:mm:ss'
+                // Precisamos tratar para evitar problemas de fuso horário
+                const [dataParte] = noticia.data_evento.split("T");
+                const [ano, mes, dia] = dataParte.split("-");
+                const dataEvento = new Date(ano, mes - 1, dia);
+
+                const diaDoEvento = dataEvento.getDate();
+                const diaElement = document.querySelector(`[data-dia="${diaDoEvento}"]`);
+
+                if (diaElement && !diaElement.querySelector(".evento-marcador")) {
+                    diaElement.classList.add("evento");
+                    const link = document.createElement("a");
+                    link.href = `#noticia-${noticia.id}`;
+                    link.classList.add("evento-marcador");
+                    link.setAttribute("aria-label", `Evento: ${noticia.titulo}`);
+                    diaElement.appendChild(link);
+                }
+            });
+        } catch (error) {
+            console.error('Erro ao popular calendário de notícias', error);
+        }
+    }
+
     function obterUrlImagem(noticia) {
         if (!noticia) {
             return null;

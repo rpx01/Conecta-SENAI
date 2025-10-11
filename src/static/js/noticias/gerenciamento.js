@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         const exibir = Boolean(marcarCalendarioCheckbox ? marcarCalendarioCheckbox.checked : false);
-        dataEventoContainer.hidden = !exibir;
+        dataEventoContainer.classList.toggle('d-none', !exibir);
         dataEventoContainer.setAttribute('aria-hidden', exibir ? 'false' : 'true');
         if (marcarCalendarioCheckbox) {
             marcarCalendarioCheckbox.setAttribute('aria-expanded', exibir ? 'true' : 'false');

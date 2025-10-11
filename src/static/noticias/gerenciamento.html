@@ -219,6 +219,11 @@
                                     <label class="form-check-label" for="noticiaCalendario">Marcar no calendário?</label>
                                 </div>
                             </div>
+                            <div class="col-md-6" id="noticiaDataEventoContainer" style="display: none;">
+                                <label for="noticiaDataEvento" class="form-label">Data do evento</label>
+                                <input type="date" class="form-control" id="noticiaDataEvento" name="dataEvento" aria-describedby="feedbackDataEvento">
+                                <div class="invalid-feedback" id="feedbackDataEvento" role="alert"></div>
+                            </div>
                             <div class="col-12" id="agendamentoPublicacao" style="display: none;">
                                 <label for="noticiaDataAgendamento" class="form-label">Agendar publicação para</label>
                                 <input type="datetime-local" class="form-control" id="noticiaDataAgendamento" name="dataAgendamento" aria-describedby="feedbackDataAgendamento">

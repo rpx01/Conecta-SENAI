@@ -19,7 +19,7 @@ def _parse_datetime(value: Optional[str | datetime]) -> Optional[datetime]:
     try:
         parsed = datetime.fromisoformat(texto)
     except (TypeError, ValueError) as exc:  # pragma: no cover - validação explícita
-        raise ValueError("Data de publicação inválida. Use o formato ISO 8601.") from exc
+        raise ValueError("Data inválida. Use o formato ISO 8601.") from exc
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=timezone.utc)
     return parsed
@@ -36,6 +36,7 @@ class NoticiaBaseSchema(BaseModel):
     marcar_calendario: bool = Field(default=False, alias="marcarCalendario")
     data_publicacao: Optional[datetime] = Field(default=None, alias="dataPublicacao")
     data_agendamento: Optional[datetime] = Field(default=None, alias="dataAgendamento")
+    data_evento: Optional[datetime] = Field(default=None, alias="dataEvento")
 
     @field_validator("titulo", "resumo", "conteudo", "autor", "imagem_url", mode="before")
     @classmethod
@@ -54,7 +55,7 @@ class NoticiaBaseSchema(BaseModel):
             raise ValueError("O resumo deve conter ao menos 10 caracteres ou ser omitido.")
         return value
 
-    @field_validator("data_publicacao", "data_agendamento", mode="before")
+    @field_validator("data_publicacao", "data_agendamento", "data_evento", mode="before")
     @classmethod
     def validar_data_publicacao(cls, value):
         return _parse_datetime(value)
@@ -78,6 +79,7 @@ class NoticiaUpdateSchema(BaseModel):
     marcar_calendario: Optional[bool] = Field(default=None, alias="marcarCalendario")
     data_publicacao: Optional[datetime] = Field(default=None, alias="dataPublicacao")
     data_agendamento: Optional[datetime] = Field(default=None, alias="dataAgendamento")
+    data_evento: Optional[datetime] = Field(default=None, alias="dataEvento")
 
     @field_validator("titulo", "resumo", "conteudo", "autor", "imagem_url", mode="before")
     @classmethod
@@ -96,7 +98,7 @@ class NoticiaUpdateSchema(BaseModel):
             raise ValueError("O resumo deve conter ao menos 10 caracteres ou ser omitido.")
         return value
 
-    @field_validator("data_publicacao", "data_agendamento", mode="before")
+    @field_validator("data_publicacao", "data_agendamento", "data_evento", mode="before")
     @classmethod
     def validar_data_publicacao(cls, value):
         return _parse_datetime(value)

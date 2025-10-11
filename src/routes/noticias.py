@@ -64,6 +64,7 @@ def _extrair_dados_form(expect_update: bool = False) -> Tuple[Dict[str, Any], An
     dados_brutos.pop("_method", None)
 
     data_agendamento = dados_brutos.pop("dataAgendamento", None) or dados_brutos.pop("data_agendamento", None)
+    data_evento = dados_brutos.pop("dataEvento", None) or dados_brutos.pop("data_evento", None)
 
     if "destaque" in dados_brutos:
         valor = _normalizar_booleano(dados_brutos.get("destaque"), False if not expect_update else None)
@@ -106,6 +107,8 @@ def _extrair_dados_form(expect_update: bool = False) -> Tuple[Dict[str, Any], An
         dados_brutos["dataPublicacao"] = data_publicacao
     if data_agendamento:
         dados_brutos["dataAgendamento"] = data_agendamento
+    if data_evento is not None:
+        dados_brutos["dataEvento"] = data_evento
 
     return dados_brutos, arquivo
 
@@ -287,6 +290,8 @@ def criar():
         return jsonify({"erros": _serialize_validation_errors(err)}), 400
 
     dados = payload.model_dump(mode="python")
+    if not dados.get("marcar_calendario"):
+        dados["data_evento"] = None
     data_agendamento = dados.pop("data_agendamento", None)
     if data_agendamento and not dados.get("data_publicacao"):
         dados["data_publicacao"] = data_agendamento
@@ -317,6 +322,8 @@ def atualizar(noticia_id: int):
         return jsonify({"erros": _serialize_validation_errors(err)}), 400
 
     dados = payload.model_dump(mode="python", exclude_unset=True)
+    if dados.get("marcar_calendario") is False:
+        dados["data_evento"] = None
     data_agendamento = dados.pop("data_agendamento", None)
     if data_agendamento is not None:
         dados["data_publicacao"] = data_agendamento

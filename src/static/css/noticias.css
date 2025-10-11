@@ -177,9 +177,42 @@
   padding-left: 1rem;
 }
 
+.news-calendar__wrapper {
+  position: relative;
+}
+
+.news-calendar__grid {
+  min-height: 320px;
+}
+
+.news-calendar__empty {
+  text-align: center;
+}
+
 .news-calendar__date {
   font-weight: 600;
   color: var(--primary-color);
+}
+
+.news-calendar .fc {
+  font-size: 0.85rem;
+}
+
+.news-calendar .fc .fc-toolbar.fc-header-toolbar {
+  margin-bottom: 0.75rem;
+}
+
+.news-calendar .fc .fc-toolbar-title {
+  font-size: 1rem;
+}
+
+.news-calendar .fc .fc-button {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+.news-calendar .fc .fc-daygrid-day-number {
+  font-size: 0.85rem;
 }
 
 .news-empty-state {

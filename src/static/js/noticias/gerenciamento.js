@@ -34,7 +34,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnSalvar = document.getElementById('btnSalvarNoticia');
     const publicarImediatamenteCheckbox = document.getElementById('noticiaAtivo');
     const marcarCalendarioCheckbox = document.getElementById('noticiaCalendario');
-    const dataEventoContainer = document.getElementById('noticiaDataEventoContainer');
+    const dataEventoContainer =
+        document.getElementById('noticiaDataEventoContainer') ||
+        document.getElementById('data-evento-div') ||
+        document.querySelector('.data-evento-div');
     const dataEventoInput = document.getElementById('noticiaDataEvento');
     const agendamentoDiv = document.getElementById('agendamentoPublicacao');
     const dataAgendamentoInput = document.getElementById('noticiaDataAgendamento');

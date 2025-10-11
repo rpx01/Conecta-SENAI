@@ -38,6 +38,7 @@ class NoticiaSchema(Schema):
     ativo = fields.Bool()
     marcar_calendario = fields.Bool(attribute="marcar_calendario")
     data_publicacao = fields.DateTime(allow_none=True)
+    data_evento = fields.DateTime(allow_none=True)
     criado_em = fields.DateTime()
     atualizado_em = fields.DateTime()
 

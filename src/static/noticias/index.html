@@ -130,20 +130,11 @@
                             <h2 class="h5 mb-0"><i class="bi bi-calendar-event me-2"></i> Calendário do mês</h2>
                         </div>
                         <div class="card-body news-calendar">
-                            <ul class="news-sidebar__list" aria-label="Eventos institucionais">
-                                <li>
-                                    <span class="news-calendar__date">12 Mar</span>
-                                    <span>Reunião pedagógica</span>
-                                </li>
-                                <li>
-                                    <span class="news-calendar__date">18 Mar</span>
-                                    <span>Semana da Indústria</span>
-                                </li>
-                                <li>
-                                    <span class="news-calendar__date">28 Mar</span>
-                                    <span>Entrega de certificados</span>
-                                </li>
+                            <ul class="news-sidebar__list" id="newsCalendarList" aria-label="Eventos institucionais" aria-live="polite" aria-busy="false">
                             </ul>
+                            <p id="newsCalendarEmpty" class="text-muted small mt-2 visually-hidden" role="status">
+                                Nenhum evento marcado no calendário para este mês.
+                            </p>
                             <p class="text-muted small mt-3 mb-0">Os eventos são atualizados semanalmente pelo time administrativo.</p>
                         </div>
                     </section>

@@ -194,6 +194,11 @@ def listar_noticias():
     destaque_param = request.args.get("destaque")
     status_param = request.args.get("ativo") or request.args.get("status")
     termo_busca = request.args.get("busca") or request.args.get("q")
+    calendario_param = (
+        request.args.get("calendario")
+        or request.args.get("marcar_calendario")
+        or request.args.get("marcarCalendario")
+    )
 
     try:
         consulta = NoticiaRepository.base_query()
@@ -216,6 +221,11 @@ def listar_noticias():
             consulta = consulta.filter(
                 or_(Noticia.titulo.ilike(like), Noticia.resumo.ilike(like))
             )
+        filtro_calendario = _normalizar_booleano(calendario_param)
+        if filtro_calendario is True:
+            consulta = consulta.filter(Noticia.marcar_calendario.is_(True))
+        elif filtro_calendario is False:
+            consulta = consulta.filter(Noticia.marcar_calendario.is_(False))
 
         consulta = consulta.order_by(Noticia.data_publicacao.desc(), Noticia.id.desc())
         paginacao = consulta.paginate(page=page, per_page=per_page, error_out=False)

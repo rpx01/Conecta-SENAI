@@ -55,6 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const listContainer = document.getElementById('newsGrid');
     const listEmptyState = document.getElementById('newsListEmpty');
     const paginationContainer = document.getElementById('newsPagination');
+    const calendarList = document.getElementById('newsCalendarList');
+    const calendarEmptyState = document.getElementById('newsCalendarEmpty');
     const searchForm = document.getElementById('newsSearchForm');
     const searchInput = document.getElementById('newsSearchInput');
     const refreshButton = document.getElementById('refreshNewsBtn');
@@ -84,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let progressoRotacaoId = null;
     let animacaoHeroAtual = null;
     const TEMPO_ROTACAO_MS = 10000;
+    let noticiasCalendario = new Map();
 
     const usuario = getUsuarioLogado?.();
     const token = window.localStorage?.getItem('token');
@@ -120,6 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleRefreshClick() {
         carregarDestaques();
         carregarLista(paginaAtual);
+        carregarCalendario();
     }
 
     function handleSearchSubmit(event) {
@@ -205,6 +209,60 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function carregarCalendario() {
+        if (!calendarList) {
+            return;
+        }
+
+        setAriaBusy(calendarList, true);
+        calendarList.innerHTML = '';
+        noticiasCalendario = new Map();
+
+        try {
+            const params = new URLSearchParams({
+                per_page: '100',
+                marcar_calendario: 'true'
+            });
+            const resposta = await chamarAPI(`/noticias?${params.toString()}`);
+            const noticias = Array.isArray(resposta.items) ? resposta.items : [];
+            const eventosValidos = noticias
+                .map(noticia => ({
+                    noticia,
+                    dataEvento: normalizarDataISO(noticia.data_evento)
+                }))
+                .filter(item => item.dataEvento !== null)
+                .sort((a, b) => a.dataEvento - b.dataEvento);
+
+            noticiasCalendario = new Map(
+                eventosValidos.map(item => [item.noticia.id, item.noticia])
+            );
+
+            const agora = new Date();
+            const mesAtual = agora.getMonth();
+            const anoAtual = agora.getFullYear();
+
+            let eventosDoMes = eventosValidos.filter(
+                item =>
+                    item.dataEvento.getMonth() === mesAtual &&
+                    item.dataEvento.getFullYear() === anoAtual
+            );
+
+            if (eventosDoMes.length === 0) {
+                eventosDoMes = eventosValidos;
+            }
+
+            renderizarCalendario(eventosDoMes.map(item => item.noticia));
+        } catch (error) {
+            console.error('Erro ao carregar calendário de notícias', error);
+            showToast('Não foi possível carregar os eventos do calendário.', 'danger');
+            calendarList.innerHTML = '';
+            mostrarEstadoVazioCalendario();
+            tentarRenovarCSRF();
+        } finally {
+            setAriaBusy(calendarList, false);
+        }
+    }
+
     function obterUrlImagem(noticia) {
         if (!noticia) {
             return null;
@@ -262,6 +320,33 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function renderizarCalendario(noticias) {
+        if (!calendarList) {
+            return;
+        }
+
+        if (!Array.isArray(noticias) || noticias.length === 0) {
+            calendarList.innerHTML = '';
+            mostrarEstadoVazioCalendario();
+            return;
+        }
+
+        ocultarEstadoVazioCalendario();
+        calendarList.innerHTML = noticias.map(criarItemCalendario).join('');
+        calendarList.querySelectorAll('[data-calendar-news-id]').forEach(botao => {
+            botao.addEventListener('click', () => {
+                const id = Number.parseInt(botao.getAttribute('data-calendar-news-id'), 10);
+                if (Number.isNaN(id)) {
+                    return;
+                }
+                const noticia = noticiasCalendario.get(id);
+                if (noticia) {
+                    abrirModal(noticia);
+                }
+            });
+        });
+    }
+
     function criarHighlightNoticia(noticia) {
         const resumo = noticia.resumo ?? '';
         return `
@@ -273,6 +358,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     Ler mais <i class="bi bi-arrow-right-short"></i>
                 </button>
             </article>
+        `;
+    }
+
+    function criarItemCalendario(noticia) {
+        const dataRotulo = formatarDataCalendario(noticia.data_evento);
+        const dataAttr = noticia.data_evento ? escapeHTML(noticia.data_evento) : '';
+        return `
+            <li class="news-calendar__item d-flex align-items-start gap-2" role="listitem">
+                <time class="news-calendar__date" datetime="${dataAttr}">${dataRotulo}</time>
+                <button class="btn btn-link p-0 text-start news-calendar__link" type="button" data-calendar-news-id="${noticia.id}" aria-label="Ver detalhes do evento ${escapeHTML(noticia.titulo)}" data-bs-toggle="modal" data-bs-target="#newsModal">
+                    ${escapeHTML(noticia.titulo)}
+                </button>
+            </li>
         `;
     }
 
@@ -366,6 +464,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function formatarDataCalendario(dataISO) {
+        if (!dataISO) {
+            return 'Data não informada';
+        }
+        const data = normalizarDataISO(dataISO);
+        if (!data) {
+            return 'Data não informada';
+        }
+        const dia = data.toLocaleDateString('pt-BR', { day: '2-digit' });
+        let mes = data.toLocaleDateString('pt-BR', { month: 'short' });
+        mes = mes.replace('.', '');
+        if (mes.length > 0) {
+            mes = mes.charAt(0).toUpperCase() + mes.slice(1);
+        }
+        return `${dia} ${mes}`;
+    }
+
+    function normalizarDataISO(dataISO) {
+        if (!dataISO) {
+            return null;
+        }
+        try {
+            const data = new Date(dataISO);
+            if (Number.isNaN(data.getTime())) {
+                return null;
+            }
+            return data;
+        } catch (error) {
+            return null;
+        }
+    }
+
     function setAriaBusy(elemento, ocupado) {
         if (!elemento) return;
         elemento.setAttribute('aria-busy', ocupado ? 'true' : 'false');
@@ -392,6 +522,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function mostrarEstadoVazioHighlights() {
         highlightsContainer.innerHTML = '';
         highlightsEmptyState.classList.remove('visually-hidden');
+    }
+
+    function mostrarEstadoVazioCalendario() {
+        calendarEmptyState?.classList.remove('visually-hidden');
+    }
+
+    function ocultarEstadoVazioCalendario() {
+        calendarEmptyState?.classList.add('visually-hidden');
     }
 
     function atualizarHeroEDestaques({ animarHero = false } = {}) {
@@ -738,4 +876,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     carregarDestaques();
     carregarLista(paginaAtual);
+    carregarCalendario();
 });

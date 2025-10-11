@@ -73,6 +73,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const systemSelectionButton = document.querySelector('[data-testid="system-selection-button"]');
     const userProfileButton = document.querySelector('[data-testid="user-profile-button"]');
     const userMenu = document.querySelector('.user-menu');
+    const calendarWrapper = document.getElementById('newsCalendarWrapper');
+    const calendarElement = document.getElementById('newsCalendarGrid');
+    const calendarEmptyState = document.getElementById('newsCalendarEmpty');
+    const calendarLoadingIndicator = document.getElementById('newsCalendarLoading');
 
     let paginaAtual = 1;
     const itensPorPagina = 6;
@@ -84,6 +88,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let progressoRotacaoId = null;
     let animacaoHeroAtual = null;
     const TEMPO_ROTACAO_MS = 10000;
+    const noticiasCache = new Map();
+    let calendarioNoticias = null;
 
     const usuario = getUsuarioLogado?.();
     const token = window.localStorage?.getItem('token');
@@ -117,9 +123,166 @@ document.addEventListener('DOMContentLoaded', () => {
         searchForm?.addEventListener('submit', handleSearchSubmit);
     }
 
+    function registrarNoticiasNoCache(noticias) {
+        if (!Array.isArray(noticias)) {
+            return;
+        }
+        noticias.forEach(noticia => {
+            if (!noticia) {
+                return;
+            }
+            const idNumerico = Number.parseInt(noticia.id, 10);
+            if (!Number.isNaN(idNumerico)) {
+                noticiasCache.set(idNumerico, noticia);
+            }
+        });
+    }
+
+    function setCalendarioCarregando(loading) {
+        if (calendarWrapper) {
+            calendarWrapper.setAttribute('aria-busy', loading ? 'true' : 'false');
+        }
+        if (calendarLoadingIndicator) {
+            calendarLoadingIndicator.classList.toggle('d-none', !loading);
+        }
+    }
+
+    function atualizarEstadoCalendario(totalEventos) {
+        if (calendarEmptyState) {
+            const possuiEventos = totalEventos > 0;
+            calendarEmptyState.classList.toggle('visually-hidden', possuiEventos);
+        }
+    }
+
+    async function buscarEventosCalendario() {
+        try {
+            const response = await fetch(`${API_URL}/noticias/calendario`, {
+                credentials: 'include'
+            });
+            if (!response.ok) {
+                throw new Error(`Falha ao buscar eventos do calendário (${response.status})`);
+            }
+            const payload = await response.json();
+            if (Array.isArray(payload)) {
+                return payload;
+            }
+            if (payload && Array.isArray(payload.items)) {
+                return payload.items;
+            }
+            return [];
+        } catch (error) {
+            console.error('Erro ao carregar eventos do calendário', error);
+            showToast('Não foi possível carregar os eventos do calendário.', 'danger');
+            return [];
+        }
+    }
+
+    function mapearEventosCalendario(lista) {
+        if (!Array.isArray(lista)) {
+            return [];
+        }
+        return lista
+            .filter(item => item && item.data_evento)
+            .map(item => ({
+                id: String(item.id),
+                title: item.titulo,
+                start: item.data_evento,
+                allDay: true,
+                display: 'block',
+                extendedProps: {
+                    noticiaId: item.id
+                }
+            }));
+    }
+
+    async function obterNoticiaCompleta(noticiaId) {
+        if (!Number.isInteger(noticiaId)) {
+            return null;
+        }
+        if (noticiasCache.has(noticiaId)) {
+            return noticiasCache.get(noticiaId);
+        }
+        try {
+            const response = await fetch(`${API_URL}/noticias/${noticiaId}`, {
+                credentials: 'include'
+            });
+            if (!response.ok) {
+                return null;
+            }
+            const noticia = await response.json();
+            if (noticia) {
+                const idNumerico = Number.parseInt(noticia.id, 10);
+                if (!Number.isNaN(idNumerico)) {
+                    noticiasCache.set(idNumerico, noticia);
+                }
+            }
+            return noticia;
+        } catch (error) {
+            console.error('Erro ao carregar notícia detalhada', error);
+            return null;
+        }
+    }
+
+    function inicializarCalendarioNoticias() {
+        if (!calendarElement || typeof FullCalendar === 'undefined') {
+            setCalendarioCarregando(false);
+            atualizarEstadoCalendario(0);
+            return;
+        }
+
+        calendarioNoticias = new FullCalendar.Calendar(calendarElement, {
+            initialView: 'dayGridMonth',
+            locale: 'pt-br',
+            height: 'auto',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: ''
+            },
+            buttonText: {
+                today: 'Hoje'
+            },
+            dayMaxEventRows: 3,
+            events(fetchInfo, successCallback, failureCallback) {
+                setCalendarioCarregando(true);
+                buscarEventosCalendario()
+                    .then(eventos => {
+                        const eventosMapeados = mapearEventosCalendario(eventos);
+                        successCallback(eventosMapeados);
+                        atualizarEstadoCalendario(eventosMapeados.length);
+                    })
+                    .catch(error => {
+                        failureCallback(error);
+                        atualizarEstadoCalendario(0);
+                    })
+                    .finally(() => {
+                        setCalendarioCarregando(false);
+                    });
+            },
+            eventClick: async info => {
+                info.jsEvent?.preventDefault();
+                const noticiaId = Number.parseInt(info.event.extendedProps?.noticiaId, 10);
+                if (Number.isNaN(noticiaId)) {
+                    return;
+                }
+                const noticia = await obterNoticiaCompleta(noticiaId);
+                if (noticia) {
+                    abrirModal(noticia);
+                } else {
+                    showToast('Não foi possível carregar a notícia selecionada.', 'warning');
+                }
+            }
+        });
+
+        calendarioNoticias.render();
+    }
+
     function handleRefreshClick() {
         carregarDestaques();
         carregarLista(paginaAtual);
+        if (calendarioNoticias) {
+            calendarioNoticias.refetchEvents();
+        }
     }
 
     function handleSearchSubmit(event) {
@@ -136,6 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const resposta = await chamarAPI(`/noticias?destaque=true&per_page=5`);
             const noticias = resposta.items || [];
+            registrarNoticiasNoCache(noticias);
             if (noticias.length > 0) {
                 destaquesHero = noticias;
                 indiceDestaqueAtual = 0;
@@ -176,6 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const resposta = await chamarAPI(`/noticias?${params.toString()}`);
             const noticias = resposta.items || [];
+            registrarNoticiasNoCache(noticias);
             if (noticias.length === 0) {
                 listContainer.innerHTML = '';
                 listEmptyState.textContent = 'Nenhuma notícia cadastrada ainda.';
@@ -736,6 +901,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    inicializarCalendarioNoticias();
     carregarDestaques();
     carregarLista(paginaAtual);
 });

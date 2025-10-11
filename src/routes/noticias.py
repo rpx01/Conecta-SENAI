@@ -31,6 +31,7 @@ api_noticias_bp = Blueprint("api_noticias", __name__)
 
 noticia_schema = NoticiaSchema()
 noticias_schema = NoticiaSchema(many=True)
+noticias_calendario_schema = NoticiaSchema(many=True, only=("id", "titulo", "data_evento"))
 
 BOOLEAN_TRUES = {"1", "true", "t", "on", "yes", "y", "sim"}
 BOOLEAN_FALSES = {"0", "false", "f", "off", "no", "n", "nao", "não"}
@@ -247,6 +248,30 @@ def listar_noticias():
                 ),
                 200,
             )
+        raise
+
+
+@api_noticias_bp.route("/noticias/calendario", methods=["GET"])
+def listar_noticias_calendario():
+    """Retorna notícias marcadas para exibição no calendário."""
+
+    try:
+        consulta = (
+            NoticiaRepository.base_query()
+            .filter(Noticia.marcar_calendario.is_(True))
+            .filter(Noticia.ativo.is_(True))
+            .filter(Noticia.data_evento.isnot(None))
+            .order_by(Noticia.data_evento.asc(), Noticia.titulo.asc())
+        )
+        noticias = consulta.all()
+        return jsonify(noticias_calendario_schema.dump(noticias)), 200
+    except (ProgrammingError, SQLAlchemyError) as exc:
+        if _estrutura_noticias_desatualizada(exc):
+            current_app.logger.error(
+                "Estrutura da tabela 'noticias' desatualizada ao listar calendário.",
+                exc_info=True,
+            )
+            return jsonify([]), 200
         raise
 
 

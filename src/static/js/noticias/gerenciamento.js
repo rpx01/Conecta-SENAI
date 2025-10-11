@@ -34,6 +34,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnSalvar = document.getElementById('btnSalvarNoticia');
     const publicarImediatamenteCheckbox = document.getElementById('noticiaAtivo');
     const marcarCalendarioCheckbox = document.getElementById('noticiaCalendario');
+    const dataEventoContainer = document.getElementById('noticiaDataEventoContainer');
+    const dataEventoInput = document.getElementById('noticiaDataEvento');
     const agendamentoDiv = document.getElementById('agendamentoPublicacao');
     const dataAgendamentoInput = document.getElementById('noticiaDataAgendamento');
     const imagemInput = document.getElementById('noticiaImagem');
@@ -44,7 +46,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         conteudo: document.getElementById('noticiaConteudo'),
         dataPublicacao: document.getElementById('noticiaDataPublicacao'),
         dataAgendamento: dataAgendamentoInput,
-        marcarCalendario: marcarCalendarioCheckbox
+        marcarCalendario: marcarCalendarioCheckbox,
+        dataEvento: dataEventoInput
     };
 
     const feedbacks = {
@@ -52,7 +55,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         resumo: document.getElementById('feedbackResumo'),
         conteudo: document.getElementById('feedbackConteudo'),
         dataPublicacao: document.getElementById('feedbackDataPublicacao'),
-        dataAgendamento: document.getElementById('feedbackDataAgendamento')
+        dataAgendamento: document.getElementById('feedbackDataAgendamento'),
+        dataEvento: document.getElementById('feedbackDataEvento')
     };
 
     let focoAplicado = false;
@@ -155,6 +159,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
+        if (payload.marcarCalendario) {
+            const dataEvento = payload.dataEvento;
+            if (!dataEvento) {
+                const mensagem = 'Informe uma data para o evento.';
+                registrarErroCampo('dataEvento', mensagem);
+                erros.push(mensagem);
+            } else {
+                const data = new Date(dataEvento);
+                if (Number.isNaN(data.getTime())) {
+                    const mensagem = 'Informe uma data do evento válida.';
+                    registrarErroCampo('dataEvento', mensagem);
+                    erros.push(mensagem);
+                }
+            }
+        } else if (payload.dataEvento) {
+            const data = new Date(payload.dataEvento);
+            if (Number.isNaN(data.getTime())) {
+                const mensagem = 'Informe uma data do evento válida.';
+                registrarErroCampo('dataEvento', mensagem);
+                erros.push(mensagem);
+            }
+        }
+
         return erros;
     }
 
@@ -177,6 +204,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    function atualizarEstadoCalendario() {
+        if (!dataEventoContainer) {
+            return;
+        }
+        const exibir = marcarCalendarioCheckbox ? marcarCalendarioCheckbox.checked : false;
+        if (exibir) {
+            dataEventoContainer.style.display = 'block';
+        } else {
+            dataEventoContainer.style.display = 'none';
+            if (dataEventoInput) {
+                dataEventoInput.value = '';
+                limparErroCampoEspecifico('dataEvento');
+            }
+        }
+    }
+
     function normalizarCampoErro(loc) {
         if (!loc) return null;
         if (Array.isArray(loc) && loc.length > 0) {
@@ -189,7 +232,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             data_agendamento: 'dataAgendamento',
             dataAgendamento: 'dataAgendamento',
             marcar_calendario: 'marcarCalendario',
-            marcarCalendario: 'marcarCalendario'
+            marcarCalendario: 'marcarCalendario',
+            data_evento: 'dataEvento',
+            dataEvento: 'dataEvento'
         };
         return mapa[loc] || loc;
     }
@@ -348,6 +393,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (marcarCalendarioCheckbox) {
             marcarCalendarioCheckbox.checked = Boolean(noticia.marcar_calendario);
         }
+        if (dataEventoInput) {
+            dataEventoInput.value = converterDataParaInputDate(noticia.data_evento);
+        }
         const campoDataPublicacao = camposFormulario.dataPublicacao;
         if (campoDataPublicacao) {
             campoDataPublicacao.value = converterDataParaInputLocal(noticia.data_publicacao);
@@ -360,6 +408,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         atualizarEstadoAgendamento();
+        atualizarEstadoCalendario();
     }
 
     function limparFormulario() {
@@ -375,10 +424,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (dataAgendamentoInput) {
             dataAgendamentoInput.value = '';
         }
+        if (dataEventoInput) {
+            dataEventoInput.value = '';
+        }
         if (imagemInput) {
             imagemInput.value = '';
         }
         atualizarEstadoAgendamento();
+        atualizarEstadoCalendario();
         limparValidacaoCampos();
     }
 
@@ -391,8 +444,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const autor = dadosFormulario.get('autor')?.toString().trim() || '';
         const dataPublicacaoBruta = dadosFormulario.get('dataPublicacao')?.toString().trim() || '';
         const dataAgendamentoBruta = dadosFormulario.get('dataAgendamento')?.toString().trim() || '';
+        let dataEventoBruta = dadosFormulario.get('dataEvento')?.toString().trim() || '';
         const publicarImediatamente = publicarImediatamenteCheckbox ? publicarImediatamenteCheckbox.checked : true;
         const marcarCalendario = marcarCalendarioCheckbox ? marcarCalendarioCheckbox.checked : false;
+
+        if (!marcarCalendario) {
+            dataEventoBruta = '';
+        }
 
         const payloadValidacao = {
             titulo,
@@ -401,7 +459,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             dataPublicacao: dataPublicacaoBruta,
             dataAgendamento: dataAgendamentoBruta,
             publicarImediatamente,
-            marcarCalendario
+            marcarCalendario,
+            dataEvento: dataEventoBruta
         };
 
         const errosFormulario = validarCamposObrigatorios(payloadValidacao);
@@ -442,6 +501,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!Number.isNaN(data.getTime())) {
                 dadosEnvio.append('dataAgendamento', data.toISOString());
             }
+        }
+
+        if (marcarCalendario) {
+            if (dataEventoBruta) {
+                const dataEvento = new Date(dataEventoBruta);
+                if (!Number.isNaN(dataEvento.getTime())) {
+                    dadosEnvio.append('dataEvento', dataEvento.toISOString());
+                }
+            }
+        } else {
+            dadosEnvio.append('dataEvento', '');
         }
 
         const noticiaId = document.getElementById('noticiaId').value;
@@ -494,7 +564,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showToast('Nenhuma notícia para exportar.', 'info');
                 return;
             }
-            const cabecalho = ['id', 'titulo', 'resumo', 'conteudo', 'autor', 'imagem_url', 'destaque', 'ativo', 'marcar_calendario', 'data_publicacao'];
+            const cabecalho = ['id', 'titulo', 'resumo', 'conteudo', 'autor', 'imagem_url', 'destaque', 'ativo', 'marcar_calendario', 'data_publicacao', 'data_evento'];
             const linhas = [cabecalho.join(';')];
             itens.forEach(item => {
                 const linha = [
@@ -507,7 +577,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     item.destaque ? '1' : '0',
                     item.ativo ? '1' : '0',
                     item.marcar_calendario ? '1' : '0',
-                    item.data_publicacao || ''
+                    item.data_publicacao || '',
+                    item.data_evento || ''
                 ];
                 linhas.push(linha.join(';'));
             });
@@ -552,6 +623,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    function converterDataParaInputDate(dataISO) {
+        if (!dataISO) return '';
+        try {
+            const data = new Date(dataISO);
+            if (Number.isNaN(data.getTime())) {
+                return '';
+            }
+            const ano = data.getUTCFullYear();
+            const mes = String(data.getUTCMonth() + 1).padStart(2, '0');
+            const dia = String(data.getUTCDate()).padStart(2, '0');
+            return `${ano}-${mes}-${dia}`;
+        } catch (error) {
+            return '';
+        }
+    }
+
     function obterDataAtualFormatada() {
         const agora = new Date();
         const ano = agora.getFullYear();
@@ -588,6 +675,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         publicarImediatamenteCheckbox.addEventListener('change', atualizarEstadoAgendamento);
     }
 
+    if (marcarCalendarioCheckbox) {
+        marcarCalendarioCheckbox.addEventListener('change', atualizarEstadoCalendario);
+    }
+
     modalEl.addEventListener('show.bs.modal', () => {
         const idAtual = document.getElementById('noticiaId').value;
         if (idAtual) {
@@ -601,6 +692,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             publicarImediatamenteCheckbox.checked = true;
         }
         atualizarEstadoAgendamento();
+        atualizarEstadoCalendario();
     });
 
     modalEl.addEventListener('hidden.bs.modal', limparFormulario);
@@ -621,5 +713,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     exportarButton.addEventListener('click', exportarNoticias);
 
     atualizarEstadoAgendamento();
+    atualizarEstadoCalendario();
     carregarNoticias(paginaAtual);
 });

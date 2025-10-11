@@ -37,6 +37,7 @@ class NoticiaRepository:
         inspector = inspect(engine)
         if inspector.has_table(Noticia.__tablename__):
             cls._ensure_marcar_calendario_column(engine, inspector)
+            cls._ensure_data_evento_column(engine, inspector)
             cls._table_checked = True
             return True
 
@@ -87,6 +88,35 @@ class NoticiaRepository:
             cls._table_checked = False
             log.exception(
                 "Falha ao atualizar a tabela 'noticias' com a coluna 'marcar_calendario'."
+            )
+            raise
+
+    @classmethod
+    def _ensure_data_evento_column(cls, engine, inspector) -> None:
+        """Garante a existência da coluna ``data_evento``."""
+
+        table_name = Noticia.__tablename__
+        columns = {column["name"] for column in inspector.get_columns(table_name)}
+        if "data_evento" in columns:
+            return
+
+        column_type = "TIMESTAMP WITH TIME ZONE"
+        if engine.dialect.name == "sqlite":
+            column_type = "DATETIME"
+
+        try:
+            with engine.begin() as connection:
+                connection.execute(
+                    text(
+                        f"ALTER TABLE {table_name} "
+                        f"ADD COLUMN data_evento {column_type}"
+                    )
+                )
+            log.info("Coluna 'data_evento' criada automaticamente na tabela 'noticias'.")
+        except SQLAlchemyError:
+            cls._table_checked = False
+            log.exception(
+                "Falha ao atualizar a tabela 'noticias' com a coluna 'data_evento'.",
             )
             raise
 

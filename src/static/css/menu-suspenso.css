@@ -17,19 +17,22 @@
 #sidebarDrawer.drawer{
   position: fixed;
   top: 0;
-  left: -280px;         /* escondido fora da tela */
-  width: 280px;
+  left: 0;
   height: 100vh;
+  width: min(280px, 86vw);
   background: var(--senai-azul);
   color: #fff;
   box-shadow: 2px 0 16px rgba(0,0,0,.25);
-  transition: left .25s ease-in-out;
+  transform: translateX(-100%);
+  transition: transform .25s ease-in-out;
   z-index: 1040;
   display: flex;
   flex-direction: column;
 }
 
-#sidebarDrawer.drawer.open{ left: 0; }
+#sidebarDrawer.drawer.open{
+  transform: translateX(0);
+}
 #sidebarDrawer .drawer-header{ padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,.15); }
 #sidebarDrawer .drawer-header h2{ font-size: 16px; margin: 0; color:#fff; }
 
@@ -55,5 +58,8 @@
 
 /* Responsivo: em telas muito estreitas o drawer ocupa toda a largura */
 @media (max-width: 480px){
-  #sidebarDrawer.drawer{ width: 88vw; }
+  #sidebarDrawer.drawer{
+    width: calc(100vw - 32px);
+    max-width: 320px;
+  }
 }

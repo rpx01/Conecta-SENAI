@@ -490,7 +490,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (Number.isNaN(data.getTime())) {
                 return null;
             }
-            return data;
+            return new Date(
+                data.getUTCFullYear(),
+                data.getUTCMonth(),
+                data.getUTCDate()
+            );
         } catch (error) {
             return null;
         }

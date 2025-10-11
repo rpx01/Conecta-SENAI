@@ -164,3 +164,29 @@ def test_remover_destaques_expirados_considera_dias_uteis(app):
         assert resultado == {"total": 2, "ajustados": 1, "falhas": 0}
         assert expirada.destaque is False
         assert recente.destaque is True
+
+
+def test_criar_noticia_persiste_data_evento(app):
+    with app.app_context():
+        db.create_all()
+
+        dados = {
+            "titulo": "Notícia com evento",
+            "resumo": "Resumo com tamanho adequado.",
+            "conteudo": "Conteúdo extenso o suficiente para ser válido no cadastro.",
+            "marcar_calendario": True,
+            "data_publicacao": datetime(2024, 4, 10, tzinfo=timezone.utc),
+            "data_evento": datetime(2024, 5, 5, tzinfo=timezone.utc),
+        }
+
+        noticia = noticia_service.criar_noticia(dados)
+
+        assert noticia.marcar_calendario is True
+        esperado_naive = dados["data_evento"].replace(tzinfo=None)
+        assert noticia.data_evento is not None
+        assert noticia.data_evento.replace(tzinfo=None) == esperado_naive
+
+        recuperada = db.session.get(Noticia, noticia.id)
+        assert recuperada is not None
+        assert recuperada.data_evento is not None
+        assert recuperada.data_evento.replace(tzinfo=None) == esperado_naive

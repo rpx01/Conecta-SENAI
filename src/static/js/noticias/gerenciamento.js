@@ -208,12 +208,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!dataEventoContainer) {
             return;
         }
-        const exibir = marcarCalendarioCheckbox ? marcarCalendarioCheckbox.checked : false;
-        if (exibir) {
-            dataEventoContainer.style.display = 'block';
-        } else {
-            dataEventoContainer.style.display = 'none';
-            if (dataEventoInput) {
+        const exibir = Boolean(marcarCalendarioCheckbox ? marcarCalendarioCheckbox.checked : false);
+        dataEventoContainer.hidden = !exibir;
+        dataEventoContainer.setAttribute('aria-hidden', exibir ? 'false' : 'true');
+        if (marcarCalendarioCheckbox) {
+            marcarCalendarioCheckbox.setAttribute('aria-expanded', exibir ? 'true' : 'false');
+        }
+        if (dataEventoInput) {
+            dataEventoInput.required = exibir;
+            if (!exibir) {
                 dataEventoInput.value = '';
                 limparErroCampoEspecifico('dataEvento');
             }

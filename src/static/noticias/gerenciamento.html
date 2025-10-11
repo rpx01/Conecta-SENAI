@@ -215,11 +215,11 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-check form-switch mt-4">
-                                    <input class="form-check-input" type="checkbox" role="switch" id="noticiaCalendario" name="marcarCalendario">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="noticiaCalendario" name="marcarCalendario" aria-controls="noticiaDataEventoContainer" aria-expanded="false">
                                     <label class="form-check-label" for="noticiaCalendario">Marcar no calendário?</label>
                                 </div>
                             </div>
-                            <div class="col-md-6" id="noticiaDataEventoContainer" style="display: none;">
+                            <div class="col-md-6" id="noticiaDataEventoContainer" hidden aria-hidden="true">
                                 <label for="noticiaDataEvento" class="form-label">Data do evento</label>
                                 <input type="date" class="form-control" id="noticiaDataEvento" name="dataEvento" aria-describedby="feedbackDataEvento">
                                 <div class="invalid-feedback" id="feedbackDataEvento" role="alert"></div>

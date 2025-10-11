@@ -87,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let animacaoHeroAtual = null;
     const TEMPO_ROTACAO_MS = 10000;
     let noticiasCalendario = new Map();
+    const CALENDAR_DATE_KEY = '__dataEventoDate';
 
     const usuario = getUsuarioLogado?.();
     const token = window.localStorage?.getItem('token');
@@ -226,11 +227,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const resposta = await chamarAPI(`/noticias?${params.toString()}`);
             const noticias = Array.isArray(resposta.items) ? resposta.items : [];
             const eventosValidos = noticias
-                .map(noticia => ({
-                    noticia,
-                    dataEvento: normalizarDataISO(noticia.data_evento)
-                }))
-                .filter(item => item.dataEvento !== null)
+                .map(noticia => {
+                    const dataEventoNormalizada = normalizarDataISO(noticia.data_evento);
+                    if (!dataEventoNormalizada) {
+                        return null;
+                    }
+                    const noticiaComDataNormalizada = {
+                        ...noticia,
+                        [CALENDAR_DATE_KEY]: dataEventoNormalizada
+                    };
+                    return {
+                        noticia: noticiaComDataNormalizada,
+                        dataEvento: dataEventoNormalizada
+                    };
+                })
+                .filter(item => item !== null)
                 .sort((a, b) => a.dataEvento - b.dataEvento);
 
             noticiasCalendario = new Map(
@@ -438,7 +449,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function criarItemCalendario(noticia) {
-        const dataRotulo = formatarDataCalendario(noticia.data_evento);
+        const dataRotulo = formatarDataCalendario(
+            noticia.data_evento,
+            noticia[CALENDAR_DATE_KEY]
+        );
         const dataAttr = noticia.data_evento ? escapeHTML(noticia.data_evento) : '';
         return `
             <li class="news-calendar__item d-flex align-items-start gap-2" role="listitem">
@@ -540,16 +554,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function formatarDataCalendario(dataISO) {
-        if (!dataISO) {
-            return 'Data não informada';
-        }
-        const data = normalizarDataISO(dataISO);
+    function formatarDataCalendario(dataISO, dataNormalizada) {
+        const data = dataNormalizada instanceof Date && !Number.isNaN(dataNormalizada.getTime())
+            ? dataNormalizada
+            : normalizarDataISO(dataISO);
         if (!data) {
             return 'Data não informada';
         }
         const dia = data.toLocaleDateString('pt-BR', { day: '2-digit' });
-        let mes = data.toLocaleDateString('pt-BR', { month: 'short' });
+        const formatter = new Intl.DateTimeFormat('pt-BR', { month: 'short' });
+        let mes = formatter.format(data);
         mes = mes.replace('.', '');
         if (mes.length > 0) {
             mes = mes.charAt(0).toUpperCase() + mes.slice(1);
@@ -561,19 +575,54 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!dataISO) {
             return null;
         }
-        try {
-            const data = new Date(dataISO);
+
+        const normalizarParaDate = valor => {
+            if (valor instanceof Date) {
+                return Number.isNaN(valor.getTime()) ? null : valor;
+            }
+            if (typeof valor === 'number' && Number.isFinite(valor)) {
+                const dataNumero = new Date(valor);
+                return Number.isNaN(dataNumero.getTime()) ? null : dataNumero;
+            }
+            if (typeof valor !== 'string') {
+                return null;
+            }
+
+            let texto = valor.trim();
+            if (!texto) {
+                return null;
+            }
+
+            // Normaliza separador de data/hora e timezone
+            texto = texto.replace(' ', 'T');
+            texto = texto.replace(/([+-]\d{2})(\d{2})$/, '$1:$2');
+
+            const possuiHorario = /T\d{2}:\d{2}/.test(texto);
+            const possuiTimezone = /[zZ]|[+-]\d{2}:\d{2}$/.test(texto);
+
+            if (!possuiHorario) {
+                texto = `${texto}T00:00:00Z`;
+            } else if (!possuiTimezone) {
+                texto = `${texto}Z`;
+            }
+
+            const data = new Date(texto);
             if (Number.isNaN(data.getTime())) {
                 return null;
             }
-            return new Date(
-                data.getUTCFullYear(),
-                data.getUTCMonth(),
-                data.getUTCDate()
-            );
-        } catch (error) {
+            return data;
+        };
+
+        const data = normalizarParaDate(dataISO);
+        if (!data) {
             return null;
         }
+
+        return new Date(
+            data.getUTCFullYear(),
+            data.getUTCMonth(),
+            data.getUTCDate()
+        );
     }
 
     function setAriaBusy(elemento, ocupado) {

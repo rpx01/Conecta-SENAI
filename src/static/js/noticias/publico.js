@@ -240,15 +240,32 @@ document.addEventListener('DOMContentLoaded', () => {
             const agora = new Date();
             const mesAtual = agora.getMonth();
             const anoAtual = agora.getFullYear();
+            const inicioMesAtual = new Date(anoAtual, mesAtual, 1);
 
-            let eventosDoMes = eventosValidos.filter(
-                item =>
-                    item.dataEvento.getMonth() === mesAtual &&
-                    item.dataEvento.getFullYear() === anoAtual
-            );
+            const filtrarPorMesAno = (ano, mes) =>
+                eventosValidos.filter(
+                    item =>
+                        item.dataEvento.getMonth() === mes &&
+                        item.dataEvento.getFullYear() === ano
+                );
 
-            if (eventosDoMes.length === 0) {
-                eventosDoMes = eventosValidos;
+            let eventosDoMes = filtrarPorMesAno(anoAtual, mesAtual);
+
+            if (eventosDoMes.length === 0 && eventosValidos.length > 0) {
+                const proximoEvento = eventosValidos.find(
+                    item => item.dataEvento >= inicioMesAtual
+                );
+
+                if (proximoEvento) {
+                    const anoAlvo = proximoEvento.dataEvento.getFullYear();
+                    const mesAlvo = proximoEvento.dataEvento.getMonth();
+                    eventosDoMes = filtrarPorMesAno(anoAlvo, mesAlvo);
+                } else {
+                    const ultimoEvento = eventosValidos[eventosValidos.length - 1];
+                    const anoAlvo = ultimoEvento.dataEvento.getFullYear();
+                    const mesAlvo = ultimoEvento.dataEvento.getMonth();
+                    eventosDoMes = filtrarPorMesAno(anoAlvo, mesAlvo);
+                }
             }
 
             renderizarCalendario(eventosDoMes.map(item => item.noticia));

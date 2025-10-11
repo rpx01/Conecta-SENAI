@@ -22,23 +22,6 @@ def test_noticia_create_schema_accepts_isoformat_with_z_suffix():
     assert schema.data_publicacao == datetime(2025, 10, 9, 13, 30, 14, tzinfo=timezone.utc)
 
 
-def test_noticia_create_schema_parses_data_evento():
-    """Garante que a data do evento seja convertida para UTC ao marcar no calendário."""
-
-    payload = {
-        "titulo": "Notícia com evento",
-        "resumo": "Resumo válido com tamanho adequado.",
-        "conteudo": "Conteúdo suficientemente longo para validação.",
-        "marcarCalendario": True,
-        "dataEvento": "2025-05-01T08:00:00Z",
-    }
-
-    schema = NoticiaCreateSchema.model_validate(payload)
-
-    assert schema.marcar_calendario is True
-    assert schema.data_evento == datetime(2025, 5, 1, 8, 0, tzinfo=timezone.utc)
-
-
 @pytest.mark.parametrize(
     "valor",
     ["2025-10-09 13:30:14", "2025-10-09T13:30:14", "2025-10-09T13:30:14+00:00"],

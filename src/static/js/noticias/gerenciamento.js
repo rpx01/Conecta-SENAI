@@ -209,7 +209,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         const exibir = Boolean(marcarCalendarioCheckbox ? marcarCalendarioCheckbox.checked : false);
-        dataEventoContainer.classList.toggle('d-none', !exibir);
+        if (exibir) {
+            dataEventoContainer.classList.remove('d-none');
+            dataEventoContainer.removeAttribute('hidden');
+        } else {
+            dataEventoContainer.classList.add('d-none');
+            dataEventoContainer.setAttribute('hidden', '');
+        }
         dataEventoContainer.setAttribute('aria-hidden', exibir ? 'false' : 'true');
         if (marcarCalendarioCheckbox) {
             marcarCalendarioCheckbox.setAttribute('aria-expanded', exibir ? 'true' : 'false');
@@ -680,6 +686,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (marcarCalendarioCheckbox) {
         marcarCalendarioCheckbox.addEventListener('change', atualizarEstadoCalendario);
+        marcarCalendarioCheckbox.addEventListener('input', atualizarEstadoCalendario);
     }
 
     modalEl.addEventListener('show.bs.modal', () => {

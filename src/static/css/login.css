@@ -1,30 +1,13 @@
 /* Estilos para a nova página de login */
 
-@font-face {
-    font-family: "Gibson";
-    src: url("data:font/woff2;base64,") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "Exo 2";
-    src: url("data:font/woff2;base64,") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
+@import url('./tokens.css');
 
 body {
     font-family: "Gibson", "Exo 2", sans-serif;
-    /* Align login typography with global rhythm */
-    font-size: 1rem;
-    line-height: 1.65;
     overflow: hidden;
     min-height: 100vh;
-    /* Slightly warmer neutral keeps the login view calm */
-    background-color: #f6f8fd;
+    background-color: var(--bg);
+    color: var(--text);
 }
 
 .login-branding-col {
@@ -38,32 +21,32 @@ body {
 .login-form-container {
     width: 100%;
     max-width: 400px;
-    /* Additional padding ensures the form breathes on larger screens */
-    padding: 2.25rem;
+    padding: var(--space-6) var(--space-5);
 }
 
 .form-floating > .form-control {
-    height: calc(3.5rem + 2px);
-    line-height: 1.25;
+    height: 48px;
+    line-height: var(--lh-normal);
+    font-size: var(--font-size-sm);
 }
 
 .form-floating > label {
-    padding: 1rem .75rem;
+    padding: var(--space-3) var(--space-3);
+    font-size: var(--font-size-sm);
 }
 
 .btn-primary {
-    background-color: #1d4ea8; /* Azul FIEMG suavizado */
-    border-color: #1d4ea8;
-    padding: 0.75rem;
-    font-weight: 500;
-    /* Gentle rounding complements the updated brand curvature */
-    border-radius: 0.65rem;
-    box-shadow: 0 10px 28px rgba(12, 32, 67, 0.12);
+    background-color: var(--brand);
+    border-color: var(--brand);
+    height: 44px;
+    font-weight: 600;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover {
-    background-color: #174289;
-    border-color: #174289;
+    background-color: var(--brand-700);
+    border-color: var(--brand-700);
 }
 
 @media (max-width: 992px) {
@@ -72,8 +55,7 @@ body {
     }
 
     .login-form-container {
-        /* Maintain balance as the layout stacks vertically */
-        padding: 1.85rem;
+        padding: var(--space-5) var(--space-4);
     }
 }
 
@@ -84,30 +66,29 @@ body {
 
     .login-form-container {
         max-width: 100%;
-        padding: 1.65rem;
+        padding: var(--space-5) var(--space-3);
     }
 
     .form-floating > .form-control {
-        height: calc(3.2rem + 2px);
+        height: 44px;
     }
 
     .btn-primary {
         width: 100%;
-        padding: 0.65rem;
-        font-size: 1rem;
+        font-size: var(--font-size-sm);
     }
 }
 
 @media (max-width: 480px) {
     body {
-        padding: 1.5rem 1rem;
+        padding: var(--space-5) var(--space-3);
     }
 
     .login-form-container {
-        padding: 1.4rem;
+        padding: var(--space-4);
     }
 
     .form-floating > .form-control {
-        height: calc(3rem + 2px);
+        height: 42px;
     }
 }

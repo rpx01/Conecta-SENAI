@@ -116,3 +116,30 @@ th[data-filterable="true"] .filter-scope{
   margin-bottom: 0;
   flex-grow: 1;
 }
+
+@media (max-width: 768px){
+  .filter-menu.dropdown-menu{
+    min-width: 220px;
+    inset: auto auto auto 50% !important;
+    transform: translateX(-50%);
+  }
+
+  .filter-menu .filter-actions{
+    justify-content: center;
+  }
+}
+
+@media (max-width: 576px){
+  .filter-menu.dropdown-menu{
+    width: 90vw;
+    padding: .65rem;
+  }
+
+  .filter-menu .form-control{
+    height: 32px;
+  }
+
+  .filter-menu .dropdown-item{
+    font-size: .825rem;
+  }
+}

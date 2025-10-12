@@ -1,4 +1,4 @@
-/* Botão e menu de filtro/ordenação para tabelas “estilo Excel” */
+@import url('./tokens.css');
 
 .th-filter {
   position: relative;
@@ -6,17 +6,18 @@
 }
 
 .th-filter .filter-btn {
-  border: 0;
+  border: none;
   background: transparent;
-  padding: 0 .25rem;
-  margin-left: .25rem;
+  padding: 0 var(--space-1);
+  margin-left: var(--space-1);
   cursor: pointer;
   line-height: 1;
+  color: var(--brand-primary);
 }
 
-.th-filter .filter-btn:focus {
-  outline: 2px solid #0d6efd33;
-  border-radius: .25rem;
+.th-filter .filter-btn:focus-visible {
+  outline: 3px solid rgba(11, 77, 162, 0.25);
+  border-radius: var(--radius-sm);
 }
 
 .filter-menu {
@@ -24,34 +25,42 @@
   right: 0;
   top: 100%;
   min-width: 280px;
-  background: #fff;
-  border: 1px solid #dee2e6;
-  border-radius: .5rem;
-  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
-  padding: .5rem;
-  margin-top: .25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-3);
+  margin-top: var(--space-2);
   z-index: 1050;
   display: none;
 }
 
-.filter-menu.show { display: block; }
+.filter-menu.show {
+  display: block;
+}
 
-.filter-section { margin-bottom: .5rem; }
-.filter-section h6 { margin: .25rem 0; font-size: .9rem; }
+.filter-section {
+  margin-bottom: var(--space-2);
+}
+
+.filter-section h6 {
+  margin: var(--space-1) 0;
+  font-size: var(--font-size-sm);
+}
 
 .filter-menu .values {
   max-height: 220px;
   overflow: auto;
-  border: 1px solid #eee;
-  border-radius: .25rem;
-  padding: .25rem .25rem .25rem .5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
 }
 
 .filter-menu .menu-actions {
   display: flex;
-  gap: .5rem;
+  gap: var(--space-2);
   justify-content: flex-end;
-  margin-top: .5rem;
+  margin-top: var(--space-2);
 }
 
 .filter-backdrop {
@@ -61,7 +70,9 @@
   z-index: 1049;
 }
 
-.filter-backdrop.show { display: block; }
+.filter-backdrop.show {
+  display: block;
+}
 
 @media (max-width: 768px) {
   .filter-menu {
@@ -78,7 +89,7 @@
     left: 50%;
     right: auto;
     transform: translateX(-50%);
-    padding: 0.75rem;
+    padding: var(--space-3);
   }
 
   .filter-menu .values {

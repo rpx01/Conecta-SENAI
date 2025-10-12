@@ -116,28 +116,3 @@ th[data-filterable="true"] .filter-scope{
   margin-bottom: 0;
   flex-grow: 1;
 }
-
-@media (max-width: 62rem){
-  .filter-menu.dropdown-menu{
-    min-width: min(17rem, 80vw);
-  }
-
-  th[data-filterable="true"]{
-    white-space: normal;
-  }
-}
-
-@media (max-width: 40rem){
-  .filter-menu.dropdown-menu{
-    width: min(18rem, 90vw);
-    padding: .65rem;
-  }
-
-  .filter-menu .filter-actions{
-    flex-direction: column;
-  }
-
-  .filter-menu .filter-actions .btn{
-    width: 100%;
-  }
-}

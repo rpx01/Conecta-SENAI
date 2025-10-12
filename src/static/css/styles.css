@@ -16,8 +16,9 @@
 }
 
 :root {
-  --header-color: #164194;
-  --primary-color: #164194;
+  /* Softer primary blue to reduce visual weight on large areas */
+  --header-color: #1d4ea8;
+  --primary-color: #1d4ea8;
   --accent-color: #008BD2;
   --secondary-color: #e6f4ff;
   --success-color: #006837;
@@ -26,9 +27,17 @@
   --info-color: #00539F;
   --light-color: #f8f9fa;
   --dark-color: #212529;
-  --text-color: #333333;
+  /* Softer body text for comfortable reading */
+  --text-color: #3a3a3a;
   --muted-color: #888888;
-  --background-color: #f7f9fc;
+  /* Lightened background for subtle section contrast */
+  --background-color: #f5f7fb;
+
+  /* Unified spacing scale for consistent rhythm */
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2rem;
 
   --turno-manha-color: #FDD835;
   --turno-tarde-color: #00539F;
@@ -37,8 +46,10 @@
 
 body {
   font-family: "Gibson", "Exo 2", sans-serif;
-  font-size: 14px;
-  line-height: 1.6;
+  /* Restored base font size for better typographic hierarchy */
+  font-size: 1rem;
+  /* Slightly taller lines improve readability across paragraphs */
+  line-height: 1.65;
   color: var(--text-color);
   background-color: var(--background-color);
   min-height: 100vh;
@@ -81,36 +92,54 @@ i.bi {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 1.5rem;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #dee2e6;
+  /* Expanded breathing room to align with softer layout */
+  margin-bottom: var(--space-3);
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .card, .btn, .badge, .form-control, .form-select, .modal-content, .input-group-text {
-  border-radius: 4px;
+  /* Slightly larger radii reinforce the friendly look and feel */
+  border-radius: 0.65rem;
+}
+
+/* Softened elevation for a modern, less harsh appearance */
+.card {
+  box-shadow: 0 12px 35px rgba(13, 36, 76, 0.08);
+  border: 1px solid rgba(13, 36, 76, 0.06);
+}
+
+.btn {
+  /* Subtle lift helps primary actions stand out without feeling heavy */
+  box-shadow: 0 8px 20px rgba(13, 36, 76, 0.08);
 }
 
 
 h1, .h1, h2, .h2 {
-  font-weight: 700;
+  /* Reserve heavy weights for key headings only */
+  font-weight: 600;
   text-transform: none;
   letter-spacing: 0.5px;
 }
 
 h1, .h1 {
-  font-size: clamp(1.65rem, 1.3rem + 1vw, 2.1rem);
+  /* Reduced maximum size keeps large headings from overpowering layouts */
+  font-size: clamp(1.6rem, 1.2rem + 1vw, 1.95rem);
 }
 
 h2, .h2 {
-  font-size: clamp(1.35rem, 1.1rem + 0.6vw, 1.7rem);
+  /* Adjusted clamp for balanced hierarchy on wide screens */
+  font-size: clamp(1.3rem, 1.05rem + 0.55vw, 1.55rem);
 }
 
 p,
 .card-text,
 .lead {
-  font-size: 0.95rem;
+  /* Slightly larger paragraph text improves legibility at the new base size */
+  font-size: 1rem;
   color: inherit;
+  line-height: 1.7;
 }
 
 :is(h1, .h1, h2, .h2, h3, .h3, h4, .h4, p, .card-title, .card-text, label, th, td) {

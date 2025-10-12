@@ -45,6 +45,11 @@ body {
   flex-direction: column;
 }
 
+.content-wrapper {
+  padding-inline: var(--space-3);
+  padding-bottom: var(--space-4);
+}
+
 /* Normalize Bootstrap icon appearance */
 i.bi {
   font-style: normal;
@@ -196,6 +201,74 @@ small, .small {
 
   .page-header .btn-toolbar .btn {
     flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 62rem) {
+  .navbar-brand img {
+    height: 1.5rem;
+  }
+
+  .navbar-brand-text {
+    max-width: 100%;
+  }
+
+  .page-header {
+    gap: var(--space-2);
+  }
+
+  .page-header h1,
+  .page-header .h1 {
+    font-size: clamp(1.7rem, 1.25rem + 2.5vw, 2.15rem);
+  }
+
+  .card .card-body {
+    padding: clamp(0.9rem, 0.75rem + 1.2vw, 1.6rem);
+  }
+
+  .content-wrapper {
+    padding-inline: var(--space-2);
+  }
+}
+
+@media (max-width: 40rem) {
+  .navbar-brand {
+    align-items: flex-start;
+  }
+
+  .navbar-brand img {
+    height: 1.35rem;
+    margin-right: var(--space-2);
+  }
+
+  .navbar-brand-text {
+    font-size: clamp(0.82rem, 0.75rem + 0.4vw, 0.95rem);
+  }
+
+  .page-header {
+    align-items: flex-start;
+    padding-block: var(--space-2);
+  }
+
+  .page-header .btn-toolbar {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .page-header .btn-toolbar .btn {
+    flex: 1 1 100%;
+  }
+
+  .card {
+    margin-bottom: var(--space-2);
+  }
+
+  .card .card-body {
+    padding: clamp(0.75rem, 0.7rem + 1vw, 1.25rem);
+  }
+
+  .content-wrapper {
+    padding-inline: var(--space-1);
   }
 }
 

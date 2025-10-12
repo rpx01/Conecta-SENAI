@@ -159,6 +159,17 @@ small, .small {
     display: none;
   }
 }
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+
+  .main-content {
+    width: 100%;
+    margin-left: 0;
+  }
+}
 .card {
   border: 1px solid #dee2e6;
   border-radius: 4px;

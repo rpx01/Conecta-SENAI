@@ -1,8 +1,10 @@
 .news-hero {
   position: relative;
-  background: linear-gradient(135deg, rgba(22, 65, 148, 0.95), rgba(0, 139, 210, 0.9));
+  /* Softer gradient tones to keep the hero approachable */
+  background: linear-gradient(135deg, rgba(29, 78, 168, 0.9), rgba(0, 139, 210, 0.85));
   color: #fff;
-  padding: clamp(3rem, 5vw, 5rem) 0;
+  /* Reduced top/bottom extremes to prevent oversized hero blocks */
+  padding: clamp(2.5rem, 4.5vw, 4rem) 0;
   overflow: hidden;
 }
 
@@ -27,15 +29,18 @@
 }
 
 .news-hero__title {
-  font-size: clamp(2rem, 4vw, 3.2rem);
-  font-weight: 700;
+  /* Lower maximum size keeps titles elegant on wide screens */
+  font-size: clamp(1.9rem, 3.5vw, 2.6rem);
+  font-weight: 600;
   margin-bottom: 1rem;
 }
 
 .news-hero__summary {
-  font-size: clamp(1rem, 2vw, 1.2rem);
+  /* Balanced summary sizing for smoother reading rhythm */
+  font-size: clamp(0.95rem, 1.8vw, 1.15rem);
   max-width: 48ch;
   color: rgba(255, 255, 255, 0.9);
+  line-height: 1.7;
 }
 
 .news-highlights {
@@ -59,9 +64,10 @@
 
 .news-highlight {
   background: #fff;
-  border-radius: 0.75rem;
-  box-shadow: 0 10px 30px rgba(12, 32, 67, 0.1);
-  padding: 1.5rem;
+  border-radius: 0.85rem;
+  /* Airier shadow and spacing embrace the softer visual tone */
+  box-shadow: 0 12px 32px rgba(12, 32, 67, 0.08);
+  padding: 1.75rem;
   scroll-snap-align: start;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   min-height: 100%;
@@ -70,12 +76,13 @@
 .news-highlight:focus-within,
 .news-highlight:hover {
   transform: translateY(-4px);
-  box-shadow: 0 18px 40px rgba(12, 32, 67, 0.18);
+  box-shadow: 0 20px 44px rgba(12, 32, 67, 0.14);
 }
 
 .news-highlight__title {
-  font-size: 1.2rem;
-  font-weight: 600;
+  /* Slightly lighter weight aligns with the global typography refresh */
+  font-size: 1.1rem;
+  font-weight: 500;
 }
 
 .news-highlight__title,
@@ -94,6 +101,7 @@
 .news-highlight__excerpt {
   font-size: 0.95rem;
   color: #3b4a67;
+  line-height: 1.65;
 }
 
 .news-grid {
@@ -106,8 +114,9 @@
   display: flex;
   flex-direction: column;
   background: #fff;
-  border-radius: 0.75rem;
-  box-shadow: 0 14px 30px rgba(12, 32, 67, 0.08);
+  border-radius: 0.85rem;
+  /* Softer elevation keeps cards feeling lightweight */
+  box-shadow: 0 16px 38px rgba(12, 32, 67, 0.08);
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -115,7 +124,7 @@
 .news-card:focus-within,
 .news-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 20px 45px rgba(12, 32, 67, 0.16);
+  box-shadow: 0 22px 52px rgba(12, 32, 67, 0.14);
 }
 
 .news-card__image {
@@ -127,7 +136,8 @@
 
 .news-card__body {
   flex: 1;
-  padding: 1.5rem;
+  /* Increased interior spacing gives the content room to breathe */
+  padding: 1.75rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -135,20 +145,21 @@
 
 .news-card__date {
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--muted-color);
 }
 
 .news-card__title {
-  font-size: 1.25rem;
-  font-weight: 700;
+  /* Lowered weight to prevent titles from dominating the card */
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 
 .news-card__summary {
   color: #405168;
-  line-height: 1.6;
+  line-height: 1.7;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -189,16 +200,17 @@
 }
 
 .news-empty-state {
-  border: 2px dashed rgba(22, 65, 148, 0.2);
-  border-radius: 0.75rem;
-  padding: 2rem;
+  border: 2px dashed rgba(29, 78, 168, 0.18);
+  border-radius: 0.85rem;
+  padding: 2.25rem;
   text-align: center;
   color: var(--muted-color);
 }
 
 .news-modal__title {
-  font-size: 1.8rem;
-  font-weight: 700;
+  /* Modal titles mirror on-page hierarchy for continuity */
+  font-size: 1.65rem;
+  font-weight: 600;
 }
 
 .news-modal__meta {
@@ -223,7 +235,8 @@
   }
 
   .news-card__body {
-    padding: 1.25rem;
+    /* Maintain generous spacing on tablets without overwhelming the layout */
+    padding: 1.5rem;
   }
 }
 
@@ -268,7 +281,8 @@
   }
 
   .news-highlight {
-    padding: 1.25rem;
+    /* Preserve tactile spacing within horizontal scroll on smaller screens */
+    padding: 1.4rem;
   }
 
   .news-card {
@@ -276,7 +290,7 @@
   }
 
   .news-card__body {
-    padding: 1.15rem;
+    padding: 1.35rem;
   }
 
   .news-card__title {

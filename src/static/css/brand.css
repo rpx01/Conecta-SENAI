@@ -27,8 +27,8 @@ h1,h2,h3,h4,h5,h6{ font-family: var(--font-sans); font-weight: 600; }
 h3,h4,h5,h6, .subtitle{ font-weight: 500; }
 
 :root{
-  /* Cores principais */
-  --brand-primary: #164194; /* FIEMG 293C */
+  /* Slightly brighter primary tone to soften large brand surfaces */
+  --brand-primary: #1d4ea8; /* Ajuste suave do azul FIEMG */
   --brand-info:    #008BD2; /* Medium Blue C */
 
   /* Secundárias sugeridas (Guia) */
@@ -58,14 +58,15 @@ h3,h4,h5,h6, .subtitle{ font-weight: 500; }
 /* Spinner padrão em botões */
 .btn .spinner-border{ width:1rem; height:1rem; border-width:.2rem; margin-left:.5rem; }
 
-.brand-gradient{ background: linear-gradient(135deg, #164194 0%, #008BD2 100%); }
+.brand-gradient{ background: linear-gradient(135deg, #1d4ea8 0%, #008BD2 100%); }
 .brand-shear{ transform: skewY(-9.19deg); }
 :focus-visible{ outline: 3px solid #f3c258; outline-offset: 2px; } /* amarelo da paleta */
 a:not(.btn){ text-decoration-thickness: .12em; text-underline-offset: .2em; }
 
-.card{ border:1px solid var(--brand-gray-300); border-radius: .75rem; }
-.btn{ border-radius:.6rem; }
-.form-control, .form-select{ border-radius:.5rem; }
+/* Lighter outline keeps cards feeling airy against the pale background */
+.card{ border:1px solid rgba(29, 78, 168, 0.08); border-radius: .75rem; }
+.btn{ border-radius:.65rem; }
+.form-control, .form-select{ border-radius:.55rem; }
 .alert{ border:none; }
 .badge{ border-radius:.5rem; }
 

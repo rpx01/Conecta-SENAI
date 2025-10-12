@@ -71,17 +71,14 @@
     <main class="content-wrapper">
         <section class="news-hero text-white" aria-labelledby="newsHeroTitle">
             <div class="container">
-                <div class="news-hero__content">
-                    <p class="news-hero__kicker" id="newsHeroKicker">Destaque do dia</p>
-                    <h1 class="news-hero__title" id="newsHeroTitle">Carregando novidades...</h1>
-                    <p class="news-hero__summary" id="newsHeroSummary">Estamos preparando os últimos destaques para você. Aguarde alguns instantes.</p>
-                    <div class="news-hero__actions">
-                        <span class="news-hero__date" id="newsHeroDate" aria-live="polite"></span>
-                        <button class="btn btn-light btn-sm text-primary news-hero__button" id="newsHeroReadMore" data-bs-toggle="modal" data-bs-target="#newsModal" disabled>
-                            <i class="bi bi-arrow-right-circle me-1"></i>
-                            <span>Ver destaque</span>
-                        </button>
-                    </div>
+                <p class="news-hero__kicker" id="newsHeroKicker">Destaque do dia</p>
+                <h1 class="news-hero__title" id="newsHeroTitle">Carregando novidades...</h1>
+                <p class="news-hero__summary" id="newsHeroSummary">Estamos preparando os últimos destaques para você. Aguarde alguns instantes.</p>
+                <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+                    <span class="badge bg-light text-dark" id="newsHeroDate" aria-live="polite"></span>
+                    <button class="btn btn-light text-primary" id="newsHeroReadMore" data-bs-toggle="modal" data-bs-target="#newsModal" disabled>
+                        <i class="bi bi-arrow-right-circle me-1"></i> Ler destaque
+                    </button>
                 </div>
             </div>
         </section>
@@ -89,15 +86,14 @@
         <div class="container py-5">
             <div class="row g-4">
                 <div class="col-lg-8">
-                    <section aria-labelledby="newsHighlightsHeading" class="news-section">
-                        <div class="section-header">
-                            <div class="section-header__text">
+                    <section aria-labelledby="newsHighlightsHeading">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
                                 <h2 class="h4 mb-0" id="newsHighlightsHeading">Destaques recentes</h2>
                                 <p class="text-muted small mb-0">Acompanhe os principais comunicados da semana</p>
                             </div>
-                            <button class="btn btn-outline-primary btn-sm section-header__action" id="refreshNewsBtn" type="button">
-                                <i class="bi bi-arrow-clockwise me-1"></i>
-                                <span>Atualizar</span>
+                            <button class="btn btn-outline-primary btn-sm" id="refreshNewsBtn" type="button">
+                                <i class="bi bi-arrow-clockwise me-1"></i> Atualizar
                             </button>
                         </div>
                         <div id="newsHighlights" class="news-highlights" role="list" aria-live="polite" aria-busy="false"></div>
@@ -106,18 +102,16 @@
                         </div>
                     </section>
 
-                    <section class="news-section" aria-labelledby="newsListHeading">
-                        <div class="section-header section-header--stacked">
+                    <section class="mt-5" aria-labelledby="newsListHeading">
+                        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
                             <h2 class="h4 mb-0" id="newsListHeading">Últimas notícias</h2>
-                            <form class="news-search" role="search" id="newsSearchForm">
+                            <form class="d-flex" role="search" id="newsSearchForm">
                                 <label for="newsSearchInput" class="visually-hidden">Buscar notícias</label>
-                                <div class="news-search__field">
-                                    <input type="search" class="form-control news-search__input" id="newsSearchInput" placeholder="Buscar por título ou palavra-chave" aria-label="Buscar por título ou palavra-chave">
-                                    <button class="btn btn-primary news-search__button" type="submit">
-                                        <i class="bi bi-search"></i>
-                                        <span class="visually-hidden">Buscar</span>
-                                    </button>
-                                </div>
+                                <input type="search" class="form-control me-2" id="newsSearchInput" placeholder="Buscar por título ou palavra-chave" aria-label="Buscar por título ou palavra-chave">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-search"></i>
+                                    <span class="visually-hidden">Buscar</span>
+                                </button>
                             </form>
                         </div>
                         <div id="newsGrid" class="news-grid" role="list" aria-live="polite" aria-busy="false"></div>

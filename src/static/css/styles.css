@@ -36,11 +36,11 @@
 }
 
 body {
-  font-family: var(--font-sans, "Gibson", "Exo 2", sans-serif);
-  font-size: var(--fs-1);
+  font-family: "Gibson", "Exo 2", sans-serif;
+  font-size: 14px;
   color: var(--text-color);
   background-color: var(--background-color);
-  min-height: 100dvh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -60,33 +60,33 @@ i.bi {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: var(--space-3);
-  padding-block: var(--space-2);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  gap: var(--space-2);
+  margin-bottom: 1.5rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #dee2e6;
 }
 
 .card, .btn, .badge, .form-control, .form-select, .modal-content, .input-group-text {
-  border-radius: var(--radius);
+  border-radius: 4px;
 }
 
 
 h1, .h1, h2, .h2 {
-  font-weight: 600;
+  font-weight: 700;
   text-transform: none;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.5px;
 }
 
 h1, .h1 {
-  font-size: var(--fs-6);
+  font-size: 24px;
 }
 
 h2, .h2 {
-  font-size: var(--fs-5);
+  font-size: 18px;
 }
 
 small, .small {
-  font-size: clamp(0.75rem, 0.7rem + 0.3vw, 0.875rem);
+  font-size: 12px;
   opacity: 0.8;
 }
 
@@ -112,29 +112,26 @@ small, .small {
 }
 
 .navbar-brand img {
-  height: 1.75rem;
-  margin-right: var(--space-2);
+  height: 30px;
+  margin-right: 10px;
 }
 
 .navbar-brand-text {
-  display: inline-flex;
-  flex-direction: column;
-  font-size: clamp(0.85rem, 0.78rem + 0.4vw, 1rem);
-  max-width: min(18ch, 100%);
-  line-height: 1.2;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: normal;
-}
-.card {
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-soft);
-  margin-bottom: var(--space-3);
 }
 
-.card .card-body {
-  padding: clamp(1rem, 0.9rem + 1vw, 2rem);
+@media (max-width: 600px) {
+  .navbar-brand-text {
+    display: none;
+  }
+}
+.card {
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
 }
 
 .card-header {
@@ -155,7 +152,11 @@ small, .small {
 
 .form-control:focus {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 0.15rem rgba(0, 80, 179, 0.2);
+  box-shadow: 0 0 0 0.25rem rgba(0, 80, 179, 0.25);
+}
+
+.btn {
+  min-height: 36px;
 }
 
 .btn-primary {
@@ -183,10 +184,16 @@ small, .small {
 }
 
 @media (max-width: 575.98px) {
+  .btn {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.95rem;
+    min-height: 32px;
+  }
+
   .page-header {
     flex-direction: column;
     align-items: stretch;
-    gap: var(--space-2);
+    gap: 0.75rem;
   }
 
   .page-header .btn-toolbar {

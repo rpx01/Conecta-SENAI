@@ -8,8 +8,8 @@
   position: fixed;
   left: 0;
   top: 0;
-  width: 0.75rem;          /* zona segura para o mouse encostar */
-  height: 100dvh;
+  width: 12px;          /* zona segura para o mouse encostar */
+  height: 100vh;
   z-index: 1030;        /* acima do conteúdo */
 }
 
@@ -18,8 +18,8 @@
   position: fixed;
   top: 0;
   left: 0;
-  height: 100dvh;
-  width: min(17.5rem, 86vw);
+  height: 100vh;
+  width: min(280px, 86vw);
   background: var(--senai-azul);
   color: #fff;
   box-shadow: 2px 0 16px rgba(0,0,0,.25);
@@ -33,14 +33,14 @@
 #sidebarDrawer.drawer.open{
   transform: translateX(0);
 }
-#sidebarDrawer .drawer-header{ padding: var(--space-2) var(--space-3); border-bottom: 1px solid rgba(255,255,255,.15); }
-#sidebarDrawer .drawer-header h2{ font-size: clamp(1rem, 0.9rem + 0.4vw, 1.1rem); margin: 0; color:#fff; }
+#sidebarDrawer .drawer-header{ padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,.15); }
+#sidebarDrawer .drawer-header h2{ font-size: 16px; margin: 0; color:#fff; }
 
-#sidebarDrawer .drawer-nav{ padding: 0.5rem 0; overflow-y: auto; }
+#sidebarDrawer .drawer-nav{ padding: 8px 0; overflow-y: auto; }
 #sidebarDrawer .drawer-nav ul{ list-style: none; margin:0; padding:0; }
 #sidebarDrawer .drawer-nav a{
   display:block;
-  padding: 0.75rem 1.25rem;
+  padding: 12px 20px;
   color:#fff;
   text-decoration:none;
   border-left: 4px solid transparent;
@@ -59,7 +59,7 @@
 /* Responsivo: em telas muito estreitas o drawer ocupa toda a largura */
 @media (max-width: 480px){
   #sidebarDrawer.drawer{
-    width: calc(100vw - 2rem);
-    max-width: 20rem;
+    width: calc(100vw - 32px);
+    max-width: 320px;
   }
 }

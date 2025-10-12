@@ -17,19 +17,21 @@
 #sidebarDrawer.drawer{
   position: fixed;
   top: 0;
-  left: -280px;         /* escondido fora da tela */
+  left: 0;
   width: 280px;
   height: 100vh;
   background: var(--senai-azul);
   color: #fff;
   box-shadow: 2px 0 16px rgba(0,0,0,.25);
-  transition: left .25s ease-in-out;
+  transition: transform .25s ease-in-out;
+  transform: translateX(-100%);
+  will-change: transform;
   z-index: 1040;
   display: flex;
   flex-direction: column;
 }
 
-#sidebarDrawer.drawer.open{ left: 0; }
+#sidebarDrawer.drawer.open{ transform: translateX(0); }
 #sidebarDrawer .drawer-header{ padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,.15); }
 #sidebarDrawer .drawer-header h2{ font-size: 16px; margin: 0; color:#fff; }
 

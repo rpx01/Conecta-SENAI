@@ -1,52 +1,40 @@
-@import url('./tokens.css');
-
 th { position: relative; }
 .filtro-btn {
-    background-color: #fff;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    background-color: var(--white);
+    border: 1px solid var(--brand-gray-300);
+    border-radius: 4px;
     padding: 0;
     cursor: pointer;
-    width: 32px;
-    height: 32px;
+    width: 16px;
+    height: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: var(--shadow-sm);
-    color: var(--brand);
-    transition: box-shadow .2s ease, border-color .2s ease;
-    font-size: 1rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    color: var(--brand-primary);
 }
 
 .filtro-btn svg {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     display: block;
 }
 .filter-toggle {
-  margin-left: var(--space-2);
-  border: 1px solid var(--border);
-  background: #fff;
-  cursor: pointer;
-  font-size: var(--font-size-xs);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
+  margin-left: .5rem; border: 1px solid #ddd; background: #fff; cursor: pointer;
+  font-size: 12px; padding: 2px 6px; border-radius: 4px;
 }
 .filter-menu {
   position: absolute; top: 100%; right: 0; min-width: 220px; z-index: 1000;
-  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
-  padding: var(--space-3); box-shadow: var(--shadow-md);
+  background: #fff; border: 1px solid #ddd; border-radius: 8px;
+  padding: 8px; box-shadow: 0 8px 20px rgba(0,0,0,.15);
 }
 .filter-menu.hidden { display: none; }
-.filter-menu .search { width: 100%; margin-bottom: var(--space-2); padding: var(--space-2); font-size: var(--font-size-sm); }
+.filter-menu .search { width: 100%; margin-bottom: 6px; padding: 6px; }
 .filter-menu .options { max-height: 240px; overflow: auto; }
-.filter-menu .actions { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-2); }
+.filter-menu .actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .filter-menu .btn {
-  border: 1px solid var(--border); background: #f7f7f7; padding: var(--space-1) var(--space-3); border-radius: var(--radius-sm); cursor: pointer;
-  font-size: var(--font-size-xs);
-  height: 36px;
+  border: 1px solid #ddd; background: #f7f7f7; padding: 4px 8px; border-radius: 4px; cursor: pointer;
 }
-.filter-menu .btn:hover { border-color: var(--brand); box-shadow: var(--shadow-sm); }
 
 @media (max-width: 768px) {
   .filter-menu {

@@ -1,14 +1,12 @@
 /* src/static/css/components/filter.css */
 
-@import url('../tokens.css');
-
 /* Paleta FIEMG/SENAI (tokens mínimos para o componente) */
 :root{
-  --brand-blue-700: var(--brand);
-  --brand-blue-500: #008BD2;
-  --brand-orange:   #F3B54E;
-  --neutral-300:    var(--border);
-  --neutral-700:    var(--muted);
+  --brand-blue-700: #164194;  /* Primário */
+  --brand-blue-500: #008BD2;  /* Destaque/hover/foco */
+  --brand-orange:   #F3B54E;  /* Ação/realce eventual */
+  --neutral-300:    #D8D9DD;  /* Borda */
+  --neutral-700:    #5B5B5F;  /* Texto secundário */
   --white:          #FFFFFF;
 }
 
@@ -27,24 +25,23 @@
 .filter-toggle,
 .filtro-btn,
 .filter-btn {
-  width: 32px;
-  height: 32px;
+  width: 14px;
+  height: 14px;
   padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: #fff;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border: 1px solid #e6eef7;
+  border-radius: 3px;
   line-height: 0;
   cursor: pointer;
   transition: box-shadow .2s ease, border-color .2s ease, background-color .2s ease, color .2s ease;
   color: var(--brand-blue-700);
-  font-size: 1rem;
 }
 .filter-toggle:hover,
 .filtro-btn:hover,
-.filter-btn:hover{ border-color: var(--brand-blue-500); box-shadow: var(--shadow-sm); }
+.filter-btn:hover{ border-color: var(--brand-blue-500); box-shadow: 0 1px 6px rgba(0,0,0,.06); }
 .filter-toggle:focus,
 .filtro-btn:focus,
 .filter-btn:focus{ outline: 3px solid color-mix(in srgb, var(--brand-blue-700) 24%, transparent); outline-offset: 2px; }
@@ -73,26 +70,25 @@
 
 /* Dropdown “card” clean */
 .filter-menu.dropdown-menu{
+  /* Bootstrap dá base; aqui refinamos o visual */
   border: 1px solid var(--neutral-300);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-md);
-  padding: var(--space-3);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+  padding: .75rem;
   min-width: 260px;
 }
-.filter-menu .form-control{ height: 40px; border-radius: var(--radius-sm); font-size: var(--font-size-sm); }
-.filter-menu .filter-actions{ display:flex; gap:var(--space-2); flex-wrap:wrap; }
+.filter-menu .form-control{ height: 34px; border-radius: 8px; }
+.filter-menu .filter-actions{ display:flex; gap:.5rem; flex-wrap:wrap; }
 .filter-menu .btn{
-  border-radius: var(--radius-sm);
-  padding: var(--space-1) var(--space-3);
-  height: 36px;
-  font-size: var(--font-size-xs);
+  border-radius: 10px;
+  padding: .35rem .65rem;
 }
 .filter-menu .btn-primary{ background: var(--brand-blue-700); border-color: var(--brand-blue-700); }
 .filter-menu .btn-outline-primary{ color: var(--brand-blue-700); border-color: var(--brand-blue-500); }
 .filter-menu .btn-outline-primary:hover{ background: var(--brand-blue-500); color: var(--white); }
 .filter-menu .btn-outline-secondary{ color: var(--neutral-700); }
 .filter-menu .divider{ height:1px; background: var(--neutral-300); margin:.5rem 0; }
-.filter-menu .dropdown-item{ display:flex; align-items:center; gap:var(--space-2); font-size:var(--font-size-sm); padding:var(--space-2); border-radius:var(--radius-sm); color:var(--neutral-700); }
+.filter-menu .dropdown-item{ display:flex; align-items:center; gap:.5rem; font-size:.875rem; padding:.25rem .5rem; border-radius:8px; color:var(--neutral-700); }
 .filter-menu .dropdown-item i{ font-size:1rem; }
 
 /* Ajustes para cabeçalhos com botão de filtro */
@@ -109,8 +105,8 @@ th[data-filterable="true"] .filter-scope{
 .filter-menu .form-check{
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-1);
+  gap: .35rem;
+  margin-bottom: .25rem;
 }
 .filter-menu .form-check-input{
   margin-top: 0;
@@ -119,7 +115,6 @@ th[data-filterable="true"] .filter-scope{
 .filter-menu .form-check-label{
   margin-bottom: 0;
   flex-grow: 1;
-  font-size: var(--font-size-sm);
 }
 
 @media (max-width: 768px){

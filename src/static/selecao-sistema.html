@@ -38,27 +38,27 @@
         </div>
     </nav>
 
-    <div class="container py-4 py-md-5">
-        <div class="row justify-content-center mb-5 text-center text-md-start">
-            <div class="col-12 col-lg-8 mx-auto">
+    <div class="container py-5">
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-8 text-center">
                 <h1 class="display-4 mb-4">Bem-vindo ao Portal de Sistemas</h1>
-                <p class="lead mb-0">Selecione o sistema que deseja acessar:</p>
+                <p class="lead">Selecione o sistema que deseja acessar:</p>
             </div>
         </div>
 
         <div class="row justify-content-center mb-4">
-            <div class="col-12 col-md-4 text-center text-md-start">
-                <div class="form-check d-inline-flex align-items-center gap-2">
+            <div class="col-md-4 text-center">
+                <div class="form-check d-inline-block">
                     <input class="form-check-input" type="checkbox" id="rememberChoice">
                     <label class="form-check-label" for="rememberChoice">Lembrar minha escolha</label>
                 </div>
             </div>
         </div>
-
-        <div class="row justify-content-center g-4 g-lg-5">
-            <div class="col-12 col-sm-10 col-md-6 col-xl-5 sistema-card-col">
+        
+        <div class="row justify-content-center">
+            <div class="col-md-5 mb-4">
                 <div class="card sistema-card h-100" data-url="/laboratorios/dashboard.html">
-                    <div class="card-body text-center p-4 p-xl-5">
+                    <div class="card-body text-center p-5">
                         <div class="sistema-icon">
                             <i class="bi bi-calendar-check"></i>
                         </div>
@@ -71,9 +71,9 @@
                 </div>
             </div>
 
-            <div class="col-12 col-sm-10 col-md-6 col-xl-5 sistema-card-col">
+            <div class="col-md-5 mb-4">
                 <div class="card sistema-card h-100" data-url="/treinamentos/index.html">
-                    <div class="card-body text-center p-4 p-xl-5">
+                    <div class="card-body text-center p-5">
                         <div class="sistema-icon">
                             <i class="bi bi-easel2"></i>
                         </div>
@@ -86,9 +86,9 @@
                 </div>
             </div>
 
-            <div class="col-12 col-sm-10 col-md-6 col-xl-5 sistema-card-col">
+            <div class="col-md-5 mb-4">
                 <div class="card sistema-card h-100" data-url="/noticias/index.html">
-                    <div class="card-body text-center p-4 p-xl-5">
+                    <div class="card-body text-center p-5">
                         <div class="sistema-icon">
                             <i class="bi bi-newspaper"></i>
                         </div>
@@ -101,9 +101,9 @@
                 </div>
             </div>
 
-            <div class="col-12 col-sm-10 col-md-6 col-xl-5 sistema-card-col">
+            <div class="col-md-5 mb-4">
                 <div class="card sistema-card h-100" data-url="/ocupacao/dashboard.html">
-                    <div class="card-body text-center p-4 p-xl-5">
+                    <div class="card-body text-center p-5">
                         <div class="sistema-icon">
                             <i class="bi bi-building"></i>
                         </div>
@@ -115,9 +115,9 @@
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-sm-10 col-md-6 col-xl-5 sistema-card-col admin-only">
+            <div class="col-md-5 mb-4 admin-only">
                 <div class="card sistema-card h-100" data-url="/rateio/dashboard.html">
-                    <div class="card-body text-center p-4 p-xl-5">
+                    <div class="card-body text-center p-5">
                         <div class="sistema-icon">
                             <i class="bi bi-coin"></i>
                         </div>
@@ -130,9 +130,9 @@
                 </div>
             </div>
 
-            <div class="col-12 col-sm-10 col-md-6 col-xl-5 sistema-card-col admin-only">
+            <div class="col-md-5 mb-4 admin-only">
                 <div class="card sistema-card h-100" data-url="/admin/usuarios.html">
-                    <div class="card-body text-center p-4 p-xl-5">
+                    <div class="card-body text-center p-5">
                         <div class="sistema-icon">
                             <i class="bi bi-person-gear"></i>
                         </div>
@@ -166,15 +166,12 @@
             if (usuario) {
                 document.getElementById('userName').textContent = usuario.nome;
                 const modulosDisponiveis = obterModulosDisponiveis(usuario);
-                    document.querySelectorAll('.sistema-card').forEach(card => {
-                        const url = card.getAttribute('data-url');
-                        if (!modulosDisponiveis.includes(url)) {
-                            const coluna = card.closest('.sistema-card-col');
-                            if (coluna) {
-                                coluna.style.display = 'none';
-                            }
-                        }
-                    });
+                document.querySelectorAll('.sistema-card').forEach(card => {
+                    const url = card.getAttribute('data-url');
+                    if (!modulosDisponiveis.includes(url)) {
+                        card.closest('.col-md-5').style.display = 'none';
+                    }
+                });
             }
 
             // LÓGICA PARA OCULTAR OS CARDS DE ADMIN PARA USUÁRIOS COMUNS

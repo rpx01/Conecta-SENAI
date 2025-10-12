@@ -38,11 +38,32 @@
 body {
   font-family: "Gibson", "Exo 2", sans-serif;
   font-size: 14px;
+  line-height: 1.6;
   color: var(--text-color);
   background-color: var(--background-color);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  -webkit-text-size-adjust: 100%;
+}
+
+img,
+svg,
+canvas,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-responsive,
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Normalize Bootstrap icon appearance */
@@ -78,11 +99,22 @@ h1, .h1, h2, .h2 {
 }
 
 h1, .h1 {
-  font-size: 24px;
+  font-size: clamp(1.65rem, 1.3rem + 1vw, 2.1rem);
 }
 
 h2, .h2 {
-  font-size: 18px;
+  font-size: clamp(1.35rem, 1.1rem + 0.6vw, 1.7rem);
+}
+
+p,
+.card-text,
+.lead {
+  font-size: 0.95rem;
+  color: inherit;
+}
+
+:is(h1, .h1, h2, .h2, h3, .h3, h4, .h4, p, .card-title, .card-text, label, th, td) {
+  overflow-wrap: anywhere;
 }
 
 small, .small {
@@ -157,6 +189,8 @@ small, .small {
 
 .btn {
   min-height: 36px;
+  padding: 0.55rem 1.35rem;
+  font-size: 0.95rem;
 }
 
 .btn-primary {
@@ -803,21 +837,23 @@ img {
   height: auto;
 }
 
-button:not(.navbar-toggler), .btn {
-  padding: 12px;
-  font-size: 16px;
+button:not(.navbar-toggler) {
+  padding: 0.55rem 1.35rem;
+  font-size: 0.95rem;
 }
 
 @media (max-width: 768px) {
-  button:not(.navbar-toggler), .btn {
+  button:not(.navbar-toggler) {
     width: 100%;
   }
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
   width: 100%;
-  padding: 12px;
-  margin: 8px 0;
+  padding: 0.65rem 0.75rem;
+  margin: 0.5rem 0;
   box-sizing: border-box;
 }
 
@@ -950,39 +986,191 @@ input, select, textarea {
 
 
 @media (max-width: 991.98px) {
-    body {
-        font-size: 0.95rem;
-    }
-    main.col-lg-9 {
-        padding-top: 1.5rem;
-    }
+  body {
+    font-size: 0.9375rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .page-header > * {
+    width: 100%;
+  }
+
+  .page-header .btn-toolbar,
+  .page-header .btn-group {
+    justify-content: flex-start;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .card-body {
+    padding: 1.25rem;
+  }
+
+  .table > :not(caption) > * > * {
+    padding: 0.6rem 0.5rem;
+  }
+
+  .calendario-container {
+    overflow-x: auto;
+  }
+
+  .calendario-grid {
+    min-width: 680px;
+  }
 }
 
 @media (max-width: 767.98px) {
-    body {
-        font-size: 0.9rem;
-    }
+  body {
+    font-size: 0.9rem;
+  }
 
-    h2 {
-        font-size: 1.5rem;
-    }
+  h1, .h1 {
+    font-size: clamp(1.45rem, 1.3rem + 1vw, 1.8rem);
+  }
 
-    .kpi-card .d-flex {
-        flex-direction: column;
-        align-items: center !important;
-        text-align: center;
-    }
+  h2, .h2 {
+    font-size: clamp(1.25rem, 1.1rem + 0.8vw, 1.55rem);
+  }
 
-    .kpi-card .kpi-icon {
-        margin-top: 0.5rem;
-    }
+  .navbar-brand img {
+    height: 26px;
+  }
 
-    .pill-turno {
-    }
+  .navbar-nav {
+    gap: 0.5rem;
+  }
 
-    .action-tile {
-        padding: 1rem;
-    }
+  .card {
+    margin-bottom: 1.25rem;
+  }
+
+  .card-body {
+    padding: 1.15rem;
+  }
+
+  .card-body.p-5,
+  .card-body.p-4 {
+    padding: 1.1rem !important;
+  }
+
+  .btn {
+    padding: 0.5rem 1.1rem;
+    font-size: 0.9rem;
+  }
+
+  button:not(.navbar-toggler) {
+    padding: 0.5rem 1.1rem;
+    font-size: 0.9rem;
+  }
+
+  .legenda-turnos {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .action-tile {
+    padding: 1rem;
+  }
+
+  .container,
+  .container-fluid {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  body {
+    font-size: 0.875rem;
+  }
+
+  .navbar {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .navbar-brand {
+    gap: 0.5rem;
+  }
+
+  .navbar-brand-text {
+    font-size: 0.95rem;
+  }
+
+  .page-header {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+
+  .page-header h1,
+  .page-header .h1 {
+    margin-bottom: 0;
+  }
+
+  .btn {
+    width: 100%;
+    min-height: 40px;
+  }
+
+  button:not(.navbar-toggler) {
+    width: 100%;
+    min-height: 40px;
+  }
+
+  .btn-toolbar,
+  .btn-group {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
+  .card-title {
+    font-size: 1.1rem;
+  }
+
+  .card-text {
+    font-size: 0.9rem;
+  }
+
+  .table {
+    font-size: 0.85rem;
+  }
+
+  .table > :not(caption) > * > * {
+    padding: 0.5rem 0.4rem;
+  }
+
+  .sistema-icon {
+    font-size: 2.2rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .card-body.p-5,
+  .card-body.p-4,
+  .card-body.p-3 {
+    padding: 1rem 1.1rem !important;
+  }
+
+  .sistema-card .card-body {
+    padding: 1.35rem 1.1rem !important;
+  }
+
+  footer .container {
+    padding-left: 0;
+    padding-right: 0;
+  }
 }
 
 

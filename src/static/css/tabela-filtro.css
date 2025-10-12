@@ -62,3 +62,31 @@
 }
 
 .filter-backdrop.show { display: block; }
+
+@media (max-width: 768px) {
+  .filter-menu {
+    min-width: 240px;
+    right: 50%;
+    transform: translateX(50%);
+  }
+}
+
+@media (max-width: 576px) {
+  .filter-menu {
+    width: 92vw;
+    min-width: unset;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    padding: 0.75rem;
+  }
+
+  .filter-menu .values {
+    max-height: 180px;
+  }
+
+  .filter-menu .menu-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

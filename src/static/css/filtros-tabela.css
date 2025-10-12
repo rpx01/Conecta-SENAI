@@ -35,3 +35,32 @@ th { position: relative; }
 .filter-menu .btn {
   border: 1px solid #ddd; background: #f7f7f7; padding: 4px 8px; border-radius: 4px; cursor: pointer;
 }
+
+@media (max-width: 768px) {
+  .filter-menu {
+    min-width: 200px;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .filter-menu .actions {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .filter-menu {
+    width: 90vw;
+    padding: 0.75rem;
+  }
+
+  .filter-menu .options {
+    max-height: 180px;
+  }
+
+  .filter-toggle {
+    font-size: 11px;
+    padding: 2px 5px;
+  }
+}

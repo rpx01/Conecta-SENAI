@@ -1,7 +1,5 @@
-@import url('./tokens.css');
-
 :root {
-  --senai-azul: var(--brand);
+  --senai-azul: #164194;
   --senai-laranja: #F3B54E;
 }
 
@@ -10,7 +8,7 @@
   position: fixed;
   left: 0;
   top: 0;
-  width: var(--space-3);          /* zona segura para o mouse encostar */
+  width: 12px;          /* zona segura para o mouse encostar */
   height: 100vh;
   z-index: 1030;        /* acima do conteúdo */
 }
@@ -20,11 +18,11 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: min(280px, 80vw);
+  width: 280px;
   height: 100vh;
   background: var(--senai-azul);
   color: #fff;
-  box-shadow: 0 12px 35px rgba(12, 32, 67, 0.24);
+  box-shadow: 2px 0 16px rgba(0,0,0,.25);
   transition: transform .25s ease-in-out;
   transform: translateX(-100%);
   will-change: transform;
@@ -34,19 +32,18 @@
 }
 
 #sidebarDrawer.drawer.open{ transform: translateX(0); }
-#sidebarDrawer .drawer-header{ padding: var(--space-4) var(--space-5); border-bottom: 1px solid rgba(255,255,255,.15); }
-#sidebarDrawer .drawer-header h2{ font-size: var(--font-size-md); margin: 0; color:#fff; }
+#sidebarDrawer .drawer-header{ padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,.15); }
+#sidebarDrawer .drawer-header h2{ font-size: 16px; margin: 0; color:#fff; }
 
-#sidebarDrawer .drawer-nav{ padding: var(--space-2) 0; overflow-y: auto; }
+#sidebarDrawer .drawer-nav{ padding: 8px 0; overflow-y: auto; }
 #sidebarDrawer .drawer-nav ul{ list-style: none; margin:0; padding:0; }
 #sidebarDrawer .drawer-nav a{
   display:block;
-  padding: var(--space-3) var(--space-5);
+  padding: 12px 20px;
   color:#fff;
   text-decoration:none;
   border-left: 4px solid transparent;
   outline: none;
-  font-size: var(--font-size-sm);
 }
 #sidebarDrawer .drawer-nav a:hover,
 #sidebarDrawer .drawer-nav a:focus,

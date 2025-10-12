@@ -1,13 +1,30 @@
 /* Estilos para a nova página de login */
 
-@import url('./tokens.css');
+@font-face {
+    font-family: "Gibson";
+    src: url("data:font/woff2;base64,") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Exo 2";
+    src: url("data:font/woff2;base64,") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
 
 body {
     font-family: "Gibson", "Exo 2", sans-serif;
+    /* Align login typography with global rhythm */
+    font-size: 1rem;
+    line-height: 1.65;
     overflow: hidden;
     min-height: 100vh;
-    background-color: var(--bg);
-    color: var(--text);
+    /* Slightly warmer neutral keeps the login view calm */
+    background-color: #f6f8fd;
 }
 
 .login-branding-col {
@@ -21,32 +38,32 @@ body {
 .login-form-container {
     width: 100%;
     max-width: 400px;
-    padding: var(--space-6) var(--space-5);
+    /* Additional padding ensures the form breathes on larger screens */
+    padding: 2.25rem;
 }
 
 .form-floating > .form-control {
-    height: 48px;
-    line-height: var(--lh-normal);
-    font-size: var(--font-size-sm);
+    height: calc(3.5rem + 2px);
+    line-height: 1.25;
 }
 
 .form-floating > label {
-    padding: var(--space-3) var(--space-3);
-    font-size: var(--font-size-sm);
+    padding: 1rem .75rem;
 }
 
 .btn-primary {
-    background-color: var(--brand);
-    border-color: var(--brand);
-    height: 44px;
-    font-weight: 600;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-sm);
+    background-color: #1d4ea8; /* Azul FIEMG suavizado */
+    border-color: #1d4ea8;
+    padding: 0.75rem;
+    font-weight: 500;
+    /* Gentle rounding complements the updated brand curvature */
+    border-radius: 0.65rem;
+    box-shadow: 0 10px 28px rgba(12, 32, 67, 0.12);
 }
 
 .btn-primary:hover {
-    background-color: var(--brand-700);
-    border-color: var(--brand-700);
+    background-color: #174289;
+    border-color: #174289;
 }
 
 @media (max-width: 992px) {
@@ -55,7 +72,8 @@ body {
     }
 
     .login-form-container {
-        padding: var(--space-5) var(--space-4);
+        /* Maintain balance as the layout stacks vertically */
+        padding: 1.85rem;
     }
 }
 
@@ -66,29 +84,30 @@ body {
 
     .login-form-container {
         max-width: 100%;
-        padding: var(--space-5) var(--space-3);
+        padding: 1.65rem;
     }
 
     .form-floating > .form-control {
-        height: 44px;
+        height: calc(3.2rem + 2px);
     }
 
     .btn-primary {
         width: 100%;
-        font-size: var(--font-size-sm);
+        padding: 0.65rem;
+        font-size: 1rem;
     }
 }
 
 @media (max-width: 480px) {
     body {
-        padding: var(--space-5) var(--space-3);
+        padding: 1.5rem 1rem;
     }
 
     .login-form-container {
-        padding: var(--space-4);
+        padding: 1.4rem;
     }
 
     .form-floating > .form-control {
-        height: 42px;
+        height: calc(3rem + 2px);
     }
 }

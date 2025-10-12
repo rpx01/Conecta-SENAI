@@ -68,16 +68,3 @@ a:not(.btn){ text-decoration-thickness: .12em; text-underline-offset: .2em; }
 .form-control, .form-select{ border-radius:.5rem; }
 .alert{ border:none; }
 .badge{ border-radius:.5rem; }
-
-.display-4{
-  font-size: clamp(2.25rem, 1.75rem + 2.5vw, 3.25rem);
-  line-height: 1.15;
-}
-
-.lead{
-  font-size: clamp(1rem, 0.95rem + 0.35vw, 1.25rem);
-}
-
-@media (max-width: 575.98px){
-  .lead{ font-size: 1rem; }
-}

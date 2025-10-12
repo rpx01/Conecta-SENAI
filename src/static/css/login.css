@@ -18,7 +18,9 @@
 
 body {
     font-family: "Gibson", "Exo 2", sans-serif;
-    overflow: hidden; /* Previne barras de scroll na página principal */
+    overflow-x: hidden;
+    min-height: 100vh;
+    background-color: #f7f9fc;
 }
 
 .login-branding-col {
@@ -53,4 +55,50 @@ body {
 .btn-primary:hover {
     background-color: #0e326f;
     border-color: #0e326f;
+}
+
+@media (max-width: 991.98px) {
+    body {
+        overflow-y: auto;
+    }
+
+    .container-fluid.vh-100,
+    .container-fluid.min-vh-100 {
+        height: auto;
+        min-height: 100vh;
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+
+    .row.h-100 {
+        min-height: 100vh;
+    }
+
+    .login-branding-col {
+        display: none !important;
+    }
+
+    .login-form-container {
+        max-width: min(420px, 90vw);
+        padding: 2rem 1.75rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .login-form-container {
+        padding: 1.75rem 1.25rem;
+    }
+
+    .form-floating > .form-control {
+        min-height: 3.25rem;
+    }
+
+    .form-floating > label {
+        padding: 0.75rem .75rem;
+    }
+
+    .btn.btn-lg {
+        font-size: 1rem;
+        padding: 0.7rem 1rem;
+    }
 }

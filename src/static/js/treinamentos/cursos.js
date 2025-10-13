@@ -150,10 +150,21 @@ function calcularDataLimiteInscricao(dataInicioStr) {
 }
 
 function buildBadges(turma) {
-    const teoriaLabel = turma.teoria_online ? 'Teoria: Online' : 'Teoria: Presencial';
-    const teoriaBadge = `<span class="badge badge-teoria">${teoriaLabel}</span>`;
+    const teoriaOnline = turma.teoria_online === true || turma.treinamento?.teoria_online === true;
+    const teoriaLabel = `Teoria: ${teoriaOnline ? 'Online' : 'Presencial'}`;
+    const teoriaClasses = ['badge', 'badge-teoria', teoriaOnline ? 'badge-teoria-online' : 'badge-teoria-presencial'].join(' ');
+    const teoriaBadge = `<span class="${teoriaClasses}">${teoriaLabel}</span>`;
+
     const hasPratica = turma.treinamento?.tem_pratica === true || turma.has_pratica === true;
-    const praticaBadge = hasPratica ? `<span class="badge badge-pratica">Prática: Presencial</span>` : '';
+    if (!hasPratica) {
+        return teoriaBadge;
+    }
+
+    const praticaOnline = turma.pratica_online === true || turma.treinamento?.pratica_online === true;
+    const praticaLabel = `Prática: ${praticaOnline ? 'Online' : 'Presencial'}`;
+    const praticaClasses = ['badge', 'badge-pratica', praticaOnline ? 'badge-pratica-online' : 'badge-pratica-presencial'].join(' ');
+    const praticaBadge = `<span class="${praticaClasses}">${praticaLabel}</span>`;
+
     return teoriaBadge + praticaBadge;
 }
 

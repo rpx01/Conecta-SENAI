@@ -1387,15 +1387,30 @@ textarea {
 
 .badges .badge {
     display: inline-block;
-    padding: .25rem .5rem;
+    padding: .25rem .65rem;
     border-radius: 6px;
     font-size: .75rem;
     font-weight: 600;
-    background: #eef3ff;
+    color: #ffffff;
+    background: var(--primary-color);
 }
 
-.badge-pratica {
-    background: #e8fff0;
+.badge-teoria,
+.badge-teoria-presencial {
+    background: var(--primary-color);
+}
+
+.badge-teoria-online {
+    background: var(--info-color);
+}
+
+.badge-pratica,
+.badge-pratica-presencial {
+    background: var(--success-color);
+}
+
+.badge-pratica-online {
+    background: #512DA8;
 }
 
 .curso-card-disponivel {

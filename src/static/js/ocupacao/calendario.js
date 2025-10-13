@@ -11,6 +11,61 @@ let diaResumoAtual = null;
 
 const rootStyle = getComputedStyle(document.documentElement);
 
+function getFiltroElements(nome) {
+    const baseId = `filtro${nome}`;
+    return [
+        document.getElementById(baseId),
+        document.getElementById(`${baseId}Mobile`)
+    ].filter(Boolean);
+}
+
+function getFiltroValue(nome) {
+    const [elemento] = getFiltroElements(nome);
+    return elemento ? elemento.value : '';
+}
+
+function setFiltroValue(nome, valor) {
+    const valorNormalizado = valor ?? '';
+    getFiltroElements(nome).forEach(el => {
+        el.dataset.selectedValue = valorNormalizado;
+        el.value = valorNormalizado;
+        if (el.value !== valorNormalizado) {
+            // Mantém o valor desejado para aplicar quando as opções forem carregadas
+            el.dataset.selectedValue = valorNormalizado;
+        }
+    });
+}
+
+function popularSelectComOpcoes(selects, opcoes, opcaoPadrao) {
+    selects.forEach(select => {
+        const valorDesejado = select.dataset.selectedValue ?? select.value ?? '';
+        select.innerHTML = '';
+
+        if (opcaoPadrao) {
+            const optionDefault = document.createElement('option');
+            optionDefault.value = opcaoPadrao.value;
+            optionDefault.textContent = opcaoPadrao.label;
+            select.appendChild(optionDefault);
+        }
+
+        opcoes.forEach(opcao => {
+            const optionEl = document.createElement('option');
+            optionEl.value = opcao.value;
+            optionEl.textContent = opcao.label;
+            select.appendChild(optionEl);
+        });
+
+        if (valorDesejado) {
+            select.value = valorDesejado;
+            if (select.value !== valorDesejado) {
+                select.value = opcaoPadrao ? opcaoPadrao.value : '';
+            }
+        }
+
+        select.dataset.selectedValue = select.value;
+    });
+}
+
 // Converte o nome do turno em um identificador CSS sem acentos
 function slugifyTurno(turno) {
     return turno
@@ -79,9 +134,9 @@ async function carregarOcupacoes(dataInicio, dataFim) {
         });
         
         // Aplica filtros ativos
-        const salaId = document.getElementById('filtroSala').value;
-        const instrutorId = document.getElementById('filtroInstrutor').value;
-        const turno = document.getElementById('filtroTurno').value;
+        const salaId = getFiltroValue('Sala');
+        const instrutorId = getFiltroValue('Instrutor');
+        const turno = getFiltroValue('Turno');
         
         if (salaId) params.append('sala_id', salaId);
         if (instrutorId) params.append('instrutor_id', instrutorId);
@@ -121,9 +176,9 @@ async function carregarResumoPeriodo(dataInicio, dataFim) {
             data_fim: dataFim.split('T')[0]
         });
 
-        const salaId = document.getElementById('filtroSala').value;
-        const instrutorId = document.getElementById('filtroInstrutor').value;
-        const turno = document.getElementById('filtroTurno').value;
+        const salaId = getFiltroValue('Sala');
+        const instrutorId = getFiltroValue('Instrutor');
+        const turno = getFiltroValue('Turno');
 
         if (salaId) params.append('sala_id', salaId);
         if (instrutorId) params.append('instrutor_id', instrutorId);
@@ -307,12 +362,12 @@ async function carregarSalasParaFiltro() {
         if (response.ok) {
             salasData = await response.json();
             
-            const select = document.getElementById('filtroSala');
-            select.innerHTML = '<option value="">Todas as salas</option>';
-            
-            salasData.forEach(sala => {
-                select.innerHTML += `<option value="${sala.id}">${sala.nome}</option>`;
-            });
+            const selects = getFiltroElements('Sala');
+            popularSelectComOpcoes(
+                selects,
+                salasData.map(sala => ({ value: String(sala.id), label: sala.nome })),
+                { value: '', label: 'Todas as salas' }
+            );
         }
     } catch (error) {
         console.error('Erro ao carregar salas:', error);
@@ -330,12 +385,12 @@ async function carregarInstrutoresParaFiltro() {
         if (response.ok) {
             instrutoresData = await response.json();
             
-            const select = document.getElementById('filtroInstrutor');
-            select.innerHTML = '<option value="">Todos os instrutores</option>';
-            
-            instrutoresData.forEach(instrutor => {
-                select.innerHTML += `<option value="${instrutor.id}">${instrutor.nome}</option>`;
-            });
+            const selects = getFiltroElements('Instrutor');
+            popularSelectComOpcoes(
+                selects,
+                instrutoresData.map(instrutor => ({ value: String(instrutor.id), label: instrutor.nome })),
+                { value: '', label: 'Todos os instrutores' }
+            );
         }
     } catch (error) {
         console.error('Erro ao carregar instrutores:', error);
@@ -381,9 +436,14 @@ function configurarFiltros() {
     if (form) {
         form.addEventListener('submit', e => {
             e.preventDefault();
-            document.getElementById('filtroSalaMobile').value = document.getElementById('filtroSala').value;
-            document.getElementById('filtroInstrutorMobile').value = document.getElementById('filtroInstrutor').value;
-            document.getElementById('filtroTurnoMobile').value = document.getElementById('filtroTurno').value;
+            const salaValor = form.querySelector('#filtroSala')?.value ?? '';
+            const instrutorValor = form.querySelector('#filtroInstrutor')?.value ?? '';
+            const turnoValor = form.querySelector('#filtroTurno')?.value ?? '';
+
+            setFiltroValue('Sala', salaValor);
+            setFiltroValue('Instrutor', instrutorValor);
+            setFiltroValue('Turno', turnoValor);
+
             aplicarFiltrosCalendario();
         });
     }
@@ -391,9 +451,14 @@ function configurarFiltros() {
     if (formMobile) {
         formMobile.addEventListener('submit', e => {
             e.preventDefault();
-            document.getElementById('filtroSala').value = document.getElementById('filtroSalaMobile').value;
-            document.getElementById('filtroInstrutor').value = document.getElementById('filtroInstrutorMobile').value;
-            document.getElementById('filtroTurno').value = document.getElementById('filtroTurnoMobile').value;
+            const salaValor = formMobile.querySelector('#filtroSalaMobile')?.value ?? '';
+            const instrutorValor = formMobile.querySelector('#filtroInstrutorMobile')?.value ?? '';
+            const turnoValor = formMobile.querySelector('#filtroTurnoMobile')?.value ?? '';
+
+            setFiltroValue('Sala', salaValor);
+            setFiltroValue('Instrutor', instrutorValor);
+            setFiltroValue('Turno', turnoValor);
+
             aplicarFiltrosCalendario();
         });
     }
@@ -409,15 +474,15 @@ function aplicarFiltrosURL() {
     const mesParam = urlParams.get('mes');
     
     if (salaId) {
-        document.getElementById('filtroSala').value = salaId;
+        setFiltroValue('Sala', salaId);
     }
-    
+
     if (instrutorId) {
-        document.getElementById('filtroInstrutor').value = instrutorId;
+        setFiltroValue('Instrutor', instrutorId);
     }
 
     if (turnoParam) {
-        document.getElementById('filtroTurno').value = turnoParam;
+        setFiltroValue('Turno', turnoParam);
     }
 
     if (mesParam && calendar) {

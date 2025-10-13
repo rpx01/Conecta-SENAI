@@ -76,6 +76,44 @@
             <main class="col-12">
                 <h1 class="mb-4">Calendário de Ocupações</h1>
 
+                <div class="d-none d-lg-block mb-4">
+                    <div class="card">
+                        <div class="card-header d-flex align-items-center">
+                            <h2 class="card-title mb-0">Filtros</h2>
+                        </div>
+                        <div class="card-body">
+                            <form id="filtrosForm" class="row g-3 align-items-end">
+                                <div class="col-lg-4">
+                                    <label for="filtroSala" class="form-label">Sala</label>
+                                    <select class="form-select" id="filtroSala">
+                                        <option value="">Todas as salas</option>
+                                    </select>
+                                </div>
+                                <div class="col-lg-4">
+                                    <label for="filtroInstrutor" class="form-label">Instrutor</label>
+                                    <select class="form-select" id="filtroInstrutor">
+                                        <option value="">Todos os instrutores</option>
+                                    </select>
+                                </div>
+                                <div class="col-lg-3">
+                                    <label for="filtroTurno" class="form-label">Turno</label>
+                                    <select class="form-select" id="filtroTurno">
+                                        <option value="">Todos</option>
+                                        <option value="Manhã">Manhã</option>
+                                        <option value="Tarde">Tarde</option>
+                                        <option value="Noite">Noite</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-lg-1 d-grid">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-funnel me-2"></i>Filtrar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
 
                 <div class="d-lg-none mb-4">
                     <div class="card">

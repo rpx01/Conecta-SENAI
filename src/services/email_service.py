@@ -463,10 +463,28 @@ def send_nova_turma_instrutor_email(
         return
 
     treinamento = getattr(turma, "treinamento", None)
+    carga_horaria = getattr(treinamento, "carga_horaria", None)
+    if carga_horaria is not None:
+        carga_horaria = f"{carga_horaria} horas"
+    else:
+        carga_horaria = "-"
+
+    horario = getattr(turma, "horario", None)
+    if not horario:
+        hora_inicio = _parse_time(getattr(turma, "horario_inicio", None))
+        hora_fim = _parse_time(getattr(turma, "horario_fim", None))
+        if hora_inicio and hora_fim:
+            horario = f"{hora_inicio.strftime('%H:%M')} às {hora_fim.strftime('%H:%M')}"
+        elif hora_inicio:
+            horario = f"A partir das {hora_inicio.strftime('%H:%M')}"
+        else:
+            horario = "-"
+
     html = render_email_template(
         "nova_turma_instrutor.html.j2",
         instrutor_nome=getattr(instrutor, "nome", ""),
         treinamento_nome=getattr(treinamento, "nome", ""),
+        treinamento_codigo=getattr(treinamento, "codigo", "-") or "-",
         data_inicio=(
             turma.data_inicio.strftime("%d/%m/%Y")
             if getattr(turma, "data_inicio", None)
@@ -477,8 +495,13 @@ def send_nova_turma_instrutor_email(
             if getattr(turma, "data_fim", None)
             else None
         ),
-        horario=getattr(turma, "horario", "-") or "-",
+        horario=horario,
+        carga_horaria=carga_horaria,
+        instrutor_antigo=getattr(instrutor, "nome", "-") or "-",
         local_realizacao=getattr(turma, "local_realizacao", "-") or "-",
+        teoria_online=getattr(turma, "teoria_online", False),
+        tem_pratica=getattr(treinamento, "tem_pratica", False),
+        local_pratica=getattr(turma, "local_pratica", "-") or "-",
     )
     subject = f"Nova turma designada - {getattr(treinamento, 'nome', '')}"
     send_email(instrutor.email, subject, html)

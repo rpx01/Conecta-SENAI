@@ -275,6 +275,98 @@ def _formatar_periodo(
     return ""
 
 
+def _formatar_periodo_texto(
+    data_inicio: str | None, data_fim: str | None
+) -> str:
+    """Formata período já convertido em texto para exibição em e-mails."""
+
+    if data_inicio and data_fim:
+        return f"De {data_inicio} a {data_fim}"
+
+    if data_inicio:
+        return data_inicio
+
+    if data_fim:
+        return data_fim
+
+    return ""
+
+
+def _montar_dados_turma_email(turma: Any) -> Dict[str, Any]:
+    """Monta o dicionário padrão com informações da turma para e-mails."""
+
+    treinamento = getattr(turma, "treinamento", None)
+    periodo = _formatar_periodo(
+        getattr(turma, "data_inicio", None),
+        getattr(turma, "data_fim", None),
+    )
+
+    instrutor = getattr(turma, "instrutor", None)
+    instrutor_nome = getattr(instrutor, "nome", None) or "Não definido"
+
+    local_pratica = getattr(turma, "local_pratica", None)
+    tem_pratica = bool(getattr(treinamento, "tem_pratica", False))
+    if not local_pratica and tem_pratica:
+        local_pratica = getattr(treinamento, "local_pratica", None)
+
+    return {
+        "treinamento_nome": getattr(treinamento, "nome", "") or "",
+        "treinamento_codigo": getattr(treinamento, "codigo", "") or "",
+        "periodo": periodo,
+        "horario": getattr(turma, "horario", "") or "",
+        "carga_horaria": getattr(treinamento, "carga_horaria", None),
+        "instrutor_nome": instrutor_nome,
+        "local_realizacao": getattr(turma, "local_realizacao", "") or "",
+        "teoria_online": bool(getattr(turma, "teoria_online", False)),
+        "tem_pratica": tem_pratica,
+        "local_pratica": local_pratica,
+    }
+
+
+def _aplicar_diff_em_dados_antigos(
+    dados_base: Dict[str, Any], diff: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Retorna cópia dos dados aplicando valores antigos presentes no diff."""
+
+    dados_antigos = dict(dados_base)
+
+    data_inicio_antiga = diff.get("data_inicio", (None, None))[0]
+    data_fim_antiga = diff.get("data_fim", (None, None))[0]
+    if data_inicio_antiga or data_fim_antiga:
+        dados_antigos["periodo"] = _formatar_periodo_texto(
+            data_inicio_antiga,
+            data_fim_antiga,
+        )
+
+    if "horario" in diff:
+        dados_antigos["horario"] = diff["horario"][0] or ""
+
+    if "local_realizacao" in diff:
+        dados_antigos["local_realizacao"] = (
+            diff["local_realizacao"][0] or ""
+        )
+
+    if "instrutor" in diff:
+        dados_antigos["instrutor_nome"] = (
+            diff["instrutor"][0] or "Não definido"
+        )
+
+    if "teoria_online" in diff:
+        dados_antigos["teoria_online"] = bool(diff["teoria_online"][0])
+
+    for chave in (
+        "treinamento_nome",
+        "treinamento_codigo",
+        "carga_horaria",
+        "tem_pratica",
+        "local_pratica",
+    ):
+        if chave in diff:
+            dados_antigos[chave] = diff[chave][0]
+
+    return dados_antigos
+
+
 def enviar_convocacao(
     inscricao: Any, turma: Any, send_email_fn: Callable[..., Any] = send_email
 ) -> None:
@@ -361,13 +453,18 @@ def send_turma_alterada_secretaria(
 ) -> None:
     """Envia e-mail comparando dados antigos e novos de uma turma."""
     turma_ctx = build_turma_context(turma)
+    dados_novos = _montar_dados_turma_email(turma)
     subject = (
         "Alteração de Agendamento de Turma: "
         f"{turma_ctx.treinamento.nome} - Turma {turma_ctx.nome}"
     )
+    dados_antigos_completos = dict(dados_novos)
+    dados_antigos_completos.update(dados_antigos or {})
+
     html = render_email_template(
         "turma_alterada_secretaria.html.j2",
-        dados_antigos=dados_antigos,
+        dados_antigos=dados_antigos_completos,
+        dados_novos=dados_novos,
         turma=turma_ctx,
     )
     send_email(list(emails), subject, html)
@@ -384,9 +481,12 @@ def send_turma_alterada_email(dados_antigos: dict, dados_novos: dict):
             )
             return
 
+        dados_antigos_completos = dict(dados_novos)
+        dados_antigos_completos.update(dados_antigos or {})
+
         html_body = render_template(
             "email/turma_alterada_secretaria.html.j2",
-            dados_antigos=dados_antigos,
+            dados_antigos=dados_antigos_completos,
             dados_novos=dados_novos,
         )
 
@@ -558,72 +658,9 @@ def notificar_atualizacao_turma(
     nome_treinamento = getattr(treinamento, "nome", "")
 
     turma_ctx = build_turma_context(turma)
-    fmt = "%d/%m/%Y"
 
-    dados_antigos = {
-        "nome": turma_ctx.nome,
-        "data_inicio": diff.get(
-            "data_inicio",
-            (
-                turma_ctx.data_inicio.strftime(fmt)
-                if turma_ctx.data_inicio
-                else None,
-                None,
-            ),
-        )[0],
-        "data_termino": diff.get(
-            "data_fim",
-            (
-                turma_ctx.data_termino.strftime(fmt)
-                if turma_ctx.data_termino
-                else None,
-                None,
-            ),
-        )[0],
-        "local": diff.get("local_realizacao", (turma_ctx.local, None))[0],
-        "instrutor_nome": diff.get(
-            "instrutor",
-            (
-                turma_ctx.instrutor.nome
-                if turma_ctx.instrutor
-                else "A definir",
-                None,
-            ),
-        )[0],
-    }
-    old_horario = diff.get("horario", (None, None))[0]
-    if old_horario:
-        partes = str(old_horario).split("-")
-        hora_ini = _parse_time(partes[0]) or turma_ctx.horario_inicio
-        hora_fim = _parse_time(partes[1]) if len(partes) > 1 else None
-        hora_fim = hora_fim or turma_ctx.horario_fim
-    else:
-        hora_ini = turma_ctx.horario_inicio
-        hora_fim = turma_ctx.horario_fim
-    dados_antigos["horario_inicio"] = hora_ini.strftime("%H:%M")
-    dados_antigos["horario_fim"] = hora_fim.strftime("%H:%M")
-
-    dados_novos = {
-        "treinamento_nome": turma_ctx.treinamento.nome,
-        "treinamento_codigo": getattr(treinamento, "codigo", ""),
-        "periodo": (
-            f"{turma_ctx.data_inicio.strftime('%d/%m/%Y')} a "
-            f"{turma_ctx.data_termino.strftime('%d/%m/%Y')}"
-            if turma_ctx.data_inicio and turma_ctx.data_termino
-            else ""
-        ),
-        "horario": getattr(turma, "horario", ""),
-        "carga_horaria": getattr(treinamento, "carga_horaria", None),
-        "instrutor_nome": (
-            turma_ctx.instrutor.nome
-            if turma_ctx.instrutor
-            else "Não definido"
-        ),
-        "local_realizacao": turma_ctx.local,
-        "teoria_online": getattr(turma, "teoria_online", False),
-        "tem_pratica": getattr(treinamento, "tem_pratica", False),
-        "local_pratica": getattr(turma, "local_pratica", None),
-    }
+    dados_novos = _montar_dados_turma_email(turma)
+    dados_antigos = _aplicar_diff_em_dados_antigos(dados_novos, diff)
 
     emails_secretaria = listar_emails_secretaria()
     if notificar_secretaria and emails_secretaria:

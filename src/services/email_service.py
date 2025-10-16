@@ -370,8 +370,7 @@ def send_turma_alterada_secretaria(
         dados_antigos=dados_antigos,
         turma=turma_ctx,
     )
-    for email in emails:
-        send_email(email, subject, html)
+    send_email(list(emails), subject, html)
 
 
 def send_turma_alterada_email(dados_antigos: dict, dados_novos: dict):
@@ -395,10 +394,7 @@ def send_turma_alterada_email(dados_antigos: dict, dados_novos: dict):
             "Alteração de Agendamento de Turma: "
             f"{dados_novos.get('treinamento_nome')}"
         )
-        for idx, email in enumerate(recipients):
-            send_email(email, subject, html_body)
-            if idx < len(recipients) - 1:
-                time_module.sleep(RATE_LIMIT_DELAY)
+        send_email(recipients, subject, html_body)
         current_app.logger.info(
             (
                 "E-mail de alteração da turma "
@@ -416,7 +412,8 @@ def send_treinamento_desmarcado_email(
     recipients: Iterable[str], turma: "TurmaTreinamento"
 ) -> None:
     """Envia e-mail informando sobre o cancelamento de um treinamento."""
-    if not recipients:
+    recipients_list = list(recipients)
+    if not recipients_list:
         return
 
     treinamento = getattr(turma, "treinamento", None)
@@ -450,8 +447,7 @@ def send_treinamento_desmarcado_email(
     html = render_email_template(
         "treinamento_desmarcado.html.j2", turma=turma_ctx
     )
-    for email in recipients:
-        send_email(email, subject, html)
+    send_email(recipients_list, subject, html)
 
 
 def send_nova_turma_instrutor_email(
@@ -544,8 +540,7 @@ def notificar_nova_turma(turma: "TurmaTreinamento") -> None:
             turma=turma_ctx,
         )
         subject_sec = f"Nova turma cadastrada - {ctx['treinamento_nome']}"
-        for email in emails_secretaria:
-            send_email(email, subject_sec, html_sec)
+        send_email(emails_secretaria, subject_sec, html_sec)
 
 
 def notificar_atualizacao_turma(

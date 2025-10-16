@@ -9,6 +9,20 @@ from src.models.treinamento import Treinamento, TurmaTreinamento
 from src.services.email_service import notificar_atualizacao_turma
 
 
+def coletar_destinatarios(mock_send):
+    destinatarios = []
+    for call in mock_send.call_args_list:
+        if call.args:
+            to = call.args[0]
+        else:
+            to = call.kwargs.get('to', [])
+        if isinstance(to, str):
+            destinatarios.append(to)
+        else:
+            destinatarios.extend(to)
+    return destinatarios
+
+
 def admin_headers(app):
     with app.app_context():
         from src.models.user import User
@@ -50,7 +64,7 @@ def test_notificar_nova_turma_enviada(client, app):
             headers=headers,
         )
         assert r.status_code == 201  # nosec B101
-        destinatarios = {c.args[0] for c in mock_send.call_args_list}
+        destinatarios = set(coletar_destinatarios(mock_send))
         assert 'inst@example.com' in destinatarios  # nosec B101
         assert 'sec@example.com' in destinatarios  # nosec B101
 
@@ -120,7 +134,7 @@ def test_notificar_atualizacao_envia_emails_instrutores(app):
         diff = {'instrutor': (inst_old.nome, inst_new.nome)}
         with patch('src.services.email_service.send_email') as mock_send:
             notificar_atualizacao_turma(turma, diff, inst_old)
-            destinatarios = {c.args[0] for c in mock_send.call_args_list}
+            destinatarios = set(coletar_destinatarios(mock_send))
             assert destinatarios == {
                 'sec2@example.com',
                 'old@example.com',
@@ -147,7 +161,7 @@ def test_notificar_atualizacao_instrutor_id(app):
         diff = {'instrutor': (inst_old.nome, inst_new.nome)}
         with patch('src.services.email_service.send_email') as mock_send:
             notificar_atualizacao_turma(turma, diff, inst_old.id)
-            destinatarios = {c.args[0] for c in mock_send.call_args_list}
+            destinatarios = set(coletar_destinatarios(mock_send))
             assert destinatarios == {
                 'sec3@example.com',
                 'old2@example.com',
@@ -175,7 +189,7 @@ def test_notificar_atualizacao_instrutor_inalterado_recebe_email(app):
         with patch('src.services.email_service.send_email') as mock_send:
             notificar_atualizacao_turma(turma, diff, instrutor)
 
-        destinatarios = [call.args[0] for call in mock_send.call_args_list]
+        destinatarios = coletar_destinatarios(mock_send)
         assert 'inst@example.com' in destinatarios  # nosec B101
         assert destinatarios.count('inst@example.com') == 1  # nosec B101
 

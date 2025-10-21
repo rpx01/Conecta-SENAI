@@ -1,5 +1,6 @@
 from src.models import db
 from src.models.user import User
+from src.models.refresh_token import RefreshToken
 
 
 class UserRepository:
@@ -25,6 +26,13 @@ class UserRepository:
 
     @staticmethod
     def delete(user: User):
+        """Remove um usuário e seus registros dependentes."""
+
+        if user.id is not None:
+            RefreshToken.query.filter_by(user_id=user.id).delete(
+                synchronize_session=False
+            )
+
         db.session.delete(user)
         db.session.commit()
 

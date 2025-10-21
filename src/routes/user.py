@@ -328,6 +328,8 @@ def atualizar_usuario(id):
     if not usuario:
         return jsonify({"erro": "Usuário não encontrado"}), 404
 
+    email_original_usuario = usuario.email
+
     try:
         dados = UserUpdateSchema(**(request.get_json() or {}))
     except ValidationError as e:
@@ -356,7 +358,7 @@ def atualizar_usuario(id):
         novo_tipo = data["tipo"]
         admin_email = (os.getenv("ADMIN_EMAIL") or "").strip().lower()
         solicitante_email = (user.email or "").lower()
-        alvo_email = (usuario.email or "").lower()
+        alvo_email = (email_original_usuario or "").lower()
         is_root_solicitante = bool(admin_email) and solicitante_email == admin_email
         is_root_alvo = bool(admin_email) and alvo_email == admin_email
 

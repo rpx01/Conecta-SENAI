@@ -354,21 +354,19 @@ def atualizar_usuario(id):
 
     if "tipo" in data and verificar_admin(user):
         novo_tipo = data["tipo"]
+        admin_email = (os.getenv("ADMIN_EMAIL") or "").strip().lower()
+        solicitante_email = (user.email or "").lower()
+        alvo_email = (usuario.email or "").lower()
+        is_root_solicitante = bool(admin_email) and solicitante_email == admin_email
+        is_root_alvo = bool(admin_email) and alvo_email == admin_email
 
-        # Evita que administradores comuns rebaixem outros administradores
-        if usuario.tipo == "admin" and novo_tipo == "comum":
-            admin_email = os.getenv("ADMIN_EMAIL")
-            is_root = admin_email and user.email == admin_email
-
-            if not is_root:
-                return (
-                    jsonify(
-                        {
-                            "erro": "Você não tem permissão para rebaixar um administrador"
-                        }
-                    ),
-                    403,
-                )
+        if is_root_alvo and not is_root_solicitante:
+            return (
+                jsonify(
+                    {"erro": "Você não tem permissão para alterar o Administrador raiz"}
+                ),
+                403,
+            )
 
         usuario.tipo = novo_tipo
 
@@ -409,15 +407,25 @@ def remover_usuario(id):
     if not usuario:
         return jsonify({"erro": "Usuário não encontrado"}), 404
 
-    # Apenas o administrador raiz pode remover outro administrador
-    if usuario.tipo == "admin":
-        admin_email = os.getenv("ADMIN_EMAIL")
-        is_root = admin_email and user.email == admin_email
-        if not is_root:
-            return (
-                jsonify({"erro": "Você não tem permissão para remover um administrador"}),
-                403,
-            )
+    admin_email = (os.getenv("ADMIN_EMAIL") or "").strip().lower()
+    solicitante_email = (user.email or "").lower()
+    alvo_email = (usuario.email or "").lower()
+    is_root_solicitante = bool(admin_email) and solicitante_email == admin_email
+    is_root_alvo = bool(admin_email) and alvo_email == admin_email
+
+    # Protege o administrador raiz contra remoção por outros usuários
+    if is_root_alvo and not is_root_solicitante:
+        return (
+            jsonify({"erro": "Você não tem permissão para remover o Administrador raiz"}),
+            403,
+        )
+
+    # Apenas o administrador raiz pode remover outros administradores
+    if usuario.tipo == "admin" and not is_root_solicitante:
+        return (
+            jsonify({"erro": "Você não tem permissão para remover um administrador"}),
+            403,
+        )
 
     try:
         UserRepository.delete(usuario)

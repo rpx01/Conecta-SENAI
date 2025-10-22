@@ -181,8 +181,6 @@
   class FormValidator {
     constructor(form) {
       this.form = form;
-      this.formContainer = this.form.closest('.login-form-container');
-      this.layoutColumn = this.formContainer ? this.formContainer.closest('.auth-form-column') : null;
       this.summary = this.setupSummary();
       this.fields = this.collectFields();
       this.prepareErrorMessages();
@@ -318,8 +316,6 @@
         return;
       }
 
-      this.updateLayoutForSummary(true);
-
       this.summary.innerHTML = '';
       const title = document.createElement('p');
       title.className = 'mb-2 fw-semibold';
@@ -350,18 +346,8 @@
       if (!this.summary) {
         return;
       }
-      this.updateLayoutForSummary(false);
       this.summary.classList.add('d-none');
       this.summary.innerHTML = '';
-    }
-
-    updateLayoutForSummary(hasErrors) {
-      if (this.formContainer) {
-        this.formContainer.classList.toggle('has-error-summary', Boolean(hasErrors));
-      }
-      if (this.layoutColumn) {
-        this.layoutColumn.classList.toggle('has-error-summary', Boolean(hasErrors));
-      }
     }
 
     setFieldState(field, isValid, message) {

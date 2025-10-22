@@ -49,16 +49,18 @@
                         <div id="email-help" class="form-text">Informe um endereço de email válido.</div>
 
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="cpf" name="cpf" placeholder="000.000.000-00" inputmode="numeric" data-mask="cpf" data-validate="cpf" data-error-target="cpf-error" aria-describedby="cpf-error">
-                            <label for="cpf"><i class="bi bi-card-text me-2"></i>CPF</label>
+                            <input type="text" class="form-control" id="cpf" name="cpf" placeholder="000.000.000-00" inputmode="numeric" data-mask="cpf" data-validate="cpf" data-error-target="cpf-error" aria-describedby="cpf-help cpf-error">
+                            <label for="cpf"><i class="bi bi-card-text me-2"></i>CPF (opcional)</label>
                             <div id="cpf-error" class="invalid-feedback">Informe um CPF válido.</div>
                         </div>
+                        <div id="cpf-help" class="form-text">Este campo é opcional.</div>
 
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="dataNascimento" name="dataNascimento" placeholder="DD/MM/AAAA" inputmode="numeric" data-mask="date" data-validate="date" data-error-target="dataNascimento-error" aria-describedby="dataNascimento-error">
-                            <label for="dataNascimento"><i class="bi bi-calendar-date me-2"></i>Data de Nascimento</label>
+                            <input type="text" class="form-control" id="dataNascimento" name="dataNascimento" placeholder="DD/MM/AAAA" inputmode="numeric" data-mask="date" data-validate="date" data-error-target="dataNascimento-error" aria-describedby="dataNascimento-help dataNascimento-error">
+                            <label for="dataNascimento"><i class="bi bi-calendar-date me-2"></i>Data de Nascimento (opcional)</label>
                             <div id="dataNascimento-error" class="invalid-feedback">Informe uma data válida no formato DD/MM/AAAA.</div>
                         </div>
+                        <div id="dataNascimento-help" class="form-text">Este campo é opcional.</div>
 
                         <div class="form-floating mb-3">
                             <input type="password" class="form-control" id="senha" name="senha" placeholder="Senha" required aria-required="true" aria-describedby="senha-help senha-error" data-error-target="senha-error" data-required-message="Informe uma senha válida.">

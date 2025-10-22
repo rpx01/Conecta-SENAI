@@ -21,7 +21,8 @@ body {
     /* Align login typography with global rhythm */
     font-size: 1rem;
     line-height: 1.65;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     min-height: 100vh;
     /* Slightly warmer neutral keeps the login view calm */
     background-color: #f6f8fd;

@@ -41,6 +41,9 @@ body {
     max-width: 400px;
     /* Additional padding ensures the form breathes on larger screens */
     padding: 2.25rem;
+    /* Allow the registration form to scroll when its content exceeds the viewport */
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 .form-floating > .form-control {

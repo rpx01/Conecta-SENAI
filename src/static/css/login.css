@@ -36,10 +36,6 @@ body {
     background-size: 300px;
 }
 
-.auth-form-column {
-    width: 100%;
-}
-
 .login-form-container {
     width: 100%;
     max-width: 400px;
@@ -48,17 +44,6 @@ body {
     /* Allow the registration form to scroll when its content exceeds the viewport */
     max-height: 90vh;
     overflow-y: auto;
-}
-
-.auth-form-column.has-error-summary {
-    align-items: flex-start !important;
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-}
-
-.auth-form-column.has-error-summary .login-form-container {
-    max-height: none;
-    overflow: visible;
 }
 
 .form-floating > .form-control {

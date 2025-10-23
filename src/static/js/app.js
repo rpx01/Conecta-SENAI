@@ -151,68 +151,24 @@ function setBusy(btn, busy = true) {
     }
 }
 
-const MAPA_SLUGS_PARA_URLS = {
-    laboratorios: ['/laboratorios/dashboard.html'],
-    treinamentos: ['/treinamentos/index.html'],
-    ocupacao: ['/ocupacao/dashboard.html'],
-    noticias: ['/noticias/index.html'],
-    noticias_admin: ['/noticias/gerenciamento.html'],
-    suporte_ti: ['/suporte_ti/abertura.html'],
-    suporte_ti_admin: ['/suporte_ti/admin_chamados.html'],
-    rateio: ['/rateio/dashboard.html'],
-    usuarios: ['/admin/usuarios.html']
-};
-
-const MODULOS_PADRAO = [
-    '/laboratorios/dashboard.html',
-    '/treinamentos/index.html',
-    '/ocupacao/dashboard.html',
-    '/noticias/index.html',
-    '/suporte_ti/abertura.html'
-];
-
-function normalizarModuloEntrada(modulo) {
-    if (typeof modulo !== 'string') {
-        return [];
-    }
-
-    const entrada = modulo.trim();
-    if (!entrada) {
-        return [];
-    }
-
-    if (entrada.startsWith('/')) {
-        return [entrada];
-    }
-
-    const urlsMapeadas = MAPA_SLUGS_PARA_URLS[entrada];
-    if (urlsMapeadas) {
-        return Array.isArray(urlsMapeadas) ? urlsMapeadas : [urlsMapeadas];
-    }
-
-    return [];
-}
-
 // Mapeia os módulos disponíveis de acordo com o tipo de usuário
-function obterModulosDisponiveis(usuario = {}) {
-    const modulos = new Set(MODULOS_PADRAO);
-
-    if (Array.isArray(usuario.modulos) && usuario.modulos.length > 0) {
-        usuario.modulos
-            .flatMap(normalizarModuloEntrada)
-            .forEach((url) => {
-                if (typeof url === 'string' && url.trim()) {
-                    modulos.add(url.trim());
-                }
-            });
-    }
+function obterModulosDisponiveis(usuario) {
+    const modulos = [
+        '/laboratorios/dashboard.html',
+        '/treinamentos/index.html',
+        '/ocupacao/dashboard.html',
+        '/noticias/index.html',
+        '/suporte_ti/abertura.html'
+    ];
 
     if (usuario.tipo === 'admin') {
-        ['/rateio/dashboard.html', '/admin/usuarios.html', '/noticias/gerenciamento.html', '/suporte_ti/admin_chamados.html']
-            .forEach((url) => modulos.add(url));
+        modulos.push('/rateio/dashboard.html');
+        modulos.push('/admin/usuarios.html');
+        modulos.push('/noticias/gerenciamento.html');
+        modulos.push('/suporte_ti/admin_chamados.html');
     }
 
-    return Array.from(modulos);
+    return modulos;
 }
 
 // Redireciona o usuário após o login com base nos módulos disponíveis

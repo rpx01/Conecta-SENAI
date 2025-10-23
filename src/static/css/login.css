@@ -24,9 +24,16 @@ body {
     margin: 0;
     overflow-x: hidden;
     overflow-y: auto;
+    /* Allow scrolling while keeping the scrollbar hidden */
+    scrollbar-width: none;
     min-height: 100vh;
     /* Slightly warmer neutral keeps the login view calm */
     background-color: #f6f8fd;
+}
+
+body::-webkit-scrollbar {
+    width: 0;
+    height: 0;
 }
 
 .login-branding-col {
@@ -45,6 +52,13 @@ body {
     /* Allow the registration form to scroll when its content exceeds the viewport */
     max-height: 90vh;
     overflow-y: auto;
+    /* Keep the registration form scrollable without showing the bar */
+    scrollbar-width: none;
+}
+
+.login-form-container::-webkit-scrollbar {
+    width: 0;
+    height: 0;
 }
 
 .form-floating > .form-control {

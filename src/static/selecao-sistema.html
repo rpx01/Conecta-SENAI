@@ -179,10 +179,14 @@
             const usuario = getUsuarioLogado();
             if (usuario) {
                 document.getElementById('userName').textContent = usuario.nome;
-                const modulosDisponiveis = obterModulosDisponiveis(usuario);
+                const modulosDisponiveis = new Set(obterModulosDisponiveis(usuario));
                 document.querySelectorAll('.sistema-card').forEach(card => {
-                    const url = card.getAttribute('data-url');
-                    if (!modulosDisponiveis.includes(url)) {
+                    const urlNormalizada = normalizarUrlModulo(card.getAttribute('data-url'));
+                    if (!urlNormalizada) {
+                        return;
+                    }
+
+                    if (!modulosDisponiveis.has(urlNormalizada)) {
                         card.closest('.col-md-5').style.display = 'none';
                     }
                 });

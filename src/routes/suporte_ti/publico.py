@@ -59,7 +59,7 @@ def _serialize_chamado(chamado: SuporteChamado) -> dict:
 @login_required
 def criar_chamado():
     _ensure_tables_exist(
-        [SuporteChamado, SuporteAnexo, SuporteTipoEquipamento, SuporteArea]
+        [SuporteArea, SuporteTipoEquipamento, SuporteChamado, SuporteAnexo]
     )
 
     usuario = g.current_user

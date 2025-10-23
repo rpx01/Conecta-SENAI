@@ -164,6 +164,7 @@ function obterModulosDisponiveis(usuario) {
         modulos.push('/rateio/dashboard.html');
         modulos.push('/admin/usuarios.html');
         modulos.push('/noticias/gerenciamento.html');
+        modulos.push('/suporte_ti/admin_chamados.html');
     }
 
     return modulos;

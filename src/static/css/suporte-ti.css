@@ -1,0 +1,81 @@
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-title i {
+    font-size: 1.5rem;
+    color: var(--bs-primary);
+}
+
+.support-card {
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 1rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.support-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.1);
+}
+
+.support-card .card-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(13, 110, 253, 0.1);
+    color: var(--bs-primary);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.ticket-table tbody tr {
+    vertical-align: middle;
+}
+
+.ticket-description {
+    max-width: 360px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.badge-urgencia-baixa { background-color: #0d6efd; }
+.badge-urgencia-media { background-color: #fd7e14; }
+.badge-urgencia-alta { background-color: #dc3545; }
+.badge-urgencia-critica { background-color: #6f42c1; }
+
+.badge-status-aberto { background-color: #6c757d; }
+.badge-status-em_andamento { background-color: #0dcaf0; color: #212529; }
+.badge-status-resolvido { background-color: #198754; }
+.badge-status-encerrado { background-color: #343a40; }
+
+.support-chart {
+    min-height: 320px;
+}
+
+.form-text-muted {
+    color: var(--bs-secondary-color);
+}
+
+.table-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.attachment-preview img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+}
+
+.modal-attachment-list li {
+    word-break: break-word;
+}

@@ -60,8 +60,6 @@ from src.routes.treinamentos.basedados import (
     locais_realizacao_bp as treinamentos_locais_realizacao_bp,
 )
 from src.routes.inscricoes_treinamento import bp as inscricoes_treinamento_bp
-from src.routes.chamados import chamados_bp
-from src.routes.admin_chamados import admin_chamados_bp
 from src.blueprints.auth_reset import auth_reset_bp
 from src.blueprints.auth import auth_bp
 from src.scheduler import start_scheduler
@@ -275,8 +273,6 @@ def create_app():
     app.register_blueprint(inscricoes_treinamento_bp)
     app.register_blueprint(auth_reset_bp)
     app.register_blueprint(auth_bp)
-    app.register_blueprint(chamados_bp)
-    app.register_blueprint(admin_chamados_bp)
 
     register_cli(app)
 

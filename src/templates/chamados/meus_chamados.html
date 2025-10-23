@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Meus Chamados{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Meus Chamados</h2>
+    <a href="{{ url_for('chamados.abrir_chamado') }}" class="btn btn-primary">
+      + Abrir Novo Chamado
+    </a>
+  </div>
+
+  {% if not chamados %}
+  <div class="alert alert-info">
+    Você ainda não abriu nenhum chamado.
+  </div>
+  {% else %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th scope="col">#ID</th>
+          <th scope="col">Título</th>
+          <th scope="col">Status</th>
+          <th scope="col">Aberto em</th>
+          <th scope="col">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for chamado in chamados %}
+        <tr>
+          <th scope="row">{{ chamado.id }}</th>
+          <td>{{ chamado.titulo }}</td>
+          <td>
+            <span class="badge 
+              {% if chamado.status.value == 'Aberto' %} bg-danger
+              {% elif chamado.status.value == 'Em Andamento' %} bg-warning text-dark
+              {% elif chamado.status.value == 'Aguardando Usuário' %} bg-info text-dark
+              {% elif chamado.status.value == 'Fechado' %} bg-success
+              {% else %} bg-secondary {% endif %}">
+              {{ chamado.status.value }}
+            </span>
+          </td>
+          <td>{{ chamado.data_abertura.strftime('%d/%m/%Y às %H:%M') }}</td>
+          <td>
+            <a href="{{ url_for('chamados.ver_chamado', chamado_id=chamado.id) }}" class="btn btn-sm btn-outline-primary">
+              Ver Detalhes
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

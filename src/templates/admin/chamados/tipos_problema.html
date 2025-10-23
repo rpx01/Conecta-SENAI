@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Gerenciar Tipos de Problema{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Gerenciar Base de Dados (Tipos de Problema)</h2>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="row">
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 id="form-title">Adicionar Novo Tipo</h5>
+        </div>
+        <div class="card-body">
+          <form id="tipo-form" method="POST" action="{{ url_for('admin_chamados.tipos_problema_salvar') }}">
+            <input type="hidden" name="id" id="tipo-id" />
+
+            <div class="mb-3">
+              <label for="tipo-nome" class="form-label">Nome <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="tipo-nome" name="nome" required />
+            </div>
+            <div class="mb-3">
+              <label for="tipo-descricao" class="form-label">Descrição</label>
+              <textarea class="form-control" id="tipo-descricao" name="descricao" rows="3"></textarea>
+            </div>
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary">Salvar</button>
+              <button type="button" id="btn-cancelar" class="btn btn-outline-secondary d-none">
+                Cancelar Edição
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-8">
+      <h5>Tipos Existentes</h5>
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th scope="col">Nome</th>
+              <th scope="col">Descrição</th>
+              <th scope="col">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if not tipos %}
+            <tr>
+              <td colspan="3" class="text-center text-muted">Nenhum tipo cadastrado.</td>
+            </tr>
+            {% endif %}
+            {% for tipo in tipos %}
+            <tr>
+              <td>{{ tipo.nome }}</td>
+              <td>{{ tipo.descricao or 'N/A' }}</td>
+              <td>
+                <button
+                  class="btn btn-sm btn-outline-secondary btn-edit"
+                  data-id="{{ tipo.id }}"
+                  data-nome="{{ tipo.nome }}"
+                  data-descricao="{{ tipo.descricao or '' }}"
+                >
+                  Editar
+                </button>
+                
+                <form
+                  action="{{ url_for('admin_chamados.tipos_problema_deletar', tipo_id=tipo.id) }}"
+                  method="POST"
+                  class="d-inline"
+                  onsubmit="return confirm('Tem certeza que deseja deletar o tipo &quot;{{ tipo.nome }}&quot;?');"
+                >
+                  <button type="submit" class="btn btn-sm btn-outline-danger">
+                    Deletar
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('tipo-form');
+    const formTitle = document.getElementById('form-title');
+    const inputId = document.getElementById('tipo-id');
+    const inputNome = document.getElementById('tipo-nome');
+    const inputDesc = document.getElementById('tipo-descricao');
+    const btnCancelar = document.getElementById('btn-cancelar');
+
+    document.querySelectorAll('.btn-edit').forEach(button => {
+      button.addEventListener('click', () => {
+        const id = button.dataset.id;
+        const nome = button.dataset.nome;
+        const descricao = button.dataset.descricao;
+
+        formTitle.innerText = `Editando: ${nome}`;
+        inputId.value = id;
+        inputNome.value = nome;
+        inputDesc.value = descricao;
+
+        btnCancelar.classList.remove('d-none');
+        inputNome.focus();
+      });
+    });
+
+    btnCancelar.addEventListener('click', () => {
+      formTitle.innerText = 'Adicionar Novo Tipo';
+      inputId.value = '';
+      form.reset();
+      btnCancelar.classList.add('d-none');
+    });
+  });
+</script>
+{% endblock %}

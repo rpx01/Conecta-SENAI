@@ -38,6 +38,25 @@ class User(db.Model):
     
     # Relacionamento com agendamentos
     agendamentos = db.relationship('Agendamento', backref='usuario', lazy=True)
+
+    # Relacionamentos com chamados de suporte
+    chamados_abertos = db.relationship(
+        'Chamado',
+        foreign_keys='Chamado.solicitante_id',
+        back_populates='solicitante',
+        lazy='dynamic',
+    )
+    chamados_responsaveis = db.relationship(
+        'Chamado',
+        foreign_keys='Chamado.admin_responsavel_id',
+        back_populates='admin_responsavel',
+        lazy='dynamic',
+    )
+    mensagens_chamados = db.relationship(
+        'MensagemChamado',
+        back_populates='usuario',
+        lazy='dynamic',
+    )
     
     def __init__(self, nome, email, senha, tipo='comum', username=None):
         """

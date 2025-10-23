@@ -163,13 +163,32 @@ const MAPA_SLUGS_PARA_URLS = {
     usuarios: ['/admin/usuarios.html']
 };
 
-const MODULOS_PADRAO = [
-    '/laboratorios/dashboard.html',
-    '/treinamentos/index.html',
-    '/ocupacao/dashboard.html',
-    '/noticias/index.html',
-    '/suporte_ti/abertura.html'
-];
+function normalizarUrlModulo(modulo) {
+    if (typeof modulo !== 'string') {
+        return null;
+    }
+
+    const entrada = modulo.trim();
+    if (!entrada) {
+        return null;
+    }
+
+    try {
+        const url = new URL(entrada, window.location.origin);
+        if (!url.pathname) {
+            return null;
+        }
+
+        // Remove barra extra ao final, exceto para a raiz
+        if (url.pathname !== '/' && url.pathname.endsWith('/')) {
+            return url.pathname.slice(0, -1);
+        }
+
+        return url.pathname;
+    } catch (_) {
+        return null;
+    }
+}
 
 function normalizarModuloEntrada(modulo) {
     if (typeof modulo !== 'string') {
@@ -181,35 +200,65 @@ function normalizarModuloEntrada(modulo) {
         return [];
     }
 
-    if (entrada.startsWith('/')) {
-        return [entrada];
-    }
-
     const urlsMapeadas = MAPA_SLUGS_PARA_URLS[entrada];
     if (urlsMapeadas) {
-        return Array.isArray(urlsMapeadas) ? urlsMapeadas : [urlsMapeadas];
+        const urls = Array.isArray(urlsMapeadas) ? urlsMapeadas : [urlsMapeadas];
+        return urls
+            .map((url) => normalizarUrlModulo(url))
+            .filter((urlNormalizada) => typeof urlNormalizada === 'string' && urlNormalizada.length > 0);
     }
 
-    return [];
+    const urlNormalizada = normalizarUrlModulo(entrada);
+    return urlNormalizada ? [urlNormalizada] : [];
 }
+
+function normalizarListaModulos(entradas = []) {
+    if (!entradas) {
+        return [];
+    }
+
+    let valores = [];
+
+    if (Array.isArray(entradas)) {
+        valores = entradas;
+    } else if (typeof entradas === 'string') {
+        valores = entradas.split(',');
+    } else if (entradas && typeof entradas[Symbol.iterator] === 'function') {
+        valores = Array.from(entradas);
+    }
+
+    return valores
+        .flatMap((valor) => normalizarModuloEntrada(valor))
+        .filter((url) => typeof url === 'string' && url.length > 0);
+}
+
+const MODULOS_PADRAO = normalizarListaModulos([
+    '/laboratorios/dashboard.html',
+    '/treinamentos/index.html',
+    '/ocupacao/dashboard.html',
+    '/noticias/index.html',
+    '/suporte_ti/abertura.html'
+]);
 
 // Mapeia os módulos disponíveis de acordo com o tipo de usuário
 function obterModulosDisponiveis(usuario = {}) {
     const modulos = new Set(MODULOS_PADRAO);
 
-    if (Array.isArray(usuario.modulos) && usuario.modulos.length > 0) {
-        usuario.modulos
-            .flatMap(normalizarModuloEntrada)
-            .forEach((url) => {
-                if (typeof url === 'string' && url.trim()) {
-                    modulos.add(url.trim());
-                }
-            });
-    }
+    const modulosUsuario = Array.isArray(usuario.modulos)
+        ? usuario.modulos
+        : typeof usuario.modulos === 'string' && usuario.modulos.length > 0
+            ? usuario.modulos.split(',')
+            : [];
+
+    normalizarListaModulos(modulosUsuario).forEach((url) => modulos.add(url));
 
     if (usuario.tipo === 'admin') {
-        ['/rateio/dashboard.html', '/admin/usuarios.html', '/noticias/gerenciamento.html', '/suporte_ti/admin_chamados.html']
-            .forEach((url) => modulos.add(url));
+        normalizarListaModulos([
+            '/rateio/dashboard.html',
+            '/admin/usuarios.html',
+            '/noticias/gerenciamento.html',
+            '/suporte_ti/admin_chamados.html'
+        ]).forEach((url) => modulos.add(url));
     }
 
     return Array.from(modulos);
@@ -588,6 +637,7 @@ function notify(tipo, mensagem) {
 window.showToast = showToast;
 window.notify = notify;
 window.setBusy = setBusy;
+window.normalizarUrlModulo = normalizarUrlModulo;
 document.addEventListener('DOMContentLoaded', criarToastContainer);
 
 /**

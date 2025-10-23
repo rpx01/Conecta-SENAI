@@ -59,7 +59,6 @@ from src.routes.treinamentos.basedados import (
     secretaria_bp as treinamentos_basedados_bp,
     locais_realizacao_bp as treinamentos_locais_realizacao_bp,
 )
-from src.routes.suporte_ti import suporte_ti_public_bp, suporte_ti_admin_bp
 from src.routes.inscricoes_treinamento import bp as inscricoes_treinamento_bp
 from src.blueprints.auth_reset import auth_reset_bp
 from src.blueprints.auth import auth_bp
@@ -271,8 +270,6 @@ def create_app():
         treinamentos_locais_realizacao_bp,
         url_prefix='/api/treinamentos/locais-realizacao',
     )
-    app.register_blueprint(suporte_ti_public_bp)
-    app.register_blueprint(suporte_ti_admin_bp)
     app.register_blueprint(inscricoes_treinamento_bp)
     app.register_blueprint(auth_reset_bp)
     app.register_blueprint(auth_bp)

@@ -157,13 +157,18 @@ function obterModulosDisponiveis(usuario) {
         '/laboratorios/dashboard.html',
         '/treinamentos/index.html',
         '/ocupacao/dashboard.html',
-        '/noticias/index.html'
+        '/noticias/index.html',
+        '/chamados/minhas',
+        '/chamados/novo'
     ];
 
     if (usuario.tipo === 'admin') {
         modulos.push('/rateio/dashboard.html');
         modulos.push('/admin/usuarios.html');
         modulos.push('/noticias/gerenciamento.html');
+        modulos.push('/chamados/admin/abertos');
+        modulos.push('/chamados/admin/indicadores');
+        modulos.push('/chamados/admin/base-dados');
     }
 
     return modulos;

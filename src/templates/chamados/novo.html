@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Abrir chamado de TI</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+</head>
+<body>
+  <main class="container">
+    <h1>Nova solicitação de suporte</h1>
+    <form id="form-chamado" enctype="multipart/form-data">
+      <div>
+        <label for="titulo">Título *</label>
+        <input id="titulo" name="titulo" type="text" required maxlength="200">
+      </div>
+      <div>
+        <label for="descricao">Descrição *</label>
+        <textarea id="descricao" name="descricao" rows="6" minlength="10" required></textarea>
+        <p class="ajuda">Descreva o problema com o máximo de detalhes possível.</p>
+      </div>
+      <div>
+        <label for="categoria">Categoria *</label>
+        <select id="categoria" name="categoria_id" required></select>
+      </div>
+      <div>
+        <label for="prioridade">Prioridade *</label>
+        <select id="prioridade" name="prioridade_id" required></select>
+      </div>
+      <div>
+        <label for="local">Local</label>
+        <select id="local" name="location_id"></select>
+      </div>
+      <div>
+        <label for="ativo">Equipamento / Ativo</label>
+        <select id="ativo" name="asset_id"></select>
+      </div>
+      <div>
+        <label for="anexos">Anexos (máx. 5 arquivos)</label>
+        <input id="anexos" name="anexos" type="file" multiple>
+        <small class="ajuda">Formatos suportados: PDF, PNG, JPG, CSV, TXT, DOCX, XLSX. Máx. 10MB cada.</small>
+      </div>
+      <button type="submit">Abrir chamado</button>
+      <p id="status"></p>
+    </form>
+  </main>
+  <script type="module" src="/static/js/chamados/novo.js"></script>
+</body>
+</html>

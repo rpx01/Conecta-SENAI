@@ -1,0 +1,13 @@
+{% extends 'email/_signature.html.j2' %}
+{% block content %}
+  <p>Olá,</p>
+  <p>Um novo chamado de TI foi registrado:</p>
+  <ul>
+    <li><strong>ID:</strong> {{ ticket.id }}</li>
+    <li><strong>Título:</strong> {{ ticket.titulo }}</li>
+    <li><strong>Categoria:</strong> {{ ticket.categoria_nome }}</li>
+    <li><strong>Prioridade:</strong> {{ ticket.prioridade_nome }}</li>
+    <li><strong>Solicitante:</strong> {{ ticket.solicitante_nome }}</li>
+  </ul>
+  <p>Acesse o sistema para acompanhar o atendimento.</p>
+{% endblock %}

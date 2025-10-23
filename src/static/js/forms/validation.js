@@ -154,6 +154,24 @@
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       return emailPattern.test(value);
     },
+    passwordStrength(value) {
+      if (!value) return false;
+      const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      return re.test(value);
+    },
+    match(value, field) {
+      const selector = field.dataset.validateMatchSelector;
+      if (!selector) {
+        console.warn('O validador "match" precisa do atributo "data-validate-match-selector"');
+        return false;
+      }
+      const otherField = field.form.querySelector(selector);
+      if (!otherField) {
+        console.warn(`O validador "match" não encontrou o campo: ${selector}`);
+        return false;
+      }
+      return value === otherField.value;
+    },
   };
 
   const sanitizers = {
@@ -176,6 +194,8 @@
     telefone: 'Informe um telefone válido (DD) 99999-9999.',
     date: 'Informe uma data válida no formato DD/MM/AAAA.',
     email: 'Informe um email válido.',
+    passwordStrength: 'A senha não atende aos requisitos mínimos.',
+    match: 'As senhas informadas não coincidem.',
   };
 
   class FormValidator {
@@ -258,7 +278,7 @@
         valid = false;
         message = field.dataset.requiredMessage || defaultMessages.required;
       } else if (value && type && typeof validators[type] === 'function') {
-        valid = validators[type](value);
+        valid = validators[type](value, field);
         if (!valid) {
           message = field.dataset.errorMessage || defaultMessages[type] || defaultMessages.required;
         }

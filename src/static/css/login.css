@@ -115,3 +115,22 @@ body {
         height: calc(3rem + 2px);
     }
 }
+
+/* Adições para UX do formulário de registro (Toggle de Senha) */
+.form-floating {
+    position: relative;
+}
+
+.password-toggle-icon {
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+    cursor: pointer;
+    z-index: 100;
+    color: #6c757d;
+}
+
+.password-toggle-icon:hover {
+    color: #212529;
+}

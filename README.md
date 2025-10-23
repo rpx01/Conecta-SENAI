@@ -81,6 +81,17 @@ Todas as variáveis disponíveis estão listadas em `.env.example`.
    ambiente `NOTIFICACAO_INTERVALO_MINUTOS` (padrão: `60`). Defina
    `SCHEDULER_ENABLED=0` para desativá-lo completamente.
 
+## Módulo de Chamados de TI
+
+- Execute `flask --app src.main db upgrade` para aplicar a migração `c5b7e21ad8c6_add_chamados_tables`, que cria as tabelas de chamados, comentários e anexos.
+- Configure `UPLOADS_DIR` com o diretório onde os anexos serão armazenados (ex.: `uploads/chamados`). O caminho pode ser relativo ao projeto ou absoluto.
+- Controle o envio de e-mails com `SEND_TICKET_EMAILS` (`1` para habilitar, `0` para desabilitar). Os avisos utilizam os templates em `src/templates/email/chamados/`.
+- Opcionalmente execute `python scripts/seed_chamados.py` para inserir categorias, prioridades e status padrão.
+- Os limites atuais aceitam arquivos `pdf`, `png`, `jpg`, `jpeg`, `csv`, `txt`, `docx` e `xlsx` com até 10 MB cada (máx. 50 MB por chamado).
+- Páginas disponíveis:
+  - Usuários: `/chamados/novo` (abrir chamado) e `/chamados/minhas` (listar chamados pessoais).
+  - Administradores: `/chamados/admin/abertos`, `/chamados/admin/indicadores` e `/chamados/admin/base-dados`.
+
 ## Observabilidade e Logs
 
 - **Executar com Gunicorn**:
@@ -173,6 +184,11 @@ A aplicação ficará disponível em [http://localhost:8000](http://localhost:80
 | `POST` | `/api/noticias` | Cria notícia (administradores) |
 | `PUT` | `/api/noticias/<id>` | Atualiza notícia (administradores) |
 | `DELETE` | `/api/noticias/<id>` | Remove notícia (administradores) |
+| `POST` | `/api/chamados` | Cria um chamado de TI (autenticado) |
+| `GET` | `/api/chamados` | Lista chamados do usuário autenticado |
+| `GET` | `/api/chamados/<id>` | Detalhe de um chamado (permissões aplicadas) |
+| `PATCH` | `/api/chamados/<id>` | Atualizações administrativas (atribuição, status, prioridade) |
+| `GET` | `/api/chamados/indicadores` | Indicadores agregados de chamados (administradores) |
 
 ## Integração Contínua
 

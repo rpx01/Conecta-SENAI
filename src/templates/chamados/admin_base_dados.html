@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Base de dados dos chamados</title>
+</head>
+<body>
+  <main class="container">
+    <h1>Base de dados - Chamados de TI</h1>
+    <section id="categorias" class="crud">
+      <h2>Categorias</h2>
+      <form data-resource="categorias">
+        <input name="nome" placeholder="Nome" required>
+        <input name="descricao" placeholder="Descrição">
+        <button type="submit">Adicionar</button>
+      </form>
+      <ul class="lista"></ul>
+    </section>
+    <section id="prioridades" class="crud">
+      <h2>Prioridades</h2>
+      <form data-resource="prioridades">
+        <input name="nome" placeholder="Nome" required>
+        <input name="peso" type="number" placeholder="Peso" value="1">
+        <button type="submit">Adicionar</button>
+      </form>
+      <ul class="lista"></ul>
+    </section>
+    <section id="statuses" class="crud">
+      <h2>Status</h2>
+      <form data-resource="statuses">
+        <input name="nome" placeholder="Nome" required>
+        <input name="ordem" type="number" placeholder="Ordem" value="0">
+        <button type="submit">Adicionar</button>
+      </form>
+      <ul class="lista"></ul>
+    </section>
+    <section id="locations" class="crud">
+      <h2>Locais</h2>
+      <form data-resource="locations">
+        <input name="nome" placeholder="Nome" required>
+        <button type="submit">Adicionar</button>
+      </form>
+      <ul class="lista"></ul>
+    </section>
+    <section id="assets" class="crud">
+      <h2>Ativos</h2>
+      <form data-resource="assets">
+        <input name="tag" placeholder="Tag" required>
+        <input name="descricao" placeholder="Descrição">
+        <button type="submit">Adicionar</button>
+      </form>
+      <ul class="lista"></ul>
+    </section>
+    <section id="slas" class="crud">
+      <h2>SLAs</h2>
+      <form data-resource="slas">
+        <input name="categoria_id" placeholder="ID categoria">
+        <input name="prioridade_id" placeholder="ID prioridade" required>
+        <input name="horas" type="number" placeholder="Horas" required>
+        <button type="submit">Adicionar</button>
+      </form>
+      <ul class="lista"></ul>
+    </section>
+  </main>
+  <script type="module" src="/static/js/chamados/admin_base_dados.js"></script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Admin: Chamado #{{ chamado.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <div class="row">
+    <div class="col-lg-4 mb-4">
+      <a href="{{ url_for('admin_chamados.dashboard') }}" class="btn btn-sm btn-outline-secondary mb-2">&larr; Voltar ao Dashboard</a>
+      
+      <div class="card mb-3">
+        <div class="card-header">
+          <h4>Detalhes do Chamado #{{ chamado.id }}</h4>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">{{ chamado.titulo }}</h5>
+          <p class="card-text">
+            <strong>Tipo:</strong> {{ chamado.tipo_problema.nome }}<br />
+            <strong>Solicitante:</strong> {{ chamado.solicitante.nome }} ({{ chamado.solicitante.email }})<br />
+            <strong>Aberto em:</strong> {{ chamado.data_abertura.strftime('%d/%m/%Y %H:%M') }}
+          </p>
+          <hr />
+          <h6>Descrição Original:</h6>
+          <p style="white-space: pre-wrap">{{ chamado.descricao }}</p>
+          {% if chamado.status.value == 'Fechado' and chamado.data_fechamento %}
+          <p class="text-success">
+            <strong>Fechado em:</strong> {{ chamado.data_fechamento.strftime('%d/%m/%Y %H:%M') }}
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h5>Controles do Administrador</h5>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('admin_chamados.ver_chamado_admin', chamado_id=chamado.id) }}">
+            <div class="mb-3">
+              <label for="novo_status" class="form-label"><strong>Mudar Status:</strong></label>
+              <select class="form-select" name="novo_status" id="novo_status">
+                {% for status in status_list %}
+                <option value="{{ status.name }}" {% if chamado.status == status %}selected{% endif %}>
+                  {{ status.value }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div class="mb-3">
+              <label for="admin_responsavel_id" class="form-label"><strong>Atribuir/Mudar Responsável:</strong></label>
+              <select class="form-select" name="admin_responsavel_id" id="admin_responsavel_id">
+                <option value="0">Ninguém (não atribuído)</option>
+                {% for admin in admins_list %}
+                <option value="{{ admin.id }}" {% if chamado.admin_responsavel_id == admin.id %}selected{% endif %}>
+                  {{ admin.nome }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <button type="submit" name="atualizar_status" value="1" class="btn btn-success">Salvar Alterações</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <h4>Histórico de Mensagens</h4>
+      
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <div class="historico-chat mb-3" style="max-height: 600px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
+        {% if not mensagens %}
+        <p class="text-center text-muted">Nenhuma mensagem trocada ainda.</p>
+        {% endif %}
+
+        {% for msg in mensagens %}
+        {% if msg.usuario.tipo in ['admin', 'secretaria'] %}
+        <div class="d-flex justify-content-end mb-2">
+          <div class="card bg-success text-white" style="max-width: 80%">
+            <div class="card-body p-2">
+              <strong class="card-title small">
+                {% if msg.usuario_id == current_user.id %}Você{% else %}{{ msg.usuario.nome }}{% endif %} (TI)
+              </strong>
+              <p class="card-text mb-0">{{ msg.texto | safe }}</p>
+              <small class="text-white-50 float-end">{{ msg.data_envio.strftime('%d/%m %H:%M') }}</small>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="d-flex justify-content-start mb-2">
+          <div class="card bg-light" style="max-width: 80%">
+            <div class="card-body p-2">
+              <strong class="card-title small">{{ msg.usuario.nome }} (Usuário)</strong>
+              <p class="card-text mb-0">{{ msg.texto | safe }}</p>
+              <small class="text-muted float-end">{{ msg.data_envio.strftime('%d/%m %H:%M') }}</small>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+
+      {% if chamado.status.value != 'Fechado' %}
+      <form method="POST" action="{{ url_for('admin_chamados.ver_chamado_admin', chamado_id=chamado.id) }}">
+        <div class="mb-3">
+          <label for="texto_mensagem" class="form-label">Adicionar mensagem (visível para o usuário):</label>
+          <textarea
+            class="form-control"
+            id="texto_mensagem"
+            name="texto_mensagem"
+            rows="4"
+            required
+          ></textarea>
+        </div>
+        <button type="submit" name="nova_mensagem" value="1" class="btn btn-primary">Enviar Mensagem</button>
+      </form>
+      {% else %}
+      <div class="alert alert-info">
+        Este chamado está fechado. Para reabrir, mude o status e salve as alterações.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

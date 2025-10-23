@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Indicadores de Chamados{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Indicadores de Chamados de TI</h2>
+
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">Total de Chamados Abertos</h5>
+          <p class="card-text display-4">{{ total_abertos }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">Tempo Médio de Fechamento</h5>
+          <p class="card-text display-4">{{ tempo_medio_dias }} <span class_="h5">dias</span></p>
+          <small class="text-muted">(Calculado com base em chamados já fechados)</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title text-center">Chamados por Status</h5>
+          <canvas id="graficoStatus"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title text-center">Chamados por Tipo de Problema</h5>
+          <canvas id="graficoTipo"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  const dadosStatus = {{ dados_status | tojson }};
+  const dadosTipo = {{ dados_tipo | tojson }};
+
+  const ctxStatus = document.getElementById('graficoStatus').getContext('2d');
+  new Chart(ctxStatus, {
+    type: 'pie',
+    data: {
+      labels: dadosStatus.labels,
+      datasets: [{
+        label: 'Chamados',
+        data: dadosStatus.data,
+        backgroundColor: [
+          'rgb(220, 53, 69)',
+          'rgb(255, 193, 7)',
+          'rgb(13, 202, 240)',
+          'rgb(25, 135, 84)',
+        ],
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+    }
+  });
+
+  const ctxTipo = document.getElementById('graficoTipo').getContext('2d');
+  new Chart(ctxTipo, {
+    type: 'bar',
+    data: {
+      labels: dadosTipo.labels,
+      datasets: [{
+        label: 'Nº de Chamados',
+        data: dadosTipo.data,
+        backgroundColor: 'rgba(0, 123, 255, 0.7)',
+        borderColor: 'rgba(0, 123, 255, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      },
+      plugins: {
+        legend: {
+          display: false
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

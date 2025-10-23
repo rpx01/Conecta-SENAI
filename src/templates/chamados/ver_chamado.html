@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Detalhes do Chamado #{{ chamado.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-lg-4 mb-4">
+      <a href="{{ url_for('chamados.meus_chamados') }}" class="btn btn-sm btn-outline-secondary mb-2">&larr; Voltar para Meus Chamados</a>
+      <div class="card">
+        <div class="card-header">
+          <h4>Detalhes do Chamado #{{ chamado.id }}</h4>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">{{ chamado.titulo }}</h5>
+          <p class="card-text">
+            <strong>Tipo:</strong> {{ chamado.tipo_problema.nome }}<br />
+            <strong>Solicitante:</strong> {{ chamado.solicitante.nome }}<br />
+            <strong>Aberto em:</strong> {{ chamado.data_abertura.strftime('%d/%m/%Y %H:%M') }}
+          </p>
+          <p>
+            <strong>Status:</strong>
+            <span class="badge 
+              {% if chamado.status.value == 'Aberto' %} bg-danger
+              {% elif chamado.status.value == 'Em Andamento' %} bg-warning text-dark
+              {% elif chamado.status.value == 'Aguardando Usuário' %} bg-info text-dark
+              {% elif chamado.status.value == 'Fechado' %} bg-success
+              {% else %} bg-secondary {% endif %}">
+              {{ chamado.status.value }}
+            </span>
+          </p>
+          {% if chamado.admin_responsavel %}
+          <p>
+            <strong>Responsável:</strong> {{ chamado.admin_responsavel.nome }}
+          </p>
+          {% endif %}
+          <hr />
+          <h6>Descrição Original:</h6>
+          <p style="white-space: pre-wrap">{{ chamado.descricao }}</p>
+
+          {% if chamado.status.value == 'Fechado' and chamado.data_fechamento %}
+          <p class="text-success">
+            <strong>Fechado em:</strong> {{ chamado.data_fechamento.strftime('%d/%m/%Y %H:%M') }}
+          </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <h4>Histórico de Mensagens</h4>
+      
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <div class="historico-chat mb-3" style="max-height: 600px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
+        {% if not mensagens %}
+        <p class="text-center text-muted">Nenhuma mensagem trocada ainda.</p>
+        {% endif %}
+
+        {% for msg in mensagens %}
+        {% if msg.usuario_id == current_user.id %}
+        <div class="d-flex justify-content-end mb-2">
+          <div class="card bg-primary text-white" style="max-width: 80%">
+            <div class="card-body p-2">
+              <p class="card-text mb-0">{{ msg.texto | safe }}</p>
+              <small class="text-white-50 float-end">{{ msg.data_envio.strftime('%d/%m %H:%M') }} por Você</small>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="d-flex justify-content-start mb-2">
+          <div class="card bg-light" style="max-width: 80%">
+            <div class="card-body p-2">
+              <strong class="card-title small">{{ msg.usuario.nome }}{% if msg.usuario.tipo in ['admin', 'secretaria'] %} (TI){% endif %}</strong>
+              <p class="card-text mb-0">{{ msg.texto | safe }}</p>
+              <small class="text-muted float-end">{{ msg.data_envio.strftime('%d/%m %H:%M') }}</small>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+
+      {% if chamado.status.value != 'Fechado' %}
+      <form method="POST" action="{{ url_for('chamados.ver_chamado', chamado_id=chamado.id) }}">
+        <div class="mb-3">
+          <label for="texto_mensagem" class="form-label">
+            {% if chamado.status.value == 'Aguardando Usuário' %}
+              <strong>O TI precisa de uma resposta sua:</strong>
+            {% else %}
+              Adicionar uma nova mensagem ou resposta:
+            {% endif %}
+          </label>
+          <textarea
+            class="form-control"
+            id="texto_mensagem"
+            name="texto_mensagem"
+            rows="4"
+            required
+          ></textarea>
+        </div>
+        <button type="submit" class="btn btn-success">Enviar Mensagem</button>
+      </form>
+      {% else %}
+      <div class="alert alert-info">
+        Este chamado está fechado e não pode mais receber novas mensagens.
+        Se o problema persistir, por favor, abra um novo chamado.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

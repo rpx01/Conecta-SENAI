@@ -154,6 +154,7 @@ function setBusy(btn, busy = true) {
 // Mapeia os módulos disponíveis de acordo com o tipo de usuário
 function obterModulosDisponiveis(usuario) {
     const modulos = [
+        '/chamados/meus_chamados',
         '/laboratorios/dashboard.html',
         '/treinamentos/index.html',
         '/ocupacao/dashboard.html',
@@ -161,6 +162,7 @@ function obterModulosDisponiveis(usuario) {
     ];
 
     if (usuario.tipo === 'admin') {
+        modulos.push('/admin/chamados/dashboard');
         modulos.push('/rateio/dashboard.html');
         modulos.push('/admin/usuarios.html');
         modulos.push('/noticias/gerenciamento.html');

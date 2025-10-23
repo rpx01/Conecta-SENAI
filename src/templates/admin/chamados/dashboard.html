@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Dashboard de Chamados{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <h2>Dashboard de Chamados (Abertos)</h2>
+
+  <form method="GET" action="{{ url_for('admin_chamados.dashboard') }}" class="card card-body mb-3">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label for="status" class="form-label">Status</label>
+        <select class="form-select" name="status" id="status">
+          <option value="">Todos (Não Fechados)</option>
+          {% for s in status_disponiveis %}
+          <option value="{{ s.name }}" {% if filtros.status == s.name %}selected{% endif %}>
+            {{ s.value }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label for="solicitante_id" class="form-label">Solicitante</label>
+        <select class="form-select" name="solicitante_id" id="solicitante_id">
+          <option value="">Todos Solicitantes</option>
+          {% for user in solicitantes %}
+          <option value="{{ user.id }}" {% if filtros.solicitante_id == user.id|string %}selected{% endif %}>
+            {{ user.nome }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label for="tipo_id" class="form-label">Tipo de Problema</label>
+        <select class="form-select" name="tipo_id" id="tipo_id">
+          <option value="">Todos os Tipos</option>
+          {% for tipo in tipos_problema %}
+          <option value="{{ tipo.id }}" {% if filtros.tipo_id == tipo.id|string %}selected{% endif %}>
+            {{ tipo.nome }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+        <a href="{{ url_for('admin_chamados.dashboard') }}" class="btn btn-outline-secondary ms-2" title="Limpar Filtros">X</a>
+      </div>
+    </div>
+  </form>
+
+  {% if not chamados %}
+  <div class="alert alert-info">
+    Nenhum chamado encontrado com os filtros selecionados.
+  </div>
+  {% else %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th scope="col">#ID</th>
+          <th scope="col">Aberto em</th>
+          <th scope="col">Título</th>
+          <th scope="col">Solicitante</th>
+          <th scope="col">Tipo</th>
+          <th scope="col">Status</th>
+          <th scope="col">Responsável</th>
+          <th scope="col">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for chamado in chamados %}
+        <tr>
+          <th scope="row">{{ chamado.id }}</th>
+          <td>{{ chamado.data_abertura.strftime('%d/%m/%Y %H:%M') }}</td>
+          <td>{{ chamado.titulo }}</td>
+          <td>{{ chamado.solicitante.nome }}</td>
+          <td>{{ chamado.tipo_problema.nome }}</td>
+          <td>
+            <span class="badge 
+              {% if chamado.status.value == 'Aberto' %} bg-danger
+              {% elif chamado.status.value == 'Em Andamento' %} bg-warning text-dark
+              {% elif chamado.status.value == 'Aguardando Usuário' %} bg-info text-dark
+              {% else %} bg-secondary {% endif %}">
+              {{ chamado.status.value }}
+            </span>
+          </td>
+          <td>
+            {% if chamado.admin_responsavel %} 
+              {{ chamado.admin_responsavel.nome }} 
+            {% else %}
+              <span class="text-muted">N/A</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{{ url_for('admin_chamados.ver_chamado_admin', chamado_id=chamado.id) }}" class="btn btn-sm btn-primary">
+              Gerenciar
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Abrir Novo Chamado{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Abrir Novo Chamado de TI</h2>
+  <p>
+    Descreva seu problema em detalhes para que a equipe de TI possa
+    ajudá-lo(a) da melhor forma.
+  </p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" action="{{ url_for('chamados.abrir_chamado') }}">
+    <div class="mb-3">
+      <label for="tipo_problema_id" class="form-label">Tipo de Problema <span class="text-danger">*</span></label>
+      <select class="form-select" id="tipo_problema_id" name="tipo_problema_id" required>
+        <option value="">Selecione o tipo de problema...</option>
+        {% for tipo in tipos_problema %}
+        <option value="{{ tipo.id }}">{{ tipo.nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="titulo" class="form-label">Título <span class="text-danger">*</span></label>
+      <input
+        type="text"
+        class="form-control"
+        id="titulo"
+        name="titulo"
+        placeholder="Ex: Meu computador não liga"
+        required
+      />
+    </div>
+
+    <div class="mb-3">
+      <label for="descricao" class="form-label">Descrição Detalhada <span class="text-danger">*</span></label>
+      <textarea
+        class="form-control"
+        id="descricao"
+        name="descricao"
+        rows="6"
+        placeholder="Descreva o que aconteceu, quando aconteceu e o que você já tentou fazer. (Se houver uma sala ou número de patrimônio, inclua aqui)"
+        required
+      ></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Abrir Chamado</button>
+    <a href="{{ url_for('chamados.meus_chamados') }}" class="btn btn-secondary">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

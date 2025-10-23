@@ -8,8 +8,12 @@ import re
 from flask import Flask, redirect, send_from_directory
 from flasgger import Swagger
 from flask_wtf.csrf import CSRFProtect
-from sentry_sdk.integrations.flask import FlaskIntegration
-import sentry_sdk
+try:  # pragma: no cover - Sentry é opcional em ambientes de testes
+    from sentry_sdk.integrations.flask import FlaskIntegration
+    import sentry_sdk
+except ModuleNotFoundError:  # pragma: no cover - fallback quando dependência não está instalada
+    FlaskIntegration = None
+    sentry_sdk = None
 from src.redis_client import init_redis
 from src.config import DevConfig, ProdConfig, TestConfig
 from src.repositories.user_repository import UserRepository
@@ -38,15 +42,16 @@ def before_send(event, hint):
     return event
 
 
-sentry_sdk.init(
-    dsn=os.getenv("SENTRY_DSN"),
-    environment=os.getenv("APP_ENV"),
-    release=os.getenv("APP_RELEASE"),
-    integrations=[FlaskIntegration()],
-    traces_sample_rate=0.2,
-    send_default_pii=False,
-    before_send=before_send,
-)
+if sentry_sdk and FlaskIntegration:
+    sentry_sdk.init(
+        dsn=os.getenv("SENTRY_DSN"),
+        environment=os.getenv("APP_ENV"),
+        release=os.getenv("APP_RELEASE"),
+        integrations=[FlaskIntegration()],
+        traces_sample_rate=0.2,
+        send_default_pii=False,
+        before_send=before_send,
+    )
 
 from src.models import db
 from src.routes.laboratorios import agendamento_bp, laboratorio_bp
@@ -64,6 +69,8 @@ from src.blueprints.auth_reset import auth_reset_bp
 from src.blueprints.auth import auth_bp
 from src.scheduler import start_scheduler
 from src.routes.noticias import api_noticias_bp
+from src.routes.support import support_bp
+from src.routes.horario import horario_bp
 from src.cli import register_cli
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -263,6 +270,8 @@ def create_app():
     app.register_blueprint(rateio_bp, url_prefix='/api')
     app.register_blueprint(treinamento_bp, url_prefix='/api')
     app.register_blueprint(api_noticias_bp, url_prefix='/api')
+    app.register_blueprint(support_bp, url_prefix='/api')
+    app.register_blueprint(horario_bp, url_prefix='/api')
     app.register_blueprint(
         treinamentos_basedados_bp, url_prefix='/api/treinamentos/secretaria'
     )

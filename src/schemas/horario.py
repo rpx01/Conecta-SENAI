@@ -1,9 +1,5 @@
-"""Esquemas Pydantic para o recurso de horários."""
-
-from typing import Literal, Optional
-
-from pydantic import BaseModel, ConfigDict
-
+from pydantic import BaseModel
+from typing import Optional, Literal
 
 TurnoLiteral = Literal["Manhã", "Tarde", "Noite", "Manhã/Tarde", "Tarde/Noite"]
 
@@ -18,4 +14,6 @@ class HorarioOut(BaseModel):
     nome: str
     turno: Optional[TurnoLiteral] = None
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        from_attributes = True
+

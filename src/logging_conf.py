@@ -1,17 +1,9 @@
+import os
 import logging
 import logging.config
-import os
-
 from flask import g, has_request_context
-try:  # pragma: no cover - dependência opcional
-    from opentelemetry import trace
-except ModuleNotFoundError:  # pragma: no cover - fallback quando tracing não está habilitado
-    trace = None
-
-try:  # pragma: no cover - dependência opcional
-    from pythonjsonlogger import jsonlogger
-except ModuleNotFoundError:  # pragma: no cover - fallback para ambientes de teste
-    jsonlogger = None
+from pythonjsonlogger import jsonlogger
+from opentelemetry import trace
 
 APP_ENV = os.getenv("APP_ENV", "dev")
 APP_RELEASE = os.getenv("APP_RELEASE", "")
@@ -25,42 +17,15 @@ class ContextFilter(logging.Filter):
         record.request_id = (
             getattr(g, "request_id", None) if has_request_context() else None
         )
-        if trace is not None:
-            span = trace.get_current_span()
-            ctx = span.get_span_context()
-            if ctx and ctx.is_valid:
-                record.trace_id = format(ctx.trace_id, "032x")
-                record.span_id = format(ctx.span_id, "016x")
-            else:
-                record.trace_id = None
-                record.span_id = None
+        span = trace.get_current_span()
+        ctx = span.get_span_context()
+        if ctx and ctx.is_valid:
+            record.trace_id = format(ctx.trace_id, "032x")
+            record.span_id = format(ctx.span_id, "016x")
         else:
             record.trace_id = None
             record.span_id = None
         return True
-
-
-if jsonlogger:
-    _FORMATTER_CONFIG = {
-        "()": jsonlogger.JsonFormatter,
-        "fmt": (
-            "%(asctime)s %(levelname)s %(name)s %(message)s "
-            "%(route)s %(method)s %(status)s %(latency_ms)s %(user_id)s "
-            "%(request_id)s %(trace_id)s %(span_id)s"
-        ),
-        "rename_fields": {
-            "asctime": "timestamp",
-            "levelname": "level",
-            "name": "logger",
-        },
-    }
-else:
-    _FORMATTER_CONFIG = {
-        "format": (
-            "%(asctime)s %(levelname)s %(name)s %(message)s "
-            "%(request_id)s %(trace_id)s %(span_id)s"
-        )
-    }
 
 
 LOGGING_CONFIG = {
@@ -70,7 +35,19 @@ LOGGING_CONFIG = {
         "context": {"()": ContextFilter},
     },
     "formatters": {
-        "json": _FORMATTER_CONFIG
+        "json": {
+            "()": jsonlogger.JsonFormatter,
+            "fmt": (
+                "%(asctime)s %(levelname)s %(name)s %(message)s "
+                "%(route)s %(method)s %(status)s %(latency_ms)s %(user_id)s "
+                "%(request_id)s %(trace_id)s %(span_id)s"
+            ),
+            "rename_fields": {
+                "asctime": "timestamp",
+                "levelname": "level",
+                "name": "logger",
+            },
+        }
     },
     "handlers": {
         "default": {

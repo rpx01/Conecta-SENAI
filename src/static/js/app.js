@@ -157,8 +157,7 @@ function obterModulosDisponiveis(usuario) {
         '/laboratorios/dashboard.html',
         '/treinamentos/index.html',
         '/ocupacao/dashboard.html',
-        '/noticias/index.html',
-        '/suporte-ti/index.html'
+        '/noticias/index.html'
     ];
 
     if (usuario.tipo === 'admin') {

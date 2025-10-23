@@ -173,29 +173,6 @@ A aplicação ficará disponível em [http://localhost:8000](http://localhost:80
 | `POST` | `/api/noticias` | Cria notícia (administradores) |
 | `PUT` | `/api/noticias/<id>` | Atualiza notícia (administradores) |
 | `DELETE` | `/api/noticias/<id>` | Remove notícia (administradores) |
-| `POST` | `/api/support/tickets` | Cria um chamado de suporte (usuários autenticados) |
-| `GET` | `/api/support/tickets/mine` | Lista chamados do usuário autenticado |
-| `GET` | `/api/support/tickets` | Lista chamados com filtros (administradores) |
-| `PATCH` | `/api/support/tickets/<id>` | Atualiza status/urgência do chamado (administradores) |
-| `GET` | `/api/support/indicadores` | Indicadores de suporte de TI (administradores) |
-| `GET` | `/api/support/areas` | Lista áreas de suporte |
-| `POST` | `/api/support/areas` | Cadastra área de suporte (administradores) |
-| `PUT` | `/api/support/areas/<id>` | Atualiza área de suporte (administradores) |
-| `DELETE` | `/api/support/areas/<id>` | Remove área de suporte (administradores) |
-| `GET` | `/api/support/equipamentos` | Lista tipos de equipamento |
-| `POST` | `/api/support/equipamentos` | Cadastra tipo de equipamento (administradores) |
-| `PUT` | `/api/support/equipamentos/<id>` | Atualiza tipo de equipamento (administradores) |
-| `DELETE` | `/api/support/equipamentos/<id>` | Remove tipo de equipamento (administradores) |
-
-## Módulo de Suporte de TI
-
-O módulo **Suporte de TI** centraliza a abertura e o acompanhamento de chamados técnicos dentro do Conecta-SENAI.
-
-- **Abrir chamado**: formulário com preenchimento automático do nome do usuário, seleção de área/equipamento, definição de urgência e envio de até cinco fotos.
-- **Meus chamados**: painel para acompanhar todos os tickets abertos pelo usuário, com filtros de status e detalhamento dos anexos enviados.
-- **Chamados em aberto** (administradores): visão consolidada com filtros por área, equipamento e urgência, edição rápida de status e acesso aos detalhes do chamado.
-- **Indicadores** (administradores): dashboards alimentados pela API com métricas como total de chamados, média de tempo de resolução e distribuição por área/urgência.
-- **Base de conhecimento** (administradores): CRUD para manter as listas de áreas e tipos de equipamentos utilizados no formulário de abertura de chamados.
 
 ## Integração Contínua
 

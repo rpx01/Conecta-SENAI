@@ -1,4 +1,4 @@
-/* global bootstrap, chamarAPI, verificarAutenticacao, verificarPermissaoAdmin, getUsuarioLogado, formatarData, sanitizeHTML */
+/* global bootstrap, chamarAPI, verificarAutenticacao, verificarPermissaoAdmin, getUsuarioLogado, formatarData, sanitizeHTML, showToast */
 
 (function () {
     const tabela = document.querySelector('#tabelaChamadosAdmin tbody');
@@ -15,6 +15,8 @@
     const listaAnexos = document.getElementById('listaAnexosAdmin');
     const modalEl = document.getElementById('modalDetalhesChamadoAdmin');
     const modal = modalEl ? new bootstrap.Modal(modalEl) : null;
+
+    const statusOpcoes = ['Aberto', 'Em Andamento', 'Fechado', 'Cancelado'];
 
     async function inicializar() {
         const autenticado = await verificarAutenticacao();
@@ -116,6 +118,16 @@
         }
         chamados.forEach((chamado, indice) => {
             const tr = document.createElement('tr');
+            const statusNormalizado = (chamado.status || '').toLowerCase();
+            const statusAtual =
+                statusOpcoes.find((status) => status.toLowerCase() === statusNormalizado) ||
+                statusOpcoes[0];
+            const statusOptionsHtml = statusOpcoes
+                .map(
+                    (opcao) =>
+                        `<option value="${opcao}"${opcao === statusAtual ? ' selected' : ''}>${opcao}</option>`
+                )
+                .join('');
             tr.innerHTML = `
                 <th scope="row">${indice + 1}</th>
                 <td>${formatarData(chamado.created_at)}</td>
@@ -123,11 +135,33 @@
                 <td>${sanitizeHTML(chamado.area || '')}</td>
                 <td>${sanitizeHTML(chamado.tipo_equipamento_nome || '-')}</td>
                 <td><span class="badge text-bg-${classeUrgencia(chamado.nivel_urgencia)}">${sanitizeHTML(chamado.nivel_urgencia || '-')}</span></td>
-                <td><span class="badge text-bg-${classeStatus(chamado.status)}">${sanitizeHTML(chamado.status || '-')}</span></td>
-                <td><button class="btn btn-sm btn-outline-primary" data-id="${chamado.id}"><i class="bi bi-eye"></i></button></td>
+                <td>
+                    <div class="d-flex flex-column gap-1">
+                        <span class="badge status-badge text-bg-${classeStatus(statusAtual)}">${sanitizeHTML(statusAtual)}</span>
+                        <select class="form-select form-select-sm status-select" data-id="${chamado.id}">
+                            ${statusOptionsHtml}
+                        </select>
+                    </div>
+                </td>
+                <td>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary" data-acao="detalhes" data-id="${chamado.id}" title="Ver detalhes">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </td>
             `;
-            const botao = tr.querySelector('button');
+            const botao = tr.querySelector('button[data-acao="detalhes"]');
             botao?.addEventListener('click', () => abrirModal(chamado));
+
+            const selectStatus = tr.querySelector('.status-select');
+            const badgeStatus = tr.querySelector('.status-badge');
+            if (selectStatus) {
+                selectStatus.dataset.originalValue = statusAtual;
+                selectStatus.addEventListener('change', () =>
+                    atualizarStatusChamado(chamado.id, selectStatus.value, selectStatus, badgeStatus)
+                );
+            }
             tabela.appendChild(tr);
         });
     }
@@ -156,6 +190,46 @@
                 return 'secondary';
             default:
                 return 'secondary';
+        }
+    }
+
+    function atualizarClasseBadge(badgeEl, status) {
+        if (!badgeEl) return;
+        const classes = ['text-bg-primary', 'text-bg-warning', 'text-bg-success', 'text-bg-secondary'];
+        badgeEl.classList.remove(...classes);
+        badgeEl.classList.add(`text-bg-${classeStatus(status)}`);
+        badgeEl.textContent = status || '-';
+    }
+
+    async function atualizarStatusChamado(chamadoId, novoStatus, selectEl, badgeEl) {
+        if (!novoStatus) {
+            showToast('Selecione um status válido para atualizar o chamado.', 'warning');
+            selectEl.value = selectEl.dataset.originalValue || '';
+            return;
+        }
+        if (novoStatus === selectEl.dataset.originalValue) {
+            return;
+        }
+
+        selectEl.disabled = true;
+        badgeEl?.classList.add('opacity-50');
+
+        try {
+            const resposta = await chamarAPI(
+                `/suporte_ti/admin/chamados/${chamadoId}/status`,
+                'PUT',
+                { status: novoStatus }
+            );
+            selectEl.dataset.originalValue = novoStatus;
+            atualizarClasseBadge(badgeEl, novoStatus);
+            showToast(resposta?.mensagem || 'Status atualizado com sucesso!', 'success');
+        } catch (error) {
+            const mensagem = error?.message || 'Não foi possível atualizar o status do chamado.';
+            showToast(mensagem, 'danger');
+            selectEl.value = selectEl.dataset.originalValue || '';
+        } finally {
+            selectEl.disabled = false;
+            badgeEl?.classList.remove('opacity-50');
         }
     }
 

@@ -66,61 +66,67 @@
             </div>
         </div>
 
-        <section class="card mb-4">
-            <div class="card-header bg-white">
-                <h2 class="h5 mb-0"><i class="bi bi-funnel me-2"></i>Filtros</h2>
-            </div>
-            <div class="card-body">
-                <form class="row g-3" id="formFiltros">
-                    <div class="col-sm-6 col-lg-3">
-                        <label for="filtroStatus" class="form-label">Status</label>
-                        <select id="filtroStatus" class="form-select" multiple>
-                            <option value="Aberto">Aberto</option>
-                            <option value="Em Andamento">Em Andamento</option>
-                            <option value="Fechado">Fechado</option>
-                            <option value="Cancelado">Cancelado</option>
-                        </select>
+        <section class="accordion mb-4" id="accordionFiltros">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingFiltros">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFiltros" aria-expanded="false" aria-controls="collapseFiltros">
+                        <i class="bi bi-funnel me-2"></i>Filtros
+                    </button>
+                </h2>
+                <div id="collapseFiltros" class="accordion-collapse collapse" aria-labelledby="headingFiltros" data-bs-parent="#accordionFiltros">
+                    <div class="accordion-body">
+                        <form class="row g-3" id="formFiltros">
+                            <div class="col-sm-6 col-lg-3">
+                                <label for="filtroStatus" class="form-label">Status</label>
+                                <select id="filtroStatus" class="form-select" multiple>
+                                    <option value="Aberto">Aberto</option>
+                                    <option value="Em Andamento">Em Andamento</option>
+                                    <option value="Fechado">Fechado</option>
+                                    <option value="Cancelado">Cancelado</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <label for="filtroUrgencia" class="form-label">Nível de urgência</label>
+                                <select id="filtroUrgencia" class="form-select">
+                                    <option value="">Todos</option>
+                                    <option value="Baixo">Baixo</option>
+                                    <option value="Médio">Médio</option>
+                                    <option value="Alto">Alto</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <label for="filtroArea" class="form-label">Área</label>
+                                <select id="filtroArea" class="form-select">
+                                    <option value="">Todas</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <label for="filtroTipoEquipamento" class="form-label">Tipo de equipamento</label>
+                                <select id="filtroTipoEquipamento" class="form-select">
+                                    <option value="">Todos</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <label for="filtroDataInicio" class="form-label">Data inicial</label>
+                                <input type="date" class="form-control" id="filtroDataInicio">
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <label for="filtroDataFim" class="form-label">Data final</label>
+                                <input type="date" class="form-control" id="filtroDataFim">
+                            </div>
+                            <div class="col-12 col-lg-3 align-self-end">
+                                <div class="d-grid d-md-flex gap-2">
+                                    <button type="button" class="btn btn-primary" id="btnAplicarFiltros">
+                                        <i class="bi bi-search me-1"></i> Aplicar
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" id="btnLimparFiltros">
+                                        <i class="bi bi-eraser me-1"></i> Limpar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-                    <div class="col-sm-6 col-lg-3">
-                        <label for="filtroUrgencia" class="form-label">Nível de urgência</label>
-                        <select id="filtroUrgencia" class="form-select">
-                            <option value="">Todos</option>
-                            <option value="Baixo">Baixo</option>
-                            <option value="Médio">Médio</option>
-                            <option value="Alto">Alto</option>
-                        </select>
-                    </div>
-                    <div class="col-sm-6 col-lg-3">
-                        <label for="filtroArea" class="form-label">Área</label>
-                        <select id="filtroArea" class="form-select">
-                            <option value="">Todas</option>
-                        </select>
-                    </div>
-                    <div class="col-sm-6 col-lg-3">
-                        <label for="filtroTipoEquipamento" class="form-label">Tipo de equipamento</label>
-                        <select id="filtroTipoEquipamento" class="form-select">
-                            <option value="">Todos</option>
-                        </select>
-                    </div>
-                    <div class="col-sm-6 col-lg-3">
-                        <label for="filtroDataInicio" class="form-label">Data inicial</label>
-                        <input type="date" class="form-control" id="filtroDataInicio">
-                    </div>
-                    <div class="col-sm-6 col-lg-3">
-                        <label for="filtroDataFim" class="form-label">Data final</label>
-                        <input type="date" class="form-control" id="filtroDataFim">
-                    </div>
-                    <div class="col-12 col-lg-3 align-self-end">
-                        <div class="d-grid d-md-flex gap-2">
-                            <button type="button" class="btn btn-primary" id="btnAplicarFiltros">
-                                <i class="bi bi-search me-1"></i> Aplicar
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary" id="btnLimparFiltros">
-                                <i class="bi bi-eraser me-1"></i> Limpar
-                            </button>
-                        </div>
-                    </div>
-                </form>
+                </div>
             </div>
         </section>
 

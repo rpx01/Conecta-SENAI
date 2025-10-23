@@ -20,6 +20,9 @@ suporte_ti_admin_bp = Blueprint(
 )
 
 
+ALLOWED_STATUS = {"Aberto", "Em Andamento", "Fechado", "Cancelado"}
+
+
 def _ensure_tables_exist(models: Iterable[type[db.Model]]) -> None:
     inspector = inspect(db.engine)
     for model in models:
@@ -110,6 +113,47 @@ def listar_todos_chamados():
     consulta = consulta.order_by(SuporteChamado.created_at.desc())
     chamados = consulta.all()
     return jsonify([_serialize_chamado(chamado) for chamado in chamados])
+
+
+@suporte_ti_admin_bp.route("/chamados/<int:chamado_id>/status", methods=["PUT"])
+@admin_required
+def atualizar_status_chamado(chamado_id: int):
+    """Atualiza o status de um chamado existente."""
+
+    _ensure_tables_exist([SuporteChamado])
+
+    dados = request.get_json(silent=True) or {}
+    novo_status = (dados.get("status") or "").strip()
+
+    if not novo_status:
+        return jsonify({"erro": "Status é obrigatório."}), 400
+
+    if novo_status not in ALLOWED_STATUS:
+        return jsonify({"erro": "Status informado é inválido."}), 400
+
+    chamado = db.session.get(SuporteChamado, chamado_id)
+    if not chamado:
+        return jsonify({"erro": "Chamado não encontrado."}), 404
+
+    chamado.status = novo_status
+    chamado.updated_at = datetime.utcnow()
+
+    try:
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return jsonify({"erro": "Não foi possível atualizar o status do chamado."}), 500
+
+    return (
+        jsonify(
+            {
+                "mensagem": "Status atualizado com sucesso.",
+                "status": chamado.status,
+                "updated_at": chamado.updated_at.isoformat() if chamado.updated_at else None,
+            }
+        ),
+        200,
+    )
 
 
 @suporte_ti_admin_bp.route("/indicadores", methods=["GET"])

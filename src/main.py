@@ -8,12 +8,8 @@ import re
 from flask import Flask, redirect, send_from_directory
 from flasgger import Swagger
 from flask_wtf.csrf import CSRFProtect
-try:  # pragma: no cover - fallback para ambientes sem Sentry
-    import sentry_sdk
-    from sentry_sdk.integrations.flask import FlaskIntegration
-except ImportError:  # pragma: no cover
-    sentry_sdk = None
-    FlaskIntegration = None
+from sentry_sdk.integrations.flask import FlaskIntegration
+import sentry_sdk
 from src.redis_client import init_redis
 from src.config import DevConfig, ProdConfig, TestConfig
 from src.repositories.user_repository import UserRepository
@@ -42,16 +38,15 @@ def before_send(event, hint):
     return event
 
 
-if sentry_sdk and FlaskIntegration:
-    sentry_sdk.init(
-        dsn=os.getenv("SENTRY_DSN"),
-        environment=os.getenv("APP_ENV"),
-        release=os.getenv("APP_RELEASE"),
-        integrations=[FlaskIntegration()],
-        traces_sample_rate=0.2,
-        send_default_pii=False,
-        before_send=before_send,
-    )
+sentry_sdk.init(
+    dsn=os.getenv("SENTRY_DSN"),
+    environment=os.getenv("APP_ENV"),
+    release=os.getenv("APP_RELEASE"),
+    integrations=[FlaskIntegration()],
+    traces_sample_rate=0.2,
+    send_default_pii=False,
+    before_send=before_send,
+)
 
 from src.models import db
 from src.routes.laboratorios import agendamento_bp, laboratorio_bp
@@ -63,14 +58,12 @@ from src.routes.treinamentos import treinamento_bp, turma_bp
 from src.routes.treinamentos.basedados import (
     secretaria_bp as treinamentos_basedados_bp,
     locais_realizacao_bp as treinamentos_locais_realizacao_bp,
-    horarios_bp as treinamentos_horarios_bp,
 )
 from src.routes.inscricoes_treinamento import bp as inscricoes_treinamento_bp
 from src.blueprints.auth_reset import auth_reset_bp
 from src.blueprints.auth import auth_bp
 from src.scheduler import start_scheduler
 from src.routes.noticias import api_noticias_bp
-from src.routes.chamados import chamados_bp, chamados_api_bp
 from src.cli import register_cli
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -210,9 +203,6 @@ def create_app():
             "SECRET_KEY environment variable must be set to a secure value for JWT signing"
         )
     app.config['SECRET_KEY'] = secret_key
-    app.config['JWT_SECRET_KEY'] = secret_key
-    app.config.setdefault('JWT_ALGORITHM', 'HS256')
-    app.config.setdefault('JWT_IDENTITY_CLAIM', 'user_id')
     app.config.update(
         SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_SECURE=not app.config.get('DEBUG', False),
@@ -273,8 +263,6 @@ def create_app():
     app.register_blueprint(rateio_bp, url_prefix='/api')
     app.register_blueprint(treinamento_bp, url_prefix='/api')
     app.register_blueprint(api_noticias_bp, url_prefix='/api')
-    app.register_blueprint(chamados_bp, url_prefix='/chamados')
-    app.register_blueprint(chamados_api_bp)
     app.register_blueprint(
         treinamentos_basedados_bp, url_prefix='/api/treinamentos/secretaria'
     )
@@ -282,7 +270,6 @@ def create_app():
         treinamentos_locais_realizacao_bp,
         url_prefix='/api/treinamentos/locais-realizacao',
     )
-    app.register_blueprint(treinamentos_horarios_bp, url_prefix='/api')
     app.register_blueprint(inscricoes_treinamento_bp)
     app.register_blueprint(auth_reset_bp)
     app.register_blueprint(auth_bp)

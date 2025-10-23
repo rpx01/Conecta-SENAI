@@ -7,15 +7,11 @@ from src.auth import admin_required
 from src.models import db
 from src.models.secretaria_treinamentos import SecretariaTreinamentos
 from src.models.treinamento import LocalRealizacao
-from src.models.horario import Horario
-from src.schemas.horario import HorarioIn, HorarioOut
 from src.schemas.secretaria_treinamentos import SecretariaTreinamentosSchema
 from src.schemas.treinamento import LocalRealizacaoSchema
-from src.services.horario_service import create_horario, update_horario
 
 secretaria_bp = Blueprint("treinamentos_secretaria", __name__)
 locais_realizacao_bp = Blueprint("treinamentos_locais_realizacao", __name__)
-horarios_bp = Blueprint("treinamentos_horarios", __name__)
 
 schema = SecretariaTreinamentosSchema()
 schemas = SecretariaTreinamentosSchema(many=True)
@@ -47,56 +43,6 @@ def ensure_table_exists(model) -> None:
     inspector = inspect(db.engine)
     if not inspector.has_table(model.__tablename__):
         model.__table__.create(db.engine)
-
-
-@horarios_bp.route("/horarios", methods=["GET"])
-def listar_horarios():
-    ensure_table_exists(Horario)
-    horarios = Horario.query.order_by(Horario.id).all()
-    return jsonify([
-        HorarioOut.model_validate(horario).model_dump() for horario in horarios
-    ])
-
-
-@horarios_bp.route("/horarios", methods=["POST"])
-def criar_horario():
-    ensure_table_exists(Horario)
-    data = request.get_json() or {}
-    try:
-        payload = HorarioIn.model_validate(data)
-    except ValidationError as exc:
-        return jsonify({"erro": exc.errors()}), 400
-    if Horario.query.filter_by(nome=payload.nome.strip()).first():
-        return jsonify({"erro": "Horário já cadastrado"}), 409
-    horario = create_horario(payload.model_dump())
-    return (
-        HorarioOut.model_validate(horario).model_dump(),
-        201,
-    )
-
-
-@horarios_bp.route("/horarios/<int:horario_id>", methods=["PUT"])
-def atualizar_horario(horario_id: int):
-    ensure_table_exists(Horario)
-    horario = db.session.get(Horario, horario_id)
-    if not horario:
-        return jsonify({"erro": "Horário não encontrado"}), 404
-    data = request.get_json() or {}
-    try:
-        payload = HorarioIn.model_validate(data)
-    except ValidationError as exc:
-        return jsonify({"erro": exc.errors()}), 400
-    existente = (
-        Horario.query.filter(
-            Horario.nome == payload.nome.strip(), Horario.id != horario_id
-        )
-        .with_entities(Horario.id)
-        .first()
-    )
-    if existente:
-        return jsonify({"erro": "Horário já cadastrado"}), 409
-    horario = update_horario(horario, payload.model_dump())
-    return HorarioOut.model_validate(horario).model_dump()
 
 
 @secretaria_bp.route("", methods=["GET"])

@@ -1,6 +1,5 @@
 import os
 import sys
-import shutil
 from datetime import datetime, timedelta
 import jwt
 
@@ -8,7 +7,6 @@ os.environ['ADMIN_EMAIL'] = 'admin@example.com'
 os.environ['ADMIN_USERNAME'] = 'admin'
 os.environ['DISABLE_REDIS'] = '1'
 os.environ['REDIS_URL'] = 'memory://'
-os.environ['SEND_TICKET_EMAILS'] = '0'
 
 import pytest
 from flask import Flask
@@ -20,8 +18,7 @@ from src.models import db
 from src.models.user import User
 from src.models.sala import Sala
 from src.models.log_rateio import LogLancamentoRateio
-from src.models.ticket import TicketCategory, TicketPriority, TicketStatus
-from src.extensions import limiter, jwt as jwt_ext
+from src.extensions import limiter
 from src.routes.user import user_bp, gerar_token_acesso, gerar_refresh_token
 from src.routes.ocupacao import sala_bp, instrutor_bp, ocupacao_bp
 from src.routes.treinamentos import turma_bp, treinamento_bp
@@ -31,9 +28,7 @@ from src.routes.noticias import api_noticias_bp
 from src.blueprints.auth import auth_bp
 from src.routes.treinamentos.basedados import (
     secretaria_bp as treinamentos_basedados_bp,
-    horarios_bp as treinamentos_horarios_bp,
 )
-from src.routes.chamados import chamados_bp, chamados_api_bp
 
 @pytest.fixture
 def app():
@@ -48,16 +43,8 @@ def app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = 'test'
     app.config['WTF_CSRF_CHECK_DEFAULT'] = False
-    app.config['JWT_SECRET_KEY'] = 'test'
-    app.config['JWT_IDENTITY_CLAIM'] = 'user_id'
-    uploads_dir = os.path.join(base_dir, 'tests', 'tmp_uploads')
-    if os.path.exists(uploads_dir):
-        shutil.rmtree(uploads_dir)
-    os.makedirs(uploads_dir, exist_ok=True)
-    app.config['UPLOADS_DIR'] = uploads_dir
     db.init_app(app)
     limiter.init_app(app)
-    jwt_ext.init_app(app)
     CSRFProtect(app)
     app.register_blueprint(user_bp, url_prefix='/api')
     app.register_blueprint(sala_bp, url_prefix='/api')
@@ -72,10 +59,7 @@ def app():
     app.register_blueprint(
         treinamentos_basedados_bp, url_prefix='/api/treinamentos/secretaria'
     )
-    app.register_blueprint(treinamentos_horarios_bp, url_prefix='/api')
     app.register_blueprint(auth_bp)
-    app.register_blueprint(chamados_bp, url_prefix='/chamados')
-    app.register_blueprint(chamados_api_bp)
 
     with app.app_context():
         db.create_all()
@@ -93,22 +77,6 @@ def app():
             tipo='comum'
         )
         db.session.add(comum)
-        categoria = TicketCategory(nome='Suporte', descricao='Suporte geral')
-        prioridade_baixa = TicketPriority(nome='baixa', peso=1)
-        prioridade_media = TicketPriority(nome='media', peso=2)
-        prioridade_alta = TicketPriority(nome='alta', peso=3)
-        status_aberto = TicketStatus(nome='aberto', ordem=1)
-        status_atendimento = TicketStatus(nome='em_atendimento', ordem=2)
-        status_resolvido = TicketStatus(nome='resolvido', ordem=3)
-        db.session.add_all([
-            categoria,
-            prioridade_baixa,
-            prioridade_media,
-            prioridade_alta,
-            status_aberto,
-            status_atendimento,
-            status_resolvido,
-        ])
         sala = Sala(nome='Sala Teste', capacidade=10)
         db.session.add(sala)
         for i in range(15):

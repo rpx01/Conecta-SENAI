@@ -112,26 +112,6 @@ Classes CSS principais: `.filter-scope`, `.filter-btn`, `.filter-menu`, `.filter
 
 Boas práticas de acessibilidade: forneça `aria-label` ao botão, mantenha `aria-expanded` sincronizado, permita fechar com a tecla Esc e use `dropdown-menu-end` para evitar corte em telas estreitas.
 
-#### Card com ações empilhadas
-
-Utilize cartões responsivos para destacar módulos com múltiplas ações. Combine um ícone grande, texto descritivo e botões agrupados.
-
-```html
-<div class="card sistema-card h-100">
-  <div class="card-body text-center p-4">
-    <div class="sistema-icon"><i class="bi bi-headset"></i></div>
-    <h2 class="card-title">Chamados de TI</h2>
-    <p class="card-text">Abra chamados e acompanhe indicadores.</p>
-    <div class="d-flex gap-2 justify-content-center flex-wrap">
-      <a class="btn btn-outline-primary" href="/chamados/novo">Abrir chamado</a>
-      <a class="btn btn-outline-secondary" href="/chamados/minhas">Meus chamados</a>
-    </div>
-  </div>
-</div>
-```
-
-Mantenha contraste adequado entre botões e fundo e preserve espaçamento consistente (`gap` de 0.5–1rem) para garantir toque confortável em telas móveis.
-
 ### Acessibilidade
 
 - Uma `<h1>` por página.

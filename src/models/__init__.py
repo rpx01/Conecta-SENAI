@@ -25,18 +25,6 @@ from .email_secretaria import EmailSecretaria  # noqa: E402
 from .secretaria_treinamentos import SecretariaTreinamentos  # noqa: E402
 from .noticia import Noticia  # noqa: E402
 from .imagem_noticia import ImagemNoticia  # noqa: E402
-from .horario import Horario  # noqa: E402
-from .ticket import (  # noqa: E402
-    Ticket,
-    TicketAttachment,
-    TicketCategory,
-    TicketComment,
-    TicketPriority,
-    TicketStatus,
-    TicketLocation,
-    TicketAsset,
-    TicketSLA,
-)  # noqa: E402
 
 __all__ = [
     "db",
@@ -57,18 +45,8 @@ __all__ = [
     "TurmaTreinamento",
     "InscricaoTreinamento", 
     "InscricaoTreinamentoFormulario", 
-    "EmailSecretaria",
-    "SecretariaTreinamentos",
+    "EmailSecretaria", 
+    "SecretariaTreinamentos", 
     "Noticia",
     "ImagemNoticia",
-    "Horario",
-    "TicketCategory",
-    "TicketPriority",
-    "TicketStatus",
-    "TicketLocation",
-    "TicketAsset",
-    "Ticket",
-    "TicketComment",
-    "TicketAttachment",
-    "TicketSLA",
 ]

@@ -18,14 +18,7 @@ DEFAULT_REDIS_URI = os.getenv(
     f"redis://{os.getenv('REDIS_HOST', 'localhost')}:{os.getenv('REDIS_PORT', '6379')}",
 )
 
-_storage_uri = os.getenv("RATELIMIT_STORAGE_URI")
-if not _storage_uri:
-    if os.getenv("DISABLE_REDIS") == "1":
-        _storage_uri = "memory://"
-    else:
-        _storage_uri = DEFAULT_REDIS_URI
-
 limiter = Limiter(
     key_func=get_remote_address,
-    storage_uri=_storage_uri,
+    storage_uri=os.getenv("RATELIMIT_STORAGE_URI", DEFAULT_REDIS_URI),
 )

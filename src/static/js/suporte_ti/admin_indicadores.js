@@ -37,16 +37,16 @@
     function atualizarCards(dados) {
         const total = dados?.total_chamados || 0;
         const porStatus = dados?.por_status || [];
-        const abertos = somarStatus(porStatus, ['Aberto', 'Em Andamento']);
-        const fechados = somarStatus(porStatus, ['Fechado']);
+        const abertos = somarStatus(porStatus, ['Aberto', 'Em Atendimento']);
+        const finalizados = somarStatus(porStatus, ['Finalizado']);
 
         const indicadorTotal = document.getElementById('indicadorTotal');
         const indicadorAbertos = document.getElementById('indicadorAbertos');
-        const indicadorFechados = document.getElementById('indicadorFechados');
+        const indicadorFinalizados = document.getElementById('indicadorFinalizados');
 
         if (indicadorTotal) indicadorTotal.textContent = total;
         if (indicadorAbertos) indicadorAbertos.textContent = abertos;
-        if (indicadorFechados) indicadorFechados.textContent = fechados;
+        if (indicadorFinalizados) indicadorFinalizados.textContent = finalizados;
     }
 
     function somarStatus(lista, chaves) {

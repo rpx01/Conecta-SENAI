@@ -29,7 +29,6 @@
     const STATUS_ATENDIMENTO = 'Em Atendimento';
     const STATUS_FINALIZADO = 'Finalizado';
     const STATUS_CANCELADO = 'Cancelado';
-    const STATUS_LEGADO_ATENDIMENTO = 'Em Andamento';
 
     let chamadoSelecionado = null;
 
@@ -108,12 +107,7 @@
     function montarEndpoint(parametros = {}) {
         const params = new URLSearchParams();
         Object.entries(parametros).forEach(([chave, valor]) => {
-            if (Array.isArray(valor)) {
-                const valoresFiltrados = valor.filter((item) => item !== undefined && item !== null && item !== '');
-                if (valoresFiltrados.length) {
-                    params.set(chave, valoresFiltrados.join(','));
-                }
-            } else if (valor !== undefined && valor !== null && valor !== '') {
+            if (valor !== undefined && valor !== null && valor !== '') {
                 params.set(chave, valor);
             }
         });
@@ -125,18 +119,12 @@
     async function buscarChamados() {
         const filtrosBase = obterFiltrosBase();
         const statusSelecionados = obterStatusSelecionados();
-        const statusAbertos = !statusSelecionados.length
-            ? [STATUS_ABERTO]
-            : [STATUS_ABERTO].filter((status) => statusSelecionados.includes(status));
-        const statusAtendimento = !statusSelecionados.length
-            ? [STATUS_ATENDIMENTO, STATUS_LEGADO_ATENDIMENTO]
-            : [STATUS_ATENDIMENTO, STATUS_LEGADO_ATENDIMENTO].filter((status) =>
-                  statusSelecionados.includes(status)
-              );
+        const deveBuscarAbertos = !statusSelecionados.length || statusSelecionados.includes(STATUS_ABERTO);
+        const deveBuscarAtendimento = !statusSelecionados.length || statusSelecionados.includes(STATUS_ATENDIMENTO);
 
-        if (statusAbertos.length) {
+        if (deveBuscarAbertos) {
             try {
-                const endpointAbertos = montarEndpoint({ ...filtrosBase, status: statusAbertos });
+                const endpointAbertos = montarEndpoint({ ...filtrosBase, status: STATUS_ABERTO });
                 const chamadosAbertos = await chamarAPI(endpointAbertos);
                 renderizarChamadosAbertos(chamadosAbertos || []);
             } catch (error) {
@@ -147,9 +135,9 @@
             renderizarChamadosAbertos([]);
         }
 
-        if (statusAtendimento.length) {
+        if (deveBuscarAtendimento) {
             try {
-                const endpointAtendimento = montarEndpoint({ ...filtrosBase, status: statusAtendimento });
+                const endpointAtendimento = montarEndpoint({ ...filtrosBase, status: STATUS_ATENDIMENTO });
                 const chamadosAtendimento = await chamarAPI(endpointAtendimento);
                 renderizarChamadosAtendimento(chamadosAtendimento || []);
             } catch (error) {
@@ -181,7 +169,7 @@
                 <td>${sanitizeHTML(chamado.area || '')}</td>
                 <td>${sanitizeHTML(chamado.tipo_equipamento_nome || '-')}</td>
                 <td><span class="badge text-bg-${classeUrgencia(chamado.nivel_urgencia)}">${sanitizeHTML(chamado.nivel_urgencia || '-')}</span></td>
-                <td><span class="badge text-bg-${classeStatus(chamado.status)}">${sanitizeHTML(chamado.status || STATUS_ABERTO)}</span></td>
+                <td><span class="badge text-bg-${classeStatus(STATUS_ABERTO)}">${STATUS_ABERTO}</span></td>
                 <td>
                     <div class="d-flex flex-wrap gap-2">
                         <button class="btn btn-sm btn-outline-primary" data-acao="detalhes" title="Ver detalhes">
@@ -226,7 +214,7 @@
                 <td>${sanitizeHTML(chamado.area || '')}</td>
                 <td>${sanitizeHTML(chamado.tipo_equipamento_nome || '-')}</td>
                 <td><span class="badge text-bg-${classeUrgencia(chamado.nivel_urgencia)}">${sanitizeHTML(chamado.nivel_urgencia || '-')}</span></td>
-                <td><span class="badge text-bg-${classeStatus(chamado.status)}">${sanitizeHTML(chamado.status || STATUS_ATENDIMENTO)}</span></td>
+                <td><span class="badge text-bg-${classeStatus(STATUS_ATENDIMENTO)}">${STATUS_ATENDIMENTO}</span></td>
                 <td>
                     <div class="d-flex flex-wrap gap-2">
                         <button class="btn btn-sm btn-outline-primary" data-acao="detalhes" title="Ver detalhes">
@@ -279,10 +267,8 @@
             case 'aberto':
                 return 'primary';
             case 'em atendimento':
-            case 'em andamento':
                 return 'warning';
             case 'finalizado':
-            case 'fechado':
                 return 'success';
             case 'cancelado':
                 return 'secondary';

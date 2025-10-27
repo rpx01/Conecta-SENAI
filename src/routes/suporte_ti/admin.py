@@ -92,7 +92,6 @@ def _serialize_chamado(chamado: SuporteChamado) -> dict:
         "status": _normalizar_status(chamado.status) or chamado.status,
         "created_at": chamado.created_at.isoformat() if chamado.created_at else None,
         "updated_at": chamado.updated_at.isoformat() if chamado.updated_at else None,
-        "observacoes_finalizacao": chamado.observacoes_finalizacao,
         "anexos": [anexo.file_path for anexo in chamado.anexos],
     }
 
@@ -180,15 +179,6 @@ def atualizar_status_chamado(chamado_id: int):
     chamado = db.session.get(SuporteChamado, chamado_id)
     if not chamado:
         return jsonify({"erro": "Chamado não encontrado."}), 404
-
-    observacoes_raw = dados.get("observacoes")
-    if status_normalizado in {"Finalizado", "Cancelado"}:
-        if observacoes_raw is not None:
-            observacoes_limpa = observacoes_raw.strip()
-            chamado.observacoes_finalizacao = observacoes_limpa or None
-    else:
-        # Para chamados reabertos ou em andamento, remover observações anteriores.
-        chamado.observacoes_finalizacao = None
 
     chamado.status = status_normalizado
     chamado.updated_at = datetime.utcnow()

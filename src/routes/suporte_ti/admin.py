@@ -20,7 +20,7 @@ suporte_ti_admin_bp = Blueprint(
 )
 
 
-ALLOWED_STATUS = {"Aberto", "Em Atendimento", "Finalizado", "Cancelado"}
+ALLOWED_STATUS = {"Aberto", "Em Andamento", "Fechado", "Cancelado"}
 
 
 def _ensure_tables_exist(models: Iterable[type[db.Model]]) -> None:
@@ -49,8 +49,6 @@ def _serialize_chamado(chamado: SuporteChamado) -> dict:
         "status": chamado.status,
         "created_at": chamado.created_at.isoformat() if chamado.created_at else None,
         "updated_at": chamado.updated_at.isoformat() if chamado.updated_at else None,
-        "observacoes_atendimento": getattr(chamado, "observacoes_atendimento", None),
-        "observacoes": getattr(chamado, "observacoes", None),
         "anexos": [anexo.file_path for anexo in chamado.anexos],
     }
 
@@ -139,13 +137,6 @@ def atualizar_status_chamado(chamado_id: int):
 
     chamado.status = novo_status
     chamado.updated_at = datetime.utcnow()
-
-    observacoes = (dados.get("observacoes") or "").strip()
-    if observacoes:
-        if hasattr(chamado, "observacoes_atendimento"):
-            setattr(chamado, "observacoes_atendimento", observacoes)
-        elif hasattr(chamado, "observacoes"):
-            setattr(chamado, "observacoes", observacoes)
 
     try:
         db.session.commit()

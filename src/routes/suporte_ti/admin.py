@@ -20,7 +20,50 @@ suporte_ti_admin_bp = Blueprint(
 )
 
 
-ALLOWED_STATUS = {"Aberto", "Em Andamento", "Fechado", "Cancelado"}
+CANONICAL_STATUS = {"Aberto", "Em Atendimento", "Finalizado", "Cancelado"}
+
+# Sinônimos aceitos para manter compatibilidade com registros antigos ou requisições
+# que ainda utilizem a nomenclatura anterior dos status.
+STATUS_ALIASES = {
+    "Em Andamento": "Em Atendimento",
+    "Fechado": "Finalizado",
+}
+
+_STATUS_ALIAS_LOOKUP = {alias.lower(): canonical for alias, canonical in STATUS_ALIASES.items()}
+_CANONICAL_LOOKUP = {status.lower(): status for status in CANONICAL_STATUS}
+
+
+def _normalizar_status(valor: str | None) -> str | None:
+    """Converte o status informado para sua forma canônica quando aplicável."""
+
+    if not valor:
+        return valor
+    valor_limpo = valor.strip()
+    if not valor_limpo:
+        return valor_limpo
+    chave = valor_limpo.lower()
+    if chave in _STATUS_ALIAS_LOOKUP:
+        return _STATUS_ALIAS_LOOKUP[chave]
+    if chave in _CANONICAL_LOOKUP:
+        return _CANONICAL_LOOKUP[chave]
+    return valor_limpo
+
+
+def _obter_equivalentes_status(statuses: Iterable[str]) -> set[str]:
+    """Gera o conjunto de status equivalentes (canônicos + sinônimos) para consulta."""
+
+    equivalentes: set[str] = set()
+    for status in statuses:
+        if not status:
+            continue
+        canonico = _normalizar_status(status)
+        if not canonico:
+            continue
+        equivalentes.add(canonico)
+        for alias, destino in STATUS_ALIASES.items():
+            if destino == canonico:
+                equivalentes.add(alias)
+    return equivalentes
 
 
 def _ensure_tables_exist(models: Iterable[type[db.Model]]) -> None:
@@ -46,7 +89,7 @@ def _serialize_chamado(chamado: SuporteChamado) -> dict:
         "numero_serie": chamado.numero_serie,
         "descricao_problema": chamado.descricao_problema,
         "nivel_urgencia": chamado.nivel_urgencia,
-        "status": chamado.status,
+        "status": _normalizar_status(chamado.status) or chamado.status,
         "created_at": chamado.created_at.isoformat() if chamado.created_at else None,
         "updated_at": chamado.updated_at.isoformat() if chamado.updated_at else None,
         "anexos": [anexo.file_path for anexo in chamado.anexos],
@@ -62,8 +105,9 @@ def listar_todos_chamados():
     status_param = request.args.get("status")
     if status_param:
         status_lista = [valor.strip() for valor in status_param.split(",") if valor.strip()]
-        if status_lista:
-            consulta = consulta.filter(SuporteChamado.status.in_(status_lista))
+        equivalentes = _obter_equivalentes_status(status_lista)
+        if equivalentes:
+            consulta = consulta.filter(SuporteChamado.status.in_(equivalentes))
 
     area_param = request.args.get("area")
     if area_param:
@@ -124,18 +168,19 @@ def atualizar_status_chamado(chamado_id: int):
 
     dados = request.get_json(silent=True) or {}
     novo_status = (dados.get("status") or "").strip()
+    status_normalizado = _normalizar_status(novo_status)
 
     if not novo_status:
         return jsonify({"erro": "Status é obrigatório."}), 400
 
-    if novo_status not in ALLOWED_STATUS:
+    if not status_normalizado or status_normalizado not in CANONICAL_STATUS:
         return jsonify({"erro": "Status informado é inválido."}), 400
 
     chamado = db.session.get(SuporteChamado, chamado_id)
     if not chamado:
         return jsonify({"erro": "Chamado não encontrado."}), 404
 
-    chamado.status = novo_status
+    chamado.status = status_normalizado
     chamado.updated_at = datetime.utcnow()
 
     try:

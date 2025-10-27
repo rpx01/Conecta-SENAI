@@ -10,6 +10,7 @@
 
     const STATUS_FINALIZADO = 'Finalizado';
     const STATUS_CANCELADO = 'Cancelado';
+    const STATUS_LEGADO_FINALIZADO = 'Fechado';
 
     async function inicializar() {
         const autenticado = await verificarAutenticacao();
@@ -31,7 +32,8 @@
 
     async function buscarHistorico() {
         try {
-            const endpoint = '/suporte_ti/admin/todos_chamados?status=Finalizado,Cancelado';
+            const statusQuery = [STATUS_FINALIZADO, STATUS_CANCELADO, STATUS_LEGADO_FINALIZADO].join(',');
+            const endpoint = `/suporte_ti/admin/todos_chamados?status=${statusQuery}`;
             const chamados = await chamarAPI(endpoint);
             renderizarHistorico(chamados || []);
         } catch (error) {
@@ -95,6 +97,7 @@
     function classeStatus(status) {
         switch ((status || '').toLowerCase()) {
             case 'finalizado':
+            case 'fechado':
                 return 'success';
             case 'cancelado':
                 return 'secondary';

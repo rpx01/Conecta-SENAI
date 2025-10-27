@@ -114,8 +114,7 @@
             ['Número de série', chamado.numero_serie || '-'],
             ['Descrição', chamado.descricao_problema || '-'],
             ['Nível de urgência', chamado.nivel_urgencia || '-'],
-            ['Status', chamado.status || '-'],
-            ['Observações de finalização', chamado.observacoes_finalizacao || '-']
+            ['Status', chamado.status || '-']
         ];
         campos.forEach(([label, valor]) => {
             const dt = document.createElement('dt');

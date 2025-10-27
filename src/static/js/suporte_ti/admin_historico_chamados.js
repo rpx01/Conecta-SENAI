@@ -9,7 +9,6 @@
     const listaAnexos = document.getElementById('listaAnexosHistorico');
 
     const STATUS_FINALIZADO = 'Finalizado';
-    const STATUS_FINALIZADO_LEGACY = 'Fechado';
     const STATUS_CANCELADO = 'Cancelado';
 
     async function inicializar() {
@@ -32,8 +31,7 @@
 
     async function buscarHistorico() {
         try {
-            const statusConsulta = [STATUS_FINALIZADO, STATUS_CANCELADO, STATUS_FINALIZADO_LEGACY].join(',');
-            const endpoint = `/suporte_ti/admin/todos_chamados?status=${statusConsulta}`;
+            const endpoint = '/suporte_ti/admin/todos_chamados?status=Finalizado,Cancelado';
             const chamados = await chamarAPI(endpoint);
             renderizarHistorico(chamados || []);
         } catch (error) {
@@ -97,7 +95,6 @@
     function classeStatus(status) {
         switch ((status || '').toLowerCase()) {
             case 'finalizado':
-            case 'fechado':
                 return 'success';
             case 'cancelado':
                 return 'secondary';

@@ -1,10 +1,8 @@
 /* global bootstrap, chamarAPI, verificarAutenticacao, verificarPermissaoAdmin, getUsuarioLogado, formatarData, sanitizeHTML, showToast */
 
 (function () {
-    const tabelaAbertos = document.querySelector('#tabelaChamadosAdmin tbody');
-    const tabelaAtendimento = document.querySelector('#tabelaChamadosAtendimento tbody');
-    const totalChamadosAbertosEl = document.getElementById('totalChamados');
-    const totalChamadosAtendimentoEl = document.getElementById('totalChamadosAtendimento');
+    const tabela = document.querySelector('#tabelaChamadosAdmin tbody');
+    const totalChamadosEl = document.getElementById('totalChamados');
     const filtroStatus = document.getElementById('filtroStatus');
     const filtroUrgencia = document.getElementById('filtroUrgencia');
     const filtroArea = document.getElementById('filtroArea');
@@ -15,22 +13,10 @@
     const btnLimparFiltros = document.getElementById('btnLimparFiltros');
     const detalhesContainer = document.getElementById('detalhesChamadoAdmin');
     const listaAnexos = document.getElementById('listaAnexosAdmin');
-    const modalDetalhesEl = document.getElementById('modalDetalhesChamadoAdmin');
-    const modalDetalhes = modalDetalhesEl ? new bootstrap.Modal(modalDetalhesEl) : null;
-    const modalFinalizarEl = document.getElementById('modalFinalizarChamado');
-    const modalCancelarEl = document.getElementById('modalCancelarChamado');
-    const modalFinalizar = modalFinalizarEl ? new bootstrap.Modal(modalFinalizarEl) : null;
-    const modalCancelar = modalCancelarEl ? new bootstrap.Modal(modalCancelarEl) : null;
-    const observacoesFinalizacaoEl = document.getElementById('observacoesFinalizacao');
-    const btnConfirmarFinalizacao = document.getElementById('btnConfirmarFinalizacao');
-    const btnConfirmarCancelamento = document.getElementById('btnConfirmarCancelamento');
+    const modalEl = document.getElementById('modalDetalhesChamadoAdmin');
+    const modal = modalEl ? new bootstrap.Modal(modalEl) : null;
 
-    const STATUS_ABERTO = 'Aberto';
-    const STATUS_ATENDIMENTO = 'Em Atendimento';
-    const STATUS_FINALIZADO = 'Finalizado';
-    const STATUS_CANCELADO = 'Cancelado';
-
-    let chamadoSelecionado = null;
+    const statusOpcoes = ['Aberto', 'Em Andamento', 'Fechado', 'Cancelado'];
 
     async function inicializar() {
         const autenticado = await verificarAutenticacao();
@@ -84,84 +70,64 @@
         return Array.from(filtroStatus.selectedOptions).map((opt) => opt.value);
     }
 
-    function obterFiltrosBase() {
-        const filtros = {};
+    async function buscarChamados() {
+        const params = new URLSearchParams();
+        const status = obterStatusSelecionados();
+        if (status.length) {
+            params.set('status', status.join(','));
+        }
         if (filtroUrgencia?.value) {
-            filtros.nivel_urgencia = filtroUrgencia.value;
+            params.set('nivel_urgencia', filtroUrgencia.value);
         }
         if (filtroArea?.value) {
-            filtros.area = filtroArea.value;
+            params.set('area', filtroArea.value);
         }
         if (filtroTipo?.value) {
-            filtros.tipo_equipamento_id = filtroTipo.value;
+            params.set('tipo_equipamento_id', filtroTipo.value);
         }
         if (filtroDataInicio?.value) {
-            filtros.data_inicio = filtroDataInicio.value;
+            params.set('data_inicio', filtroDataInicio.value);
         }
         if (filtroDataFim?.value) {
-            filtros.data_fim = filtroDataFim.value;
+            params.set('data_fim', filtroDataFim.value);
         }
-        return filtros;
-    }
-
-    function montarEndpoint(parametros = {}) {
-        const params = new URLSearchParams();
-        Object.entries(parametros).forEach(([chave, valor]) => {
-            if (valor !== undefined && valor !== null && valor !== '') {
-                params.set(chave, valor);
-            }
-        });
-        return params.toString()
+        const endpoint = params.toString()
             ? `/suporte_ti/admin/todos_chamados?${params.toString()}`
             : '/suporte_ti/admin/todos_chamados';
-    }
-
-    async function buscarChamados() {
-        const filtrosBase = obterFiltrosBase();
-        const statusSelecionados = obterStatusSelecionados();
-        const deveBuscarAbertos = !statusSelecionados.length || statusSelecionados.includes(STATUS_ABERTO);
-        const deveBuscarAtendimento = !statusSelecionados.length || statusSelecionados.includes(STATUS_ATENDIMENTO);
-
-        if (deveBuscarAbertos) {
-            try {
-                const endpointAbertos = montarEndpoint({ ...filtrosBase, status: STATUS_ABERTO });
-                const chamadosAbertos = await chamarAPI(endpointAbertos);
-                renderizarChamadosAbertos(chamadosAbertos || []);
-            } catch (error) {
-                console.error(error);
-                renderizarChamadosAbertos([]);
-            }
-        } else {
-            renderizarChamadosAbertos([]);
-        }
-
-        if (deveBuscarAtendimento) {
-            try {
-                const endpointAtendimento = montarEndpoint({ ...filtrosBase, status: STATUS_ATENDIMENTO });
-                const chamadosAtendimento = await chamarAPI(endpointAtendimento);
-                renderizarChamadosAtendimento(chamadosAtendimento || []);
-            } catch (error) {
-                console.error(error);
-                renderizarChamadosAtendimento([]);
-            }
-        } else {
-            renderizarChamadosAtendimento([]);
+        try {
+            const chamados = await chamarAPI(endpoint);
+            renderizarChamados(chamados || []);
+        } catch (error) {
+            console.error(error);
+            renderizarChamados([]);
         }
     }
 
-    function renderizarChamadosAbertos(chamados) {
-        if (!tabelaAbertos) return;
-        tabelaAbertos.innerHTML = '';
+    function renderizarChamados(chamados) {
+        if (!tabela) return;
+        tabela.innerHTML = '';
         const total = Array.isArray(chamados) ? chamados.length : 0;
-        if (totalChamadosAbertosEl) {
-            totalChamadosAbertosEl.textContent = `${total} registro${total === 1 ? '' : 's'}`;
+        if (totalChamadosEl) {
+            totalChamadosEl.textContent = `${total} registro${total === 1 ? '' : 's'}`;
         }
         if (!total) {
-            tabelaAbertos.appendChild(criarLinhaVazia(8));
+            const linha = document.createElement('tr');
+            linha.innerHTML = '<td colspan="8" class="text-center text-muted py-4">Nenhum chamado encontrado com os filtros selecionados.</td>';
+            tabela.appendChild(linha);
             return;
         }
         chamados.forEach((chamado, indice) => {
             const tr = document.createElement('tr');
+            const statusNormalizado = (chamado.status || '').toLowerCase();
+            const statusAtual =
+                statusOpcoes.find((status) => status.toLowerCase() === statusNormalizado) ||
+                statusOpcoes[0];
+            const statusOptionsHtml = statusOpcoes
+                .map(
+                    (opcao) =>
+                        `<option value="${opcao}"${opcao === statusAtual ? ' selected' : ''}>${opcao}</option>`
+                )
+                .join('');
             tr.innerHTML = `
                 <th scope="row">${indice + 1}</th>
                 <td>${formatarData(chamado.created_at)}</td>
@@ -169,85 +135,35 @@
                 <td>${sanitizeHTML(chamado.area || '')}</td>
                 <td>${sanitizeHTML(chamado.tipo_equipamento_nome || '-')}</td>
                 <td><span class="badge text-bg-${classeUrgencia(chamado.nivel_urgencia)}">${sanitizeHTML(chamado.nivel_urgencia || '-')}</span></td>
-                <td><span class="badge text-bg-${classeStatus(STATUS_ABERTO)}">${STATUS_ABERTO}</span></td>
                 <td>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button class="btn btn-sm btn-outline-primary" data-acao="detalhes" title="Ver detalhes">
+                    <div class="d-flex flex-column gap-1">
+                        <span class="badge status-badge text-bg-${classeStatus(statusAtual)}">${sanitizeHTML(statusAtual)}</span>
+                        <select class="form-select form-select-sm status-select" data-id="${chamado.id}">
+                            ${statusOptionsHtml}
+                        </select>
+                    </div>
+                </td>
+                <td>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary" data-acao="detalhes" data-id="${chamado.id}" title="Ver detalhes">
                             <i class="bi bi-eye"></i>
-                        </button>
-                        <button class="btn btn-sm btn-primary" data-acao="atender" title="Atender chamado">
-                            Atender Chamado
                         </button>
                     </div>
                 </td>
             `;
-            adicionarEventosLinhaAbertos(tr, chamado);
-            tabelaAbertos.appendChild(tr);
+            const botao = tr.querySelector('button[data-acao="detalhes"]');
+            botao?.addEventListener('click', () => abrirModal(chamado));
+
+            const selectStatus = tr.querySelector('.status-select');
+            const badgeStatus = tr.querySelector('.status-badge');
+            if (selectStatus) {
+                selectStatus.dataset.originalValue = statusAtual;
+                selectStatus.addEventListener('change', () =>
+                    atualizarStatusChamado(chamado.id, selectStatus.value, selectStatus, badgeStatus)
+                );
+            }
+            tabela.appendChild(tr);
         });
-    }
-
-    function adicionarEventosLinhaAbertos(linha, chamado) {
-        const botaoDetalhes = linha.querySelector('button[data-acao="detalhes"]');
-        botaoDetalhes?.addEventListener('click', () => abrirModalDetalhes(chamado));
-
-        const botaoAtender = linha.querySelector('button[data-acao="atender"]');
-        botaoAtender?.addEventListener('click', () => atualizarStatusChamado(chamado.id, STATUS_ATENDIMENTO));
-    }
-
-    function renderizarChamadosAtendimento(chamados) {
-        if (!tabelaAtendimento) return;
-        tabelaAtendimento.innerHTML = '';
-        const total = Array.isArray(chamados) ? chamados.length : 0;
-        if (totalChamadosAtendimentoEl) {
-            totalChamadosAtendimentoEl.textContent = `${total} registro${total === 1 ? '' : 's'}`;
-        }
-        if (!total) {
-            tabelaAtendimento.appendChild(criarLinhaVazia(8));
-            return;
-        }
-        chamados.forEach((chamado, indice) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <th scope="row">${indice + 1}</th>
-                <td>${formatarData(chamado.created_at)}</td>
-                <td>${sanitizeHTML(chamado.nome || chamado.email || '')}</td>
-                <td>${sanitizeHTML(chamado.area || '')}</td>
-                <td>${sanitizeHTML(chamado.tipo_equipamento_nome || '-')}</td>
-                <td><span class="badge text-bg-${classeUrgencia(chamado.nivel_urgencia)}">${sanitizeHTML(chamado.nivel_urgencia || '-')}</span></td>
-                <td><span class="badge text-bg-${classeStatus(STATUS_ATENDIMENTO)}">${STATUS_ATENDIMENTO}</span></td>
-                <td>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button class="btn btn-sm btn-outline-primary" data-acao="detalhes" title="Ver detalhes">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                        <button class="btn btn-sm btn-success" data-acao="finalizar" title="Finalizar atendimento">
-                            Finalizar
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" data-acao="cancelar" title="Cancelar atendimento">
-                            Cancelar
-                        </button>
-                    </div>
-                </td>
-            `;
-            adicionarEventosLinhaAtendimento(tr, chamado);
-            tabelaAtendimento.appendChild(tr);
-        });
-    }
-
-    function adicionarEventosLinhaAtendimento(linha, chamado) {
-        linha.querySelector('button[data-acao="detalhes"]')?.addEventListener('click', () => abrirModalDetalhes(chamado));
-
-        const btnFinalizar = linha.querySelector('button[data-acao="finalizar"]');
-        btnFinalizar?.addEventListener('click', () => abrirModalFinalizar(chamado));
-
-        const btnCancelar = linha.querySelector('button[data-acao="cancelar"]');
-        btnCancelar?.addEventListener('click', () => abrirModalCancelar(chamado));
-    }
-
-    function criarLinhaVazia(colspan) {
-        const linha = document.createElement('tr');
-        linha.innerHTML = `<td colspan="${colspan}" class="text-center text-muted py-4">Nenhum chamado encontrado com os filtros selecionados.</td>`;
-        return linha;
     }
 
     function classeUrgencia(urgencia) {
@@ -266,9 +182,9 @@
         switch ((status || '').toLowerCase()) {
             case 'aberto':
                 return 'primary';
-            case 'em atendimento':
+            case 'em andamento':
                 return 'warning';
-            case 'finalizado':
+            case 'fechado':
                 return 'success';
             case 'cancelado':
                 return 'secondary';
@@ -277,27 +193,48 @@
         }
     }
 
-    async function atualizarStatusChamado(chamadoId, novoStatus, dadosExtras = {}) {
-        if (!chamadoId || !novoStatus) return false;
+    function atualizarClasseBadge(badgeEl, status) {
+        if (!badgeEl) return;
+        const classes = ['text-bg-primary', 'text-bg-warning', 'text-bg-success', 'text-bg-secondary'];
+        badgeEl.classList.remove(...classes);
+        badgeEl.classList.add(`text-bg-${classeStatus(status)}`);
+        badgeEl.textContent = status || '-';
+    }
+
+    async function atualizarStatusChamado(chamadoId, novoStatus, selectEl, badgeEl) {
+        if (!novoStatus) {
+            showToast('Selecione um status válido para atualizar o chamado.', 'warning');
+            selectEl.value = selectEl.dataset.originalValue || '';
+            return;
+        }
+        if (novoStatus === selectEl.dataset.originalValue) {
+            return;
+        }
+
+        selectEl.disabled = true;
+        badgeEl?.classList.add('opacity-50');
 
         try {
             const resposta = await chamarAPI(
                 `/suporte_ti/admin/chamados/${chamadoId}/status`,
                 'PUT',
-                { status: novoStatus, ...dadosExtras }
+                { status: novoStatus }
             );
+            selectEl.dataset.originalValue = novoStatus;
+            atualizarClasseBadge(badgeEl, novoStatus);
             showToast(resposta?.mensagem || 'Status atualizado com sucesso!', 'success');
-            await buscarChamados();
-            return true;
         } catch (error) {
             const mensagem = error?.message || 'Não foi possível atualizar o status do chamado.';
             showToast(mensagem, 'danger');
-            return false;
+            selectEl.value = selectEl.dataset.originalValue || '';
+        } finally {
+            selectEl.disabled = false;
+            badgeEl?.classList.remove('opacity-50');
         }
     }
 
-    function abrirModalDetalhes(chamado) {
-        if (!modalDetalhes || !detalhesContainer) return;
+    function abrirModal(chamado) {
+        if (!modal || !detalhesContainer) return;
         detalhesContainer.innerHTML = '';
         const campos = [
             ['Protocolo', `#${chamado.id}`],
@@ -322,22 +259,7 @@
             detalhesContainer.appendChild(dd);
         });
         renderizarAnexos(chamado.anexos || []);
-        modalDetalhes.show();
-    }
-
-    function abrirModalFinalizar(chamado) {
-        if (!modalFinalizar) return;
-        chamadoSelecionado = chamado;
-        if (observacoesFinalizacaoEl) {
-            observacoesFinalizacaoEl.value = '';
-        }
-        modalFinalizar.show();
-    }
-
-    function abrirModalCancelar(chamado) {
-        if (!modalCancelar) return;
-        chamadoSelecionado = chamado;
-        modalCancelar.show();
+        modal.show();
     }
 
     function renderizarAnexos(anexos) {
@@ -378,35 +300,6 @@
             if (filtroDataInicio) filtroDataInicio.value = '';
             if (filtroDataFim) filtroDataFim.value = '';
             buscarChamados();
-        });
-    }
-
-    if (btnConfirmarFinalizacao) {
-        btnConfirmarFinalizacao.addEventListener('click', async () => {
-            if (!chamadoSelecionado) return;
-            const observacoes = observacoesFinalizacaoEl?.value.trim();
-            if (!observacoes) {
-                showToast('Informe as observações sobre o atendimento para finalizar o chamado.', 'warning');
-                return;
-            }
-            const atualizado = await atualizarStatusChamado(chamadoSelecionado.id, STATUS_FINALIZADO, {
-                observacoes,
-            });
-            if (atualizado) {
-                modalFinalizar?.hide();
-                chamadoSelecionado = null;
-            }
-        });
-    }
-
-    if (btnConfirmarCancelamento) {
-        btnConfirmarCancelamento.addEventListener('click', async () => {
-            if (!chamadoSelecionado) return;
-            const atualizado = await atualizarStatusChamado(chamadoSelecionado.id, STATUS_CANCELADO);
-            if (atualizado) {
-                modalCancelar?.hide();
-                chamadoSelecionado = null;
-            }
         });
     }
 

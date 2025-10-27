@@ -31,6 +31,9 @@
                         <a class="nav-link active" aria-current="page" href="/suporte_ti/admin_chamados.html"><i class="bi bi-clipboard-data me-1"></i> Chamados</a>
                     </li>
                     <li class="nav-item admin-only">
+                        <a class="nav-link" href="/suporte_ti/admin_historico_chamados.html"><i class="bi bi-archive me-1"></i> Histórico</a>
+                    </li>
+                    <li class="nav-item admin-only">
                         <a class="nav-link" href="/suporte_ti/admin_indicadores.html"><i class="bi bi-graph-up-arrow me-1"></i> Indicadores</a>
                     </li>
                     <li class="nav-item admin-only">
@@ -80,8 +83,8 @@
                                 <label for="filtroStatus" class="form-label">Status</label>
                                 <select id="filtroStatus" class="form-select" multiple>
                                     <option value="Aberto">Aberto</option>
-                                    <option value="Em Andamento">Em Andamento</option>
-                                    <option value="Fechado">Fechado</option>
+                                    <option value="Em Atendimento">Em Atendimento</option>
+                                    <option value="Finalizado">Finalizado</option>
                                     <option value="Cancelado">Cancelado</option>
                                 </select>
                             </div>
@@ -155,6 +158,32 @@
                 </div>
             </div>
         </section>
+
+        <section class="card mt-4">
+            <div class="card-header bg-white d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+                <h2 class="h5 mb-0"><i class="bi bi-person-workspace me-2"></i>Chamados em Atendimento</h2>
+                <span class="text-muted" id="totalChamadosAtendimento">0 registros</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="tabelaChamadosAtendimento">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Data</th>
+                                <th scope="col">Usuário</th>
+                                <th scope="col">Área</th>
+                                <th scope="col">Tipo</th>
+                                <th scope="col">Urgência</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
     </main>
 
     <div class="modal fade" id="modalDetalhesChamadoAdmin" tabindex="-1" aria-labelledby="modalDetalhesChamadoAdminLabel" aria-hidden="true">
@@ -170,6 +199,43 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalFinalizarChamado" tabindex="-1" aria-labelledby="modalFinalizarChamadoLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h4" id="modalFinalizarChamadoLabel">Finalizar atendimento</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="observacoesFinalizacao" class="form-label">Observações sobre o atendimento</label>
+                    <textarea class="form-control" id="observacoesFinalizacao" rows="4" required></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="btnConfirmarFinalizacao">Confirmar finalização</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalCancelarChamado" tabindex="-1" aria-labelledby="modalCancelarChamadoLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h4" id="modalCancelarChamadoLabel">Cancelar atendimento</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Tem a certeza que deseja cancelar este chamado?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Não</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarCancelamento">Sim, cancelar</button>
                 </div>
             </div>
         </div>

@@ -1,20 +1,20 @@
-/* global bootstrap, chamarAPI, verificarAutenticacao, getUsuarioLogado, formatarData, sanitizeHTML */
+/* global bootstrap, chamarAPI, verificarAutenticacao, verificarPermissaoAdmin, getUsuarioLogado, formatarData, sanitizeHTML */
 
 (function () {
-    const tabela = document.querySelector('#tabelaChamados tbody');
-    const alertaSemChamados = document.getElementById('alertSemChamados');
-    const detalhesContainer = document.getElementById('detalhesChamado');
-    const listaAnexos = document.getElementById('listaAnexos');
-    const modalEl = document.getElementById('modalDetalhesChamado');
+    const tabela = document.querySelector('#tabelaHistoricos tbody');
+    const totalHistoricosEl = document.getElementById('totalHistoricos');
+    const detalhesContainer = document.getElementById('detalhesHistorico');
+    const listaAnexos = document.getElementById('listaAnexosHistorico');
+    const modalEl = document.getElementById('modalDetalhesHistorico');
     const modal = modalEl ? new bootstrap.Modal(modalEl) : null;
 
     async function inicializar() {
         const autenticado = await verificarAutenticacao();
-        if (!autenticado) {
-            return;
-        }
+        if (!autenticado) return;
+        const admin = await verificarPermissaoAdmin();
+        if (!admin) return;
         atualizarNomeUsuario();
-        await carregarChamados();
+        await carregarHistoricos();
     }
 
     function atualizarNomeUsuario() {
@@ -27,51 +27,49 @@
         }
     }
 
-    async function carregarChamados() {
+    async function carregarHistoricos() {
         try {
-            const chamados = await chamarAPI('/suporte_ti/meus_chamados');
+            const chamados = await chamarAPI('/suporte_ti/admin/todos_chamados?status=Finalizado,Cancelado');
             renderizarChamados(chamados || []);
         } catch (error) {
             console.error(error);
-            mostrarMensagemErro('Não foi possível carregar seus chamados.');
-        }
-    }
-
-    function mostrarMensagemErro(mensagem) {
-        if (alertaSemChamados) {
-            alertaSemChamados.textContent = mensagem;
-            alertaSemChamados.classList.remove('alert-info');
-            alertaSemChamados.classList.add('alert-danger');
-            alertaSemChamados.classList.remove('d-none');
+            renderizarChamados([]);
         }
     }
 
     function renderizarChamados(chamados) {
         if (!tabela) return;
         tabela.innerHTML = '';
-        if (!Array.isArray(chamados) || chamados.length === 0) {
-            if (alertaSemChamados) {
-                alertaSemChamados.classList.remove('d-none');
-                alertaSemChamados.classList.remove('alert-danger');
-                alertaSemChamados.classList.add('alert-info');
-                alertaSemChamados.innerHTML = '<i class="bi bi-info-circle me-2"></i>Ainda não há chamados cadastrados. Clique em "Abrir novo chamado" para criar o primeiro.';
-            }
+        const lista = Array.isArray(chamados) ? chamados : [];
+        const total = lista.length;
+        if (totalHistoricosEl) {
+            totalHistoricosEl.textContent = `${total} registro${total === 1 ? '' : 's'}`;
+        }
+        if (!total) {
+            const linha = document.createElement('tr');
+            linha.innerHTML = '<td colspan="8" class="text-center text-muted py-4">Nenhum histórico encontrado no momento.</td>';
+            tabela.appendChild(linha);
             return;
         }
-        alertaSemChamados && alertaSemChamados.classList.add('d-none');
-        chamados.forEach((chamado, indice) => {
+        lista.forEach((chamado, indice) => {
             const tr = document.createElement('tr');
+            const statusAtual = chamado.status || '-';
             tr.innerHTML = `
                 <th scope="row">${indice + 1}</th>
                 <td>${formatarData(chamado.created_at)}</td>
+                <td>${sanitizeHTML(chamado.nome || chamado.email || '')}</td>
                 <td>${sanitizeHTML(chamado.area || '')}</td>
                 <td>${sanitizeHTML(chamado.tipo_equipamento_nome || '-')}</td>
                 <td><span class="badge text-bg-${classeUrgencia(chamado.nivel_urgencia)}">${sanitizeHTML(chamado.nivel_urgencia || '-')}</span></td>
-                <td><span class="badge text-bg-${classeStatus(chamado.status)}">${sanitizeHTML(chamado.status || '-')}</span></td>
-                <td><button class="btn btn-sm btn-outline-primary" data-id="${chamado.id}"><i class="bi bi-eye"></i></button></td>
+                <td><span class="badge text-bg-${classeStatus(statusAtual)}">${sanitizeHTML(statusAtual)}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" data-acao="detalhes" title="Ver detalhes">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </td>
             `;
-            const botao = tr.querySelector('button');
-            botao?.addEventListener('click', () => abrirModalDetalhes(chamado));
+            const botaoDetalhes = tr.querySelector('button[data-acao="detalhes"]');
+            botaoDetalhes?.addEventListener('click', () => abrirModalDetalhes(chamado));
             tabela.appendChild(tr);
         });
     }
@@ -104,12 +102,13 @@
     }
 
     function abrirModalDetalhes(chamado) {
-        if (!detalhesContainer || !modal) return;
+        if (!modal || !detalhesContainer) return;
         detalhesContainer.innerHTML = '';
         const campos = [
             ['Protocolo', `#${chamado.id}`],
             ['Data de abertura', formatarData(chamado.created_at)],
-            ['Área', chamado.area],
+            ['Usuário', chamado.nome || chamado.email || '-'],
+            ['Área', chamado.area || '-'],
             ['Tipo de equipamento', chamado.tipo_equipamento_nome || '-'],
             ['Patrimônio', chamado.patrimonio || '-'],
             ['Número de série', chamado.numero_serie || '-'],

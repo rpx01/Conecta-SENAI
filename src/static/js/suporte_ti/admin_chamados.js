@@ -27,8 +27,17 @@
 
     const STATUS_ABERTO = 'Aberto';
     const STATUS_ATENDIMENTO = 'Em Atendimento';
+    const STATUS_ATENDIMENTO_LEGACY = 'Em Andamento';
     const STATUS_FINALIZADO = 'Finalizado';
     const STATUS_CANCELADO = 'Cancelado';
+    const STATUS_FINALIZADO_LEGACY = 'Fechado';
+
+    const STATUS_EQUIVALENTES = {
+        [STATUS_ATENDIMENTO]: [STATUS_ATENDIMENTO, STATUS_ATENDIMENTO_LEGACY],
+        [STATUS_ATENDIMENTO_LEGACY]: [STATUS_ATENDIMENTO, STATUS_ATENDIMENTO_LEGACY],
+        [STATUS_FINALIZADO]: [STATUS_FINALIZADO, STATUS_FINALIZADO_LEGACY],
+        [STATUS_FINALIZADO_LEGACY]: [STATUS_FINALIZADO, STATUS_FINALIZADO_LEGACY],
+    };
 
     let chamadoSelecionado = null;
 
@@ -116,15 +125,33 @@
             : '/suporte_ti/admin/todos_chamados';
     }
 
+    function expandirStatus(statuses) {
+        if (!Array.isArray(statuses) || !statuses.length) {
+            return [];
+        }
+        const conjunto = new Set();
+        statuses.forEach((status) => {
+            const equivalentes = STATUS_EQUIVALENTES[status] || [status];
+            equivalentes.forEach((valor) => conjunto.add(valor));
+        });
+        return Array.from(conjunto);
+    }
+
     async function buscarChamados() {
         const filtrosBase = obterFiltrosBase();
         const statusSelecionados = obterStatusSelecionados();
         const deveBuscarAbertos = !statusSelecionados.length || statusSelecionados.includes(STATUS_ABERTO);
-        const deveBuscarAtendimento = !statusSelecionados.length || statusSelecionados.includes(STATUS_ATENDIMENTO);
+        const deveBuscarAtendimento =
+            !statusSelecionados.length ||
+            statusSelecionados.includes(STATUS_ATENDIMENTO) ||
+            statusSelecionados.includes(STATUS_ATENDIMENTO_LEGACY);
 
         if (deveBuscarAbertos) {
             try {
-                const endpointAbertos = montarEndpoint({ ...filtrosBase, status: STATUS_ABERTO });
+                const endpointAbertos = montarEndpoint({
+                    ...filtrosBase,
+                    status: STATUS_ABERTO,
+                });
                 const chamadosAbertos = await chamarAPI(endpointAbertos);
                 renderizarChamadosAbertos(chamadosAbertos || []);
             } catch (error) {
@@ -137,7 +164,22 @@
 
         if (deveBuscarAtendimento) {
             try {
-                const endpointAtendimento = montarEndpoint({ ...filtrosBase, status: STATUS_ATENDIMENTO });
+                const statusFiltroAtendimento = statusSelecionados.length
+                    ? statusSelecionados.filter((status) =>
+                          status === STATUS_ATENDIMENTO || status === STATUS_ATENDIMENTO_LEGACY
+                      )
+                    : [STATUS_ATENDIMENTO];
+                const statusAtendimento = expandirStatus(
+                    statusFiltroAtendimento.length ? statusFiltroAtendimento : [STATUS_ATENDIMENTO]
+                );
+                if (!statusAtendimento.length) {
+                    renderizarChamadosAtendimento([]);
+                    return;
+                }
+                const endpointAtendimento = montarEndpoint({
+                    ...filtrosBase,
+                    status: statusAtendimento.join(','),
+                });
                 const chamadosAtendimento = await chamarAPI(endpointAtendimento);
                 renderizarChamadosAtendimento(chamadosAtendimento || []);
             } catch (error) {
@@ -206,6 +248,7 @@
             return;
         }
         chamados.forEach((chamado, indice) => {
+            const statusAtual = chamado.status || STATUS_ATENDIMENTO;
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <th scope="row">${indice + 1}</th>
@@ -214,7 +257,7 @@
                 <td>${sanitizeHTML(chamado.area || '')}</td>
                 <td>${sanitizeHTML(chamado.tipo_equipamento_nome || '-')}</td>
                 <td><span class="badge text-bg-${classeUrgencia(chamado.nivel_urgencia)}">${sanitizeHTML(chamado.nivel_urgencia || '-')}</span></td>
-                <td><span class="badge text-bg-${classeStatus(STATUS_ATENDIMENTO)}">${STATUS_ATENDIMENTO}</span></td>
+                <td><span class="badge text-bg-${classeStatus(statusAtual)}">${sanitizeHTML(statusAtual)}</span></td>
                 <td>
                     <div class="d-flex flex-wrap gap-2">
                         <button class="btn btn-sm btn-outline-primary" data-acao="detalhes" title="Ver detalhes">
@@ -267,8 +310,10 @@
             case 'aberto':
                 return 'primary';
             case 'em atendimento':
+            case 'em andamento':
                 return 'warning';
             case 'finalizado':
+            case 'fechado':
                 return 'success';
             case 'cancelado':
                 return 'secondary';

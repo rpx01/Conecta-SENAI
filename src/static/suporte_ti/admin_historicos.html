@@ -112,6 +112,60 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modalEditarChamadoHistorico" tabindex="-1" aria-labelledby="modalEditarChamadoHistoricoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h4" id="modalEditarChamadoHistoricoLabel">Editar chamado</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarChamadoHistorico" class="row g-3">
+                        <div class="col-md-6">
+                            <label for="editarAreaHistoricoSelect" class="form-label">Área</label>
+                            <select id="editarAreaHistoricoSelect" class="form-select" aria-label="Selecione a área">
+                                <option value="" data-placeholder="true">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editarTipoEquipamentoHistoricoSelect" class="form-label">Tipo de equipamento</label>
+                            <select id="editarTipoEquipamentoHistoricoSelect" class="form-select" aria-label="Selecione o tipo de equipamento">
+                                <option value="" data-placeholder="true">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editarUrgenciaHistoricoSelect" class="form-label">Nível de urgência</label>
+                            <select id="editarUrgenciaHistoricoSelect" class="form-select" required>
+                                <option value="" data-placeholder="true">Selecione...</option>
+                                <option value="Baixo">Baixo</option>
+                                <option value="Médio">Médio</option>
+                                <option value="Alto">Alto</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editarPatrimonioHistoricoInput" class="form-label">Patrimônio</label>
+                            <input type="text" id="editarPatrimonioHistoricoInput" class="form-control" placeholder="Informe o patrimônio" />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editarNumeroSerieHistoricoInput" class="form-label">Nº de série</label>
+                            <input type="text" id="editarNumeroSerieHistoricoInput" class="form-control" placeholder="Informe o número de série" />
+                        </div>
+                        <div class="col-12">
+                            <label for="editarDescricaoHistorico" class="form-label">Descrição do problema</label>
+                            <textarea id="editarDescricaoHistorico" class="form-control" rows="4" required placeholder="Atualize a descrição do problema"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnSalvarEdicaoHistorico">
+                        <i class="bi bi-save me-2"></i>Salvar alterações
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.4/dist/purify.min.js"></script>
     <script src="/js/app.js"></script>

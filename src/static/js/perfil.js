@@ -28,15 +28,18 @@ async function carregarDadosUsuario() {
     try {
         const usuario = getUsuarioLogado();
         const dadosUsuario = await chamarAPI(`/usuarios/${usuario.id}`);
-        
+        const isRoot = usuario?.is_root ?? false;
+        dadosUsuario.is_root = isRoot;
+
         document.getElementById('nome').value = dadosUsuario.nome || '';
         document.getElementById('email').value = dadosUsuario.email || '';
         document.getElementById('cpf').value = dadosUsuario.cpf || '';
         document.getElementById('data_nascimento').value = dadosUsuario.data_nascimento || '';
         document.getElementById('empresa').value = dadosUsuario.empresa || '';
         document.getElementById('tipo').value = dadosUsuario.tipo === 'admin' ? 'Administrador' : 'Comum';
-        
+
         localStorage.setItem('usuario', JSON.stringify(dadosUsuario));
+        localStorage.setItem('isRoot', isRoot ? 'true' : 'false');
         document.getElementById('userName').textContent = dadosUsuario.nome;
         
     } catch (error) {
@@ -63,6 +66,7 @@ async function salvarDadosPerfil(e) {
             
             Object.assign(usuario, dadosAtualizacao);
             localStorage.setItem('usuario', JSON.stringify(usuario));
+            localStorage.setItem('isRoot', usuario?.is_root ? 'true' : 'false');
             
             document.getElementById('userName').textContent = dadosAtualizacao.nome;
             showToast('Perfil atualizado com sucesso!', 'success');

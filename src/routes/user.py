@@ -545,12 +545,17 @@ def login():
 
         secure_cookie = current_app.config.get("COOKIE_SECURE", True)
         csrf_token = generate_csrf()
+        admin_email = (os.getenv("ADMIN_EMAIL") or "").strip().lower()
+        usuario_dict = usuario.to_dict()
+        is_root = bool(admin_email) and (usuario.email or "").strip().lower() == admin_email
+        usuario_dict["is_root"] = is_root
         resp = jsonify(
             message="Login successful",
             token=access_token,
             refresh_token=refresh_token,
-            usuario=usuario.to_dict(),
+            usuario=usuario_dict,
             csrf_token=csrf_token,
+            is_root=is_root,
         )
         resp.set_cookie(
             "access_token",

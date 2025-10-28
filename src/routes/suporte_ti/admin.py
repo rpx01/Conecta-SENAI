@@ -1,10 +1,11 @@
 """Rotas administrativas do módulo de suporte de TI."""
 from __future__ import annotations
 
+import os
 from datetime import datetime
 from typing import Iterable
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, g
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -205,6 +206,144 @@ def atualizar_status_chamado(chamado_id: int):
     )
 
 
+@suporte_ti_admin_bp.route("/chamados/<int:chamado_id>", methods=["PUT"])
+@admin_required
+def atualizar_chamado(chamado_id: int):
+    """Atualiza os dados principais de um chamado existente."""
+
+    if not _eh_admin_raiz():
+        return _resposta_nao_autorizado()
+
+    ensure_tables_exist([SuporteChamado, SuporteArea, SuporteTipoEquipamento])
+
+    payload = request.get_json(silent=True) or {}
+    if not payload:
+        return jsonify({"erro": "Corpo da requisição ausente."}), 400
+
+    chamado = db.session.get(SuporteChamado, chamado_id)
+    if not chamado:
+        return jsonify({"erro": "Chamado não encontrado."}), 404
+
+    campos_atualizados = False
+
+    area_id = payload.get("area_id")
+    area_nome = payload.get("area")
+    if area_id is not None:
+        try:
+            area_id_int = int(area_id)
+        except (TypeError, ValueError):
+            return jsonify({"erro": "Identificador de área inválido."}), 400
+        area_registro = db.session.get(SuporteArea, area_id_int)
+        if not area_registro:
+            return jsonify({"erro": "Área não encontrada."}), 404
+        chamado.area = area_registro.nome
+        campos_atualizados = True
+    elif isinstance(area_nome, str) and area_nome.strip():
+        chamado.area = area_nome.strip()
+        campos_atualizados = True
+
+    tipo_id = payload.get("tipo_equipamento_id")
+    if tipo_id is None:
+        tipo_id = payload.get("equipamento_id")
+    if tipo_id is not None:
+        try:
+            tipo_id_int = int(tipo_id)
+        except (TypeError, ValueError):
+            return jsonify({"erro": "Identificador de equipamento inválido."}), 400
+        tipo_registro = db.session.get(SuporteTipoEquipamento, tipo_id_int)
+        if not tipo_registro:
+            return jsonify({"erro": "Tipo de equipamento não encontrado."}), 404
+        chamado.tipo_equipamento_id = tipo_registro.id
+        campos_atualizados = True
+
+    descricao = payload.get("descricao_problema")
+    if descricao is None:
+        descricao = payload.get("descricao")
+    if descricao is None:
+        descricao = payload.get("titulo")
+    if isinstance(descricao, str):
+        chamado.descricao_problema = descricao.strip()
+        campos_atualizados = True
+
+    urgencia = payload.get("nivel_urgencia")
+    if urgencia is None:
+        urgencia = payload.get("urgencia")
+    urgencia_normalizada = _normalizar_urgencia(urgencia)
+    if urgencia is not None:
+        if not urgencia_normalizada or urgencia_normalizada not in _URGENCIAS_VALIDAS:
+            return jsonify({"erro": "Nível de urgência inválido."}), 400
+        chamado.nivel_urgencia = urgencia_normalizada
+        campos_atualizados = True
+
+    if "patrimonio" in payload:
+        valor = payload.get("patrimonio")
+        if isinstance(valor, str):
+            valor = valor.strip() or None
+        chamado.patrimonio = valor
+        campos_atualizados = True
+
+    if "numero_serie" in payload or "numeroSerie" in payload:
+        valor = payload.get("numero_serie")
+        if valor is None:
+            valor = payload.get("numeroSerie")
+        if isinstance(valor, str):
+            valor = valor.strip() or None
+        chamado.numero_serie = valor
+        campos_atualizados = True
+
+    if "observacoes" in payload:
+        valor = payload.get("observacoes")
+        if isinstance(valor, str):
+            valor = valor.strip() or None
+        chamado.observacoes = valor
+        campos_atualizados = True
+
+    if not campos_atualizados:
+        return jsonify({"erro": "Nenhum campo válido para atualização foi informado."}), 400
+
+    chamado.updated_at = datetime.utcnow()
+
+    try:
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return jsonify({"erro": "Não foi possível atualizar o chamado."}), 500
+
+    return (
+        jsonify(
+            {
+                "mensagem": "Chamado atualizado com sucesso.",
+                "chamado": _serialize_chamado(chamado),
+            }
+        ),
+        200,
+    )
+
+
+@suporte_ti_admin_bp.route("/chamados/<int:chamado_id>", methods=["DELETE"])
+@admin_required
+def excluir_chamado(chamado_id: int):
+    """Remove definitivamente um chamado."""
+
+    if not _eh_admin_raiz():
+        return _resposta_nao_autorizado()
+
+    ensure_tables_exist([SuporteChamado])
+
+    chamado = db.session.get(SuporteChamado, chamado_id)
+    if not chamado:
+        return jsonify({"erro": "Chamado não encontrado."}), 404
+
+    try:
+        db.session.delete(chamado)
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return jsonify({"erro": "Não foi possível excluir o chamado."}), 500
+
+    return jsonify({"mensagem": "Chamado excluído com sucesso."}), 200
+
+
 @suporte_ti_admin_bp.route("/indicadores", methods=["GET"])
 @admin_required
 def obter_indicadores():
@@ -391,3 +530,30 @@ def excluir_area(registro_id: int):
         status = 404 if "não encontrado" in erro.lower() else 500
         return jsonify({"erro": erro}), status
     return jsonify({"mensagem": "Área removida com sucesso."})
+_URGENCIAS_VALIDAS = {"Baixo", "Médio", "Alto"}
+
+
+def _eh_admin_raiz() -> bool:
+    usuario = getattr(g, "current_user", None)
+    if not usuario or not getattr(usuario, "email", None):
+        return False
+    admin_email = (os.getenv("ADMIN_EMAIL") or "").strip().lower()
+    if not admin_email:
+        return False
+    return (usuario.email or "").strip().lower() == admin_email
+
+
+def _resposta_nao_autorizado():
+    return jsonify({"erro": "Apenas o Administrador raiz pode realizar esta ação."}), 403
+
+
+def _normalizar_urgencia(valor: str | None) -> str | None:
+    if not valor:
+        return None
+    valor_limpo = valor.strip()
+    if not valor_limpo:
+        return None
+    if valor_limpo.lower() == "medio":
+        valor_limpo = "Médio"
+    return valor_limpo
+

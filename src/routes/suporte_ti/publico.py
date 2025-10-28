@@ -3,10 +3,9 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
-from typing import Iterable
 
 from flask import Blueprint, current_app, g, jsonify, request
-from sqlalchemy import inspect, func
+from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.utils import secure_filename
 
@@ -15,6 +14,7 @@ from src.models import db
 from src.models.suporte_anexo import SuporteAnexo
 from src.models.suporte_basedados import SuporteArea, SuporteTipoEquipamento
 from src.models.suporte_chamado import SuporteChamado
+from src.routes.suporte_ti.utils import ensure_tables_exist
 
 suporte_ti_public_bp = Blueprint(
     "suporte_ti_publico",
@@ -23,14 +23,6 @@ suporte_ti_public_bp = Blueprint(
 )
 
 ALLOWED_URGENCIAS = {"Baixo", "Médio", "Medio", "Alto"}
-
-
-def _ensure_tables_exist(models: Iterable[type[db.Model]]) -> None:
-    inspector = inspect(db.engine)
-    for model in models:
-        if not inspector.has_table(model.__tablename__):
-            model.__table__.create(db.engine)
-            inspector = inspect(db.engine)
 
 
 def _serialize_chamado(chamado: SuporteChamado) -> dict:
@@ -59,7 +51,7 @@ def _serialize_chamado(chamado: SuporteChamado) -> dict:
 @suporte_ti_public_bp.route("/novo_chamado", methods=["POST"])
 @login_required
 def criar_chamado():
-    _ensure_tables_exist(
+    ensure_tables_exist(
         [SuporteArea, SuporteTipoEquipamento, SuporteChamado, SuporteAnexo]
     )
 
@@ -172,7 +164,7 @@ def criar_chamado():
 @suporte_ti_public_bp.route("/meus_chamados", methods=["GET"])
 @login_required
 def listar_meus_chamados():
-    _ensure_tables_exist([SuporteChamado])
+    ensure_tables_exist([SuporteChamado])
     usuario = g.current_user
     chamados = (
         SuporteChamado.query.filter_by(user_id=usuario.id)
@@ -185,7 +177,7 @@ def listar_meus_chamados():
 @suporte_ti_public_bp.route("/basedados_formulario", methods=["GET"])
 @login_required
 def obter_base_dados_formulario():
-    _ensure_tables_exist([SuporteTipoEquipamento, SuporteArea])
+    ensure_tables_exist([SuporteTipoEquipamento, SuporteArea])
 
     tipos = (
         SuporteTipoEquipamento.query.order_by(SuporteTipoEquipamento.nome.asc()).all()

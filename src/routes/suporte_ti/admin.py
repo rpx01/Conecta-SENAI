@@ -5,13 +5,14 @@ from datetime import datetime
 from typing import Iterable
 
 from flask import Blueprint, jsonify, request
-from sqlalchemy import func, inspect
+from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.auth import admin_required
 from src.models import db
 from src.models.suporte_basedados import SuporteArea, SuporteTipoEquipamento
 from src.models.suporte_chamado import SuporteChamado
+from src.routes.suporte_ti.utils import ensure_tables_exist
 
 suporte_ti_admin_bp = Blueprint(
     "suporte_ti_admin",
@@ -66,14 +67,6 @@ def _obter_equivalentes_status(statuses: Iterable[str]) -> set[str]:
     return equivalentes
 
 
-def _ensure_tables_exist(models: Iterable[type[db.Model]]) -> None:
-    inspector = inspect(db.engine)
-    for model in models:
-        if not inspector.has_table(model.__tablename__):
-            model.__table__.create(db.engine)
-            inspector = inspect(db.engine)
-
-
 def _serialize_chamado(chamado: SuporteChamado) -> dict:
     return {
         "id": chamado.id,
@@ -100,7 +93,7 @@ def _serialize_chamado(chamado: SuporteChamado) -> dict:
 @suporte_ti_admin_bp.route("/todos_chamados", methods=["GET"])
 @admin_required
 def listar_todos_chamados():
-    _ensure_tables_exist([SuporteChamado])
+    ensure_tables_exist([SuporteChamado])
     consulta = SuporteChamado.query
 
     status_param = request.args.get("status")
@@ -165,7 +158,7 @@ def listar_todos_chamados():
 def atualizar_status_chamado(chamado_id: int):
     """Atualiza o status de um chamado existente."""
 
-    _ensure_tables_exist([SuporteChamado])
+    ensure_tables_exist([SuporteChamado])
 
     dados = request.get_json(silent=True) or {}
     novo_status = (dados.get("status") or "").strip()
@@ -215,7 +208,7 @@ def atualizar_status_chamado(chamado_id: int):
 @suporte_ti_admin_bp.route("/indicadores", methods=["GET"])
 @admin_required
 def obter_indicadores():
-    _ensure_tables_exist([SuporteChamado])
+    ensure_tables_exist([SuporteChamado])
 
     total = db.session.query(func.count(SuporteChamado.id)).scalar() or 0
     por_status = (

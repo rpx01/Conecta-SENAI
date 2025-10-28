@@ -304,7 +304,7 @@ def _excluir_registro_basico(model, registro_id: int):
 @suporte_ti_admin_bp.route("/tipos_equipamento", methods=["GET"])
 @admin_required
 def listar_tipos_equipamento():
-    _ensure_tables_exist([SuporteTipoEquipamento])
+    ensure_tables_exist([SuporteTipoEquipamento])
     tipos = SuporteTipoEquipamento.query.order_by(SuporteTipoEquipamento.nome.asc()).all()
     return jsonify([{"id": tipo.id, "nome": tipo.nome} for tipo in tipos])
 
@@ -312,7 +312,7 @@ def listar_tipos_equipamento():
 @suporte_ti_admin_bp.route("/tipos_equipamento", methods=["POST"])
 @admin_required
 def criar_tipo_equipamento():
-    _ensure_tables_exist([SuporteTipoEquipamento])
+    ensure_tables_exist([SuporteTipoEquipamento])
     payload = request.get_json(silent=True) or {}
     nome = payload.get("nome", "")
     registro, erro = _criar_registro_basico(SuporteTipoEquipamento, nome)
@@ -324,7 +324,7 @@ def criar_tipo_equipamento():
 @suporte_ti_admin_bp.route("/tipos_equipamento/<int:registro_id>", methods=["PUT"])
 @admin_required
 def atualizar_tipo_equipamento(registro_id: int):
-    _ensure_tables_exist([SuporteTipoEquipamento])
+    ensure_tables_exist([SuporteTipoEquipamento])
     payload = request.get_json(silent=True) or {}
     nome = payload.get("nome", "")
     registro, erro = _atualizar_registro_basico(SuporteTipoEquipamento, registro_id, nome)
@@ -339,7 +339,7 @@ def atualizar_tipo_equipamento(registro_id: int):
 @suporte_ti_admin_bp.route("/tipos_equipamento/<int:registro_id>", methods=["DELETE"])
 @admin_required
 def excluir_tipo_equipamento(registro_id: int):
-    _ensure_tables_exist([SuporteTipoEquipamento])
+    ensure_tables_exist([SuporteTipoEquipamento])
     sucesso, erro = _excluir_registro_basico(SuporteTipoEquipamento, registro_id)
     if erro:
         status = 404 if "não encontrado" in erro.lower() else 500
@@ -350,7 +350,7 @@ def excluir_tipo_equipamento(registro_id: int):
 @suporte_ti_admin_bp.route("/areas", methods=["GET"])
 @admin_required
 def listar_areas():
-    _ensure_tables_exist([SuporteArea])
+    ensure_tables_exist([SuporteArea])
     areas = SuporteArea.query.order_by(SuporteArea.nome.asc()).all()
     return jsonify([{"id": area.id, "nome": area.nome} for area in areas])
 
@@ -358,7 +358,7 @@ def listar_areas():
 @suporte_ti_admin_bp.route("/areas", methods=["POST"])
 @admin_required
 def criar_area():
-    _ensure_tables_exist([SuporteArea])
+    ensure_tables_exist([SuporteArea])
     payload = request.get_json(silent=True) or {}
     nome = payload.get("nome", "")
     registro, erro = _criar_registro_basico(SuporteArea, nome)
@@ -370,7 +370,7 @@ def criar_area():
 @suporte_ti_admin_bp.route("/areas/<int:registro_id>", methods=["PUT"])
 @admin_required
 def atualizar_area(registro_id: int):
-    _ensure_tables_exist([SuporteArea])
+    ensure_tables_exist([SuporteArea])
     payload = request.get_json(silent=True) or {}
     nome = payload.get("nome", "")
     registro, erro = _atualizar_registro_basico(SuporteArea, registro_id, nome)
@@ -385,7 +385,7 @@ def atualizar_area(registro_id: int):
 @suporte_ti_admin_bp.route("/areas/<int:registro_id>", methods=["DELETE"])
 @admin_required
 def excluir_area(registro_id: int):
-    _ensure_tables_exist([SuporteArea])
+    ensure_tables_exist([SuporteArea])
     sucesso, erro = _excluir_registro_basico(SuporteArea, registro_id)
     if erro:
         status = 404 if "não encontrado" in erro.lower() else 500

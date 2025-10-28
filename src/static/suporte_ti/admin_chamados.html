@@ -204,6 +204,60 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modalEditarChamado" tabindex="-1" aria-labelledby="modalEditarChamadoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h4" id="modalEditarChamadoLabel">Editar chamado</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarChamado" class="row g-3">
+                        <div class="col-md-6">
+                            <label for="editarAreaSelect" class="form-label">Área</label>
+                            <select id="editarAreaSelect" class="form-select" aria-label="Selecione a área do chamado">
+                                <option value="" data-placeholder="true">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editarTipoEquipamentoSelect" class="form-label">Tipo de equipamento</label>
+                            <select id="editarTipoEquipamentoSelect" class="form-select" aria-label="Selecione o tipo de equipamento">
+                                <option value="" data-placeholder="true">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editarUrgenciaSelect" class="form-label">Nível de urgência</label>
+                            <select id="editarUrgenciaSelect" class="form-select" required>
+                                <option value="" data-placeholder="true">Selecione...</option>
+                                <option value="Baixo">Baixo</option>
+                                <option value="Médio">Médio</option>
+                                <option value="Alto">Alto</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editarPatrimonioInput" class="form-label">Patrimônio</label>
+                            <input type="text" id="editarPatrimonioInput" class="form-control" placeholder="Informe o patrimônio" />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editarNumeroSerieInput" class="form-label">Nº de série</label>
+                            <input type="text" id="editarNumeroSerieInput" class="form-control" placeholder="Informe o número de série" />
+                        </div>
+                        <div class="col-12">
+                            <label for="editarDescricaoProblema" class="form-label">Descrição do problema</label>
+                            <textarea id="editarDescricaoProblema" class="form-control" rows="4" required placeholder="Atualize a descrição do problema"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnSalvarEdicaoChamado">
+                        <i class="bi bi-save me-2"></i>Salvar alterações
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="modalFinalizarChamado" tabindex="-1" aria-labelledby="modalFinalizarChamadoLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">

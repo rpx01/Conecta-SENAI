@@ -297,10 +297,13 @@ async function realizarLogin(email, senha, recaptchaToken = '') {
         });
 
         if (data && data.usuario) {
-            localStorage.setItem('usuario', JSON.stringify(data.usuario));
-            localStorage.setItem('isAdmin', data.usuario.tipo === 'admin');
-            redirecionarAposLogin(data.usuario);
-            return data;
+            const isRoot = Boolean(data.is_root ?? data.usuario.is_root);
+            const usuarioComMetadados = { ...data.usuario, is_root: isRoot };
+            localStorage.setItem('usuario', JSON.stringify(usuarioComMetadados));
+            localStorage.setItem('isAdmin', usuarioComMetadados.tipo === 'admin');
+            localStorage.setItem('isRoot', isRoot ? 'true' : 'false');
+            redirecionarAposLogin(usuarioComMetadados);
+            return { ...data, usuario: usuarioComMetadados, is_root: isRoot };
         }
 
         throw new Error('Resposta inesperada do servidor');
@@ -323,6 +326,7 @@ async function realizarLogout() {
         // Ignora erros de logout
     }
     localStorage.removeItem('usuario');
+    localStorage.removeItem('isRoot');
     window.location.href = '/admin/login.html';
 }
 
@@ -336,7 +340,23 @@ async function realizarLogout() {
  */
 function getUsuarioLogado() {
     const usuarioJSON = localStorage.getItem('usuario');
-    return usuarioJSON ? JSON.parse(usuarioJSON) : null;
+    if (!usuarioJSON) {
+        return null;
+    }
+
+    try {
+        const usuario = JSON.parse(usuarioJSON);
+        if (typeof usuario.is_root === 'undefined') {
+            const armazenado = localStorage.getItem('isRoot');
+            if (armazenado !== null) {
+                usuario.is_root = armazenado === 'true';
+            }
+        }
+        return usuario;
+    } catch (erro) {
+        console.error('Não foi possível ler os dados do usuário armazenados.', erro);
+        return null;
+    }
 }
 
 /**

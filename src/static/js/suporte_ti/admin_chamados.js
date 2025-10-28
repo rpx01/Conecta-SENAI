@@ -289,7 +289,8 @@
             ['Número de série', chamado.numero_serie || '-'],
             ['Descrição', chamado.descricao_problema || '-'],
             ['Nível de urgência', chamado.nivel_urgencia || '-'],
-            ['Status', chamado.status || '-']
+            ['Status', chamado.status || '-'],
+            ['Observações', chamado.observacoes || '-']
         ];
         campos.forEach(([label, valor]) => {
             const dt = document.createElement('dt');
@@ -349,8 +350,11 @@
         textoOriginalBotaoFinalizacao = textoOriginalBotaoFinalizacao || btnConfirmarFinalizacao.innerHTML;
         btnConfirmarFinalizacao.disabled = true;
         btnConfirmarFinalizacao.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Finalizando...';
-        const observacoes = observacoesFinalizacaoEl?.value.trim();
-        const corpo = observacoes ? { observacoes } : {};
+        const possuiCampoObservacoes = Boolean(observacoesFinalizacaoEl);
+        const observacoes = possuiCampoObservacoes
+            ? observacoesFinalizacaoEl.value.trim()
+            : '';
+        const corpo = possuiCampoObservacoes ? { observacoes } : {};
         const sucesso = await atualizarStatusChamado(chamadoSelecionadoParaFinalizar.id, 'Finalizado', corpo);
         btnConfirmarFinalizacao.disabled = false;
         btnConfirmarFinalizacao.innerHTML = textoOriginalBotaoFinalizacao || '<i class="bi bi-check2-circle me-2"></i>Confirmar finalização';

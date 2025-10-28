@@ -23,6 +23,7 @@ class SuporteChamado(db.Model):
     descricao_problema = db.Column(db.Text, nullable=False)
     nivel_urgencia = db.Column(db.String(20), nullable=False, default="Baixo")
     status = db.Column(db.String(20), nullable=False, default="Aberto")
+    observacoes = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(
         db.DateTime,

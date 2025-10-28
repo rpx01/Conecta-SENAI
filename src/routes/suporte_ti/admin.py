@@ -92,6 +92,7 @@ def _serialize_chamado(chamado: SuporteChamado) -> dict:
         "status": _normalizar_status(chamado.status) or chamado.status,
         "created_at": chamado.created_at.isoformat() if chamado.created_at else None,
         "updated_at": chamado.updated_at.isoformat() if chamado.updated_at else None,
+        "observacoes": chamado.observacoes,
         "anexos": [anexo.file_path for anexo in chamado.anexos],
     }
 
@@ -182,6 +183,16 @@ def atualizar_status_chamado(chamado_id: int):
 
     chamado.status = status_normalizado
     chamado.updated_at = datetime.utcnow()
+
+    if "observacoes" in dados:
+        valor_observacoes = dados.get("observacoes")
+        if isinstance(valor_observacoes, str):
+            valor_limpo = valor_observacoes.strip()
+            chamado.observacoes = valor_limpo or None
+        elif valor_observacoes is None:
+            chamado.observacoes = None
+        else:
+            chamado.observacoes = str(valor_observacoes)
 
     try:
         db.session.commit()

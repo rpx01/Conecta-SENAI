@@ -152,7 +152,7 @@ function setBusy(btn, busy = true) {
 }
 
 const MAPA_SLUGS_PARA_URLS = {
-    laboratorios: ['/laboratorios/dashboard.html'],
+    laboratorios: ['/laboratorios/calendario.html'],
     treinamentos: ['/treinamentos/index.html'],
     ocupacao: ['/ocupacao/dashboard.html'],
     noticias: ['/noticias/index.html'],
@@ -233,7 +233,7 @@ function normalizarListaModulos(entradas = []) {
 }
 
 const MODULOS_PADRAO = normalizarListaModulos([
-    '/laboratorios/dashboard.html',
+    '/laboratorios/calendario.html',
     '/treinamentos/index.html',
     '/ocupacao/dashboard.html',
     '/noticias/index.html',
@@ -1006,7 +1006,7 @@ function atualizarInterfaceUsuario() {
     });
     
     // Carrega notificações no dashboard
-    if (window.location.pathname === '/laboratorios/dashboard.html') {
+    if (window.location.pathname === '/laboratorios/calendario.html') {
         carregarNotificacoes();
     }
 }

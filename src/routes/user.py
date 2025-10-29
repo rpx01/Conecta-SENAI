@@ -368,6 +368,20 @@ def atualizar_usuario(id):
                 403,
             )
 
+        if (
+            usuario.tipo == "admin"
+            and novo_tipo != "admin"
+            and not is_root_solicitante
+        ):
+            return (
+                jsonify(
+                    {
+                        "erro": "Você não tem permissão para alterar o tipo de administrador para comum"
+                    }
+                ),
+                403,
+            )
+
         usuario.tipo = novo_tipo
 
     if "senha" in data:

@@ -188,14 +188,22 @@ def listar_usuarios():
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
     per_page = min(per_page, 100)
-    nome = request.args.get("nome", type=str)
-    email = request.args.get("email", type=str)
-    tipo = request.args.get("tipo", type=str)
+    def _normalizar_valor(valor: str | None, *, to_lower: bool = False) -> str | None:
+        if not valor:
+            return None
+
+        valor_limpo = valor.strip()
+        if not valor_limpo:
+            return None
+
+        return valor_limpo.lower() if to_lower else valor_limpo
 
     filtros = {
-        "nome": (nome or "").strip() or None,
-        "email": (email or "").strip() or None,
-        "tipo": (tipo or "").strip() or None,
+        "nome": _normalizar_valor(request.args.get("nome", type=str)),
+        "email": _normalizar_valor(request.args.get("email", type=str)),
+        "tipo": _normalizar_valor(
+            request.args.get("tipo", type=str), to_lower=True
+        ),
     }
 
     if filtros["tipo"] not in {None, "admin", "comum", "secretaria"}:

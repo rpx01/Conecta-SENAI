@@ -162,15 +162,32 @@ def test_listar_usuarios_com_filtros(client, login_admin):
     assert dados_tipo['total'] >= 1
     assert all(usuario['tipo'] == 'secretaria' for usuario in dados_tipo['items'])
 
-    resp_combinado = client.get('/api/usuarios?nome=Secretaria&tipo=secretaria', headers=headers)
-    assert resp_combinado.status_code == 200
-    dados_combinado = resp_combinado.get_json()
-    assert dados_combinado['total'] >= 1
-    assert all(
-        usuario['tipo'] == 'secretaria' and 'Secretaria' in usuario['nome']
-        for usuario in dados_combinado['items']
+
+def test_listar_usuarios_com_filtros_normalizados(client, login_admin):
+    with client.application.app_context():
+        db.session.add(
+            User(
+                nome='Coordenador Delta',
+                email='coordenador.delta@example.com',
+                senha='Senha@123',
+                tipo='admin',
+            )
+        )
+        db.session.commit()
+
+    token, _ = login_admin(client)
+    headers = {'Authorization': f'Bearer {token}'}
+
+    resposta = client.get(
+        '/api/usuarios?nome=%20%20coordenador%20&tipo=ADMIN',
+        headers=headers,
     )
 
+    assert resposta.status_code == 200
+    payload = resposta.get_json()
+    assert payload['total'] >= 1
+    assert all('Coordenador' in usuario['nome'] for usuario in payload['items'])
+    assert all(usuario['tipo'] == 'admin' for usuario in payload['items'])
 
 def test_refresh_token(client, login_admin):
     token, refresh = login_admin(client)

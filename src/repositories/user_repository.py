@@ -21,8 +21,26 @@ class UserRepository:
         return user
 
     @staticmethod
-    def paginate(page: int, per_page: int):
-        return User.query.paginate(page=page, per_page=per_page, error_out=False)
+    def paginate(
+        page: int,
+        per_page: int,
+        *,
+        nome: str | None = None,
+        email: str | None = None,
+        tipo: str | None = None,
+    ):
+        query = User.query
+
+        if nome:
+            query = query.filter(User.nome.ilike(f"%{nome}%"))
+
+        if email:
+            query = query.filter(User.email.ilike(f"%{email}%"))
+
+        if tipo:
+            query = query.filter_by(tipo=tipo)
+
+        return query.paginate(page=page, per_page=per_page, error_out=False)
 
     @staticmethod
     def delete(user: User):

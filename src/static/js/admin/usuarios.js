@@ -58,6 +58,58 @@ document.addEventListener('DOMContentLoaded', function() {
     let paginaAtual = 1;
     const porPagina = 10;
     const paginacaoEl = document.getElementById('paginacaoUsuarios');
+    const filtroNomeEl = document.getElementById('filtroNome');
+    const filtroEmailEl = document.getElementById('filtroEmail');
+    const filtroTipoEl = document.getElementById('filtroTipo');
+    const btnAplicarFiltros = document.getElementById('btnAplicarFiltros');
+    const btnLimparFiltros = document.getElementById('btnLimparFiltros');
+    const filtrosCollapseEl = document.getElementById('filtrosCollapse');
+    const filtrosToggleIcon = document.getElementById('filtrosToggleIcon');
+
+    let filtrosAtuais = {
+        nome: '',
+        email: '',
+        tipo: '',
+    };
+
+    if (filtrosCollapseEl && filtrosToggleIcon) {
+        filtrosCollapseEl.addEventListener('show.bs.collapse', () => {
+            filtrosToggleIcon.classList.remove('bi-chevron-down');
+            filtrosToggleIcon.classList.add('bi-chevron-up');
+        });
+
+        filtrosCollapseEl.addEventListener('hide.bs.collapse', () => {
+            filtrosToggleIcon.classList.remove('bi-chevron-up');
+            filtrosToggleIcon.classList.add('bi-chevron-down');
+        });
+    }
+
+    if (btnAplicarFiltros) {
+        btnAplicarFiltros.addEventListener('click', () => {
+            filtrosAtuais = {
+                nome: filtroNomeEl ? filtroNomeEl.value.trim() : '',
+                email: filtroEmailEl ? filtroEmailEl.value.trim() : '',
+                tipo: filtroTipoEl ? filtroTipoEl.value : '',
+            };
+            paginaAtual = 1;
+            carregarUsuarios();
+        });
+    }
+
+    if (btnLimparFiltros) {
+        btnLimparFiltros.addEventListener('click', () => {
+            if (filtroNomeEl) filtroNomeEl.value = '';
+            if (filtroEmailEl) filtroEmailEl.value = '';
+            if (filtroTipoEl) filtroTipoEl.value = '';
+            filtrosAtuais = {
+                nome: '',
+                email: '',
+                tipo: '',
+            };
+            paginaAtual = 1;
+            carregarUsuarios();
+        });
+    }
 
     carregarUsuarios();
 
@@ -77,43 +129,128 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function carregarUsuarios(page = 1) {
         try {
-            const resp = await chamarAPI(`/usuarios?page=${page}&per_page=${porPagina}`);
+            if (possuiFiltrosAtivos()) {
+                const usuariosFiltrados = await carregarUsuariosComFiltros();
+                atualizarTabela(usuariosFiltrados);
+                paginacaoEl.innerHTML = '';
+                paginaAtual = 1;
+                return;
+            }
+
+            const params = criarParametrosConsulta({ page, perPage: porPagina });
+            const resp = await chamarAPI(`/usuarios?${params.toString()}`);
             const usuarios = resp.items;
-            const tableBody = document.getElementById('usuariosTableBody');
+
+            atualizarTabela(usuarios);
 
             if (!usuarios || usuarios.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum usuário encontrado.</td></tr>';
                 paginacaoEl.innerHTML = '';
                 return;
             }
 
-            tableBody.innerHTML = usuarios.map(criarLinhaUsuario).join('');
-            paginaAtual = resp.page;
-            atualizarPaginacao(resp.pages);
+            paginaAtual = typeof resp.page === 'number' ? resp.page : page;
+            atualizarPaginacao(resp.pages ?? 1);
         } catch (error) {
             document.getElementById('usuariosTableBody').innerHTML = '<tr><td colspan="5" class="text-center text-danger">Não foi possível carregar usuários.</td></tr>';
             console.error('Não foi possível carregar usuários:', error);
         }
     }
 
+    function atualizarTabela(usuarios) {
+        const tableBody = document.getElementById('usuariosTableBody');
+        if (!usuarios || usuarios.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum usuário encontrado.</td></tr>';
+            return;
+        }
+
+        tableBody.innerHTML = usuarios.map(criarLinhaUsuario).join('');
+    }
+
+    function criarParametrosConsulta({ page, perPage }) {
+        const params = new URLSearchParams({
+            page,
+            per_page: perPage,
+        });
+
+        if (filtrosAtuais.nome) {
+            params.append('nome', filtrosAtuais.nome);
+        }
+
+        if (filtrosAtuais.email) {
+            params.append('email', filtrosAtuais.email);
+        }
+
+        if (filtrosAtuais.tipo) {
+            params.append('tipo', filtrosAtuais.tipo);
+        }
+
+        return params;
+    }
+
+    async function carregarUsuariosComFiltros() {
+        const itensPorPagina = 100;
+        const params = criarParametrosConsulta({ page: 1, perPage: itensPorPagina });
+        const primeiraPagina = await chamarAPI(`/usuarios?${params.toString()}`);
+        let usuarios = primeiraPagina.items ? [...primeiraPagina.items] : [];
+        const totalPaginas = primeiraPagina.pages ?? 1;
+
+        for (let pagina = 2; pagina <= totalPaginas; pagina++) {
+            params.set('page', pagina);
+            const respostaPagina = await chamarAPI(`/usuarios?${params.toString()}`);
+            if (respostaPagina?.items?.length) {
+                usuarios = usuarios.concat(respostaPagina.items);
+            }
+        }
+
+        return aplicarFiltrosLocalmente(usuarios);
+    }
+
+    function aplicarFiltrosLocalmente(usuarios = []) {
+        const termoNome = filtrosAtuais.nome.trim().toLowerCase();
+        const termoEmail = filtrosAtuais.email.trim().toLowerCase();
+        const tipoSelecionado = filtrosAtuais.tipo;
+
+        return usuarios.filter(usuario => {
+            const nomeUsuario = (usuario.nome ?? '').toLowerCase();
+            const emailUsuario = (usuario.email ?? '').toLowerCase();
+            const tipoUsuario = usuario.tipo ?? '';
+
+            const correspondeNome = !termoNome || nomeUsuario.includes(termoNome);
+            const correspondeEmail = !termoEmail || emailUsuario.includes(termoEmail);
+            const correspondeTipo = !tipoSelecionado || tipoUsuario === tipoSelecionado;
+
+            return correspondeNome && correspondeEmail && correspondeTipo;
+        });
+    }
+
+    function possuiFiltrosAtivos() {
+        return Boolean(
+            (filtrosAtuais.nome && filtrosAtuais.nome.trim()) ||
+            (filtrosAtuais.email && filtrosAtuais.email.trim()) ||
+            (filtrosAtuais.tipo && filtrosAtuais.tipo.trim())
+        );
+    }
+
     function atualizarPaginacao(totalPaginas) {
         paginacaoEl.innerHTML = '';
+        const total = Math.max(Number.parseInt(totalPaginas, 10) || 1, 1);
+        paginaAtual = Math.min(Math.max(paginaAtual, 1), total);
         const criarItem = (label, page, disabled = false, active = false) => {
             return `<li class="page-item ${disabled ? 'disabled' : ''} ${active ? 'active' : ''}">
                         <a class="page-link" href="#" data-page="${page}">${label}</a>
                     </li>`;
         };
         paginacaoEl.insertAdjacentHTML('beforeend', criarItem('Anterior', paginaAtual - 1, paginaAtual <= 1));
-        for (let i = 1; i <= totalPaginas; i++) {
+        for (let i = 1; i <= total; i++) {
             paginacaoEl.insertAdjacentHTML('beforeend', criarItem(i, i, false, i === paginaAtual));
         }
-        paginacaoEl.insertAdjacentHTML('beforeend', criarItem('Próxima', paginaAtual + 1, paginaAtual >= totalPaginas));
+        paginacaoEl.insertAdjacentHTML('beforeend', criarItem('Próxima', paginaAtual + 1, paginaAtual >= total));
 
         Array.from(paginacaoEl.querySelectorAll('a[data-page]')).forEach(link => {
             link.addEventListener('click', e => {
                 e.preventDefault();
-                const alvo = parseInt(link.getAttribute('data-page'));
-                if (!isNaN(alvo)) {
+                const alvo = Number.parseInt(link.getAttribute('data-page'), 10);
+                if (!Number.isNaN(alvo)) {
                     carregarUsuarios(alvo);
                 }
             });

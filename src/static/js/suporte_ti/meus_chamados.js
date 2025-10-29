@@ -103,6 +103,32 @@
         }
     }
 
+    function preencherDetalheTexto(elemento, valor) {
+        if (!elemento) return;
+        const placeholder = '-';
+        if (valor === null || valor === undefined) {
+            elemento.textContent = placeholder;
+            return;
+        }
+        const texto = typeof valor === 'string' ? valor : String(valor);
+        if (!texto.trim()) {
+            elemento.textContent = placeholder;
+            return;
+        }
+        const partes = texto.split(/\r?\n/);
+        if (partes.length === 1) {
+            elemento.textContent = partes[0];
+            return;
+        }
+        elemento.innerHTML = '';
+        partes.forEach((parte, index) => {
+            if (index) {
+                elemento.appendChild(document.createElement('br'));
+            }
+            elemento.appendChild(document.createTextNode(parte));
+        });
+    }
+
     function abrirModalDetalhes(chamado) {
         if (!detalhesContainer || !modal) return;
         detalhesContainer.innerHTML = '';
@@ -124,7 +150,7 @@
             dt.textContent = label;
             const dd = document.createElement('dd');
             dd.className = 'col-sm-8';
-            dd.textContent = valor || '-';
+            preencherDetalheTexto(dd, valor);
             detalhesContainer.appendChild(dt);
             detalhesContainer.appendChild(dd);
         });

@@ -129,14 +129,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function carregarUsuarios(page = 1) {
         try {
-            if (possuiFiltrosAtivos()) {
-                const usuariosFiltrados = await carregarUsuariosComFiltros();
-                atualizarTabela(usuariosFiltrados);
-                paginacaoEl.innerHTML = '';
-                paginaAtual = 1;
-                return;
-            }
-
             const params = criarParametrosConsulta({ page, perPage: porPagina });
             const resp = await chamarAPI(`/usuarios?${params.toString()}`);
             const usuarios = resp.items;
@@ -185,50 +177,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         return params;
-    }
-
-    async function carregarUsuariosComFiltros() {
-        const itensPorPagina = 100;
-        const params = criarParametrosConsulta({ page: 1, perPage: itensPorPagina });
-        const primeiraPagina = await chamarAPI(`/usuarios?${params.toString()}`);
-        let usuarios = primeiraPagina.items ? [...primeiraPagina.items] : [];
-        const totalPaginas = primeiraPagina.pages ?? 1;
-
-        for (let pagina = 2; pagina <= totalPaginas; pagina++) {
-            params.set('page', pagina);
-            const respostaPagina = await chamarAPI(`/usuarios?${params.toString()}`);
-            if (respostaPagina?.items?.length) {
-                usuarios = usuarios.concat(respostaPagina.items);
-            }
-        }
-
-        return aplicarFiltrosLocalmente(usuarios);
-    }
-
-    function aplicarFiltrosLocalmente(usuarios = []) {
-        const termoNome = filtrosAtuais.nome.trim().toLowerCase();
-        const termoEmail = filtrosAtuais.email.trim().toLowerCase();
-        const tipoSelecionado = filtrosAtuais.tipo;
-
-        return usuarios.filter(usuario => {
-            const nomeUsuario = (usuario.nome ?? '').toLowerCase();
-            const emailUsuario = (usuario.email ?? '').toLowerCase();
-            const tipoUsuario = usuario.tipo ?? '';
-
-            const correspondeNome = !termoNome || nomeUsuario.includes(termoNome);
-            const correspondeEmail = !termoEmail || emailUsuario.includes(termoEmail);
-            const correspondeTipo = !tipoSelecionado || tipoUsuario === tipoSelecionado;
-
-            return correspondeNome && correspondeEmail && correspondeTipo;
-        });
-    }
-
-    function possuiFiltrosAtivos() {
-        return Boolean(
-            (filtrosAtuais.nome && filtrosAtuais.nome.trim()) ||
-            (filtrosAtuais.email && filtrosAtuais.email.trim()) ||
-            (filtrosAtuais.tipo && filtrosAtuais.tipo.trim())
-        );
     }
 
     function atualizarPaginacao(totalPaginas) {

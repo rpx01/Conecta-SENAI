@@ -115,6 +115,63 @@ def test_listar_usuarios_per_page_limit(client, login_admin):
     assert data['pages'] == 2
 
 
+def test_listar_usuarios_com_filtros(client, login_admin):
+    with client.application.app_context():
+        db.session.add_all(
+            [
+                User(
+                    nome='Gerente Alfa',
+                    email='gerente.alfa@example.com',
+                    senha='Senha@123',
+                    tipo='admin',
+                ),
+                User(
+                    nome='Secretaria Beta',
+                    email='secretaria.beta@example.com',
+                    senha='Senha@123',
+                    tipo='secretaria',
+                ),
+                User(
+                    nome='Colaborador Gama',
+                    email='colaborador.gama@example.com',
+                    senha='Senha@123',
+                    tipo='comum',
+                ),
+            ]
+        )
+        db.session.commit()
+
+    token, _ = login_admin(client)
+    headers = {'Authorization': f'Bearer {token}'}
+
+    resp_nome = client.get('/api/usuarios?nome=Gerente', headers=headers)
+    assert resp_nome.status_code == 200
+    dados_nome = resp_nome.get_json()
+    assert dados_nome['total'] >= 1
+    assert all('Gerente' in usuario['nome'] for usuario in dados_nome['items'])
+
+    resp_email = client.get('/api/usuarios?email=secretaria.beta', headers=headers)
+    assert resp_email.status_code == 200
+    dados_email = resp_email.get_json()
+    assert dados_email['total'] >= 1
+    assert all('secretaria.beta' in usuario['email'] for usuario in dados_email['items'])
+
+    resp_tipo = client.get('/api/usuarios?tipo=secretaria', headers=headers)
+    assert resp_tipo.status_code == 200
+    dados_tipo = resp_tipo.get_json()
+    assert dados_tipo['total'] >= 1
+    assert all(usuario['tipo'] == 'secretaria' for usuario in dados_tipo['items'])
+
+    resp_combinado = client.get('/api/usuarios?nome=Secretaria&tipo=secretaria', headers=headers)
+    assert resp_combinado.status_code == 200
+    dados_combinado = resp_combinado.get_json()
+    assert dados_combinado['total'] >= 1
+    assert all(
+        usuario['tipo'] == 'secretaria' and 'Secretaria' in usuario['nome']
+        for usuario in dados_combinado['items']
+    )
+
+
 def test_refresh_token(client, login_admin):
     token, refresh = login_admin(client)
     csrf = fetch_csrf(client)

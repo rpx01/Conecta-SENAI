@@ -188,7 +188,26 @@ def listar_usuarios():
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
     per_page = min(per_page, 100)
-    paginacao = UserRepository.paginate(page, per_page)
+    nome = request.args.get("nome", type=str)
+    email = request.args.get("email", type=str)
+    tipo = request.args.get("tipo", type=str)
+
+    filtros = {
+        "nome": (nome or "").strip() or None,
+        "email": (email or "").strip() or None,
+        "tipo": (tipo or "").strip() or None,
+    }
+
+    if filtros["tipo"] not in {None, "admin", "comum", "secretaria"}:
+        filtros["tipo"] = None
+
+    paginacao = UserRepository.paginate(
+        page,
+        per_page,
+        nome=filtros["nome"],
+        email=filtros["email"],
+        tipo=filtros["tipo"],
+    )
     return jsonify(
         {
             "items": [u.to_dict() for u in paginacao.items],

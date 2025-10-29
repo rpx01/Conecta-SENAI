@@ -540,7 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
             modalImage.classList.add('d-none');
             modalImage.removeAttribute('src');
         }
-        modalContent.innerHTML = sanitizeHTML?.(noticia.conteudo ?? '') || escapeHTML(noticia.conteudo ?? '');
+        modalContent.innerHTML = formatarConteudoNoticia(noticia.conteudo ?? '');
         modalInstance?.show();
     }
 
@@ -846,6 +846,27 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof obterCSRFToken === 'function') {
             obterCSRFToken(true).catch(() => {});
         }
+    }
+
+    function formatarConteudoNoticia(conteudo = '') {
+        if (typeof conteudo !== 'string') {
+            return '';
+        }
+        const textoNormalizado = conteudo.replace(/\r\n?/g, '\n');
+        const textoEscapado = escapeHTML(textoNormalizado);
+        const textoComLinks = transformarUrlsEmLinks(textoEscapado);
+        const textoComQuebras = textoComLinks.replace(/\n/g, '<br>');
+        return sanitizeHTML?.(textoComQuebras) || textoComQuebras;
+    }
+
+    function transformarUrlsEmLinks(texto = '') {
+        const urlRegex = /((https?:\/\/|www\.)[^\s<]+)/gi;
+        return texto.replace(urlRegex, urlOriginal => {
+            const possuiProtocolo = /^https?:\/\//i.test(urlOriginal);
+            const href = possuiProtocolo ? urlOriginal : `https://${urlOriginal}`;
+            const hrefSeguro = escapeHTML(href);
+            return `<a href="${hrefSeguro}" target="_blank" rel="noopener noreferrer">${urlOriginal}</a>`;
+        });
     }
 
     function escapeHTML(texto = '') {

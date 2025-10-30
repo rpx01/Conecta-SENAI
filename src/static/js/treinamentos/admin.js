@@ -460,6 +460,10 @@ async function carregarInscricoes(turmaId) {
             const statusAprovado = i.status_aprovacao === 'Aprovado' ? 'selected' : '';
             const statusReprovado = i.status_aprovacao === 'Reprovado' ? 'selected' : '';
 
+            const cpfFormatado = i.cpf
+                ? (window.FormValidation?.maskers?.cpf?.(i.cpf) ?? i.cpf)
+                : '';
+
             const tdPraticaHtml = temPratica ? `
                 <td class="text-center" data-col="presenca_pratica">
                     <input class="form-check-input presenca-pratica-check" type="checkbox" ${i.presenca_pratica ? 'checked' : ''}>
@@ -475,10 +479,10 @@ async function carregarInscricoes(turmaId) {
                     </button>
                 </td>
             `;
-
+            
             tr.innerHTML = `
                 <td>${escapeHTML(i.nome)}</td>
-                <td>${i.cpf || ''}</td>
+                <td>${escapeHTML(cpfFormatado)}</td>
                 <td>${i.empresa || ''}</td>
                 <td class="text-center" data-col="presenca_teoria">
                     <input class="form-check-input presenca-teoria-check" type="checkbox" ${i.presenca_teoria ? 'checked' : ''}>

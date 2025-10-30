@@ -1766,14 +1766,14 @@ cli = ["click (>=5.0)"]
 
 [[package]]
 name = "python-json-logger"
-version = "3.3.0"
+version = "4.0.0"
 description = "JSON Log Formatter for the Python Logging Package"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "python_json_logger-3.3.0-py3-none-any.whl", hash = "sha256:dd980fae8cffb24c13caf6e158d3d61c0d6d22342f932cb6e9deedab3d35eec7"},
-    {file = "python_json_logger-3.3.0.tar.gz", hash = "sha256:12b7e74b17775e7d565129296105bbe3910842d9d0eb083fc83a6a617aa8df84"},
+    {file = "python_json_logger-4.0.0-py3-none-any.whl", hash = "sha256:8fa4a6394b5b3a8d0b1899090f55ce49963cf3435753eae80f5224297f89f6cb"},
+    {file = "python_json_logger-4.0.0.tar.gz", hash = "sha256:0c3f5ca21586bd0ac0f5901962aaf820e4e5d960d36072175df7aead1b40145f"},
 ]
 
 [package.extras]
@@ -2119,14 +2119,14 @@ files = [
 
 [[package]]
 name = "sentry-sdk"
-version = "2.37.0"
+version = "2.42.1"
 description = "Python client for Sentry (https://sentry.io)"
 optional = false
 python-versions = ">=3.6"
 groups = ["main"]
 files = [
-    {file = "sentry_sdk-2.37.0-py2.py3-none-any.whl", hash = "sha256:89c1ed205d5c25926558b64a9bed8a5b4fb295b007cecc32c0ec4bf7694da2e1"},
-    {file = "sentry_sdk-2.37.0.tar.gz", hash = "sha256:2c661a482dd5accf3df58464f31733545745bb4d5cf8f5e46e0e1c4eed88479f"},
+    {file = "sentry_sdk-2.42.1-py2.py3-none-any.whl", hash = "sha256:5d786af7b44008df72ba200daba930743db9f0c0ab84730fd3444c16c8be3d91"},
+    {file = "sentry_sdk-2.42.1.tar.gz", hash = "sha256:8e4b520f214d891497719c03f1895026309582dce3b77de6fa0afc7490666c15"},
 ]
 
 [package.dependencies]
@@ -2280,14 +2280,14 @@ sqlcipher = ["sqlcipher3-binary"]
 
 [[package]]
 name = "structlog"
-version = "25.4.0"
+version = "25.5.0"
 description = "Structured Logging for Python"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "structlog-25.4.0-py3-none-any.whl", hash = "sha256:fe809ff5c27e557d14e613f45ca441aabda051d119ee5a0102aaba6ce40eed2c"},
-    {file = "structlog-25.4.0.tar.gz", hash = "sha256:186cd1b0a8ae762e29417095664adf1d6a31702160a46dacb7796ea82f7409e4"},
+    {file = "structlog-25.5.0-py3-none-any.whl", hash = "sha256:2d088730b0c020a12add7402908c162c756682e684f5ceae0e78649c82775f66"},
+    {file = "structlog-25.5.0.tar.gz", hash = "sha256:c58fa29d24d255948f37bdaec19cb3ddd7f8843881f920b9136004db3f139591"},
 ]
 
 [[package]]
@@ -2513,5 +2513,5 @@ type = ["pytest-mypy"]
 
 [metadata]
 lock-version = "2.1"
-python-versions = ">=3.11,<3.13"
-content-hash = "e86b1fb7196046337ba9140e1cc30c4374c2ee96c690ff6479adf3ad32fe6dd1"
+python-versions = ">=3.11,<3.15"
+content-hash = "c1b99f0ca9ae5225c51b0da566cf0ede0bb9a31f090865899c72f42eac672ddb"

@@ -6,7 +6,7 @@ authors = [
     {name = "Codex",email = "codex@openai.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.11,<3.13"
+requires-python = ">=3.11,<3.15"
 dependencies = [
     "flask (==3.1.1)",
     "flask-sqlalchemy (==3.1.1)",
@@ -30,9 +30,9 @@ dependencies = [
     ,"flask-wtf (==1.2.1)"
     ,"apscheduler (==3.10.4)"
     ,"flasgger (==0.9.7.1)"
-    ,"structlog"
-    ,"python-json-logger"
-    ,"sentry-sdk[flask]"
+    ,"structlog (==25.5.0)"
+    ,"python-json-logger (==4.0.0)"
+    ,"sentry-sdk[flask] (==2.42.1)"
     ,"opentelemetry-sdk"
     ,"opentelemetry-instrumentation-flask"
     ,"opentelemetry-exporter-otlp"
@@ -48,7 +48,7 @@ readme = "README.md"
 packages = [{ include = "src" }]
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.13"
+python = ">=3.11,<3.15"
 flask = "3.1.1"
 flask-sqlalchemy = "3.1.1"
 sqlalchemy = "2.0.23"
@@ -70,9 +70,9 @@ flask-jwt-extended = "4.6.0"
 flask-wtf = "1.2.1"
 apscheduler = "3.10.4"
 flasgger = "0.9.7.1"
-structlog = "*"
-python-json-logger = "*"
-sentry-sdk = {version = "*", extras = ["flask"]}
+structlog = "25.5.0"
+python-json-logger = "4.0.0"
+sentry-sdk = {version = "2.42.1", extras = ["flask"]}
 opentelemetry-sdk = "*"
 opentelemetry-instrumentation-flask = "*"
 opentelemetry-exporter-otlp = "*"

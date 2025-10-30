@@ -35,7 +35,7 @@ from flask import send_file, make_response
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Border, Side, Alignment
 from openpyxl.drawing.image import Image as OpenpyxlImage
-from reportlab.lib.pagesizes import letter, landscape
+from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.platypus import (
     SimpleDocTemplate,
@@ -1064,11 +1064,11 @@ def exportar_inscricoes(turma_id):
         # Redução das margens e ajuste dos tamanhos de fonte
         doc = SimpleDocTemplate(
             buffer,
-            pagesize=landscape(letter),
-            rightMargin=20,
-            leftMargin=20,
-            topMargin=15,
-            bottomMargin=15,
+            pagesize=letter,
+            rightMargin=18,
+            leftMargin=18,
+            topMargin=18,
+            bottomMargin=18,
         )
         elements = []
         styles = getSampleStyleSheet()
@@ -1077,7 +1077,9 @@ def exportar_inscricoes(turma_id):
             red=(0 / 255), green=(83 / 255), blue=(159 / 255)
         )
 
-        style_normal = ParagraphStyle(name="Normal", fontSize=7)  # Fonte reduzida
+        style_normal = ParagraphStyle(
+            name="Normal", fontSize=6.5, leading=7.5
+        )  # Fonte reduzida
         style_bold_white = ParagraphStyle(
             name="BoldWhite",
             parent=style_normal,
@@ -1102,7 +1104,11 @@ def exportar_inscricoes(turma_id):
 
         titulo = Paragraph("<b>Lista de Presença</b>", style_h1_centralizado)
 
-        header_table = Table([[logo, titulo]], colWidths=[1.5 * inch, 8.5 * inch])  # Ajuste de colunas
+        header_logo_width = 1.45 * inch
+        header_table = Table(
+            [[logo, titulo]],
+            colWidths=[header_logo_width, doc.width - header_logo_width],
+        )
         header_table.setStyle(
             TableStyle(
                 [
@@ -1162,9 +1168,19 @@ def exportar_inscricoes(turma_id):
             ],
         ]
 
+        col1 = 1.25 * inch
+        col3 = 1.0 * inch
+        col4 = 1.45 * inch
+        col2 = doc.width - (col1 + col3 + col4)
+        if col2 < 2.0 * inch:
+            col2 = 2.0 * inch
+            col4 = doc.width - (col1 + col2 + col3)
+        if col4 < 1.2 * inch:
+            col4 = 1.2 * inch
+            col2 = doc.width - (col1 + col3 + col4)
         tabela_dados = Table(
             dados_treinamento,
-            colWidths=[1.5 * inch, 5.0 * inch, 1.2 * inch, 2.3 * inch],  # Ajuste de colunas
+            colWidths=[col1, col2, col3, col4],
         )
         tabela_dados.setStyle(
             TableStyle(
@@ -1188,7 +1204,8 @@ def exportar_inscricoes(turma_id):
         # Estilo para cabeçalhos da tabela de participantes
         style_header_participantes = ParagraphStyle(
             name="HeaderParticipantes",
-            fontSize=6,  # Fonte reduzida
+            fontSize=5.8,  # Fonte reduzida
+            leading=6.6,
             alignment=1,
             fontName="Helvetica-Bold",
             textColor=colors.white,
@@ -1246,19 +1263,22 @@ def exportar_inscricoes(turma_id):
             )
 
         col_widths = [
-            0.3 * inch,
-            3.0 * inch,  # Largura ajustada
-            1.5 * inch,  # Largura ajustada
-            0.6 * inch,
-            0.6 * inch,
-            0.6 * inch,
-            0.6 * inch,
-            0.8 * inch,
+            0.05 * doc.width,
+            0.34 * doc.width,
+            0.2 * doc.width,
+            0.08 * doc.width,
+            0.08 * doc.width,
+            0.08 * doc.width,
+            0.08 * doc.width,
+            0.09 * doc.width,
         ]
 
         # Define a altura das linhas para economizar espaço
         num_participantes = len(dados_alunos)
-        alturas_linhas = [0.3 * inch, 0.3 * inch] + [0.2 * inch] * num_participantes  # Alturas reduzidas
+        alturas_linhas = [
+            0.28 * inch,
+            0.26 * inch,
+        ] + [0.18 * inch] * num_participantes  # Alturas reduzidas
 
         tabela_alunos = Table(
             cabecalhos_agrupados + dados_alunos,
@@ -1284,8 +1304,8 @@ def exportar_inscricoes(turma_id):
         # Observações e Assinatura
         obs_table = Table(
             [[Paragraph("<b>Observações:</b>", style_normal)], [""]],
-            colWidths=[10.0 * inch],  # Largura ajustada
-            rowHeights=[0.15 * inch, 0.4 * inch],  # Alturas reduzidas
+            colWidths=[doc.width],
+            rowHeights=[0.14 * inch, 0.35 * inch],  # Alturas reduzidas
         )
         obs_table.setStyle(
             TableStyle(
@@ -1306,8 +1326,8 @@ def exportar_inscricoes(turma_id):
                 ],
                 [""],
             ],
-            colWidths=[10.0 * inch],  # Largura ajustada
-            rowHeights=[0.15 * inch, 0.25 * inch],  # Alturas reduzidas
+            colWidths=[doc.width],
+            rowHeights=[0.14 * inch, 0.22 * inch],  # Alturas reduzidas
         )
         ass_table.setStyle(
             TableStyle(

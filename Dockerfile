@@ -1,4 +1,8 @@
-FROM python:3.14-slim
+# Utilize uma versão estável suportada pelos pacotes Python
+# Python 3.14 ainda não é suportado por dependências como Pillow e pydantic-core,
+# o que força compilações que falham no build da imagem. A versão 3.12 possui
+# wheels oficiais para essas bibliotecas, evitando erros de build.
+FROM python:3.12-slim
 
 # Configurações globais
 ENV PYTHONDONTWRITEBYTECODE=1 \

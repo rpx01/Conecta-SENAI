@@ -21,7 +21,7 @@ th { position: relative; }
 }
 .filter-toggle {
   margin-left: .5rem; border: 1px solid #ddd; background: #fff; cursor: pointer;
-  font-size: 12px; padding: 2px 6px; border-radius: 4px;
+  font-size: 11px; padding: 2px 6px; border-radius: 4px;
 }
 .filter-menu {
   position: absolute; top: 100%; right: 0; min-width: 220px; z-index: 1000;
@@ -60,7 +60,7 @@ th { position: relative; }
   }
 
   .filter-toggle {
-    font-size: 11px;
+    font-size: 10px;
     padding: 2px 5px;
   }
 }

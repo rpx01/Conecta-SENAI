@@ -54,8 +54,8 @@
 .filter-toggle svg,
 .filter-btn svg {
   display: block;
-  width: 9px;
-  height: 9px;
+  width: 8px;
+  height: 8px;
   color: currentColor;
   line-height: 1;
 }
@@ -64,7 +64,7 @@
 .filter-toggle i,
 .filter-btn i {
   display: block;
-  font-size: 9px;
+  font-size: 8px;
   line-height: 1;
 }
 
@@ -89,7 +89,7 @@
 .filter-menu .btn-outline-secondary{ color: var(--neutral-700); }
 .filter-menu .divider{ height:1px; background: var(--neutral-300); margin:.5rem 0; }
 .filter-menu .dropdown-item{ display:flex; align-items:center; gap:.5rem; font-size:.8rem; padding:.25rem .5rem; border-radius:8px; color:var(--neutral-700); }
-.filter-menu .dropdown-item i{ font-size:0.9rem; }
+.filter-menu .dropdown-item i{ font-size:0.8rem; }
 
 /* Ajustes para cabeçalhos com botão de filtro */
 th[data-filterable="true"]{

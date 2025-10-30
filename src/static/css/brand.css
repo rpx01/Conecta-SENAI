@@ -72,14 +72,14 @@ a:not(.btn){ text-decoration-thickness: .12em; text-underline-offset: .2em; }
 
 @media (max-width: 768px){
   .display-1,.display-2,.display-3,.display-4{ font-size: clamp(2rem, 6vw, 2.75rem); }
-  .btn{ padding: .55rem 1.15rem; font-size: .95rem; }
+  .btn{ padding: .5rem 1.05rem; font-size: .9rem; }
   .card{ border-radius: .65rem; }
 }
 
 @media (max-width: 576px){
-  html{ font-size: 15px; }
-  .display-1,.display-2,.display-3,.display-4{ font-size: clamp(1.8rem, 7vw, 2.4rem); }
-  .lead{ font-size: .95rem; }
+  html{ font-size: 13.5px; }
+  .display-1,.display-2,.display-3,.display-4{ font-size: clamp(1.6rem, 6.5vw, 2.2rem); }
+  .lead{ font-size: .9rem; }
   .card{ border-radius: .55rem; }
   .btn{ width: 100%; }
 }

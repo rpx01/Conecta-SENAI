@@ -16,7 +16,7 @@
 }
 
 html {
-  font-size: 90%;
+  font-size: 80%;
 }
 
 :root {
@@ -46,7 +46,7 @@ html {
   --turno-manha-color: #FDD835;
   --turno-tarde-color: #00539F;
   --turno-noite-color: #512DA8;
-  --icon-scale: 0.9;
+  --icon-scale: 0.75;
 }
 
 body {

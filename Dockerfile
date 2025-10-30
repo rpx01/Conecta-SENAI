@@ -12,7 +12,7 @@ WORKDIR /app
 
 # Dependências do sistema + Poetry
 RUN apt-get update \
- && apt-get install -y --no-install-recommends build-essential curl postgresql-client \
+ && apt-get install -y --no-install-recommends build-essential curl postgresql-client libffi-dev \
  && rm -rf /var/lib/apt/lists/* \
  && pip install --no-cache-dir "poetry==${POETRY_VERSION}"
 

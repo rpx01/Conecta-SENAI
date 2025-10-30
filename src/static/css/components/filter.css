@@ -25,8 +25,8 @@
 .filter-toggle,
 .filtro-btn,
 .filter-btn {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -54,8 +54,8 @@
 .filter-toggle svg,
 .filter-btn svg {
   display: block;
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   color: currentColor;
   line-height: 1;
 }
@@ -64,7 +64,7 @@
 .filter-toggle i,
 .filter-btn i {
   display: block;
-  font-size: 10px;
+  font-size: 9px;
   line-height: 1;
 }
 
@@ -88,8 +88,8 @@
 .filter-menu .btn-outline-primary:hover{ background: var(--brand-blue-500); color: var(--white); }
 .filter-menu .btn-outline-secondary{ color: var(--neutral-700); }
 .filter-menu .divider{ height:1px; background: var(--neutral-300); margin:.5rem 0; }
-.filter-menu .dropdown-item{ display:flex; align-items:center; gap:.5rem; font-size:.875rem; padding:.25rem .5rem; border-radius:8px; color:var(--neutral-700); }
-.filter-menu .dropdown-item i{ font-size:1rem; }
+.filter-menu .dropdown-item{ display:flex; align-items:center; gap:.5rem; font-size:.8rem; padding:.25rem .5rem; border-radius:8px; color:var(--neutral-700); }
+.filter-menu .dropdown-item i{ font-size:0.9rem; }
 
 /* Ajustes para cabeçalhos com botão de filtro */
 th[data-filterable="true"]{
@@ -140,6 +140,6 @@ th[data-filterable="true"] .filter-scope{
   }
 
   .filter-menu .dropdown-item{
-    font-size: .825rem;
+    font-size: .75rem;
   }
 }

@@ -16,7 +16,7 @@
 }
 
 html {
-  font-size: 100%;
+  font-size: 90%;
 }
 
 :root {
@@ -46,6 +46,7 @@ html {
   --turno-manha-color: #FDD835;
   --turno-tarde-color: #00539F;
   --turno-noite-color: #512DA8;
+  --icon-scale: 0.9;
 }
 
 body {
@@ -82,9 +83,20 @@ table {
 }
 
 /* Normalize Bootstrap icon appearance */
+.bi,
 i.bi {
   font-style: normal;
   line-height: 1;
+  font-size: calc(1em * var(--icon-scale));
+}
+
+svg.bi,
+svg[class*="bi-"],
+.bi svg,
+svg.icon,
+.icon svg {
+  width: calc(1em * var(--icon-scale));
+  height: calc(1em * var(--icon-scale));
 }
 
 .content-wrapper {
@@ -222,7 +234,7 @@ small, .small {
 
 @media (max-width: 600px) {
   html {
-    font-size: 90%;
+    font-size: 81%;
   }
 
   body {

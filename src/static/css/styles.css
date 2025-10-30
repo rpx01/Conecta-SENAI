@@ -44,24 +44,12 @@
   --turno-noite-color: #512DA8;
 }
 
-html {
-  font-size: 100%;
-  line-height: 1.15;
-}
-
-@media (max-width: 640px) {
-  html {
-    font-size: 93.75%;
-  }
-}
-
 body {
   font-family: "Gibson", "Exo 2", sans-serif;
   /* Restored base font size for better typographic hierarchy */
   font-size: 1rem;
   /* Slightly taller lines improve readability across paragraphs */
   line-height: 1.65;
-  letter-spacing: 0.01em;
   color: var(--text-color);
   background-color: var(--background-color);
   min-height: 100vh;
@@ -128,32 +116,21 @@ i.bi {
 }
 
 
-h1, .h1,
-h2, .h2,
-h3, .h3,
-h4, .h4 {
+h1, .h1, h2, .h2 {
   /* Reserve heavy weights for key headings only */
   font-weight: 600;
   text-transform: none;
-  letter-spacing: 0.015em;
+  letter-spacing: 0.5px;
 }
 
 h1, .h1 {
-  /* Responsive scale keeps display headlines balanced on wide screens */
-  font-size: clamp(2rem, 1.6rem + 1.5vw, 2.5rem);
+  /* Reduced maximum size keeps large headings from overpowering layouts */
+  font-size: clamp(1.6rem, 1.2rem + 1vw, 1.95rem);
 }
 
 h2, .h2 {
   /* Adjusted clamp for balanced hierarchy on wide screens */
-  font-size: clamp(1.75rem, 1.35rem + 1vw, 2.125rem);
-}
-
-h3, .h3 {
-  font-size: clamp(1.5rem, 1.15rem + 0.8vw, 1.75rem);
-}
-
-h4, .h4 {
-  font-size: clamp(1.25rem, 1.05rem + 0.4vw, 1.5rem);
+  font-size: clamp(1.3rem, 1.05rem + 0.55vw, 1.55rem);
 }
 
 p,
@@ -163,7 +140,6 @@ p,
   font-size: 1rem;
   color: inherit;
   line-height: 1.7;
-  letter-spacing: 0.01em;
 }
 
 :is(h1, .h1, h2, .h2, h3, .h3, h4, .h4, p, .card-title, .card-text, label, th, td) {
@@ -171,7 +147,7 @@ p,
 }
 
 small, .small {
-  font-size: 0.75rem;
+  font-size: 12px;
   opacity: 0.8;
 }
 
@@ -252,7 +228,7 @@ small, .small {
 }
 
 .btn {
-  min-height: 2.25rem;
+  min-height: 36px;
   padding: 0.55rem 1.35rem;
   font-size: 0.95rem;
 }
@@ -352,7 +328,7 @@ small, .small {
 }
 
 #tabelaInstrutores td.text-truncate {
-  max-width: 12.5rem;
+  max-width: 200px;
 }
 
 .calendario-container {
@@ -373,7 +349,7 @@ small, .small {
 .calendario-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 0.3125rem;
+  gap: 5px;
   width: 100%;
 }
 
@@ -381,7 +357,7 @@ small, .small {
   position: relative;
   border: 1px solid #dee2e6;
   border-radius: 0;
-  padding: 0.3125rem;
+  padding: 5px;
   overflow-y: hidden;
   height: auto;
 }
@@ -389,7 +365,7 @@ small, .small {
 .calendario-day-header {
   font-weight: 600;
   text-align: center;
-  padding: 0.35rem;
+  padding: 5px;
   background-color: #f8f9fa;
 }
 
@@ -410,7 +386,7 @@ small, .small {
 .agendamento-item {
   color: var(--dark-color);
   border-radius: 3px;
-  padding: 0.125rem 0.3rem;
+  padding: 2px 5px;
   margin-bottom: 2px;
   font-size: 0.8rem;
   white-space: nowrap;
@@ -443,9 +419,9 @@ small, .small {
 .legenda-turnos {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.625rem;
-  margin-top: 0.9375rem;
-  margin-bottom: 0.9375rem;
+  gap: 10px;
+  margin-top: 15px;
+  margin-bottom: 15px;
 }
 
 .legenda-item {
@@ -458,7 +434,7 @@ small, .small {
   width: 16px;
   height: 16px;
   border-radius: 3px;
-  margin-right: 0.3125rem;
+  margin-right: 5px;
 }
 
 .legenda-cor-manha {
@@ -482,15 +458,15 @@ small, .small {
 
 /* Estilo base para as pílulas */
 .pill-turno {
-    padding: 0.25rem 0.5rem;
-    margin: 0.1875rem auto;
-    border-radius: 0.25rem;
-    font-size: 0.8125rem;
+    padding: 4px 8px;
+    margin: 3px auto;
+    border-radius: 4px;
+    font-size: 13px;
     font-weight: 500;
     display: block;
     text-align: center;
     border: 1px solid transparent;
-    max-width: 7.5rem;
+    max-width: 120px;
     line-height: 1.4;
 }
 
@@ -987,7 +963,7 @@ textarea {
 }
 
 .day-pills-container {
-    padding-top: 0.25rem;
+    padding-top: 4px;
 }
 
 
@@ -997,15 +973,15 @@ textarea {
 
 /* Estilo base para as pílulas */
 .pill-turno {
-    padding: 0.25rem 0.5rem;
-    margin: 0.1875rem auto;
-    border-radius: 0.25rem;
-    font-size: 0.8125rem;
+    padding: 4px 8px;
+    margin: 3px auto;
+    border-radius: 4px;
+    font-size: 13px;
     font-weight: 500;
     display: block;
     text-align: center;
     border: 1px solid transparent;
-    max-width: 7.5rem;
+    max-width: 120px;
     line-height: 1.4;
 }
 
@@ -1035,7 +1011,7 @@ textarea {
 .tabela-semanal th,
 .tabela-semanal td {
     vertical-align: top;
-    min-width: 7.5rem;
+    min-width: 120px;
 }
 
 .tabela-semanal td button {
@@ -1510,15 +1486,15 @@ textarea {
 .sge-slider::before {
   content: "✕";
   position: absolute;
-  left: 0.125rem;
-  top: 0.125rem;
-  width: 1.375rem;
-  height: 1.375rem;
+  left: 2px;
+  top: 2px;
+  width: 22px;
+  height: 22px;
   background: #fff;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 0.75rem;
+  font-size: 12px;
   line-height: 1;
   transition: transform .2s ease, content .2s ease;
   box-shadow: 0 1px 2px rgba(0,0,0,.1);
@@ -1527,6 +1503,6 @@ textarea {
   background: var(--brand-success, #28a745);
 }
 .sge-switch input:checked + .sge-slider::before {
-  transform: translateX(1.375rem);
+  transform: translateX(22px);
   content: "✓";
 }

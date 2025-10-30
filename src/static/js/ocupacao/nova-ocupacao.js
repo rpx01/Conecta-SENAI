@@ -3,7 +3,6 @@
 // Variáveis globais
 let salasDisponiveis = [];
 let turmasDisponiveis = [];
-let instrutoresDisponiveis = [];
 let tiposOcupacaoData = [];
 let ocupacaoEditando = null;
 let disponibilidadeAtual = null;
@@ -83,30 +82,6 @@ async function carregarSalas() {
     }
 }
 
-// Carrega instrutores disponíveis
-async function carregarInstrutores() {
-    try {
-        const response = await fetch(`${API_URL}/instrutores?status=ativo`, {
-            headers: {
-            }
-        });
-        
-        if (response.ok) {
-            instrutoresDisponiveis = await response.json();
-            
-            const select = document.getElementById('instrutorOcupacao');
-            select.innerHTML = '<option value="">Nenhum instrutor</option>';
-            
-            instrutoresDisponiveis.forEach(instrutor => {
-                select.innerHTML += `<option value="${instrutor.id}">${instrutor.nome}</option>`;
-            });
-        }
-    } catch (error) {
-        console.error('Erro ao carregar instrutores:', error);
-    }
-}
-
-
 async function carregarTurmasSelect() {
     try {
         const response = await fetch(`${API_URL}/turmas`, {
@@ -177,7 +152,6 @@ async function carregarOcupacaoParaEdicao(id) {
             document.getElementById('dataFim').value = ocupacaoEditando.data_fim || ocupacaoEditando.data;
             document.getElementById('turno').value = obterTurnoPorHorario(ocupacaoEditando.horario_inicio, ocupacaoEditando.horario_fim);
             document.getElementById('salaOcupacao').value = ocupacaoEditando.sala_id;
-            document.getElementById('instrutorOcupacao').value = ocupacaoEditando.instrutor_id || '';
             document.getElementById('observacoesOcupacao').value = ocupacaoEditando.observacoes || '';
 
             // Atualiza título
@@ -274,11 +248,6 @@ async function salvarOcupacao() {
             sala_id: parseInt(document.getElementById('salaOcupacao').value),
             observacoes: document.getElementById('observacoesOcupacao').value
         };
-        
-        const instrutorId = document.getElementById('instrutorOcupacao').value;
-        if (instrutorId) {
-            formData.instrutor_id = parseInt(instrutorId);
-        }
         
         const urlParams = new URLSearchParams(window.location.search);
         const editarId = urlParams.get('editar');

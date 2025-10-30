@@ -48,6 +48,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link admin-only" href="/ocupacao/ocupacoes.html">
+                            <i class="bi bi-list-check me-1"></i> Lista de Ocupações
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link active admin-only" href="/ocupacao/agendamento.html">
                             <i class="bi bi-plus-circle me-1"></i> Nova Ocupação
                         </a>
@@ -134,19 +139,11 @@
                                 </div>
                                 
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-12">
                                         <div class="mb-3">
                                             <label for="salaOcupacao" class="form-label">Sala *</label>
                                             <select class="form-select" id="salaOcupacao" required>
                                                 <option value="">Selecione...</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="instrutorOcupacao" class="form-label">Instrutor (Opcional)</label>
-                                            <select class="form-select" id="instrutorOcupacao">
-                                                <option value="">Nenhum instrutor</option>
                                             </select>
                                         </div>
                                     </div>
@@ -189,7 +186,6 @@
             // Carrega dados iniciais
             await carregarTiposOcupacao();
             await carregarSalas();
-            await carregarInstrutores();
             await carregarTurmasSelect();
 
             // Adiciona listeners para validação em tempo real

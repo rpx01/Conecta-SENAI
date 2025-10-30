@@ -11,9 +11,6 @@ let loadingOverlay;
 let autenticacaoCache = null;
 let verificacaoAutenticacaoPromise = null;
 
-// Controla tentativas de renovação de sessão para evitar chamadas concorrentes
-let promessaRenovacaoSessao = null;
-
 function criarLoadingOverlay() {
     if (loadingOverlay) return;
     loadingOverlay = document.createElement('div');
@@ -56,103 +53,6 @@ async function executarComLoading(acao) {
     } finally {
         ocultarLoading();
     }
-}
-
-function armazenarUsuarioLocal(usuario) {
-    if (!usuario) {
-        return;
-    }
-    localStorage.setItem('usuario', JSON.stringify(usuario));
-}
-
-function limparSessaoLocal() {
-    localStorage.removeItem('usuario');
-    localStorage.removeItem('isRoot');
-    localStorage.removeItem('isAdmin');
-    autenticacaoCache = null;
-    csrfToken = null;
-}
-
-function base64UrlDecode(str) {
-    try {
-        const normalized = str.replace(/-/g, '+').replace(/_/g, '/');
-        const padded = normalized.padEnd(normalized.length + (4 - (normalized.length % 4)) % 4, '=');
-        return atob(padded);
-    } catch (error) {
-        console.warn('Falha ao decodificar base64 URL-safe.', error);
-        return null;
-    }
-}
-
-function obterExpiracaoTokenMillis(token) {
-    if (!token) {
-        return null;
-    }
-    const partes = token.split('.');
-    if (partes.length !== 3) {
-        return null;
-    }
-    const payloadStr = base64UrlDecode(partes[1]);
-    if (!payloadStr) {
-        return null;
-    }
-    try {
-        const payload = JSON.parse(payloadStr);
-        if (!payload || typeof payload.exp !== 'number') {
-            return null;
-        }
-        return payload.exp * 1000;
-    } catch (error) {
-        console.warn('Não foi possível interpretar o payload do token JWT.', error);
-        return null;
-    }
-}
-
-function atualizarExpiracaoSessaoLocal(token) {
-    const expMillis = obterExpiracaoTokenMillis(token);
-    if (!expMillis) {
-        return;
-    }
-    const usuario = getUsuarioLogado();
-    if (!usuario) {
-        return;
-    }
-    usuario.token_exp = expMillis;
-    armazenarUsuarioLocal(usuario);
-}
-
-async function tentarRenovarSessao() {
-    if (!promessaRenovacaoSessao) {
-        promessaRenovacaoSessao = (async () => {
-            try {
-                const resposta = await fetch(`${API_URL}/refresh`, {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({})
-                });
-                if (!resposta.ok) {
-                    return false;
-                }
-                const dados = await resposta.json();
-                if (dados?.csrf_token) {
-                    csrfToken = dados.csrf_token;
-                }
-                if (dados?.token) {
-                    atualizarExpiracaoSessaoLocal(dados.token);
-                }
-                return true;
-            } catch (erro) {
-                console.error('Falha ao renovar a sessão do usuário.', erro);
-                return false;
-            } finally {
-                promessaRenovacaoSessao = null;
-            }
-        })();
-    }
-    return promessaRenovacaoSessao;
 }
 
 // Páginas públicas acessíveis sem autenticação
@@ -399,11 +299,7 @@ async function realizarLogin(email, senha, recaptchaToken = '') {
         if (data && data.usuario) {
             const isRoot = Boolean(data.is_root ?? data.usuario.is_root);
             const usuarioComMetadados = { ...data.usuario, is_root: isRoot };
-            const expMillis = obterExpiracaoTokenMillis(data.token);
-            if (expMillis) {
-                usuarioComMetadados.token_exp = expMillis;
-            }
-            armazenarUsuarioLocal(usuarioComMetadados);
+            localStorage.setItem('usuario', JSON.stringify(usuarioComMetadados));
             localStorage.setItem('isAdmin', usuarioComMetadados.tipo === 'admin');
             localStorage.setItem('isRoot', isRoot ? 'true' : 'false');
             redirecionarAposLogin(usuarioComMetadados);
@@ -429,7 +325,8 @@ async function realizarLogout() {
     } catch (_) {
         // Ignora erros de logout
     }
-    limparSessaoLocal();
+    localStorage.removeItem('usuario');
+    localStorage.removeItem('isRoot');
     window.location.href = '/admin/login.html';
 }
 
@@ -520,16 +417,6 @@ async function verificarAutenticacao() {
             return false;
         }
 
-        const expMillis = usuario.token_exp ? Number(usuario.token_exp) : null;
-        if (expMillis && Date.now() > expMillis - 5000) {
-            const renovada = await tentarRenovarSessao();
-            if (!renovada) {
-                limparSessaoLocal();
-                window.location.href = '/admin/login.html';
-                return false;
-            }
-        }
-
         try {
             // Valida o token acessando os dados do próprio usuário
             await chamarAPI(`/usuarios/${usuario.id}`);
@@ -537,8 +424,7 @@ async function verificarAutenticacao() {
             return true;
         } catch (error) {
             console.warn('Sessão inválida. Redirecionando para login.');
-            limparSessaoLocal();
-            window.location.href = '/admin/login.html';
+            realizarLogout();
             autenticacaoCache = false;
             return false;
         } finally {
@@ -634,7 +520,7 @@ async function chamarAPI(endpoint, method = 'GET', body = null) {
         }
     }
 
-    const executarRequest = async () => {
+    return await executarComLoading(async () => {
         let response = await fetch(url, opts);
         if (mutativo && (response.status === 403 || response.status === 419)) {
             const novoToken = await obterCSRFToken(true);
@@ -642,15 +528,10 @@ async function chamarAPI(endpoint, method = 'GET', body = null) {
             response = await fetch(url, opts);
         }
 
-        if (response.status === 401 && endpointFormatado !== '/login' && endpointFormatado !== '/refresh') {
-            const renovada = await tentarRenovarSessao();
-            if (renovada) {
-                if (mutativo) {
-                    const novoToken = await obterCSRFToken(true);
-                    opts.headers['X-CSRF-Token'] = novoToken;
-                }
-                response = await fetch(url, opts);
-            }
+        if (response.status === 401 && endpointFormatado !== '/login') {
+            localStorage.removeItem('usuario');
+            window.location.href = '/admin/login.html';
+            throw new Error('Sessão expirada');
         }
 
         if (!response.ok) {
@@ -670,17 +551,7 @@ async function chamarAPI(endpoint, method = 'GET', body = null) {
             return await response.json();
         }
         return null;
-    };
-
-    try {
-        return await executarComLoading(executarRequest);
-    } catch (error) {
-        if (error?.status === 401 && endpointFormatado !== '/login' && endpointFormatado !== '/refresh') {
-            limparSessaoLocal();
-            window.location.href = '/admin/login.html';
-        }
-        throw error;
-    }
+    });
 }
 
 // Funções de formatação e utilidades

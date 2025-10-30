@@ -4,6 +4,8 @@
 let estatisticasGerais = {};
 let proximasOcupacoes = [];
 let relatorioMensal = {};
+let salasAtivasCache = null;
+let salasAtivasPromise = null;
 
 const rootStyle = getComputedStyle(document.documentElement);
 const coresOcorrencia = {
@@ -14,12 +16,36 @@ const coresOcorrencia = {
     'reserva_especial': '#9C27B0'
 };
 
+async function obterSalasAtivas() {
+    if (salasAtivasCache) {
+        return salasAtivasCache;
+    }
+
+    if (!salasAtivasPromise) {
+        salasAtivasPromise = (async () => {
+            const response = await fetch(`${API_URL}/salas?status=ativa`, {
+            });
+
+            if (!response.ok) {
+                throw new Error('Falha ao carregar salas ativas');
+            }
+
+            const salas = await response.json();
+            salasAtivasCache = salas;
+            return salas;
+        })().catch(error => {
+            salasAtivasPromise = null;
+            throw error;
+        });
+    }
+
+    return salasAtivasPromise;
+}
+
 // Carrega indicadores de salas por mês
 async function carregarIndicadoresMensais() {
     try {
-        const salasResp = await fetch(`${API_URL}/salas?status=ativa`, {
-        });
-        const salas = salasResp.ok ? await salasResp.json() : [];
+        const salas = await obterSalasAtivas();
         const totalSalas = salas.length;
 
         async function obterDados(mesOffset) {
@@ -60,14 +86,11 @@ async function carregarIndicadoresMensais() {
 async function carregarEstatisticasGerais() {
     try {
         // Carrega total de salas ativas
-        const responseSalas = await fetch(`${API_URL}/salas?status=ativa`, {
-            headers: {
-            }
-        });
-        
-        if (responseSalas.ok) {
-            const salas = await responseSalas.json();
+        try {
+            const salas = await obterSalasAtivas();
             document.getElementById('totalSalasAtivas').textContent = salas.length;
+        } catch (error) {
+            console.error('Erro ao carregar salas ativas:', error);
         }
         
         // Carrega total de instrutores ativos

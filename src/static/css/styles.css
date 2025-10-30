@@ -15,6 +15,10 @@
   font-display: swap;
 }
 
+html {
+  font-size: 100%;
+}
+
 :root {
   /* Softer primary blue to reduce visual weight on large areas */
   --header-color: #1d4ea8;
@@ -124,13 +128,29 @@ h1, .h1, h2, .h2 {
 }
 
 h1, .h1 {
-  /* Reduced maximum size keeps large headings from overpowering layouts */
-  font-size: clamp(1.6rem, 1.2rem + 1vw, 1.95rem);
+  /* Balanced scale for strong page titles without overpowering layouts */
+  font-size: clamp(2rem, 1.7rem + 1.5vw, 2.5rem);
+  line-height: 1.2;
 }
 
 h2, .h2 {
   /* Adjusted clamp for balanced hierarchy on wide screens */
-  font-size: clamp(1.3rem, 1.05rem + 0.55vw, 1.55rem);
+  font-size: clamp(1.7rem, 1.45rem + 0.7vw, 2rem);
+  line-height: 1.25;
+}
+
+h3, .h3 {
+  font-weight: 600;
+  font-size: clamp(1.35rem, 1.2rem + 0.45vw, 1.6rem);
+  letter-spacing: 0.4px;
+  line-height: 1.3;
+}
+
+h4, .h4 {
+  font-weight: 600;
+  font-size: clamp(1.15rem, 1.05rem + 0.35vw, 1.3rem);
+  letter-spacing: 0.3px;
+  line-height: 1.35;
 }
 
 p,
@@ -147,7 +167,7 @@ p,
 }
 
 small, .small {
-  font-size: 12px;
+  font-size: 0.75rem;
   opacity: 0.8;
 }
 
@@ -197,6 +217,24 @@ small, .small {
   .main-content {
     width: 100%;
     margin-left: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  html {
+    font-size: 90%;
+  }
+
+  body {
+    line-height: 1.6;
+  }
+
+  h1, .h1 {
+    letter-spacing: 0.4px;
+  }
+
+  h2, .h2 {
+    letter-spacing: 0.35px;
   }
 }
 .card {
@@ -458,15 +496,15 @@ small, .small {
 
 /* Estilo base para as pílulas */
 .pill-turno {
-    padding: 4px 8px;
-    margin: 3px auto;
-    border-radius: 4px;
-    font-size: 13px;
+    padding: 0.25rem 0.5rem;
+    margin: 0.2rem auto;
+    border-radius: 0.25rem;
+    font-size: 0.8125rem;
     font-weight: 500;
     display: block;
     text-align: center;
     border: 1px solid transparent;
-    max-width: 120px;
+    max-width: 7.5rem;
     line-height: 1.4;
 }
 
@@ -973,15 +1011,15 @@ textarea {
 
 /* Estilo base para as pílulas */
 .pill-turno {
-    padding: 4px 8px;
-    margin: 3px auto;
-    border-radius: 4px;
-    font-size: 13px;
+    padding: 0.25rem 0.5rem;
+    margin: 0.2rem auto;
+    border-radius: 0.25rem;
+    font-size: 0.8125rem;
     font-weight: 500;
     display: block;
     text-align: center;
     border: 1px solid transparent;
-    max-width: 120px;
+    max-width: 7.5rem;
     line-height: 1.4;
 }
 
@@ -1494,7 +1532,7 @@ textarea {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1;
   transition: transform .2s ease, content .2s ease;
   box-shadow: 0 1px 2px rgba(0,0,0,.1);

@@ -25,17 +25,23 @@ PASSWORD_RE = re.compile(r'^(?=.*[A-Za-z])(?=.*\d).{8,}$')
 
 
 def _validate_password(password: str) -> bool:
+    """Valida a senha segundo o padrão definido para o reset."""
+
     return bool(PASSWORD_RE.match(password))
 
 
 @auth_reset_bp.get('/forgot')
 def forgot_get():
+    """Renderiza o formulário de recuperação de senha com um token CSRF."""
+
     csrf_token = generate_csrf()
     return render_template('admin/forgot_password.html', csrf_token=csrf_token)
 
 
 @auth_reset_bp.post('/forgot')
 def forgot_post():
+    """Processa a solicitação de redefinição, enviando o e-mail com instruções."""
+
     time.sleep(1)
     try:
         validate_csrf(request.form.get('csrf_token'))
@@ -84,6 +90,8 @@ def forgot_post():
 
 @auth_reset_bp.get('/reset')
 def reset_get():
+    """Exibe o formulário para definição de uma nova senha."""
+
     token = request.args.get('token', '')
     email = confirm_reset_token(token)
     if not email:
@@ -100,6 +108,8 @@ def reset_get():
 
 @auth_reset_bp.post('/reset')
 def reset_post():
+    """Valida o formulário de redefinição e atualiza a senha do usuário."""
+
     try:
         validate_csrf(request.form.get('csrf_token'))
     except CSRFError:

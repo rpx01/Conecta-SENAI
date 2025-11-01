@@ -178,7 +178,7 @@ def create_default_recursos(app):
 def create_app():
     """Fábrica de aplicação usada pelo Flask."""
     logging.info("Iniciando a criação da aplicação Flask...")
-    app = Flask(__name__, static_url_path='', static_folder='static')
+    app = Flask(__name__, static_url_path='/static', static_folder='static')
     app.register_blueprint(request_id_bp)
     instrument(app)
 

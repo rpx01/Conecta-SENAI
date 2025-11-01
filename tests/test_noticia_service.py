@@ -11,10 +11,10 @@ from sqlalchemy import text
 from sqlalchemy.orm.attributes import LoaderCallableStatus
 from werkzeug.datastructures import FileStorage
 
-from src.models import db
-from src.models.noticia import Noticia
-from src.schemas.noticia import NoticiaSchema
-from src.services import noticia_service
+from conecta_senai.models import db
+from conecta_senai.models.noticia import Noticia
+from conecta_senai.schemas.noticia import NoticiaSchema
+from conecta_senai.services import noticia_service
 
 
 def test_atualizar_noticia_cria_tabela_imagens_quando_ausente(app, tmp_path):

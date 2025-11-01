@@ -4,10 +4,10 @@ import uuid
 import logging
 import re
 from datetime import datetime, timedelta
-from src.models import db
-from src.models.user import User
-from src.routes.user import gerar_refresh_token
-from src.schemas.user import UserCreateSchema, UserUpdateSchema
+from conecta_senai.models import db
+from conecta_senai.models.user import User
+from conecta_senai.routes.user import gerar_refresh_token
+from conecta_senai.schemas.user import UserCreateSchema, UserUpdateSchema
 
 
 def fetch_csrf(client):

@@ -6,7 +6,8 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from src.main import create_app, db
+from conecta_senai import create_app
+from conecta_senai.extensions import db
 
 config = context.config
 fileConfig(config.config_file_name)

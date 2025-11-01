@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export FLASK_APP="${FLASK_APP:-src.main}"
+export FLASK_APP="${FLASK_APP:-conecta_senai.main}"
 echo "[start] Running DB migrations..."
 SCHEDULER_ENABLED=${SCHEDULER_ENABLED:-0} flask db upgrade || true
 echo "[start] Starting Gunicorn..."
-exec gunicorn "src.main:create_app()" \
+exec gunicorn "conecta_senai.main:create_app()" \
   --bind 0.0.0.0:${PORT:-8080} \
   --workers 1 \
   --threads 1 \

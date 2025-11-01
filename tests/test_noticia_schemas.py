@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from src.schemas.noticia_validacao import NoticiaCreateSchema
+from conecta_senai.schemas.noticia_validacao import NoticiaCreateSchema
 
 
 def test_noticia_create_schema_accepts_isoformat_with_z_suffix():

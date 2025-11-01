@@ -1,6 +1,6 @@
 import jwt
 from datetime import datetime, timedelta
-from src.models.user import User
+from conecta_senai.models.user import User
 
 
 def admin_headers(app):

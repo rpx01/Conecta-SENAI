@@ -1,7 +1,7 @@
-from src.utils.audit import log_action
-from src.utils.error_handler import handle_internal_error
-from src.schemas.user import _is_cpf_valid
-from src.models.audit_log import AuditLog
+from conecta_senai.utils.audit import log_action
+from conecta_senai.utils.error_handler import handle_internal_error
+from conecta_senai.schemas.user import _is_cpf_valid
+from conecta_senai.models.audit_log import AuditLog
 
 
 def test_is_cpf_valid():

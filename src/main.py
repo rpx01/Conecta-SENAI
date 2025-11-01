@@ -3,9 +3,9 @@
 import os
 import logging
 import traceback
-import sys
 import re
-from flask import Flask, redirect, send_from_directory
+from pathlib import Path
+from flask import Flask, render_template, send_from_directory, abort
 from flasgger import Swagger
 from flask_wtf.csrf import CSRFProtect
 from sentry_sdk.integrations.flask import FlaskIntegration
@@ -66,6 +66,8 @@ from src.blueprints.auth import auth_bp
 from src.scheduler import start_scheduler
 from src.routes.noticias import api_noticias_bp
 from src.cli import register_cli
+
+from jinja2 import TemplateNotFound
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -314,19 +316,44 @@ def create_app():
 
     @app.route('/')
     def index():
-        return redirect('/admin/login.html')
+        """Exibe a tela inicial do painel administrativo."""
+
+        return render_template('admin/login.html')
 
     @app.route('/static/<path:filename>')
     def static_files(filename):
+        """Entrega arquivos estáticos como CSS, JS e imagens."""
+
         return app.send_static_file(filename)
 
     @app.route('/<path:path>')
     def static_file(path):
+        """Entrega templates HTML ou demais arquivos estáticos.
+
+        Se o caminho terminar com ``.html`` o arquivo será renderizado como
+        template Jinja2 a partir de ``src/templates``. Para outros formatos o
+        Flask continua atendendo via diretório ``static``.
+        """
+
+        if path.endswith('.html'):
+            template_path = Path(path)
+            if '..' in template_path.parts:
+                abort(404)
+            try:
+                # O Path garante a normalização independentemente do SO
+                normalized_template = str(template_path).replace('\\', '/')
+                return render_template(normalized_template)
+            except TemplateNotFound:
+                app.logger.warning("Template HTML não encontrado: %s", path)
+                abort(404)
+
         return app.send_static_file(path)
 
     @app.route('/favicon.ico')
     @app.route('/admin/favicon.ico')
     def favicon():
+        """Serve o favicon padrão da aplicação."""
+
         static_img_dir = os.path.join(app.static_folder, 'img')
         try:
             return send_from_directory(static_img_dir, 'senai-logo.png', mimetype='image/png')

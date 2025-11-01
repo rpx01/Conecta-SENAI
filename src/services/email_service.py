@@ -80,6 +80,8 @@ class RateLimiter:
 
 
 def _normalize(addr: Address | None) -> Optional[List[str]]:
+    """Converte o destinatário em lista de strings."""
+
     if addr is None:
         return None
     if isinstance(addr, str):
@@ -88,6 +90,8 @@ def _normalize(addr: Address | None) -> Optional[List[str]]:
 
 
 def _parse_time(value: Any) -> time | None:
+    """Tenta extrair uma instância de ``time`` a partir de diferentes formatos."""
+
     if isinstance(value, time):
         return value
     if isinstance(value, str):
@@ -103,6 +107,8 @@ def _parse_time(value: Any) -> time | None:
 
 
 def build_turma_context(turma: Any) -> SimpleNamespace:
+    """Monta o contexto mínimo usado nos templates de e-mail de turmas."""
+
     treino = getattr(turma, "treinamento", None)
     return SimpleNamespace(
         treinamento=SimpleNamespace(nome=getattr(treino, "nome", "")),
@@ -124,6 +130,8 @@ def build_turma_context(turma: Any) -> SimpleNamespace:
 
 
 def build_user_context(nome: str) -> SimpleNamespace:
+    """Cria um namespace simples apenas com o nome do usuário."""
+
     return SimpleNamespace(name=nome)
 
 

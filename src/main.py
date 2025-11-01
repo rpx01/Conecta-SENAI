@@ -249,8 +249,15 @@ def create_app():
     Swagger(app, config=swagger_config, template=swagger_template)
 
     # Configura chaves do reCAPTCHA (opcional)
-    app.config['RECAPTCHA_SITE_KEY'] = os.getenv('RECAPTCHA_SITE_KEY') or os.getenv('SITE_KEY')
-    app.config['RECAPTCHA_SECRET_KEY'] = os.getenv('RECAPTCHA_SECRET_KEY') or os.getenv('CAPTCHA_SECRET_KEY') or os.getenv('SECRET_KEY')
+    recaptcha_site_key = (
+        os.getenv('RECAPTCHA_SITE_KEY') or os.getenv('SITE_KEY') or ''
+    ).strip()
+    recaptcha_secret_key = (
+        os.getenv('RECAPTCHA_SECRET_KEY') or os.getenv('CAPTCHA_SECRET_KEY') or ''
+    ).strip()
+
+    app.config['RECAPTCHA_SITE_KEY'] = recaptcha_site_key or None
+    app.config['RECAPTCHA_SECRET_KEY'] = recaptcha_secret_key or None
     app.config['RECAPTCHA_THRESHOLD'] = float(os.getenv('RECAPTCHA_THRESHOLD', '0.5'))
 
     app.register_blueprint(user_bp, url_prefix='/api')

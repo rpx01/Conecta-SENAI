@@ -197,6 +197,7 @@ def excluir_local_realizacao(local_id):
 
 
 @horarios_bp.route('', methods=['GET'])
+@admin_required
 def listar_horarios():
     """Lista todos os horários cadastrados ordenados por nome."""
 
@@ -206,6 +207,7 @@ def listar_horarios():
 
 
 @horarios_bp.route('', methods=['POST'])
+@admin_required
 def criar_horario():
     """Cria um novo horário disponível para treinamentos."""
 
@@ -225,6 +227,7 @@ def criar_horario():
 
 
 @horarios_bp.route('/<int:horario_id>', methods=['PUT'])
+@admin_required
 def atualizar_horario(horario_id: int):
     """Atualiza os dados de um horário existente."""
 

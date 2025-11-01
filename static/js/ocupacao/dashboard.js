@@ -43,6 +43,20 @@ async function obterSalasAtivas() {
 }
 
 // Carrega indicadores de salas por mês
+function setTextContentIfExists(elementId, value) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.textContent = value;
+    }
+}
+
+function setHrefIfExists(elementId, value) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.href = value;
+    }
+}
+
 async function carregarIndicadoresMensais() {
     try {
         const salas = await obterSalasAtivas();
@@ -67,10 +81,10 @@ async function carregarIndicadoresMensais() {
         const seguinte = await obterDados(1);
 
         function preencher(prefixo, dados, linkEl) {
-            document.getElementById(`totalSalasMes${prefixo}`).textContent = dados.totalSalas;
-            document.getElementById(`salasOcupadasMes${prefixo}`).textContent = dados.salasOcupadas;
-            document.getElementById(`salasLivresMes${prefixo}`).textContent = dados.totalSalas - dados.salasOcupadas;
-            document.getElementById(linkEl).href = `/ocupacao/calendario.html?mes=${dados.iniStr.substring(0,7)}`;
+            setTextContentIfExists(`totalSalasMes${prefixo}`, dados.totalSalas);
+            setTextContentIfExists(`salasOcupadasMes${prefixo}`, dados.salasOcupadas);
+            setTextContentIfExists(`salasLivresMes${prefixo}`, dados.totalSalas - dados.salasOcupadas);
+            setHrefIfExists(linkEl, `/ocupacao/calendario.html?mes=${dados.iniStr.substring(0,7)}`);
         }
 
         preencher('Anterior', anterior, 'linkMesAnterior');

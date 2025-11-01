@@ -3,7 +3,6 @@ from flask import Blueprint, request, jsonify, make_response, send_file
 from conecta_senai.models import db
 from conecta_senai.models.ocupacao import Ocupacao
 from conecta_senai.models.sala import Sala
-from conecta_senai.models.instrutor import Instrutor
 from conecta_senai.routes.user import verificar_autenticacao, verificar_admin
 from conecta_senai.auth import admin_required
 from sqlalchemy.exc import SQLAlchemyError
@@ -17,7 +16,7 @@ from io import StringIO, BytesIO
 from openpyxl import Workbook
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-from sqlalchemy import and_, or_, func, extract, desc
+from sqlalchemy import and_, or_, func, extract, desc, cast, String
 
 ocupacao_bp = Blueprint('ocupacao', __name__)
 
@@ -35,63 +34,189 @@ TURNOS_PADRAO = {
     'Noite': (time.fromisoformat('18:30'), time.fromisoformat('22:30'))
 }
 
+
+def obter_ocupacoes_por_identificador(identificador):
+    """Retorna a lista de ocupações associadas ao identificador fornecido.
+
+    O identificador pode ser o ID numérico de uma ocupação específica ou um
+    ``grupo_ocupacao_id``. Para registros antigos que não possuem
+    ``grupo_ocupacao_id``, o ID numérico continua sendo aceito.
+    """
+
+    if not identificador:
+        return None, None, None
+
+    ocupacoes = []
+    grupo_id = None
+    ocupacao_base = None
+
+    if identificador.isdigit():
+        ocupacao_base = db.session.get(Ocupacao, int(identificador))
+        if not ocupacao_base:
+            return None, None, None
+        if ocupacao_base.grupo_ocupacao_id:
+            grupo_id = ocupacao_base.grupo_ocupacao_id
+            ocupacoes = (
+                Ocupacao.query
+                .filter_by(grupo_ocupacao_id=grupo_id)
+                .order_by(Ocupacao.data.asc())
+                .all()
+            )
+        else:
+            ocupacoes = [ocupacao_base]
+    else:
+        grupo_id = identificador
+        ocupacoes = (
+            Ocupacao.query
+            .filter_by(grupo_ocupacao_id=grupo_id)
+            .order_by(Ocupacao.data.asc())
+            .all()
+        )
+        if not ocupacoes:
+            return None, None, None
+        ocupacao_base = ocupacoes[0]
+
+    if ocupacao_base is None and ocupacoes:
+        ocupacao_base = ocupacoes[0]
+
+    return ocupacoes, grupo_id, ocupacao_base
+
+
+def obter_turno_por_horarios(horario_inicio, horario_fim):
+    """Retorna o nome do turno a partir dos horários padrão configurados."""
+
+    if not horario_inicio or not horario_fim:
+        return None
+
+    for turno_nome, (inicio, fim) in TURNOS_PADRAO.items():
+        if inicio == horario_inicio and fim == horario_fim:
+            return turno_nome
+    return None
+
 @ocupacao_bp.route('/ocupacoes', methods=['GET'])
 def listar_ocupacoes():
-    """
-    Lista todas as ocupações com filtros opcionais.
-    """
+    """Lista ocupações agrupadas por reserva (grupo_ocupacao_id)."""
+
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
-    
-    # Parâmetros de filtro
+
     data_inicio_str = request.args.get('data_inicio')
     data_fim_str = request.args.get('data_fim')
     sala_id = request.args.get('sala_id', type=int)
-    instrutor_id = request.args.get('instrutor_id', type=int)
     status = request.args.get('status')
     tipo_ocupacao = request.args.get('tipo_ocupacao')
     curso_evento = request.args.get('curso_evento')
-    
-    # Query base
-    query = Ocupacao.query
-    
-    # Aplica filtros de data
+
+    data_inicio = None
+    data_fim = None
+
     if data_inicio_str:
         try:
             data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
-            query = query.filter(Ocupacao.data >= data_inicio)
         except ValueError:
             return jsonify({'erro': 'Formato de data_inicio inválido (YYYY-MM-DD)'}), 400
-    
+
     if data_fim_str:
         try:
             data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
-            query = query.filter(Ocupacao.data <= data_fim)
         except ValueError:
             return jsonify({'erro': 'Formato de data_fim inválido (YYYY-MM-DD)'}), 400
-    
-    # Aplica outros filtros
-    if sala_id:
-        query = query.filter(Ocupacao.sala_id == sala_id)
-    
-    if instrutor_id:
-        query = query.filter(Ocupacao.instrutor_id == instrutor_id)
-    
-    if status:
-        query = query.filter(Ocupacao.status == status)
-    
-    if tipo_ocupacao:
-        query = query.filter(Ocupacao.tipo_ocupacao == tipo_ocupacao)
-    
-    if curso_evento:
-        query = query.filter(Ocupacao.curso_evento.ilike(f'%{curso_evento}%'))
-    
-    
-    # Ordena por data e horário
-    ocupacoes = query.order_by(Ocupacao.data, Ocupacao.horario_inicio).all()
 
-    return jsonify([o.to_dict() for o in ocupacoes]), 200
+    ocupacoes_query = Ocupacao.query
+
+    if sala_id:
+        ocupacoes_query = ocupacoes_query.filter(Ocupacao.sala_id == sala_id)
+
+    if status:
+        ocupacoes_query = ocupacoes_query.filter(Ocupacao.status == status)
+
+    if tipo_ocupacao:
+        ocupacoes_query = ocupacoes_query.filter(Ocupacao.tipo_ocupacao == tipo_ocupacao)
+
+    if curso_evento:
+        ocupacoes_query = ocupacoes_query.filter(Ocupacao.curso_evento.ilike(f'%{curso_evento}%'))
+
+    grupo_expr = func.coalesce(Ocupacao.grupo_ocupacao_id, cast(Ocupacao.id, String))
+
+    agrupamento = (
+        ocupacoes_query
+        .with_entities(
+            grupo_expr.label('grupo_id'),
+            func.min(Ocupacao.id).label('primeira_ocupacao_id'),
+            Ocupacao.sala_id.label('sala_id'),
+            func.min(Ocupacao.curso_evento).label('curso_evento'),
+            func.min(Ocupacao.tipo_ocupacao).label('tipo_ocupacao'),
+            func.min(Ocupacao.recorrencia).label('recorrencia'),
+            func.min(Ocupacao.status).label('status'),
+            func.min(Ocupacao.observacoes).label('observacoes'),
+            func.min(Ocupacao.horario_inicio).label('horario_inicio'),
+            func.min(Ocupacao.horario_fim).label('horario_fim'),
+            func.min(Ocupacao.usuario_id).label('usuario_id'),
+            func.min(Ocupacao.grupo_ocupacao_id).label('grupo_ocupacao_id'),
+            func.count(Ocupacao.id).label('quantidade_dias'),
+            func.min(Ocupacao.data).label('data_inicio'),
+            func.max(Ocupacao.data).label('data_fim')
+        )
+        .group_by(grupo_expr, Ocupacao.sala_id)
+    )
+
+    subquery = agrupamento.subquery()
+
+    query = (
+        db.session.query(
+            subquery.c.grupo_id,
+            subquery.c.primeira_ocupacao_id,
+            subquery.c.sala_id,
+            subquery.c.curso_evento,
+            subquery.c.tipo_ocupacao,
+            subquery.c.recorrencia,
+            subquery.c.status,
+            subquery.c.observacoes,
+            subquery.c.horario_inicio,
+            subquery.c.horario_fim,
+            subquery.c.usuario_id,
+            subquery.c.grupo_ocupacao_id,
+            subquery.c.quantidade_dias,
+            subquery.c.data_inicio,
+            subquery.c.data_fim,
+            Sala.nome.label('sala_nome')
+        )
+        .join(Sala, Sala.id == subquery.c.sala_id, isouter=True)
+    )
+
+    if data_inicio:
+        query = query.filter(subquery.c.data_fim >= data_inicio)
+
+    if data_fim:
+        query = query.filter(subquery.c.data_inicio <= data_fim)
+
+    resultados = query.order_by(subquery.c.data_inicio, subquery.c.horario_inicio).all()
+
+    ocupacoes_agrupadas = []
+    for item in resultados:
+        turno_nome = obter_turno_por_horarios(item.horario_inicio, item.horario_fim)
+        identificador = item.grupo_ocupacao_id or item.grupo_id
+        ocupacoes_agrupadas.append({
+            'id': identificador,
+            'grupo_ocupacao_id': item.grupo_ocupacao_id,
+            'primeira_ocupacao_id': item.primeira_ocupacao_id,
+            'sala_id': item.sala_id,
+            'sala_nome': item.sala_nome,
+            'curso_evento': item.curso_evento,
+            'tipo_ocupacao': item.tipo_ocupacao,
+            'recorrencia': item.recorrencia,
+            'status': item.status,
+            'observacoes': item.observacoes,
+            'horario_inicio': item.horario_inicio.strftime('%H:%M') if item.horario_inicio else None,
+            'horario_fim': item.horario_fim.strftime('%H:%M') if item.horario_fim else None,
+            'turno': turno_nome,
+            'data_inicio': item.data_inicio.isoformat() if item.data_inicio else None,
+            'data_fim': item.data_fim.isoformat() if item.data_fim else None,
+            'quantidade_dias': item.quantidade_dias,
+        })
+
+    return jsonify(ocupacoes_agrupadas), 200
 
 
 @ocupacao_bp.route('/ocupacoes/export', methods=['GET'])
@@ -152,32 +277,49 @@ def exportar_ocupacoes():
     output.headers["Content-Type"] = "text/csv"
     return output
 
-@ocupacao_bp.route('/ocupacoes/<int:id>', methods=['GET'])
-def obter_ocupacao(id):
-    """Obtém detalhes de uma ocupação específica incluindo o período completo."""
+@ocupacao_bp.route('/ocupacoes/<string:identificador>', methods=['GET'])
+def obter_ocupacao(identificador):
+    """Obtém detalhes consolidados de uma ocupação (individual ou agrupada)."""
+
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
 
-    ocupacao = db.session.get(Ocupacao, id)
-    if not ocupacao:
+    ocupacoes_grupo, grupo_id, ocupacao_base = obter_ocupacoes_por_identificador(identificador)
+
+    if not ocupacao_base:
         return jsonify({'erro': 'Ocupação não encontrada'}), 404
 
+    if not ocupacoes_grupo:
+        ocupacoes_grupo = [ocupacao_base]
 
-    dados = ocupacao.to_dict()
+    datas = [oc.data for oc in ocupacoes_grupo]
+    data_inicio = min(datas)
+    data_fim = max(datas)
+    horario_inicio = ocupacao_base.horario_inicio
+    horario_fim = ocupacao_base.horario_fim
 
-    # Calcula o período completo da reserva
-    data_inicio = ocupacao.data
-    data_fim = ocupacao.data
-    if ocupacao.grupo_ocupacao_id:
-        grupo_ocupacoes = Ocupacao.query.filter_by(grupo_ocupacao_id=ocupacao.grupo_ocupacao_id).all()
-        if grupo_ocupacoes:
-            datas = [oc.data for oc in grupo_ocupacoes]
-            data_inicio = min(datas)
-            data_fim = max(datas)
+    turno_nome = obter_turno_por_horarios(horario_inicio, horario_fim)
 
-    dados['data_inicio'] = data_inicio.isoformat()
-    dados['data_fim'] = data_fim.isoformat()
+    dados = {
+        'id': grupo_id or str(ocupacao_base.id),
+        'grupo_ocupacao_id': grupo_id,
+        'sala_id': ocupacao_base.sala_id,
+        'sala_nome': ocupacao_base.sala.nome if ocupacao_base.sala else None,
+        'curso_evento': ocupacao_base.curso_evento,
+        'tipo_ocupacao': ocupacao_base.tipo_ocupacao,
+        'recorrencia': ocupacao_base.recorrencia,
+        'status': ocupacao_base.status,
+        'observacoes': ocupacao_base.observacoes,
+        'usuario_id': ocupacao_base.usuario_id,
+        'horario_inicio': horario_inicio.strftime('%H:%M') if horario_inicio else None,
+        'horario_fim': horario_fim.strftime('%H:%M') if horario_fim else None,
+        'turno': turno_nome,
+        'data_inicio': data_inicio.isoformat(),
+        'data_fim': data_fim.isoformat(),
+        'datas': [data.isoformat() for data in datas],
+        'quantidade_dias': len(ocupacoes_grupo),
+    }
 
     return jsonify(dados), 200
 
@@ -201,13 +343,6 @@ def criar_ocupacao():
     if not sala:
         return jsonify({'erro': 'Sala não encontrada'}), 404
 
-    # Verifica se o instrutor existe (se fornecido)
-    instrutor = None
-    if payload.instrutor_id:
-        instrutor = db.session.get(Instrutor, payload.instrutor_id)
-        if not instrutor:
-            return jsonify({'erro': 'Instrutor não encontrado'}), 404
-    
     try:
         data_inicio = datetime.strptime(payload.data_inicio, '%Y-%m-%d').date()
         data_fim = datetime.strptime(payload.data_fim, '%Y-%m-%d').date()
@@ -235,30 +370,6 @@ def criar_ocupacao():
                 'conflitos': [c.to_dict(include_relations=False) for c in conflitos_totais]
             }), 409
         
-        # Verifica disponibilidade do instrutor (se fornecido)
-        if instrutor:
-            ocupacoes_instrutor = []
-            dia = data_inicio
-            while dia <= data_fim:
-                ocorrencias = Ocupacao.query.filter(
-                    Ocupacao.instrutor_id == instrutor.id,
-                    Ocupacao.data == dia,
-                    Ocupacao.status.in_(['confirmado', 'pendente']),
-                    or_(
-                        and_(Ocupacao.horario_inicio <= horario_inicio, Ocupacao.horario_fim > horario_inicio),
-                        and_(Ocupacao.horario_inicio < horario_fim, Ocupacao.horario_fim >= horario_fim),
-                        and_(Ocupacao.horario_inicio >= horario_inicio, Ocupacao.horario_fim <= horario_fim)
-                    )
-                ).all()
-                ocupacoes_instrutor.extend(ocorrencias)
-                dia += timedelta(days=1)
-
-            if ocupacoes_instrutor:
-                return jsonify({
-                    'erro': 'Instrutor não disponível no turno solicitado',
-                    'conflitos': [c.to_dict(include_relations=False) for c in ocupacoes_instrutor]
-                }), 409
-        
         # Validação de tipo de ocupação
         tipos_validos = ['aula_regular', 'evento_especial', 'reuniao', 'manutencao', 'reserva_especial']
         tipo_ocupacao = payload.tipo_ocupacao or 'aula_regular'
@@ -283,7 +394,6 @@ def criar_ocupacao():
                 continue
             nova_ocupacao = Ocupacao(
                 sala_id=payload.sala_id,
-                instrutor_id=payload.instrutor_id,
                 usuario_id=user.id,
                 curso_evento=payload.curso_evento,
                 data=dia,
@@ -311,9 +421,9 @@ def criar_ocupacao():
         db.session.rollback()
         return handle_internal_error(e)
 
-@ocupacao_bp.route('/ocupacoes/<int:id>', methods=['PUT'])
+@ocupacao_bp.route('/ocupacoes/<string:identificador>', methods=['PUT'])
 @admin_required
-def atualizar_ocupacao(id):
+def atualizar_ocupacao(identificador):
     """
     Atualiza uma ocupação existente. Para garantir a consistência de agendamentos
     de múltiplos dias, esta função adota a estratégia de "apagar e recriar".
@@ -322,8 +432,8 @@ def atualizar_ocupacao(id):
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
 
-    # 1. Encontra a ocupação original para obter o grupo.
-    ocupacao_original = db.session.get(Ocupacao, id)
+    ocupacoes_grupo, grupo_existente, ocupacao_original = obter_ocupacoes_por_identificador(identificador)
+
     if not ocupacao_original:
         return jsonify({'erro': 'Ocupação não encontrada'}), 404
 
@@ -338,30 +448,36 @@ def atualizar_ocupacao(id):
     except ValidationError as e:
         return jsonify({'erro': e.errors()}), 400
 
-    # 4. Pega o grupo_id original. Se não existir, usa um novo.
-    grupo_id = ocupacao_original.grupo_ocupacao_id
-    if not grupo_id:
+    if not ocupacoes_grupo:
+        ocupacoes_grupo = [ocupacao_original]
+
+    # 4. Determina o grupo final. Para reservas sem grupo prévio, gera um novo ID.
+    grupo_id_existente = grupo_existente
+    if not grupo_id_existente:
+        grupo_id_existente = ocupacao_original.grupo_ocupacao_id
+
+    grupo_id_final = grupo_id_existente
+    if not grupo_id_final:
         import uuid
-        grupo_id = uuid.uuid4().hex
+        grupo_id_final = uuid.uuid4().hex
 
     # ----- Início da Transação Atómica -----
     try:
-        # 5. Apaga TODAS as ocupações antigas que pertencem ao mesmo grupo.
-        Ocupacao.query.filter_by(grupo_ocupacao_id=grupo_id).delete()
-
-        # 6. Prepara os dados para a recriação.
         sala_id = payload.sala_id if payload.sala_id is not None else ocupacao_original.sala_id
-        instrutor_id = payload.instrutor_id if payload.instrutor_id is not None else ocupacao_original.instrutor_id
-        data_inicio = (
-            datetime.strptime(payload.data_inicio, '%Y-%m-%d').date()
-            if payload.data_inicio
-            else ocupacao_original.data
-        )
-        data_fim = (
-            datetime.strptime(payload.data_fim, '%Y-%m-%d').date()
-            if payload.data_fim
-            else ocupacao_original.data
-        )
+        sala = db.session.get(Sala, sala_id)
+        if not sala:
+            raise ValueError('Sala não encontrada.')
+
+        if payload.data_inicio:
+            data_inicio = datetime.strptime(payload.data_inicio, '%Y-%m-%d').date()
+        else:
+            data_inicio = min(oc.data for oc in ocupacoes_grupo)
+
+        if payload.data_fim:
+            data_fim = datetime.strptime(payload.data_fim, '%Y-%m-%d').date()
+        else:
+            data_fim = max(oc.data for oc in ocupacoes_grupo)
+
         turno = payload.turno if payload.turno is not None else ocupacao_original.get_turno()
 
         if data_inicio > data_fim:
@@ -371,18 +487,39 @@ def atualizar_ocupacao(id):
             raise ValueError("Turno inválido.")
         horario_inicio, horario_fim = TURNOS_PADRAO[turno]
 
-        # 7. Verifica conflitos com outras ocupações, ignorando o grupo atual (que já foi apagado).
-        conflitos = Ocupacao.query.filter(
-            Ocupacao.sala_id == sala_id,
-            Ocupacao.data.between(data_inicio, data_fim),
-            Ocupacao.horario_inicio == horario_inicio,
-            # Adicionar verificação de conflito de instrutor se necessário
-        ).all()
+        tipo_ocupacao = payload.tipo_ocupacao if payload.tipo_ocupacao is not None else ocupacao_original.tipo_ocupacao
+        recorrencia = payload.recorrencia if payload.recorrencia is not None else ocupacao_original.recorrencia
+        status_atual = payload.status if payload.status is not None else ocupacao_original.status
+        observacoes = payload.observacoes if payload.observacoes is not None else ocupacao_original.observacoes
+        curso_evento = payload.curso_evento if payload.curso_evento is not None else ocupacao_original.curso_evento
 
-        if conflitos:
-             raise ValueError("Conflito de horário detectado. A sala já está ocupada neste novo período.")
+        ignorar_ocupacao_id = None if grupo_id_existente else ocupacao_original.id
 
-        # 8. Recria as novas ocupações com os dados atualizados.
+        conflitos_totais = []
+        dia_atual = data_inicio
+        while dia_atual <= data_fim:
+            if not sala.is_disponivel(dia_atual, horario_inicio, horario_fim, ignorar_ocupacao_id, grupo_id_existente):
+                conflitos = Ocupacao.buscar_conflitos(
+                    sala_id,
+                    dia_atual,
+                    horario_inicio,
+                    horario_fim,
+                    ignorar_ocupacao_id,
+                    grupo_id_existente
+                )
+                conflitos_totais.extend(conflitos)
+            dia_atual += timedelta(days=1)
+
+        if conflitos_totais:
+            raise ValueError('Conflito de horário detectado. A sala já está ocupada neste período.')
+
+        # 5. Apaga as ocupações antigas do grupo (ou a ocupação única).
+        ocupacoes_anteriores = ocupacoes_grupo if grupo_id_existente else [ocupacao_original]
+        dados_anteriores = [oc.to_dict() for oc in ocupacoes_anteriores]
+        for oc in ocupacoes_anteriores:
+            db.session.delete(oc)
+
+        # 6. Recria as novas ocupações com os dados atualizados.
         ocupacoes_criadas = []
         dia_atual = data_inicio
         while dia_atual <= data_fim:
@@ -392,24 +529,27 @@ def atualizar_ocupacao(id):
                 continue
             nova_ocupacao = Ocupacao(
                 sala_id=sala_id,
-                instrutor_id=instrutor_id,
                 usuario_id=user.id,
-                curso_evento=payload.curso_evento,
+                curso_evento=curso_evento,
                 data=dia_atual,
                 horario_inicio=horario_inicio,
                 horario_fim=horario_fim,
-                tipo_ocupacao=payload.tipo_ocupacao,
-                recorrencia=payload.recorrencia,
-                status=payload.status,
-                observacoes=payload.observacoes,
-                grupo_ocupacao_id=grupo_id  # Reutiliza o mesmo ID de grupo
+                tipo_ocupacao=tipo_ocupacao,
+                recorrencia=recorrencia,
+                status=status_atual,
+                observacoes=observacoes,
+                grupo_ocupacao_id=grupo_id_final
             )
             db.session.add(nova_ocupacao)
             ocupacoes_criadas.append(nova_ocupacao)
             dia_atual += timedelta(days=1)
-        
+
         # 9. Comita a transação.
         db.session.commit()
+
+        for antigo in dados_anteriores:
+            log_action(user.id, 'delete', 'Ocupacao', antigo['id'], antigo)
+
         for oc in ocupacoes_criadas:
             log_action(user.id, 'update', 'Ocupacao', oc.id, oc.to_dict())
 
@@ -425,32 +565,34 @@ def atualizar_ocupacao(id):
         # 10. Se qualquer passo falhar, desfaz tudo (rollback).
         db.session.rollback()
         return jsonify({'erro': f'Falha ao atualizar a ocupação: {str(e)}'}), 500
-@ocupacao_bp.route('/ocupacoes/<int:id>', methods=['DELETE'])
+@ocupacao_bp.route('/ocupacoes/<string:identificador>', methods=['DELETE'])
 @admin_required
-def remover_ocupacao(id):
+def remover_ocupacao(identificador):
     """
     Remove uma ocupação.
     """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
-    
-    ocupacao = db.session.get(Ocupacao, id)
+
+    ocupacoes_grupo, grupo_id, ocupacao = obter_ocupacoes_por_identificador(identificador)
+
     if not ocupacao:
         return jsonify({'erro': 'Ocupação não encontrada'}), 404
-    
+
     # Verifica permissões
     if not ocupacao.pode_ser_editada_por(user):
         return jsonify({'erro': 'Permissão negada'}), 403
-    
+
     try:
         somente_dia = request.args.get('somente_dia', default=False, type=lambda v: str(v).lower() == 'true')
-        grupo_id = ocupacao.grupo_ocupacao_id
+        if not ocupacoes_grupo:
+            ocupacoes_grupo = [ocupacao]
 
         if somente_dia or not grupo_id:
             ocupacoes = [ocupacao]
         else:
-            ocupacoes = Ocupacao.query.filter_by(grupo_ocupacao_id=grupo_id).all()
+            ocupacoes = ocupacoes_grupo
 
         quantidade = len(ocupacoes)
         dados = [oc.to_dict() for oc in ocupacoes]
@@ -479,12 +621,16 @@ def verificar_disponibilidade():
     data_inicio_str = request.args.get('data_inicio')
     data_fim_str = request.args.get('data_fim')
     turno = request.args.get('turno')
-    ocupacao_id = request.args.get('ocupacao_id', type=int)  # Para edição
+    ocupacao_identificador = request.args.get('ocupacao_id')  # Para edição
     grupo_ocupacao_id = None
-    if ocupacao_id:
-        ocup = db.session.get(Ocupacao, ocupacao_id)
-        if ocup:
-            grupo_ocupacao_id = ocup.grupo_ocupacao_id
+    ocupacao_id = None
+    if ocupacao_identificador:
+        ocupacoes_grupo, grupo_id_existente, ocupacao_base = obter_ocupacoes_por_identificador(ocupacao_identificador)
+        if ocupacao_base:
+            if grupo_id_existente:
+                grupo_ocupacao_id = grupo_id_existente
+            else:
+                ocupacao_id = ocupacao_base.id
 
     if not all([sala_id, data_inicio_str, data_fim_str, turno]):
         return jsonify({'erro': 'Parâmetros obrigatórios: sala_id, data_inicio, data_fim, turno'}), 400

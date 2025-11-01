@@ -123,7 +123,11 @@ function renderizarOcupacoes(lista) {
 
     lista.forEach(ocupacao => {
         const linha = document.createElement('tr');
-        const dataFormatada = formatarData(ocupacao.data);
+        const dataInicio = ocupacao.data_inicio ? formatarData(ocupacao.data_inicio) : '-';
+        const dataFim = ocupacao.data_fim ? formatarData(ocupacao.data_fim) : '-';
+        const mesmoDia = ocupacao.data_inicio === ocupacao.data_fim;
+        const periodoBruto = mesmoDia ? dataInicio : `${dataInicio} - ${dataFim}`;
+        const periodo = escapeHTML(periodoBruto);
         const turnoHorario = formatarTurnoHorario(ocupacao);
         const sala = ocupacao.sala_nome
             ? escapeHTML(ocupacao.sala_nome)
@@ -131,21 +135,24 @@ function renderizarOcupacoes(lista) {
         const cursoEvento = ocupacao.curso_evento ? escapeHTML(ocupacao.curso_evento) : '-';
         const tipoNome = obterNomeTipoOcupacao(ocupacao.tipo_ocupacao);
         const statusBadge = criarBadgeStatus(ocupacao.status);
+        const identificador = ocupacao.id;
+        const identificadorURL = encodeURIComponent(identificador);
+        const idExibicao = ocupacao.primeira_ocupacao_id ?? ocupacao.id;
 
         linha.innerHTML = `
-            <td>${ocupacao.id}</td>
-            <td>${dataFormatada}</td>
+            <td>${escapeHTML(idExibicao.toString())}</td>
+            <td>${periodo}</td>
             <td>${turnoHorario}</td>
             <td>${sala}</td>
             <td>${cursoEvento}</td>
             <td>${escapeHTML(tipoNome)}</td>
             <td>${statusBadge}</td>
             <td>
-                <div class="btn-group btn-group-sm" role="group" aria-label="Ações da ocupação ${ocupacao.id}">
-                    <a class="btn btn-outline-primary" href="/ocupacao/agendamento.html?editar=${ocupacao.id}" title="Editar Ocupação">
+                <div class="btn-group btn-group-sm" role="group" aria-label="Ações da ocupação ${escapeHTML(idExibicao.toString())}">
+                    <a class="btn btn-outline-primary" href="/ocupacao/agendamento.html?editar=${identificadorURL}" title="Editar Ocupação">
                         <i class="bi bi-pencil"></i>
                     </a>
-                    <button type="button" class="btn btn-outline-danger" title="Excluir Ocupação" onclick="excluirOcupacao(${ocupacao.id})">
+                    <button type="button" class="btn btn-outline-danger" title="Excluir Ocupação" onclick="excluirOcupacao('${identificador}')">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
@@ -243,7 +250,7 @@ async function excluirOcupacao(id) {
     }
 
     try {
-        await chamarAPI(`/ocupacoes/${id}`, 'DELETE');
+        await chamarAPI(`/ocupacoes/${encodeURIComponent(id)}`, 'DELETE');
         showToast('Ocupação excluída com sucesso!', 'success');
         await carregarOcupacoes();
     } catch (error) {

@@ -2,8 +2,8 @@ from datetime import datetime, timedelta, timezone
 
 from datetime import datetime, timedelta, timezone
 
-from src.models import db
-from src.models.noticia import Noticia
+from conecta_senai.models import db
+from conecta_senai.models.noticia import Noticia
 
 
 def _criar_noticia(**kwargs):

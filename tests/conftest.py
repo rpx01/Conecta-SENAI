@@ -14,20 +14,21 @@ from flask_wtf.csrf import CSRFProtect
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.models import db
-from src.models.user import User
-from src.models.sala import Sala
-from src.models.log_rateio import LogLancamentoRateio
-from src.extensions import limiter
-from src.routes.user import user_bp, gerar_token_acesso, gerar_refresh_token
-from src.routes.ocupacao import sala_bp, instrutor_bp, ocupacao_bp
-from src.routes.treinamentos import turma_bp, treinamento_bp
-from src.routes.laboratorios import agendamento_bp, laboratorio_bp
-from src.routes.rateio.rateio import rateio_bp
-from src.routes.noticias import api_noticias_bp
-from src.blueprints.auth import auth_bp
-from src.routes.treinamentos.basedados import (
+from conecta_senai.models import db
+from conecta_senai.models.user import User
+from conecta_senai.models.sala import Sala
+from conecta_senai.models.log_rateio import LogLancamentoRateio
+from conecta_senai.extensions import limiter
+from conecta_senai.routes.user import user_bp, gerar_token_acesso, gerar_refresh_token
+from conecta_senai.routes.ocupacao import sala_bp, instrutor_bp, ocupacao_bp
+from conecta_senai.routes.treinamentos import turma_bp, treinamento_bp
+from conecta_senai.routes.laboratorios import agendamento_bp, laboratorio_bp
+from conecta_senai.routes.rateio.rateio import rateio_bp
+from conecta_senai.routes.noticias import api_noticias_bp
+from conecta_senai.auth import auth_bp
+from conecta_senai.routes.treinamentos.basedados import (
     secretaria_bp as treinamentos_basedados_bp,
+    horarios_bp as treinamentos_horarios_bp,
 )
 
 @pytest.fixture
@@ -35,8 +36,8 @@ def app():
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     app = Flask(
         __name__,
-        template_folder=os.path.join(base_dir, 'src', 'templates'),
-        static_folder=os.path.join(base_dir, 'src', 'static')
+        template_folder=os.path.join(base_dir, 'templates'),
+        static_folder=os.path.join(base_dir, 'static')
     )
     app.config['TESTING'] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
@@ -56,6 +57,7 @@ def app():
     app.register_blueprint(laboratorio_bp, url_prefix='/api')
     app.register_blueprint(rateio_bp, url_prefix='/api')
     app.register_blueprint(api_noticias_bp, url_prefix='/api')
+    app.register_blueprint(treinamentos_horarios_bp, url_prefix='/api/horarios')
     app.register_blueprint(
         treinamentos_basedados_bp, url_prefix='/api/treinamentos/secretaria'
     )

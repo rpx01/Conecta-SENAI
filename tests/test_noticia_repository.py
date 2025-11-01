@@ -1,8 +1,8 @@
 from sqlalchemy import inspect, text
 
-from src.models import db
-from src.models.noticia import Noticia
-from src.repositories.noticia_repository import NoticiaRepository
+from conecta_senai.models import db
+from conecta_senai.models.noticia import Noticia
+from conecta_senai.repositories.noticia_repository import NoticiaRepository
 
 
 def _drop_noticias_table(engine):

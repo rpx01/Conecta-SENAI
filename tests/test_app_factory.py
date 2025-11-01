@@ -1,4 +1,4 @@
-from src.main import create_app
+from conecta_senai import create_app
 
 
 def test_create_app(monkeypatch):
@@ -20,7 +20,7 @@ def test_create_app_inicia_scheduler_por_padrao(monkeypatch):
     def fake_start(app):
         chamado["valor"] = True
 
-    monkeypatch.setattr("src.main.start_scheduler", fake_start)
+    monkeypatch.setattr("conecta_senai.start_scheduler", fake_start)
 
     app = create_app()
 
@@ -38,7 +38,7 @@ def test_create_app_nao_inicia_scheduler_quando_desativado(monkeypatch):
     def fake_start(app):
         chamado["valor"] = True
 
-    monkeypatch.setattr("src.main.start_scheduler", fake_start)
+    monkeypatch.setattr("conecta_senai.start_scheduler", fake_start)
 
     app = create_app()
 
@@ -56,7 +56,7 @@ def test_create_app_nao_inicia_scheduler_em_modo_teste(monkeypatch):
     def fake_start(app):
         chamado["valor"] = True
 
-    monkeypatch.setattr("src.main.start_scheduler", fake_start)
+    monkeypatch.setattr("conecta_senai.start_scheduler", fake_start)
 
     app = create_app()
 

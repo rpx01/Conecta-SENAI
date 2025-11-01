@@ -1,8 +1,8 @@
 import os
 from gunicorn import glogging
-from src.logging_conf import LOGGING_CONFIG
+from conecta_senai.logging_conf import LOGGING_CONFIG
 
-wsgi_app = "src.main:create_app()"
+wsgi_app = "conecta_senai.main:create_app()"
 bind = "0.0.0.0:8080"
 workers = 1
 threads = int(os.getenv("GTHREADS", "1"))

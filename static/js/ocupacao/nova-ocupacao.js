@@ -137,7 +137,7 @@ function verificarParametrosURL() {
 // Carrega ocupação para edição
 async function carregarOcupacaoParaEdicao(id) {
     try {
-        const response = await fetch(`${API_URL}/ocupacoes/${id}`, {
+        const response = await fetch(`${API_URL}/ocupacoes/${encodeURIComponent(id)}`, {
             headers: {
             }
         });
@@ -252,7 +252,7 @@ async function salvarOcupacao() {
         const urlParams = new URLSearchParams(window.location.search);
         const editarId = urlParams.get('editar');
         const isEdicao = editarId !== null;
-        const url = isEdicao ? `${API_URL}/ocupacoes/${editarId}` : `${API_URL}/ocupacoes`;
+        const url = isEdicao ? `${API_URL}/ocupacoes/${encodeURIComponent(editarId)}` : `${API_URL}/ocupacoes`;
         const method = isEdicao ? 'PUT' : 'POST';
         
         await verificarDisponibilidade();

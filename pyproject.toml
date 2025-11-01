@@ -45,7 +45,11 @@ version = "0.1.0"
 description = "Agenda de laborat\u00f3rios e salas do SENAI"
 authors = ["Codex <codex@openai.com>"]
 readme = "README.md"
-packages = [{ include = "conecta_senai" }]
+packages = [
+    { include = "conecta_senai" },
+    # Pacote de compatibilidade para ambientes que importam ``src``
+    { include = "src" },
+]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.15"

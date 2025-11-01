@@ -123,15 +123,11 @@ function renderizarOcupacoes(lista) {
 
     lista.forEach(ocupacao => {
         const linha = document.createElement('tr');
-        let periodoFormatado = '-';
-        if (ocupacao.data_inicio && ocupacao.data_fim) {
-            const inicio = formatarData(ocupacao.data_inicio);
-            const fim = formatarData(ocupacao.data_fim);
-            periodoFormatado = inicio === fim ? inicio : `${inicio} - ${fim}`;
-        } else if (ocupacao.data) {
-            periodoFormatado = formatarData(ocupacao.data);
-        }
-        const periodo = escapeHTML(periodoFormatado);
+        const dataInicio = ocupacao.data_inicio ? formatarData(ocupacao.data_inicio) : '-';
+        const dataFim = ocupacao.data_fim ? formatarData(ocupacao.data_fim) : '-';
+        const mesmoDia = ocupacao.data_inicio === ocupacao.data_fim;
+        const periodoBruto = mesmoDia ? dataInicio : `${dataInicio} - ${dataFim}`;
+        const periodo = escapeHTML(periodoBruto);
         const turnoHorario = formatarTurnoHorario(ocupacao);
         const sala = ocupacao.sala_nome
             ? escapeHTML(ocupacao.sala_nome)
@@ -144,6 +140,7 @@ function renderizarOcupacoes(lista) {
         const idExibicao = ocupacao.primeira_ocupacao_id ?? ocupacao.id;
 
         linha.innerHTML = `
+            <td>${escapeHTML(idExibicao.toString())}</td>
             <td>${periodo}</td>
             <td>${turnoHorario}</td>
             <td>${sala}</td>

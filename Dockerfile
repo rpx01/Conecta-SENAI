@@ -38,6 +38,9 @@ RUN poetry install --without dev --no-ansi --no-root
 #    O projeto utiliza o diretório "conecta_senai" como pacote Python, por isso
 #    precisamos copiá-lo para dentro da imagem antes da instalação.
 COPY conecta_senai ./conecta_senai
+# Incluir diretórios estáticos e templates necessários em tempo de execução
+COPY static ./static
+COPY templates ./templates
 # (copie também outros arquivos necessários ao runtime)
 COPY gunicorn.conf.py .
 COPY alembic.ini .

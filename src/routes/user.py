@@ -34,16 +34,6 @@ PASSWORD_REGEX = user_service.PASSWORD_REGEX
 
 user_bp = Blueprint("user", __name__)
 
-# chaves do Google reCAPTCHA
-RECAPTCHA_SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY") or os.getenv("SITE_KEY")
-RECAPTCHA_SECRET_KEY = (
-    os.getenv("RECAPTCHA_SECRET_KEY")
-    or os.getenv("CAPTCHA_SECRET_KEY")
-    or os.getenv("SECRET_KEY")
-)
-RECAPTCHA_THRESHOLD = float(os.getenv("RECAPTCHA_THRESHOLD", "0.5"))
-
-
 @user_bp.before_request
 def verificar_csrf():
     if request.method in {"POST", "PUT", "DELETE"} and request.endpoint != "user.get_csrf_token":
@@ -68,7 +58,8 @@ def get_csrf_token():
 @user_bp.route("/recaptcha/site-key", methods=["GET"])
 def obter_site_key():
     """Retorna a site key pública do reCAPTCHA."""
-    return jsonify({"site_key": RECAPTCHA_SITE_KEY or ""})
+    site_key = current_app.config.get("RECAPTCHA_SITE_KEY")
+    return jsonify({"site_key": site_key or ""})
 
 
 # Funções auxiliares para geração de tokens
@@ -526,8 +517,9 @@ def login():
         recaptcha_token = dados.get("recaptcha_token")
 
         # Valida reCAPTCHA caso a chave esteja configurada
-        recaptcha_secret = current_app.config.get("RECAPTCHA_SECRET_KEY")
-        if recaptcha_secret:
+        recaptcha_secret = (current_app.config.get("RECAPTCHA_SECRET_KEY") or "").strip()
+        recaptcha_site_key = (current_app.config.get("RECAPTCHA_SITE_KEY") or "").strip()
+        if recaptcha_secret and recaptcha_site_key:
             if not recaptcha_token:
                 return (
                     jsonify(success=False, message="Verificação reCAPTCHA obrigatória"),

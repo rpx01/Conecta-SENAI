@@ -41,6 +41,8 @@ COPY conecta_senai ./conecta_senai
 # Incluir diretórios estáticos e templates necessários em tempo de execução
 COPY static ./static
 COPY templates ./templates
+# Pacote de compatibilidade ``src`` (utilizado em alguns entrypoints)
+COPY src ./src
 # (copie também outros arquivos necessários ao runtime)
 COPY gunicorn.conf.py .
 COPY alembic.ini .

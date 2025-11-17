@@ -30,6 +30,10 @@ from conecta_senai.routes.treinamentos.basedados import (
     secretaria_bp as treinamentos_basedados_bp,
     horarios_bp as treinamentos_horarios_bp,
 )
+from conecta_senai.routes.suporte_ti.visitante import (
+    suporte_ti_paginas_publicas_bp,
+    suporte_ti_visitante_bp,
+)
 
 @pytest.fixture
 def app():
@@ -62,6 +66,8 @@ def app():
         treinamentos_basedados_bp, url_prefix='/api/treinamentos/secretaria'
     )
     app.register_blueprint(auth_bp)
+    app.register_blueprint(suporte_ti_visitante_bp)
+    app.register_blueprint(suporte_ti_paginas_publicas_bp)
 
     with app.app_context():
         db.create_all()

@@ -59,7 +59,7 @@ def _normalizar_urgencia(valor: str | None) -> str:
 
 
 @suporte_ti_paginas_publicas_bp.route(
-    "/suporte_ti/abertura_publica.html", methods=["GET"]
+    "/suporte_ti/abertura_publica.html", methods=["GET"], strict_slashes=False
 )
 def pagina_abertura_publica():
     """Renderiza o formulário público de abertura de chamados com dados padrão."""

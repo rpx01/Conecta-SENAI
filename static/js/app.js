@@ -55,6 +55,39 @@ async function executarComLoading(acao) {
     }
 }
 
+function normalizarPathname(pathname) {
+    if (!pathname || typeof pathname !== 'string') {
+        return '';
+    }
+
+    let path = pathname.trim().toLowerCase();
+
+    // Garante que o caminho comece com '/'
+    if (path && !path.startsWith('/')) {
+        path = `/${path}`;
+    }
+
+    // Remove parâmetros de consulta ou hash, caso tenham sido incluídos acidentalmente
+    const queryIndex = path.indexOf('?');
+    if (queryIndex !== -1) {
+        path = path.slice(0, queryIndex);
+    }
+    const hashIndex = path.indexOf('#');
+    if (hashIndex !== -1) {
+        path = path.slice(0, hashIndex);
+    }
+
+    // Remove barras extras ao final mantendo a raiz
+    if (path.length > 1) {
+        path = path.replace(/\/+$/, '');
+        if (!path) {
+            path = '/';
+        }
+    }
+
+    return path || '/';
+}
+
 // Páginas públicas acessíveis sem autenticação
 const PAGINAS_PUBLICAS = new Set([
     '/admin/login.html',
@@ -65,22 +98,41 @@ const PAGINAS_PUBLICAS = new Set([
     '/noticias/',
     '/noticias/index.html',
     '/suporte_ti/abertura_publica.html'
-]);
+].map(normalizarPathname));
+
 const PREFIXOS_PUBLICOS = ['/noticias/'];
+const PREFIXOS_PUBLICOS_NORMALIZADOS = PREFIXOS_PUBLICOS.map(prefix => ({
+    original: prefix,
+    normalizado: normalizarPathname(prefix)
+}));
+
 const EXCECOES_PREFIXOS_PUBLICOS = new Set([
     '/noticias/gerenciamento.html'
-]);
+].map(normalizarPathname));
+
+const PAGINAS_REDIRECIONAMENTO = new Set([
+    '/admin/login.html',
+    '/register',
+    '/forgot',
+    '/reset'
+].map(normalizarPathname));
 
 function ehPaginaPublica(pathname) {
-    if (!pathname) return false;
-    const normalizado = pathname.toLowerCase();
+    const normalizado = normalizarPathname(pathname);
+    if (!normalizado) return false;
     if (PAGINAS_PUBLICAS.has(normalizado)) {
         return true;
     }
     if (EXCECOES_PREFIXOS_PUBLICOS.has(normalizado)) {
         return false;
     }
-    return PREFIXOS_PUBLICOS.some(prefix => normalizado.startsWith(prefix));
+    return PREFIXOS_PUBLICOS_NORMALIZADOS.some(({ original, normalizado: prefixNormalizado }) => {
+        const requerSubcaminho = original.endsWith('/');
+        if (requerSubcaminho) {
+            return normalizado === prefixNormalizado || normalizado.startsWith(`${prefixNormalizado}/`);
+        }
+        return normalizado.startsWith(prefixNormalizado);
+    });
 }
 
 // Variável global para armazenar o token CSRF e evitar múltiplas buscas
@@ -465,9 +517,7 @@ async function verificarPermissaoAdmin() {
 // Esta IIFE garante que o redirecionamento ocorra apenas quando necessário,
 // evitando loops na página de login ou registro.
 (async function() {
-    const currentPage = window.location.pathname.toLowerCase();
-    // Páginas públicas que devem redirecionar usuários autenticados
-    const paginasRedirecionamento = ['/admin/login.html', '/register', '/forgot', '/reset'];
+    const currentPage = normalizarPathname(window.location.pathname);
 
     // Se a página não for pública, valida a sessão no servidor
     if (!ehPaginaPublica(currentPage)) {
@@ -476,7 +526,7 @@ async function verificarPermissaoAdmin() {
 
     // Usuário logado tentando acessar página pública que deve redirecionar
     const usuario = getUsuarioLogado();
-    if (usuario && paginasRedirecionamento.includes(currentPage)) {
+    if (usuario && PAGINAS_REDIRECIONAMENTO.has(currentPage)) {
         window.location.href = '/selecao-sistema.html';
     }
 

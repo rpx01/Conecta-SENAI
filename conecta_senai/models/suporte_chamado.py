@@ -10,7 +10,8 @@ class SuporteChamado(db.Model):
     __tablename__ = "suporte_chamados"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True)
+    nome_solicitante = db.Column(db.String(150), nullable=True)
     email = db.Column(db.String(120), nullable=False)
     area = db.Column(db.String(120), nullable=False)
     tipo_equipamento_id = db.Column(
@@ -24,6 +25,7 @@ class SuporteChamado(db.Model):
     nivel_urgencia = db.Column(db.String(20), nullable=False, default="Baixo")
     status = db.Column(db.String(20), nullable=False, default="Aberto")
     observacoes = db.Column(db.Text, nullable=True)
+    local_unidade = db.Column(db.String(150), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(
         db.DateTime,

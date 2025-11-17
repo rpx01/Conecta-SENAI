@@ -72,7 +72,8 @@ def _serialize_chamado(chamado: SuporteChamado) -> dict:
     return {
         "id": chamado.id,
         "user_id": chamado.user_id,
-        "nome": chamado.user.nome if chamado.user else None,
+        "nome": chamado.user.nome if chamado.user else chamado.nome_solicitante,
+        "nome_solicitante": chamado.nome_solicitante,
         "email": chamado.email,
         "area": chamado.area,
         "tipo_equipamento_id": chamado.tipo_equipamento_id,
@@ -87,6 +88,7 @@ def _serialize_chamado(chamado: SuporteChamado) -> dict:
         "created_at": chamado.created_at.isoformat() if chamado.created_at else None,
         "updated_at": chamado.updated_at.isoformat() if chamado.updated_at else None,
         "observacoes": chamado.observacoes,
+        "local_unidade": chamado.local_unidade,
         "anexos": [anexo.file_path for anexo in chamado.anexos],
     }
 

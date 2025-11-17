@@ -29,7 +29,8 @@ def _serialize_chamado(chamado: SuporteChamado) -> dict:
     return {
         "id": chamado.id,
         "user_id": chamado.user_id,
-        "nome": chamado.user.nome if chamado.user else None,
+        "nome": chamado.user.nome if chamado.user else chamado.nome_solicitante,
+        "nome_solicitante": chamado.nome_solicitante,
         "email": chamado.email,
         "area": chamado.area,
         "tipo_equipamento_id": chamado.tipo_equipamento_id,
@@ -44,6 +45,7 @@ def _serialize_chamado(chamado: SuporteChamado) -> dict:
         "created_at": chamado.created_at.isoformat() if chamado.created_at else None,
         "updated_at": chamado.updated_at.isoformat() if chamado.updated_at else None,
         "observacoes": chamado.observacoes,
+        "local_unidade": chamado.local_unidade,
         "anexos": [anexo.file_path for anexo in chamado.anexos],
     }
 
@@ -66,6 +68,12 @@ def criar_chamado():
     numero_serie = form.get("numero_serie") or form.get("numeroSerie") or None
     descricao = (form.get("descricao_problema") or form.get("descricaoProblema") or "").strip()
     nivel_urgencia = (form.get("nivel_urgencia") or form.get("nivelUrgencia") or "").strip()
+    local_unidade = (
+        form.get("local_unidade")
+        or form.get("local")
+        or form.get("unidade")
+        or ""
+    ).strip()
 
     erros: list[str] = []
 
@@ -116,6 +124,7 @@ def criar_chamado():
 
     chamado = SuporteChamado(
         user_id=usuario.id,
+        nome_solicitante=usuario.nome,
         email=usuario.email,
         area=area_registro.nome if area_registro else area,
         tipo_equipamento_id=tipo_equipamento.id if tipo_equipamento else None,
@@ -124,6 +133,7 @@ def criar_chamado():
         descricao_problema=descricao,
         nivel_urgencia="Médio" if nivel_urgencia == "Medio" else nivel_urgencia,
         status="Aberto",
+        local_unidade=local_unidade or None,
     )
 
     arquivos_salvos: list[SuporteAnexo] = []

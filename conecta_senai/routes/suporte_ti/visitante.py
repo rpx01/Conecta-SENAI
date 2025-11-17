@@ -1,7 +1,7 @@
 """Rotas públicas para abertura de chamados por visitantes."""
 from __future__ import annotations
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, render_template, request
 from flask_wtf.csrf import CSRFError, validate_csrf
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
@@ -15,6 +15,11 @@ suporte_ti_visitante_bp = Blueprint(
     "suporte_ti_visitante",
     __name__,
     url_prefix="/suporte",
+)
+
+suporte_ti_paginas_publicas_bp = Blueprint(
+    "suporte_ti_paginas_publicas",
+    __name__,
 )
 
 ALLOWED_URGENCIAS = {"Baixo", "Médio", "Medio", "Alto"}
@@ -51,6 +56,19 @@ def _normalizar_urgencia(valor: str | None) -> str:
     if texto in {"Medio", "medio"}:
         return "Médio"
     return texto
+
+
+@suporte_ti_paginas_publicas_bp.route(
+    "/suporte_ti/abertura_publica.html", methods=["GET"]
+)
+def pagina_abertura_publica():
+    """Renderiza o formulário público de abertura de chamados com dados padrão."""
+
+    form_data = request.args.to_dict(flat=True) if request.args else {}
+    return render_template(
+        "suporte_ti/abertura_publica.html",
+        form_data=form_data or {},
+    )
 
 
 @suporte_ti_visitante_bp.route("/base-dados", methods=["GET"])

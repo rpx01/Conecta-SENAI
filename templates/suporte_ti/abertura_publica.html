@@ -47,48 +47,48 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label for="nomeCompleto" class="form-label">Nome completo <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="nomeCompleto" name="nome_completo" required placeholder="Seu nome e sobrenome">
+                                    <input type="text" class="form-control" id="nomeCompleto" name="nome_completo" required placeholder="Seu nome e sobrenome" value="{{ form_data.nome_completo|default('') }}">
                                 </div>
                                 <div class="col-md-6">
                                     <label for="emailContato" class="form-label">E-mail para contato <span class="text-danger">*</span></label>
-                                    <input type="email" class="form-control" id="emailContato" name="email" required placeholder="seu@email.com">
+                                    <input type="email" class="form-control" id="emailContato" name="email" required placeholder="seu@email.com" value="{{ form_data.email|default('') }}">
                                 </div>
                                 <div class="col-md-6">
                                     <label for="areaSelect" class="form-label">Área <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="areaSelect" name="area" required aria-required="true">
+                                    <select class="form-select" id="areaSelect" name="area" required aria-required="true" data-selected="{{ form_data.area|default('') }}">
                                         <option value="">Selecione...</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="tipoEquipamentoSelect" class="form-label">Tipo de equipamento <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="tipoEquipamentoSelect" name="tipo_equipamento_id" required aria-required="true">
+                                    <select class="form-select" id="tipoEquipamentoSelect" name="tipo_equipamento_id" required aria-required="true" data-selected="{{ form_data.tipo_equipamento_id|default('') }}">
                                         <option value="">Selecione...</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="patrimonioInput" class="form-label">Patrimônio</label>
-                                    <input type="text" class="form-control" id="patrimonioInput" name="patrimonio" placeholder="Ex.: PAT-1234">
+                                    <input type="text" class="form-control" id="patrimonioInput" name="patrimonio" placeholder="Ex.: PAT-1234" value="{{ form_data.patrimonio|default('') }}">
                                 </div>
                                 <div class="col-md-6">
                                     <label for="numeroSerieInput" class="form-label">Número de série</label>
-                                    <input type="text" class="form-control" id="numeroSerieInput" name="numero_serie" placeholder="Ex.: SN123456">
+                                    <input type="text" class="form-control" id="numeroSerieInput" name="numero_serie" placeholder="Ex.: SN123456" value="{{ form_data.numero_serie|default('') }}">
                                 </div>
                                 <div class="col-md-6">
                                     <label for="localUnidade" class="form-label">Local / Unidade</label>
-                                    <input type="text" class="form-control" id="localUnidade" name="local_unidade" placeholder="Campus, laboratório ou sala">
+                                    <input type="text" class="form-control" id="localUnidade" name="local_unidade" placeholder="Campus, laboratório ou sala" value="{{ form_data.local_unidade|default('') }}">
                                 </div>
                                 <div class="col-md-6">
                                     <label for="nivelUrgenciaSelect" class="form-label">Nível de urgência</label>
                                     <select class="form-select" id="nivelUrgenciaSelect" name="nivel_urgencia">
                                         <option value="">Selecione...</option>
-                                        <option value="Baixo">Baixo</option>
-                                        <option value="Médio">Médio</option>
-                                        <option value="Alto">Alto</option>
+                                        <option value="Baixo" {% if form_data.nivel_urgencia|default('') == 'Baixo' %}selected{% endif %}>Baixo</option>
+                                        <option value="Médio" {% if form_data.nivel_urgencia|default('') in ['Médio', 'Medio'] %}selected{% endif %}>Médio</option>
+                                        <option value="Alto" {% if form_data.nivel_urgencia|default('') == 'Alto' %}selected{% endif %}>Alto</option>
                                     </select>
                                 </div>
                                 <div class="col-12">
                                     <label for="descricaoProblema" class="form-label">Descrição do problema <span class="text-danger">*</span></label>
-                                    <textarea class="form-control" id="descricaoProblema" name="descricao_problema" rows="5" required placeholder="Explique o que está acontecendo, quando começou e quais equipamentos foram afetados."></textarea>
+                                    <textarea class="form-control" id="descricaoProblema" name="descricao_problema" rows="5" required placeholder="Explique o que está acontecendo, quando começou e quais equipamentos foram afetados.">{{ form_data.descricao_problema|default('') }}</textarea>
                                 </div>
                             </div>
 

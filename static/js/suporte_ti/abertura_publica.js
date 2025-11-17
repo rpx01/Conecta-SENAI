@@ -33,6 +33,16 @@
             option.textContent = item[labelKey];
             selectEl.appendChild(option);
         });
+
+        const valorDesejado = (selectEl.dataset.selected || '').trim();
+        if (valorDesejado) {
+            const valorNormalizado = String(valorDesejado);
+            const opcoes = Array.from(selectEl.options);
+            const alvo = opcoes.find((opt) => String(opt.value) === valorNormalizado);
+            if (alvo) {
+                alvo.selected = true;
+            }
+        }
     }
 
     function validarFormulario() {

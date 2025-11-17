@@ -5,6 +5,7 @@ from flask import Blueprint, jsonify, render_template, request
 from flask_wtf.csrf import CSRFError, validate_csrf
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
+from wtforms.validators import ValidationError
 
 from conecta_senai.models import db
 from conecta_senai.models.suporte_basedados import SuporteArea, SuporteTipoEquipamento
@@ -108,7 +109,7 @@ def abrir_chamado_publico():
         return jsonify({"erro": "Token CSRF ausente."}), 400
     try:
         validate_csrf(csrf_token)
-    except CSRFError:
+    except (CSRFError, ValidationError):
         return jsonify({"erro": "Token CSRF inválido."}), 400
 
     nome = _limpar_texto(_obter_dado(form, payload, "nome_completo", "nome"), 150)

@@ -45,3 +45,20 @@ def test_abertura_chamado_limita_campos_texto(client, app, csrf_token, suporte_b
         assert len(chamado.email) == email_max_len
         assert len(chamado.area) <= area_max_len
         assert chamado.nivel_urgencia == 'Médio'
+
+
+def test_abertura_chamado_token_invalido(client, suporte_base):
+    resposta = client.post(
+        '/suporte/abrir-chamado',
+        data={
+            'csrf_token': 'token-invalido',
+            'nome_completo': 'Visitante Teste',
+            'email': 'visitante@example.com',
+            'area': suporte_base['area_nome'],
+            'tipo_equipamento_id': suporte_base['tipo_id'],
+            'descricao_problema': 'Sem acesso à rede.',
+        },
+    )
+
+    assert resposta.status_code == 400
+    assert resposta.get_json()['erro'] == 'Token CSRF inválido.'

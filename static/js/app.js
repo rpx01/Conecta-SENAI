@@ -63,9 +63,7 @@ const PAGINAS_PUBLICAS = new Set([
     '/reset',
     '/noticias',
     '/noticias/',
-    '/noticias/index.html',
-    '/suporte/abrir-chamado',
-    '/suporte/abrir-chamado/'
+    '/noticias/index.html'
 ]);
 const PREFIXOS_PUBLICOS = ['/noticias/'];
 const EXCECOES_PREFIXOS_PUBLICOS = new Set([

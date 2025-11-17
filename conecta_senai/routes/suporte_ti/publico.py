@@ -1,30 +1,16 @@
-"""Rotas públicas (usuários autenticados e visitantes) do módulo de suporte de TI."""
+"""Rotas públicas (usuários autenticados) do módulo de suporte de TI."""
 from __future__ import annotations
 
 import os
-import re
-import secrets
 from datetime import datetime
 
-from email_validator import EmailNotValidError, validate_email
-from flask import (
-    Blueprint,
-    current_app,
-    flash,
-    g,
-    jsonify,
-    redirect,
-    render_template,
-    request,
-    url_for,
-)
-from flask_wtf.csrf import CSRFError, generate_csrf, validate_csrf
+from flask import Blueprint, current_app, g, jsonify, request
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.utils import secure_filename
 
 from conecta_senai.auth import login_required
-from conecta_senai.models import User, db
+from conecta_senai.models import db
 from conecta_senai.models.suporte_anexo import SuporteAnexo
 from conecta_senai.models.suporte_basedados import SuporteArea, SuporteTipoEquipamento
 from conecta_senai.models.suporte_chamado import SuporteChamado
@@ -36,167 +22,7 @@ suporte_ti_public_bp = Blueprint(
     url_prefix="/api/suporte_ti",
 )
 
-suporte_ti_public_html_bp = Blueprint(
-    "suporte_ti_public_html",
-    __name__,
-)
-
 ALLOWED_URGENCIAS = {"Baixo", "Médio", "Medio", "Alto"}
-_USERNAME_SANITIZE_RE = re.compile(r"[^a-z0-9]+")
-
-
-def _render_public_form(
-    areas: list[SuporteArea],
-    tipos: list[SuporteTipoEquipamento],
-    form_data: dict[str, str] | None = None,
-    errors: list[str] | None = None,
-    status_code: int = 200,
-):
-    """Renderiza o formulário público com os dados auxiliares necessários."""
-
-    return (
-        render_template(
-            "suporte_ti/abertura_publica.html",
-            csrf_token=generate_csrf(),
-            areas=areas,
-            tipos=tipos,
-            form_data=form_data or {},
-            form_errors=errors or [],
-        ),
-        status_code,
-    )
-
-
-def _gerar_username_base(email: str) -> str:
-    """Gera um username base sanitizado a partir do e-mail informado."""
-
-    local_part = (email.split("@", 1)[0] or "usuario").lower()
-    base = _USERNAME_SANITIZE_RE.sub("-", local_part).strip("-") or "usuario"
-    return base[:40]
-
-
-def _obter_ou_criar_usuario_publico(nome: str, email: str) -> User:
-    """Obtém o usuário relacionado ao e-mail ou cria um novo registro público."""
-
-    email_normalizado = email.lower()
-    usuario = User.query.filter(func.lower(User.email) == email_normalizado).first()
-    if usuario:
-        return usuario
-
-    base_username = _gerar_username_base(email_normalizado)
-    username = base_username
-    sufixo = 1
-    while User.query.filter_by(username=username).first():
-        username = f"{base_username[:35]}-{sufixo}"
-        sufixo += 1
-
-    senha_temporaria = secrets.token_urlsafe(16)
-    novo_usuario = User(
-        nome=nome,
-        email=email_normalizado,
-        senha=senha_temporaria,
-        username=username,
-    )
-    db.session.add(novo_usuario)
-    db.session.flush()
-    return novo_usuario
-
-
-@suporte_ti_public_html_bp.route("/suporte/abrir-chamado", methods=["GET", "POST"])
-def abrir_chamado_publico():
-    """Disponibiliza um formulário público para abertura de chamados."""
-
-    ensure_tables_exist([SuporteArea, SuporteTipoEquipamento, SuporteChamado])
-
-    areas = SuporteArea.query.order_by(SuporteArea.nome.asc()).all()
-    tipos = (
-        SuporteTipoEquipamento.query.order_by(SuporteTipoEquipamento.nome.asc()).all()
-    )
-
-    if request.method == "GET":
-        return _render_public_form(areas, tipos)
-
-    form_data = {chave: (valor or "").strip() for chave, valor in request.form.items()}
-    erros: list[str] = []
-
-    try:
-        validate_csrf(form_data.get("csrf_token"))
-    except CSRFError:
-        erros.append("Não conseguimos validar o token de segurança. Atualize a página e tente novamente.")
-
-    nome = form_data.get("nome_completo", "")
-    if not nome:
-        erros.append("Informe seu nome completo.")
-
-    email = form_data.get("email", "").lower()
-    if not email:
-        erros.append("Informe um e-mail para contato.")
-    else:
-        try:
-            validate_email(email, check_deliverability=False)
-        except EmailNotValidError:
-            erros.append("E-mail informado é inválido.")
-
-    descricao = form_data.get("descricao_problema", "")
-    if not descricao:
-        erros.append("Descreva o problema encontrado.")
-
-    nivel_urgencia = (form_data.get("nivel_urgencia") or "").strip()
-    if not nivel_urgencia:
-        erros.append("Selecione o nível de urgência.")
-    elif nivel_urgencia not in ALLOWED_URGENCIAS:
-        erros.append("Nível de urgência inválido.")
-
-    area_obj = None
-    try:
-        area_id = int(form_data.get("area_id", ""))
-        area_obj = db.session.get(SuporteArea, area_id)
-    except (TypeError, ValueError):
-        area_obj = None
-    if not area_obj:
-        erros.append("Selecione uma área válida.")
-
-    tipo_equipamento_obj = None
-    try:
-        tipo_id = int(form_data.get("tipo_equipamento_id", ""))
-        tipo_equipamento_obj = db.session.get(SuporteTipoEquipamento, tipo_id)
-    except (TypeError, ValueError):
-        tipo_equipamento_obj = None
-    if not tipo_equipamento_obj:
-        erros.append("Selecione um tipo de equipamento válido.")
-
-    if erros:
-        return _render_public_form(areas, tipos, form_data=form_data, errors=erros, status_code=400)
-
-    nivel_normalizado = "Médio" if nivel_urgencia == "Medio" else nivel_urgencia
-
-    try:
-        usuario = _obter_ou_criar_usuario_publico(nome, email)
-        chamado = SuporteChamado(
-            user_id=usuario.id,
-            email=email,
-            area=area_obj.nome,
-            tipo_equipamento_id=tipo_equipamento_obj.id,
-            patrimonio=form_data.get("patrimonio") or None,
-            numero_serie=form_data.get("numero_serie") or None,
-            descricao_problema=descricao,
-            nivel_urgencia=nivel_normalizado,
-            observacoes=form_data.get("local") or None,
-            status="Aberto",
-        )
-        db.session.add(chamado)
-        db.session.commit()
-    except SQLAlchemyError:
-        current_app.logger.exception("Falha ao salvar chamado público de suporte")
-        db.session.rollback()
-        flash(
-            "Não foi possível registrar o chamado neste momento. Tente novamente em instantes.",
-            "danger",
-        )
-        return _render_public_form(areas, tipos, form_data=form_data, status_code=500)
-
-    flash("Chamado registrado com sucesso! Em breve nossa equipe entrará em contato.", "success")
-    return redirect(url_for("suporte_ti_public_html.abrir_chamado_publico"))
 
 
 def _serialize_chamado(chamado: SuporteChamado) -> dict:

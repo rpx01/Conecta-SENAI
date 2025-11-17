@@ -32,11 +32,7 @@ from conecta_senai.routes.noticias import api_noticias_bp
 from conecta_senai.routes.notificacao import notificacao_bp
 from conecta_senai.routes.ocupacao import instrutor_bp, ocupacao_bp, sala_bp
 from conecta_senai.routes.rateio import rateio_bp
-from conecta_senai.routes.suporte_ti import (
-    suporte_ti_admin_bp,
-    suporte_ti_public_bp,
-    suporte_ti_public_html_bp,
-)
+from conecta_senai.routes.suporte_ti import suporte_ti_admin_bp, suporte_ti_public_bp
 from conecta_senai.routes.treinamentos import treinamento_bp, turma_bp
 from conecta_senai.routes.treinamentos.basedados import (
     locais_realizacao_bp as treinamentos_locais_realizacao_bp,
@@ -161,7 +157,6 @@ def _configure_flask(app: Flask) -> None:
         url_prefix="/api/treinamentos/locais-realizacao",
     )
     app.register_blueprint(suporte_ti_public_bp)
-    app.register_blueprint(suporte_ti_public_html_bp)
     app.register_blueprint(suporte_ti_admin_bp)
     app.register_blueprint(inscricoes_treinamento_bp)
     app.register_blueprint(auth_reset_bp)

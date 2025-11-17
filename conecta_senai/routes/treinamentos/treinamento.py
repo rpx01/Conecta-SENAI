@@ -7,6 +7,7 @@ import math
 from datetime import date, datetime, timedelta
 import logging
 from types import SimpleNamespace
+from pathlib import Path
 
 from conecta_senai.models import (
     db,
@@ -62,6 +63,14 @@ from conecta_senai.services.email_service import (
 log = logging.getLogger(__name__)
 
 treinamento_bp = Blueprint("treinamento", __name__)
+
+
+def _get_logo_path() -> Path:
+    """Retorna o caminho absoluto do logo do SENAI dentro da pasta estática."""
+    static_folder = current_app.static_folder
+    if not static_folder:
+        static_folder = str(Path(current_app.root_path) / "static")
+    return Path(static_folder) / "img" / "senai-logo.png"
 
 
 # Função auxiliar para coletar dados da turma
@@ -865,12 +874,17 @@ def exportar_inscricoes(turma_id):
         ws.merge_cells("C1:K2")
 
         # Logo
+        logo_path = _get_logo_path()
         try:
-            img = OpenpyxlImage("src/static/img/senai-logo.png")
-            img.anchor = "A1"
-            img.height = 40
-            ws.add_image(img)
+            if logo_path.exists():
+                img = OpenpyxlImage(str(logo_path))
+                img.anchor = "A1"
+                img.height = 40
+                ws.add_image(img)
+            else:
+                raise FileNotFoundError(str(logo_path))
         except FileNotFoundError:
+            log.warning("Logo do SENAI não encontrado em %s", logo_path)
             logo_cell = ws["A1"]
             logo_cell.value = "SENAI"
             logo_cell.font = font_white_bold
@@ -1095,11 +1109,16 @@ def exportar_inscricoes(turma_id):
         )
 
         try:
-            logo = ReportlabImage(
-                "src/static/img/senai-logo.png", width=1.2 * inch, height=0.4 * inch  # Logo menor
-            )
-            logo.hAlign = "CENTER"
-        except Exception:
+            logo_path = _get_logo_path()
+            if logo_path.exists():
+                logo = ReportlabImage(
+                    str(logo_path), width=1.2 * inch, height=0.4 * inch  # Logo menor
+                )
+                logo.hAlign = "CENTER"
+            else:
+                raise FileNotFoundError(str(logo_path))
+        except Exception as exc:
+            log.warning("Falha ao carregar o logo do SENAI: %s", exc)
             logo = Paragraph("<b>SENAI</b>", style_normal)
 
         titulo = Paragraph("<b>Lista de Presença</b>", style_h1_centralizado)

@@ -27,24 +27,38 @@ def ensure_tables_exist(models: Iterable[type[db.Model]]) -> None:
             inspector = inspect(db.engine)
 
         if table_name == SuporteChamado.__tablename__:
-            inspector = _ensure_suporte_chamados_observacoes(inspector)
+            inspector = _ensure_suporte_chamados_columns(inspector)
 
 
-def _ensure_suporte_chamados_observacoes(inspector):
-    """Garante que a coluna ``observacoes`` exista na tabela de chamados."""
+def _ensure_suporte_chamados_columns(inspector):
+    """Garante que colunas críticas existam na tabela de chamados."""
 
     table_name = SuporteChamado.__tablename__
     columns = {column["name"] for column in inspector.get_columns(table_name)}
-    if "observacoes" in columns:
+    ddl_statements = []
+
+    if "observacoes" not in columns:
+        ddl_statements.append(
+            text("ALTER TABLE suporte_chamados ADD COLUMN observacoes TEXT")
+        )
+
+    if "local_unidade" not in columns:
+        ddl_statements.append(
+            text(
+                "ALTER TABLE suporte_chamados ADD COLUMN local_unidade VARCHAR(150)"
+            )
+        )
+
+    if not ddl_statements:
         return inspector
 
-    ddl = text("ALTER TABLE suporte_chamados ADD COLUMN observacoes TEXT")
-    try:
-        with db.engine.begin() as connection:
-            connection.execute(ddl)
-    except ProgrammingError as exc:  # pragma: no cover - dependente do banco
-        mensagem = str(exc).lower()
-        if "duplicate column" not in mensagem and "already exists" not in mensagem:
-            raise
+    for ddl in ddl_statements:
+        try:
+            with db.engine.begin() as connection:
+                connection.execute(ddl)
+        except ProgrammingError as exc:  # pragma: no cover - dependente do banco
+            mensagem = str(exc).lower()
+            if "duplicate column" not in mensagem and "already exists" not in mensagem:
+                raise
 
     return inspect(db.engine)

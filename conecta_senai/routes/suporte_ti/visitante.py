@@ -23,6 +23,10 @@ suporte_ti_paginas_publicas_bp = Blueprint(
 )
 
 ALLOWED_URGENCIAS = {"Baixo", "Médio", "Medio", "Alto"}
+CHAMADO_EMAIL_MAX_LEN = (
+    SuporteChamado.email.property.columns[0].type.length or 120
+)
+CHAMADO_AREA_MAX_LEN = SuporteChamado.area.property.columns[0].type.length or 120
 
 
 def _limpar_texto(valor: str | None, limite: int | None = None) -> str:
@@ -108,8 +112,12 @@ def abrir_chamado_publico():
         return jsonify({"erro": "Token CSRF inválido."}), 400
 
     nome = _limpar_texto(_obter_dado(form, payload, "nome_completo", "nome"), 150)
-    email = _limpar_texto(_obter_dado(form, payload, "email", "email_contato"), 180)
-    area = _limpar_texto(_obter_dado(form, payload, "area"), 150)
+    email = _limpar_texto(
+        _obter_dado(form, payload, "email", "email_contato"), CHAMADO_EMAIL_MAX_LEN
+    )
+    area = _limpar_texto(
+        _obter_dado(form, payload, "area"), CHAMADO_AREA_MAX_LEN
+    )
     tipo_equipamento_id = _obter_dado(
         form, payload, "tipo_equipamento_id", "tipoEquipamentoId"
     )

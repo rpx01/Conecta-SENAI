@@ -13,3 +13,5 @@
 ### Fixed
 - Edição de ocupações recorrentes agora ignora o próprio grupo ao verificar disponibilidade.
 - Corrigido erro de banco de dados ao listar treinamentos garantindo a existência da coluna `teoria_online` em `turmas_treinamento`.
+- Formulário público de suporte passa a criar os campos `nome_solicitante`/`local_unidade` e libera `user_id` como nulo quando as
+  migrações ainda não foram executadas.

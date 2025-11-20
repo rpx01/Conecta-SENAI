@@ -5,7 +5,7 @@ import os
 from datetime import datetime, timezone, timedelta
 from typing import Iterable
 
-from flask import Blueprint, jsonify, request, g
+from flask import Blueprint, jsonify, request, g, current_app
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -185,14 +185,41 @@ def atualizar_status_chamado(chamado_id: int):
     if not chamado:
         return jsonify({"erro": "Chamado não encontrado."}), 404
 
+    # Salvar status anterior para comparação
+    status_anterior = chamado.status
+
     # Timezone de Brasília (UTC-3)
     tz_brasilia = timezone(timedelta(hours=-3))
     agora = datetime.now(tz_brasilia).replace(tzinfo=None)
 
-    if status_normalizado == "Em Atendimento" and chamado.status == "Aberto" and not chamado.inicio_atendimento_at:
+    # Lógica de registro de timestamps baseada em transições de status
+    # Normalizar status anterior também para comparação consistente
+    status_anterior_normalizado = _normalizar_status(status_anterior) if status_anterior else None
+
+    # Registrar início de atendimento quando transiciona PARA "Em Atendimento"
+    # e ainda não possui esse timestamp
+    if status_normalizado == "Em Atendimento" and not chamado.inicio_atendimento_at:
         chamado.inicio_atendimento_at = agora
-    if status_normalizado in ("Finalizado", "Cancelado") and chamado.status == "Em Atendimento" and not chamado.encerrado_at:
+        current_app.logger.info(
+            f"Registrado inicio_atendimento_at para chamado {chamado_id}: "
+            f"status {status_anterior_normalizado} → {status_normalizado}"
+        )
+
+    # Registrar encerramento quando transiciona PARA "Finalizado" ou "Cancelado"
+    # e ainda não possui esse timestamp
+    if status_normalizado in ("Finalizado", "Cancelado") and not chamado.encerrado_at:
+        # Se não tem início de atendimento, registra agora também
+        if not chamado.inicio_atendimento_at:
+            chamado.inicio_atendimento_at = agora
+            current_app.logger.info(
+                f"Registrado inicio_atendimento_at (retroativo) para chamado {chamado_id} "
+                f"pois foi encerrado sem atendimento prévio"
+            )
         chamado.encerrado_at = agora
+        current_app.logger.info(
+            f"Registrado encerrado_at para chamado {chamado_id}: "
+            f"status {status_anterior_normalizado} → {status_normalizado}"
+        )
 
     chamado.status = status_normalizado
     chamado.updated_at = agora

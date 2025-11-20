@@ -170,12 +170,15 @@ def listar_todos_chamados():
 @admin_required
 def exportar_chamados_excel():
     """Exporta todos os chamados do sistema em formato XLSX (Excel)."""
+    current_app.logger.info("XLSX EXPORT: Iniciando exportação de chamados em formato XLSX")
     ensure_tables_exist([SuporteChamado])
 
     try:
         from openpyxl import Workbook
         from openpyxl.styles import Font, PatternFill, Alignment
+        current_app.logger.info("XLSX EXPORT: openpyxl importado com sucesso")
     except ImportError:
+        current_app.logger.error("XLSX EXPORT: openpyxl não está instalado")
         return jsonify({"erro": "Biblioteca openpyxl não está instalada"}), 500
 
     # Buscar todos os chamados sem filtro de status
@@ -248,9 +251,11 @@ def exportar_chamados_excel():
     output.seek(0)
 
     # Preparar resposta
+    current_app.logger.info(f"XLSX EXPORT: Arquivo gerado com sucesso. Tamanho: {len(output.getvalue())} bytes")
     resposta = make_response(output.getvalue())
     resposta.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     resposta.headers["Content-Disposition"] = 'attachment; filename="chamados_suporte_ti.xlsx"'
+    current_app.logger.info("XLSX EXPORT: Headers configurados. Retornando arquivo XLSX")
     return resposta
 
 

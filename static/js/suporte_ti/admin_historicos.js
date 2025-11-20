@@ -23,6 +23,7 @@
     let tiposEquipamentoBase = [];
     let chamadoEmEdicao = null;
     let textoOriginalSalvarEdicao = btnSalvarEdicaoHistorico?.innerHTML || '';
+    let exibindoSomenteMesAtual = true;
 
     async function inicializar() {
         const autenticado = await verificarAutenticacao();
@@ -81,7 +82,23 @@
 
     async function carregarHistoricos() {
         try {
-            const chamados = await chamarAPI('/suporte_ti/admin/todos_chamados?status=Finalizado,Cancelado');
+            const params = new URLSearchParams();
+            params.set('status', 'Finalizado,Cancelado');
+
+            if (exibindoSomenteMesAtual) {
+                const agora = new Date();
+                const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+                const fimMes = new Date(agora.getFullYear(), agora.getMonth() + 1, 0);
+
+                const dataInicio = inicioMes.toISOString().slice(0, 10); // yyyy-mm-dd
+                const dataFim = fimMes.toISOString().slice(0, 10);
+
+                params.set('data_inicio', dataInicio);
+                params.set('data_fim', dataFim);
+            }
+
+            const endpoint = `/suporte_ti/admin/todos_chamados?${params.toString()}`;
+            const chamados = await chamarAPI(endpoint);
             renderizarChamados(chamados || []);
         } catch (error) {
             console.error(error);
@@ -468,5 +485,26 @@
         });
     }
 
+    // Botão para exibir todos os históricos ou apenas mês atual
+    const btnExibirTodosHistoricos = document.getElementById('btnExibirTodosHistoricos');
+    if (btnExibirTodosHistoricos) {
+        btnExibirTodosHistoricos.addEventListener('click', () => {
+            exibindoSomenteMesAtual = !exibindoSomenteMesAtual;
+            btnExibirTodosHistoricos.textContent = exibindoSomenteMesAtual
+                ? 'Exibir todos'
+                : 'Exibir apenas mês atual';
+            carregarHistoricos();
+        });
+    }
+
+    // Botão para exportar todos os chamados para Excel/CSV
+    const btnExportarExcelHistoricos = document.getElementById('btnExportarExcelHistoricos');
+    if (btnExportarExcelHistoricos) {
+        btnExportarExcelHistoricos.addEventListener('click', () => {
+            window.location.href = '/api/suporte_ti/admin/chamados/exportar_excel';
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', inicializar);
 })();
+

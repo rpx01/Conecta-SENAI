@@ -1,11 +1,13 @@
 """Rotas administrativas do módulo de suporte de TI."""
 from __future__ import annotations
 
+import csv
+import io
 import os
 from datetime import datetime, timezone, timedelta
 from typing import Iterable
 
-from flask import Blueprint, jsonify, request, g, current_app
+from flask import Blueprint, jsonify, request, g, current_app, make_response
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -162,6 +164,67 @@ def listar_todos_chamados():
     consulta = consulta.order_by(SuporteChamado.created_at.desc())
     chamados = consulta.all()
     return jsonify([_serialize_chamado(chamado) for chamado in chamados])
+
+
+@suporte_ti_admin_bp.route("/chamados/exportar_excel", methods=["GET"])
+@admin_required
+def exportar_chamados_excel():
+    """Exporta todos os chamados do sistema em formato CSV compatível com Excel."""
+    ensure_tables_exist([SuporteChamado])
+
+    # Buscar todos os chamados sem filtro de status
+    chamados = (
+        SuporteChamado.query
+        .order_by(SuporteChamado.created_at.asc())
+        .all()
+    )
+
+    def _fmt(dt):
+        """Formatar datetime para string."""
+        return dt.strftime("%Y-%m-%d %H:%M:%S") if dt else ""
+
+    # Criar CSV em memória
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=";")
+
+    # Cabeçalho
+    writer.writerow([
+        "ID",
+        "Nome solicitante",
+        "Email",
+        "Área",
+        "Tipo de equipamento",
+        "Nível urgência",
+        "Status",
+        "Abertura",
+        "Início atendimento",
+        "Encerramento",
+        "Última atualização",
+        "Observações",
+    ])
+
+    # Dados
+    for c in chamados:
+        writer.writerow([
+            c.id,
+            c.nome_solicitante or (c.user.nome if c.user else ""),
+            c.email,
+            c.area or "",
+            c.tipo_equipamento.nome if c.tipo_equipamento else "",
+            c.nivel_urgencia or "",
+            c.status or "",
+            _fmt(c.created_at),
+            _fmt(c.inicio_atendimento_at),
+            _fmt(c.encerrado_at),
+            _fmt(c.updated_at),
+            (c.observacoes or "").replace("\n", " ").replace("\r", " "),
+        ])
+
+    # Preparar resposta
+    resposta = make_response(output.getvalue())
+    resposta.headers["Content-Type"] = "text/csv; charset=utf-8"
+    resposta.headers["Content-Disposition"] = 'attachment; filename="chamados_suporte_ti.csv"'
+    return resposta
 
 
 @suporte_ti_admin_bp.route("/chamados/<int:chamado_id>/status", methods=["PUT"])

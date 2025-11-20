@@ -169,8 +169,17 @@ def listar_todos_chamados():
 @suporte_ti_admin_bp.route("/chamados/exportar_excel", methods=["GET"])
 @admin_required
 def exportar_chamados_excel():
-    """Exporta todos os chamados do sistema em formato CSV compatível com Excel."""
+    """Exporta todos os chamados do sistema em formato XLSX (Excel)."""
+    current_app.logger.info("XLSX EXPORT: Iniciando exportação de chamados em formato XLSX")
     ensure_tables_exist([SuporteChamado])
+
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment
+        current_app.logger.info("XLSX EXPORT: openpyxl importado com sucesso")
+    except ImportError:
+        current_app.logger.error("XLSX EXPORT: openpyxl não está instalado")
+        return jsonify({"erro": "Biblioteca openpyxl não está instalada"}), 500
 
     # Buscar todos os chamados sem filtro de status
     chamados = (
@@ -183,12 +192,18 @@ def exportar_chamados_excel():
         """Formatar datetime para string."""
         return dt.strftime("%Y-%m-%d %H:%M:%S") if dt else ""
 
-    # Criar CSV em memória
-    output = io.StringIO()
-    writer = csv.writer(output, delimiter=";")
+    # Criar workbook Excel
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Chamados Suporte TI"
 
-    # Cabeçalho
-    writer.writerow([
+    # Estilo do cabeçalho
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="0066CC", end_color="0066CC", fill_type="solid")
+    header_alignment = Alignment(horizontal="center", vertical="center")
+
+    # Cabeçalhos
+    headers = [
         "ID",
         "Nome solicitante",
         "Email",
@@ -201,29 +216,46 @@ def exportar_chamados_excel():
         "Encerramento",
         "Última atualização",
         "Observações",
-    ])
+    ]
 
-    # Dados
-    for c in chamados:
-        writer.writerow([
-            c.id,
-            c.nome_solicitante or (c.user.nome if c.user else ""),
-            c.email,
-            c.area or "",
-            c.tipo_equipamento.nome if c.tipo_equipamento else "",
-            c.nivel_urgencia or "",
-            c.status or "",
-            _fmt(c.created_at),
-            _fmt(c.inicio_atendimento_at),
-            _fmt(c.encerrado_at),
-            _fmt(c.updated_at),
-            (c.observacoes or "").replace("\n", " ").replace("\r", " "),
-        ])
+    # Escrever cabeçalhos
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+
+    # Escrever dados
+    for row_num, c in enumerate(chamados, 2):
+        ws.cell(row=row_num, column=1, value=c.id)
+        ws.cell(row=row_num, column=2, value=c.nome_solicitante or (c.user.nome if c.user else ""))
+        ws.cell(row=row_num, column=3, value=c.email)
+        ws.cell(row=row_num, column=4, value=c.area or "")
+        ws.cell(row=row_num, column=5, value=c.tipo_equipamento.nome if c.tipo_equipamento else "")
+        ws.cell(row=row_num, column=6, value=c.nivel_urgencia or "")
+        ws.cell(row=row_num, column=7, value=c.status or "")
+        ws.cell(row=row_num, column=8, value=_fmt(c.created_at))
+        ws.cell(row=row_num, column=9, value=_fmt(c.inicio_atendimento_at))
+        ws.cell(row=row_num, column=10, value=_fmt(c.encerrado_at))
+        ws.cell(row=row_num, column=11, value=_fmt(c.updated_at))
+        ws.cell(row=row_num, column=12, value=(c.observacoes or ""))
+
+    # Ajustar largura das colunas
+    column_widths = [8, 25, 30, 20, 20, 15, 15, 20, 20, 20, 20, 40]
+    for col_num, width in enumerate(column_widths, 1):
+        ws.column_dimensions[ws.cell(row=1, column=col_num).column_letter].width = width
+
+    # Salvar em memória
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
 
     # Preparar resposta
+    current_app.logger.info(f"XLSX EXPORT: Arquivo gerado com sucesso. Tamanho: {len(output.getvalue())} bytes")
     resposta = make_response(output.getvalue())
-    resposta.headers["Content-Type"] = "text/csv; charset=utf-8"
-    resposta.headers["Content-Disposition"] = 'attachment; filename="chamados_suporte_ti.csv"'
+    resposta.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    resposta.headers["Content-Disposition"] = 'attachment; filename="chamados_suporte_ti.xlsx"'
+    current_app.logger.info("XLSX EXPORT: Headers configurados. Retornando arquivo XLSX")
     return resposta
 
 

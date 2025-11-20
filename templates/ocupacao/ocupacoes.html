@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,9 +8,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/brand.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAIEAYAAADIFSHsAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGYktHRAAAAAAAAPlDu38AAAAHdElNRQfpBgoBOhQj05UdAAADXUlEQVRIx92UbUzUdQDHP7/73zXgyjs6uPA8Kg82BgyYFDLNbt1YuWkOcqvZow8V4pouXYLQA3OSTHCGBBtl6RuaY7nVKtwCshU2EQRbK7BJhweUHOw87gTugfv/f72IttYbhRe59Xn/3b6f74uvsFpdrqam4ccBIK2DWyGRSNAe1Y7LfFjblWdZcQg2VjjrHKcheGGmLFoJ39T19nuq4KX3ntyYHYLwZ9FCNRcGbEMlXiukD6c6zQegs7TH5KkG+6b7ku+RMFY08W1wC/gGAlnhT2B3y7PHVo3AYdtHLT0GKGzLed9mg5ncuReijXCuqzc02giKouwXO27Z/l/4A7oF8c23nYkSQwMiRInB6oac6uXLQHVp3fIcBI7MPhx5HlIqLenGHkh6LfF0wna4kj9S7/saPMnX+wIDkOlytFqC8MzVJ5SMPZC119FniQNzeNlQXB8U3MjOSimGla22kyYV8iYziqz1kLIjadSYD9Yf7+1NMIAMy0xZu1jxv0k0LQxA2W1ndAgEiCThEdXQ++LPRde3grt2fHw6G9JrUucSi8HhsP9iPgOaTyuWd4N6VkuTN0GdVN+UzeCd8uXOlsLkO/7yuQdgnWvVyhWfgjESHzQkgLPpodX29XBjbfBgeBBcwwVj91+Eu07pm3XNIDvp4dpSxf+ps0TkZvbJzyGp3DwSPw0Pltl2m0YhWj7/lrofpk74j83lQNgebYhtg5QSi874FTh+tX9grofAczOm6Hpo93b/4K6BkTf+qAiYYPm2JI8xH7xW31NzVdB6vH3voAKqqtZrJyE+M67SUACzVaEP59uBt0Upa5Y+gH7RCQN6dCDShE+8C2fN5yfcW+DS5cGLE3qIbpiv0Log2DZ7JPI6nM+8/N24EwwX9BVKEELd4bZYB3T6e8qvbYXgyzNfRrbDgZKGNd/ng9KiuMXHMF8Tq9X6YfrKzRMRJwxYhgq9jaBoSp2YgtChyCNqKihduoO6XQC8upQhxF8nKOWikwo6BMhLDDIB8ieZIMtBbGCdcAAdtPA0yC+kX+4E+hnCCxwV+3gMyCNDJIP4XXSwC3DJV2gDeZVR/CBcFJAKwi3a2QkyKrOpBfkbY0yDOMwenCDOiKMUA2EixP7LAf4nLHyAP3Cni9wZYp1/AkYRW5V0uSBfAAAAAElFTkSuQmCC">
+    <link rel="icon"
+        href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAIEAYAAADIFSHsAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGYktHRAAAAAAAAPlDu38AAAAHdElNRQfpBgoBOhQj05UdAAADXUlEQVRIx92UbUzUdQDHP7/73zXgyjs6uPA8Kg82BgyYFDLNbt1YuWkOcqvZow8V4pouXYLQA3OSTHCGBBtl6RuaY7nVKtwCshU2EQRbK7BJhweUHOw87gTugfv/f72IttYbhRe59Xn/3b6f74uvsFpdrqam4ccBIK2DWyGRSNAe1Y7LfFjblWdZcQg2VjjrHKcheGGmLFoJ39T19nuq4KX3ntyYHYLwZ9FCNRcGbEMlXiukD6c6zQegs7TH5KkG+6b7ku+RMFY08W1wC/gGAlnhT2B3y7PHVo3AYdtHLT0GKGzLed9mg5ncuReijXCuqzc02giKouwXO27Z/l/4A7oF8c23nYkSQwMiRInB6oac6uXLQHVp3fIcBI7MPhx5HlIqLenGHkh6LfF0wna4kj9S7/saPMnX+wIDkOlytFqC8MzVJ5SMPZC119FniQNzeNlQXB8U3MjOSimGla22kyYV8iYziqz1kLIjadSYD9Yf7+1NMIAMy0xZu1jxv0k0LQxA2W1ndAgEiCThEdXQ++LPRde3grt2fHw6G9JrUucSi8HhsP9iPgOaTyuWd4N6VkuTN0GdVN+UzeCd8uXOlsLkO/7yuQdgnWvVyhWfgjESHzQkgLPpodX29XBjbfBgeBBcwwVj91+Eu07pm3XNIDvp4dpSxf+ps0TkZvbJzyGp3DwSPw0Pltl2m0YhWj7/lrofpk74j83lQNgebYhtg5QSi874FTh+tX9grofAczOm6Hpo93b/4K6BkTf+qAiYYPm2JI8xH7xW31NzVdB6vH3voAKqqtZrJyE+M67SUACzVaEP59uBt0Upa5Y+gH7RCQN6dCDShE+8C2fN5yfcW+DS5cGLE3qIbpiv0Log2DZ7JPI6nM+8/N24EwwX9BVKEELd4bZYB3T6e8qvbYXgyzNfRrbDgZKGNd/ng9KiuMXHMF8Tq9X6YfrKzRMRJwxYhgq9jaBoSp2YgtChyCNqKihduoO6XQC8upQhxF8nKOWikwo6BMhLDDIB8ieZIMtBbGCdcAAdtPA0yC+kX+4E+hnCCxwV+3gMyCNDJIP4XXSwC3DJV2gDeZVR/CBcFJAKwi3a2QkyKrOpBfkbY0yDOMwenCDOiKMUA2EixP7LAf4nLHyAP3Cni9wZYp1/AkYRW5V0uSBfAAAAAElFTkSuQmCC">
     <link href="/static/css/styles.css" rel="stylesheet">
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
         <div class="container-fluid">
@@ -17,7 +20,8 @@
                 <img src="/img/senai-logo.png" alt="SENAI" height="28" class="me-2">
                 <span class="navbar-brand-text" title="Controle de Ocupação">Sistema FIEMG | Controle de Ocupação</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -33,18 +37,8 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link admin-only" href="/ocupacao/salas.html">
-                            <i class="bi bi-door-open me-1"></i> Gerenciar Salas
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link admin-only" href="/ocupacao/instrutores.html">
-                            <i class="bi bi-person-badge me-1"></i> Corpo Docente
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link admin-only" href="/ocupacao/turmas.html">
-                            <i class="bi bi-people-fill me-1"></i> Gerenciar Turmas
+                        <a class="nav-link admin-only" href="/ocupacao/basedados.html">
+                            <i class="bi bi-database me-1"></i> Base de Dados
                         </a>
                     </li>
                     <li class="nav-item">
@@ -60,14 +54,19 @@
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle me-1"></i>
                             <span id="nomeUsuarioNav">Usuário</span>
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/ocupacao/perfil.html"><i class="bi bi-person me-2"></i>Meu Perfil</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#" onclick="realizarLogout()"><i class="bi bi-box-arrow-right me-2"></i>Sair</a></li>
+                            <li><a class="dropdown-item" href="/ocupacao/perfil.html"><i
+                                        class="bi bi-person me-2"></i>Meu Perfil</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#" onclick="realizarLogout()"><i
+                                        class="bi bi-box-arrow-right me-2"></i>Sair</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -127,7 +126,8 @@
                         <div class="row g-3 mt-1">
                             <div class="col-sm-8 col-md-6 col-lg-4">
                                 <label for="filtroCurso" class="form-label">Curso/Evento</label>
-                                <input type="text" class="form-control" id="filtroCurso" placeholder="Ex: Curso de Soldagem">
+                                <input type="text" class="form-control" id="filtroCurso"
+                                    placeholder="Ex: Curso de Soldagem">
                             </div>
                         </div>
                         <div class="row mt-3">
@@ -192,4 +192,5 @@
     <script src="/js/app.js"></script>
     <script src="/js/ocupacao/ocupacoes.js"></script>
 </body>
+
 </html>

@@ -136,8 +136,12 @@
     }
 
     function atualizarNovosCards(dados) {
+        console.log('Dados recebidos para novos cards:', dados);
+
         // Tempo médio até atendimento
         const tempoAtendimento = dados?.tempo_medio_abertura_para_atendimento_segundos || 0;
+        console.log('Tempo atendimento (segundos):', tempoAtendimento);
+
         const { valor: valorAtend, unidade: unidadeAtend } = formatarTempo(tempoAtendimento);
         const indicadorTempoAtendimento = document.getElementById('indicadorTempoAtendimento');
         const unidadeTempoAtendimento = document.getElementById('unidadeTempoAtendimento');
@@ -146,6 +150,8 @@
 
         // Tempo médio até encerramento
         const tempoEncerramento = dados?.tempo_medio_abertura_para_encerramento_segundos || 0;
+        console.log('Tempo encerramento (segundos):', tempoEncerramento);
+
         const { valor: valorEncer, unidade: unidadeEncer } = formatarTempo(tempoEncerramento);
         const indicadorTempoEncerramento = document.getElementById('indicadorTempoEncerramento');
         const unidadeTempoEncerramento = document.getElementById('unidadeTempoEncerramento');
@@ -154,12 +160,16 @@
 
         // Percentual atendidos em 24h
         const percentual24h = dados?.percentual_atendidos_em_24h || 0;
+        console.log('Percentual 24h:', percentual24h);
+
         const indicadorSLA24h = document.getElementById('indicadorSLA24h');
         if (indicadorSLA24h) indicadorSLA24h.textContent = percentual24h.toFixed(1);
     }
 
     function formatarTempo(segundos) {
-        if (segundos === 0) {
+        console.log('formatarTempo chamada com:', segundos);
+
+        if (segundos === 0 || segundos === null || segundos === undefined) {
             return { valor: '-', unidade: '' };
         }
 

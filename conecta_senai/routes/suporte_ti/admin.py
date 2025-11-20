@@ -185,6 +185,11 @@ def atualizar_status_chamado(chamado_id: int):
     if not chamado:
         return jsonify({"erro": "Chamado não encontrado."}), 404
 
+    if status_normalizado == "Em Atendimento" and chamado.status == "Aberto" and not chamado.inicio_atendimento_at:
+        chamado.inicio_atendimento_at = datetime.utcnow()
+    if status_normalizado in ("Finalizado", "Cancelado") and chamado.status == "Em Atendimento" and not chamado.encerrado_at:
+        chamado.encerrado_at = datetime.utcnow()
+
     chamado.status = status_normalizado
     chamado.updated_at = datetime.utcnow()
 

@@ -301,26 +301,18 @@ let modalInstrutorBootstrap = null;
 
 async function carregarInstrutores() {
     try {
-        const response = await fetch(`${API_URL}/instrutores?status=ativo`, {
-            headers: {
-                'Authorization': `Bearer ${obterToken()}`
-            }
-        });
+        const instrutores = await chamarAPI('/instrutores?status=ativo', 'GET');
 
-        if (response.ok) {
-            instrutoresCache = await response.json();
-            const select = document.getElementById('selectInstrutor');
-            if (select) {
-                select.innerHTML = '<option value="">Sem instrutor</option>';
-                instrutoresCache.forEach(instrutor => {
-                    const option = document.createElement('option');
-                    option.value = instrutor.id;
-                    option.textContent = instrutor.nome;
-                    select.appendChild(option);
-                });
-            }
-        } else {
-            console.error('Erro ao carregar instrutores:', response.statusText);
+        instrutoresCache = instrutores;
+        const select = document.getElementById('selectInstrutor');
+        if (select) {
+            select.innerHTML = '<option value="">Sem instrutor</option>';
+            instrutoresCache.forEach(instrutor => {
+                const option = document.createElement('option');
+                option.value = instrutor.id;
+                option.textContent = instrutor.nome;
+                select.appendChild(option);
+            });
         }
     } catch (error) {
         console.error('Erro ao carregar instrutores:', error);

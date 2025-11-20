@@ -34,6 +34,7 @@
         atualizarNomeUsuario();
         await carregarBaseDados();
         await carregarHistoricos();
+        configurarBotoesHistoricos();
     }
 
     function atualizarNomeUsuario() {
@@ -93,11 +94,21 @@
                 const dataInicio = inicioMes.toISOString().slice(0, 10); // yyyy-mm-dd
                 const dataFim = fimMes.toISOString().slice(0, 10);
 
+                console.log('[Históricos] Filtro de mês ativo:', {
+                    mes: agora.getMonth() + 1,
+                    ano: agora.getFullYear(),
+                    dataInicio,
+                    dataFim
+                });
+
                 params.set('data_inicio', dataInicio);
                 params.set('data_fim', dataFim);
+            } else {
+                console.log('[Históricos] Exibindo todos os registros (sem filtro de data)');
             }
 
             const endpoint = `/suporte_ti/admin/todos_chamados?${params.toString()}`;
+            console.log('[Históricos] Buscando:', endpoint);
             const chamados = await chamarAPI(endpoint);
             renderizarChamados(chamados || []);
         } catch (error) {
@@ -485,24 +496,34 @@
         });
     }
 
-    // Botão para exibir todos os históricos ou apenas mês atual
-    const btnExibirTodosHistoricos = document.getElementById('btnExibirTodosHistoricos');
-    if (btnExibirTodosHistoricos) {
-        btnExibirTodosHistoricos.addEventListener('click', () => {
-            exibindoSomenteMesAtual = !exibindoSomenteMesAtual;
-            btnExibirTodosHistoricos.textContent = exibindoSomenteMesAtual
-                ? 'Exibir todos'
-                : 'Exibir apenas mês atual';
-            carregarHistoricos();
-        });
-    }
+    function configurarBotoesHistoricos() {
+        // Botão para exibir todos os históricos ou apenas mês atual
+        const btnExibirTodosHistoricos = document.getElementById('btnExibirTodosHistoricos');
+        if (btnExibirTodosHistoricos) {
+            console.log('[Históricos] Botão "Exibir todos" configurado');
+            btnExibirTodosHistoricos.addEventListener('click', () => {
+                console.log('[Históricos] Alternando filtro de mês. Estado anterior:', exibindoSomenteMesAtual);
+                exibindoSomenteMesAtual = !exibindoSomenteMesAtual;
+                btnExibirTodosHistoricos.textContent = exibindoSomenteMesAtual
+                    ? 'Exibir todos'
+                    : 'Exibir apenas mês atual';
+                carregarHistoricos();
+            });
+        } else {
+            console.error('[Históricos] Botão "btnExibirTodosHistoricos" não encontrado no DOM');
+        }
 
-    // Botão para exportar todos os chamados para Excel/CSV
-    const btnExportarExcelHistoricos = document.getElementById('btnExportarExcelHistoricos');
-    if (btnExportarExcelHistoricos) {
-        btnExportarExcelHistoricos.addEventListener('click', () => {
-            window.location.href = '/api/suporte_ti/admin/chamados/exportar_excel';
-        });
+        // Botão para exportar todos os chamados para Excel/CSV
+        const btnExportarExcelHistoricos = document.getElementById('btnExportarExcelHistoricos');
+        if (btnExportarExcelHistoricos) {
+            console.log('[Históricos] Botão "Exportar Excel" configurado');
+            btnExportarExcelHistoricos.addEventListener('click', () => {
+                console.log('[Históricos] Iniciando exportação para Excel');
+                window.location.href = '/api/suporte_ti/admin/chamados/exportar_excel';
+            });
+        } else {
+            console.error('[Históricos] Botão "btnExportarExcelHistoricos" não encontrado no DOM');
+        }
     }
 
     document.addEventListener('DOMContentLoaded', inicializar);

@@ -1,7 +1,13 @@
 """Modelos de chamados do módulo de suporte de TI."""
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from conecta_senai.models import db
+
+
+def _get_brasilia_time():
+    """Retorna o horário atual de Brasília (UTC-3)."""
+    tz_brasilia = timezone(timedelta(hours=-3))
+    return datetime.now(tz_brasilia).replace(tzinfo=None)
 
 
 class SuporteChamado(db.Model):
@@ -26,11 +32,11 @@ class SuporteChamado(db.Model):
     status = db.Column(db.String(20), nullable=False, default="Aberto")
     observacoes = db.Column(db.Text, nullable=True)
     local_unidade = db.Column(db.String(150), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=_get_brasilia_time, nullable=False)
     updated_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=_get_brasilia_time,
+        onupdate=_get_brasilia_time,
         nullable=False,
     )
     # novos campos para registrar transições de status

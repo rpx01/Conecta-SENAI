@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from flask import Blueprint, current_app, g, jsonify, request
 from sqlalchemy import func
@@ -149,7 +149,9 @@ def criar_chamado():
         nome_seguro = secure_filename(arquivo.filename)
         if not nome_seguro:
             continue
-        timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
+        # Timezone de Brasília (UTC-3)
+        tz_brasilia = timezone(timedelta(hours=-3))
+        timestamp = datetime.now(tz_brasilia).strftime("%Y%m%d%H%M%S%f")
         nome_final = f"{timestamp}_{nome_seguro}"
         caminho_completo = os.path.join(upload_folder, nome_final)
         arquivo.save(caminho_completo)

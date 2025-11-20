@@ -72,6 +72,26 @@ def _ensure_suporte_chamados_columns(inspector):
             )
         )
 
+    if "inicio_atendimento_at" not in columns:
+        ddl_statements.append(
+            (
+                text(
+                    "ALTER TABLE suporte_chamados ADD COLUMN inicio_atendimento_at TIMESTAMP"
+                ),
+                "Adicionada coluna inicio_atendimento_at em suporte_chamados.",
+            )
+        )
+
+    if "encerrado_at" not in columns:
+        ddl_statements.append(
+            (
+                text(
+                    "ALTER TABLE suporte_chamados ADD COLUMN encerrado_at TIMESTAMP"
+                ),
+                "Adicionada coluna encerrado_at em suporte_chamados.",
+            )
+        )
+
     for ddl, message in ddl_statements:
         _execute_ddl(ddl, message)
 

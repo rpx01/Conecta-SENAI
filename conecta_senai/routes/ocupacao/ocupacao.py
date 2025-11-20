@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify, make_response, send_file
 from conecta_senai.models import db
 from conecta_senai.models.ocupacao import Ocupacao
 from conecta_senai.models.sala import Sala
+from conecta_senai.models.instrutor import Instrutor
 from conecta_senai.routes.user import verificar_autenticacao, verificar_admin
 from conecta_senai.auth import admin_required
 from sqlalchemy.exc import SQLAlchemyError
@@ -603,6 +604,69 @@ def remover_ocupacao(identificador):
         for info in dados:
             log_action(user.id, 'delete', 'Ocupacao', info['id'], info)
         return jsonify({'mensagem': 'Ocupação removida com sucesso', 'removidas': quantidade})
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return handle_internal_error(e)
+
+@ocupacao_bp.route('/ocupacoes/<string:identificador>/instrutor', methods=['PATCH'])
+@admin_required
+def atualizar_instrutor_ocupacao(identificador):
+    """
+    Atualiza o instrutor associado a uma ocupação ou grupo de ocupações.
+    Este endpoint permite atribuir ou remover um instrutor de forma leve,
+    sem necessidade de recriar as ocupações.
+    """
+    autenticado, user = verificar_autenticacao(request)
+    if not autenticado:
+        return jsonify({'erro': 'Não autenticado'}), 401
+
+    ocupacoes_grupo, grupo_id, ocupacao_base = obter_ocupacoes_por_identificador(identificador)
+
+    if not ocupacao_base:
+        return jsonify({'erro': 'Ocupação não encontrada'}), 404
+
+    # Verifica permissões
+    if not ocupacao_base.pode_ser_editada_por(user):
+        return jsonify({'erro': 'Permissão negada'}), 403
+
+    data = request.json or {}
+    instrutor_id = data.get('instrutor_id')
+
+    # Valida instrutor se fornecido
+    if instrutor_id is not None and instrutor_id != '':
+        instrutor = db.session.get(Instrutor, instrutor_id)
+        if not instrutor:
+            return jsonify({'erro': 'Instrutor não encontrado'}), 404
+        if instrutor.status != 'ativo':
+            return jsonify({'erro': 'Instrutor não está ativo'}), 400
+    else:
+        instrutor_id = None
+
+    try:
+        # Determina quais ocupações atualizar
+        if not ocupacoes_grupo:
+            ocupacoes_grupo = [ocupacao_base]
+
+        # Atualiza todas as ocupações do grupo
+        for ocupacao in ocupacoes_grupo:
+            ocupacao.instrutor_id = instrutor_id
+
+        db.session.commit()
+
+        # Log de auditoria
+        for oc in ocupacoes_grupo:
+            log_action(user.id, 'update', 'Ocupacao', oc.id, {
+                'campo': 'instrutor_id',
+                'valor_anterior': ocupacao_base.instrutor_id,
+                'valor_novo': instrutor_id
+            })
+
+        return jsonify({
+            'mensagem': 'Instrutor atualizado com sucesso',
+            'ocupacoes_atualizadas': len(ocupacoes_grupo),
+            'instrutor_id': instrutor_id
+        }), 200
+
     except SQLAlchemyError as e:
         db.session.rollback()
         return handle_internal_error(e)

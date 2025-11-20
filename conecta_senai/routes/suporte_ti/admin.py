@@ -368,14 +368,69 @@ def excluir_chamado(chamado_id: int):
 @suporte_ti_admin_bp.route("/indicadores", methods=["GET"])
 @admin_required
 def obter_indicadores():
+    """Retorna indicadores de suporte com filtros e métricas de tempo."""
     ensure_tables_exist([SuporteChamado])
 
-    total = db.session.query(func.count(SuporteChamado.id)).scalar() or 0
+    # Construir query base
+    query = db.session.query(SuporteChamado)
+
+    # Aplicar filtros da query string
+    data_inicio_str = request.args.get("data_inicio")
+    data_fim_str = request.args.get("data_fim")
+    area = request.args.get("area")
+    tipo_equipamento_id = request.args.get("tipo_equipamento_id")
+    nivel_urgencia = request.args.get("nivel_urgencia")
+    status = request.args.get("status")
+
+    # Filtro de data início
+    if data_inicio_str:
+        try:
+            # Timezone de Brasília (UTC-3)
+            tz_brasilia = timezone(timedelta(hours=-3))
+            data_inicio = datetime.fromisoformat(data_inicio_str).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=tz_brasilia).replace(tzinfo=None)
+            query = query.filter(SuporteChamado.created_at >= data_inicio)
+        except (ValueError, TypeError):
+            pass
+
+    # Filtro de data fim
+    if data_fim_str:
+        try:
+            tz_brasilia = timezone(timedelta(hours=-3))
+            data_fim = datetime.fromisoformat(data_fim_str).replace(hour=23, minute=59, second=59, microsecond=999999, tzinfo=tz_brasilia).replace(tzinfo=None)
+            query = query.filter(SuporteChamado.created_at <= data_fim)
+        except (ValueError, TypeError):
+            pass
+
+    # Filtro de área
+    if area:
+        query = query.filter(SuporteChamado.area == area)
+
+    # Filtro de tipo de equipamento
+    if tipo_equipamento_id:
+        try:
+            tipo_id = int(tipo_equipamento_id)
+            query = query.filter(SuporteChamado.tipo_equipamento_id == tipo_id)
+        except (ValueError, TypeError):
+            pass
+
+    # Filtro de nível de urgência
+    if nivel_urgencia:
+        query = query.filter(SuporteChamado.nivel_urgencia == nivel_urgencia)
+
+    # Filtro de status
+    if status:
+        query = query.filter(SuporteChamado.status == status)
+
+    # Estatísticas básicas (com filtros aplicados)
+    total = query.count()
+    
     por_status = (
         db.session.query(SuporteChamado.status, func.count(SuporteChamado.id))
+        .filter(SuporteChamado.id.in_(query.with_entities(SuporteChamado.id).subquery()))
         .group_by(SuporteChamado.status)
         .all()
     )
+    
     por_tipo = (
         db.session.query(SuporteTipoEquipamento.nome, func.count(SuporteChamado.id))
         .join(
@@ -383,14 +438,96 @@ def obter_indicadores():
             SuporteTipoEquipamento.id == SuporteChamado.tipo_equipamento_id,
             isouter=True,
         )
+        .filter(SuporteChamado.id.in_(query.with_entities(SuporteChamado.id).subquery()))
         .group_by(SuporteTipoEquipamento.nome)
         .all()
     )
+    
     por_urgencia = (
         db.session.query(SuporteChamado.nivel_urgencia, func.count(SuporteChamado.id))
+        .filter(SuporteChamado.id.in_(query.with_entities(SuporteChamado.id).subquery()))
         .group_by(SuporteChamado.nivel_urgencia)
         .all()
     )
+
+    # Métricas de tempo - Tempo médio até início de atendimento (em segundos)
+    tempo_medio_atendimento = (
+        db.session.query(
+            func.avg(
+                func.extract('epoch', SuporteChamado.inicio_atendimento_at) - 
+                func.extract('epoch', SuporteChamado.created_at)
+            )
+        )
+        .filter(SuporteChamado.inicio_atendimento_at.isnot(None))
+        .filter(SuporteChamado.id.in_(query.with_entities(SuporteChamado.id).subquery()))
+        .scalar()
+    )
+
+    # Tempo médio até encerramento (em segundos)
+    tempo_medio_encerramento = (
+        db.session.query(
+            func.avg(
+                func.extract('epoch', SuporteChamado.encerrado_at) - 
+                func.extract('epoch', SuporteChamado.created_at)
+            )
+        )
+        .filter(SuporteChamado.encerrado_at.isnot(None))
+        .filter(SuporteChamado.id.in_(query.with_entities(SuporteChamado.id).subquery()))
+        .scalar()
+    )
+
+    # Percentual de chamados atendidos em menos de 24 horas
+    total_com_atendimento = (
+        query.filter(SuporteChamado.inicio_atendimento_at.isnot(None)).count()
+    )
+    
+    if total_com_atendimento > 0:
+        atendidos_em_24h = (
+            query.filter(SuporteChamado.inicio_atendimento_at.isnot(None))
+            .filter(
+                func.extract('epoch', SuporteChamado.inicio_atendimento_at) - 
+                func.extract('epoch', SuporteChamado.created_at) < 86400
+            )
+            .count()
+        )
+        percentual_24h = (atendidos_em_24h / total_com_atendimento) * 100
+    else:
+        percentual_24h = 0
+
+    # Tempo médio por urgência
+    tempo_por_urgencia = []
+    for nivel in ["Baixo", "Médio", "Alto"]:
+        query_nivel = query.filter(SuporteChamado.nivel_urgencia == nivel)
+        
+        tempo_atend = (
+            db.session.query(
+                func.avg(
+                    func.extract('epoch', SuporteChamado.inicio_atendimento_at) - 
+                    func.extract('epoch', SuporteChamado.created_at)
+                )
+            )
+            .filter(SuporteChamado.inicio_atendimento_at.isnot(None))
+            .filter(SuporteChamado.id.in_(query_nivel.with_entities(SuporteChamado.id).subquery()))
+            .scalar()
+        )
+        
+        tempo_encer = (
+            db.session.query(
+                func.avg(
+                    func.extract('epoch', SuporteChamado.encerrado_at) - 
+                    func.extract('epoch', SuporteChamado.created_at)
+                )
+            )
+            .filter(SuporteChamado.encerrado_at.isnot(None))
+            .filter(SuporteChamado.id.in_(query_nivel.with_entities(SuporteChamado.id).subquery()))
+            .scalar()
+        )
+        
+        tempo_por_urgencia.append({
+            "nivel": nivel,
+            "tempo_atendimento": float(tempo_atend) if tempo_atend else 0,
+            "tempo_encerramento": float(tempo_encer) if tempo_encer else 0,
+        })
 
     return jsonify(
         {
@@ -407,6 +544,10 @@ def obter_indicadores():
                 {"nivel": nivel or "Não informado", "quantidade": quantidade}
                 for nivel, quantidade in por_urgencia
             ],
+            "tempo_medio_abertura_para_atendimento_segundos": float(tempo_medio_atendimento) if tempo_medio_atendimento else 0,
+            "tempo_medio_abertura_para_encerramento_segundos": float(tempo_medio_encerramento) if tempo_medio_encerramento else 0,
+            "percentual_atendidos_em_24h": round(percentual_24h, 2),
+            "tempo_medio_por_urgencia": tempo_por_urgencia,
         }
     )
 

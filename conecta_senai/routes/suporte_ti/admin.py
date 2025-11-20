@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from typing import Iterable
 
 from flask import Blueprint, jsonify, request, g
@@ -185,13 +185,17 @@ def atualizar_status_chamado(chamado_id: int):
     if not chamado:
         return jsonify({"erro": "Chamado não encontrado."}), 404
 
+    # Timezone de Brasília (UTC-3)
+    tz_brasilia = timezone(timedelta(hours=-3))
+    agora = datetime.now(tz_brasilia).replace(tzinfo=None)
+
     if status_normalizado == "Em Atendimento" and chamado.status == "Aberto" and not chamado.inicio_atendimento_at:
-        chamado.inicio_atendimento_at = datetime.utcnow()
+        chamado.inicio_atendimento_at = agora
     if status_normalizado in ("Finalizado", "Cancelado") and chamado.status == "Em Atendimento" and not chamado.encerrado_at:
-        chamado.encerrado_at = datetime.utcnow()
+        chamado.encerrado_at = agora
 
     chamado.status = status_normalizado
-    chamado.updated_at = datetime.utcnow()
+    chamado.updated_at = agora
 
     if "observacoes" in dados:
         valor_observacoes = dados.get("observacoes")
@@ -316,7 +320,9 @@ def atualizar_chamado(chamado_id: int):
     if not campos_atualizados:
         return jsonify({"erro": "Nenhum campo válido para atualização foi informado."}), 400
 
-    chamado.updated_at = datetime.utcnow()
+    # Timezone de Brasília (UTC-3)
+    tz_brasilia = timezone(timedelta(hours=-3))
+    chamado.updated_at = datetime.now(tz_brasilia).replace(tzinfo=None)
 
     try:
         db.session.commit()

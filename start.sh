@@ -3,7 +3,8 @@ set -euo pipefail
 
 export FLASK_APP="${FLASK_APP:-conecta_senai.main}"
 echo "[start] Running DB migrations..."
-SCHEDULER_ENABLED=${SCHEDULER_ENABLED:-0} flask db upgrade || true
+ls -la migrations/versions
+SCHEDULER_ENABLED=${SCHEDULER_ENABLED:-0} flask db upgrade
 echo "[start] Starting Gunicorn..."
 exec gunicorn "conecta_senai.main:create_app()" \
   --bind 0.0.0.0:${PORT:-8080} \

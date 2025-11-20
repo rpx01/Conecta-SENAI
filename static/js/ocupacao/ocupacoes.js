@@ -144,7 +144,7 @@ function renderizarOcupacoes(lista) {
             <td>${periodo}</td>
             <td>${turnoHorario}</td>
             <td>${sala}</td>
-            <td>${cursoEvento}</td>
+            <td><a href="#" class="curso-evento-link" onclick="abrirModalInstrutor('${identificador}'); return false;">${cursoEvento}</a></td>
             <td>${escapeHTML(tipoNome)}</td>
             <td>${statusBadge}</td>
             <td>
@@ -294,3 +294,90 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     aplicarFiltros();
 });
+
+// ===== Modal e funções de instrutor =====
+let instrutoresCache = [];
+let modalInstrutorBootstrap = null;
+
+async function carregarInstrutores() {
+    try {
+        const response = await fetch(`${API_URL}/instrutores?status=ativo`, {
+            headers: {
+                'Authorization': `Bearer ${obterToken()}`
+            }
+        });
+
+        if (response.ok) {
+            instrutoresCache = await response.json();
+            const select = document.getElementById('selectInstrutor');
+            if (select) {
+                select.innerHTML = '<option value="">Sem instrutor</option>';
+                instrutoresCache.forEach(instrutor => {
+                    const option = document.createElement('option');
+                    option.value = instrutor.id;
+                    option.textContent = instrutor.nome;
+                    select.appendChild(option);
+                });
+            }
+        } else {
+            console.error('Erro ao carregar instrutores:', response.statusText);
+        }
+    } catch (error) {
+        console.error('Erro ao carregar instrutores:', error);
+        showToast('Não foi possível carregar os instrutores.', 'danger');
+    }
+}
+
+function abrirModalInstrutor(ocupacaoId) {
+    document.getElementById('ocupacaoIdModal').value = ocupacaoId;
+
+    if (!modalInstrutorBootstrap) {
+        const modalElement = document.getElementById('modalInstrutorOcupacao');
+        if (modalElement) {
+            modalInstrutorBootstrap = new bootstrap.Modal(modalElement);
+        } else {
+            console.error('Modal element not found');
+            showToast('Erro: Modal não encontrado na página.', 'danger');
+            return;
+        }
+    }
+
+    if (instrutoresCache.length === 0) {
+        carregarInstrutores();
+    }
+
+    modalInstrutorBootstrap.show();
+}
+
+async function salvarInstrutorOcupacao() {
+    const ocupacaoId = document.getElementById('ocupacaoIdModal').value;
+    const instrutorId = document.getElementById('selectInstrutor').value;
+
+    try {
+        const response = await chamarAPI(`/ocupacoes/${ocupacaoId}/instrutor`, 'PATCH', {
+            instrutor_id: instrutorId || null
+        });
+
+        showToast('Instrutor atribuído com sucesso!', 'success');
+        if (modalInstrutorBootstrap) {
+            modalInstrutorBootstrap.hide();
+        }
+        await carregarOcupacoes();
+    } catch (error) {
+        console.error('Erro ao atribuir instrutor:', error);
+        const mensagem = error?.message || 'Não foi possível atribuir o instrutor.';
+        showToast(mensagem, 'danger');
+    }
+}
+
+// Adicionar event listener para o botão salvar quando o DOM estiver pronto
+document.addEventListener('DOMContentLoaded', () => {
+    const btnSalvar = document.getElementById('btnSalvarInstrutor');
+    if (btnSalvar) {
+        btnSalvar.addEventListener('click', salvarInstrutorOcupacao);
+    }
+});
+
+// Expor função globalmente para uso no onclick
+window.abrirModalInstrutor = abrirModalInstrutor;
+

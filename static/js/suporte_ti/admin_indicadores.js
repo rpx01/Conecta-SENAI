@@ -4,6 +4,8 @@
     let graficoStatus;
     let graficoTipos;
     let graficoUrgencia;
+    let graficoTempos;
+    let dadosBasedados = null;
 
     async function inicializar() {
         const autenticado = await verificarAutenticacao();
@@ -11,7 +13,9 @@
         const admin = await verificarPermissaoAdmin();
         if (!admin) return;
         atualizarNomeUsuario();
+        await carregarBasedados();
         await carregarIndicadores();
+        configurarEventosFiltros();
     }
 
     function atualizarNomeUsuario() {
@@ -24,11 +28,93 @@
         }
     }
 
-    async function carregarIndicadores() {
+    async function carregarBasedados() {
         try {
-            const dados = await chamarAPI('/suporte_ti/admin/indicadores');
+            dadosBasedados = await chamarAPI('/suporte_ti/basedados_formulario');
+            preencherFiltros(dadosBasedados);
+        } catch (error) {
+            console.error('Erro ao carregar base de dados:', error);
+        }
+    }
+
+    function preencherFiltros(dados) {
+        // Preencher áreas
+        const selectArea = document.getElementById('filtroArea');
+        if (selectArea && dados?.areas) {
+            dados.areas.forEach((area) => {
+                const option = document.createElement('option');
+                option.value = area;
+                option.textContent = area;
+                selectArea.appendChild(option);
+            });
+        }
+
+        // Preencher tipos de equipamento
+        const selectTipo = document.getElementById('filtroTipo');
+        if (selectTipo && dados?.tipos_equipamento) {
+            dados.tipos_equipamento.forEach((tipo) => {
+                const option = document.createElement('option');
+                option.value = tipo.id;
+                option.textContent = tipo.nome;
+                selectTipo.appendChild(option);
+            });
+        }
+    }
+
+    function configurarEventosFiltros() {
+        const btnAplicar = document.getElementById('btnAplicarFiltros');
+        const btnLimpar = document.getElementById('btnLimparFiltros');
+
+        if (btnAplicar) {
+            btnAplicar.addEventListener('click', aplicarFiltros);
+        }
+
+        if (btnLimpar) {
+            btnLimpar.addEventListener('click', limparFiltros);
+        }
+    }
+
+    async function aplicarFiltros() {
+        const params = new URLSearchParams();
+
+        const dataInicio = document.getElementById('filtroDataInicio')?.value;
+        const dataFim = document.getElementById('filtroDataFim')?.value;
+        const area = document.getElementById('filtroArea')?.value;
+        const tipo = document.getElementById('filtroTipo')?.value;
+        const urgencia = document.getElementById('filtroUrgencia')?.value;
+        const status = document.getElementById('filtroStatus')?.value;
+
+        if (dataInicio) params.append('data_inicio', dataInicio);
+        if (dataFim) params.append('data_fim', dataFim);
+        if (area) params.append('area', area);
+        if (tipo) params.append('tipo_equipamento_id', tipo);
+        if (urgencia) params.append('nivel_urgencia', urgencia);
+        if (status) params.append('status', status);
+
+        await carregarIndicadores(params.toString());
+    }
+
+    async function limparFiltros() {
+        document.getElementById('filtroDataInicio').value = '';
+        document.getElementById('filtroDataFim').value = '';
+        document.getElementById('filtroArea').value = '';
+        document.getElementById('filtroTipo').value = '';
+        document.getElementById('filtroUrgencia').value = '';
+        document.getElementById('filtroStatus').value = '';
+
+        await carregarIndicadores();
+    }
+
+    async function carregarIndicadores(queryParams = '') {
+        try {
+            const url = queryParams
+                ? `/suporte_ti/admin/indicadores?${queryParams}`
+                : '/suporte_ti/admin/indicadores';
+            const dados = await chamarAPI(url);
             atualizarCards(dados);
+            atualizarNovosCards(dados);
             montarGraficos(dados);
+            montarGraficoTempos(dados);
         } catch (error) {
             console.error(error);
         }
@@ -47,6 +133,46 @@
         if (indicadorTotal) indicadorTotal.textContent = total;
         if (indicadorAbertos) indicadorAbertos.textContent = abertos;
         if (indicadorFinalizados) indicadorFinalizados.textContent = finalizados;
+    }
+
+    function atualizarNovosCards(dados) {
+        // Tempo médio até atendimento
+        const tempoAtendimento = dados?.tempo_medio_abertura_para_atendimento_segundos || 0;
+        const { valor: valorAtend, unidade: unidadeAtend } = formatarTempo(tempoAtendimento);
+        const indicadorTempoAtendimento = document.getElementById('indicadorTempoAtendimento');
+        const unidadeTempoAtendimento = document.getElementById('unidadeTempoAtendimento');
+        if (indicadorTempoAtendimento) indicadorTempoAtendimento.textContent = valorAtend;
+        if (unidadeTempoAtendimento) unidadeTempoAtendimento.textContent = unidadeAtend;
+
+        // Tempo médio até encerramento
+        const tempoEncerramento = dados?.tempo_medio_abertura_para_encerramento_segundos || 0;
+        const { valor: valorEncer, unidade: unidadeEncer } = formatarTempo(tempoEncerramento);
+        const indicadorTempoEncerramento = document.getElementById('indicadorTempoEncerramento');
+        const unidadeTempoEncerramento = document.getElementById('unidadeTempoEncerramento');
+        if (indicadorTempoEncerramento) indicadorTempoEncerramento.textContent = valorEncer;
+        if (unidadeTempoEncerramento) unidadeTempoEncerramento.textContent = unidadeEncer;
+
+        // Percentual atendidos em 24h
+        const percentual24h = dados?.percentual_atendidos_em_24h || 0;
+        const indicadorSLA24h = document.getElementById('indicadorSLA24h');
+        if (indicadorSLA24h) indicadorSLA24h.textContent = percentual24h.toFixed(1);
+    }
+
+    function formatarTempo(segundos) {
+        if (segundos === 0) {
+            return { valor: '-', unidade: '' };
+        }
+
+        const horas = segundos / 3600;
+        if (horas < 1) {
+            const minutos = Math.round(segundos / 60);
+            return { valor: minutos, unidade: 'minutos' };
+        } else if (horas < 24) {
+            return { valor: horas.toFixed(1), unidade: 'horas' };
+        } else {
+            const dias = horas / 24;
+            return { valor: dias.toFixed(1), unidade: 'dias' };
+        }
     }
 
     function somarStatus(lista, chaves) {
@@ -114,6 +240,9 @@
                             },
                         },
                     },
+                    plugins: {
+                        legend: { display: false },
+                    },
                 },
             });
         }
@@ -146,6 +275,67 @@
                 },
             });
         }
+    }
+
+    function montarGraficoTempos(dados) {
+        const ctxTempos = document.getElementById('graficoTempos');
+        if (!ctxTempos) return;
+
+        const dadosTempos = dados?.tempo_medio_por_urgencia || [];
+
+        // Converter segundos para horas
+        const labelsNiveis = dadosTempos.map((item) => item.nivel);
+        const temposAtendimento = dadosTempos.map((item) => (item.tempo_atendimento / 3600).toFixed(2));
+        const temposEncerramento = dadosTempos.map((item) => (item.tempo_encerramento / 3600).toFixed(2));
+
+        if (graficoTempos) graficoTempos.destroy();
+
+        graficoTempos = new Chart(ctxTempos, {
+            type: 'bar',
+            data: {
+                labels: labelsNiveis,
+                datasets: [
+                    {
+                        label: 'Tempo até atendimento (horas)',
+                        data: temposAtendimento,
+                        backgroundColor: '#0dcaf0',
+                        borderColor: '#0dcaf0',
+                        borderWidth: 1,
+                    },
+                    {
+                        label: 'Tempo até encerramento (horas)',
+                        data: temposEncerramento,
+                        backgroundColor: '#6c757d',
+                        borderColor: '#6c757d',
+                        borderWidth: 1,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Tempo (horas)',
+                        },
+                    },
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return `${context.dataset.label}: ${context.parsed.y} horas`;
+                            },
+                        },
+                    },
+                },
+            },
+        });
     }
 
     document.addEventListener('DOMContentLoaded', inicializar);

@@ -44,6 +44,14 @@ def _serialize_chamado(chamado: SuporteChamado) -> dict:
         "status": chamado.status,
         "created_at": chamado.created_at.isoformat() if chamado.created_at else None,
         "updated_at": chamado.updated_at.isoformat() if chamado.updated_at else None,
+        "inicio_atendimento_at": (
+            chamado.inicio_atendimento_at.isoformat()
+            if chamado.inicio_atendimento_at
+            else None
+        ),
+        "encerrado_at": (
+            chamado.encerrado_at.isoformat() if chamado.encerrado_at else None
+        ),
         "observacoes": chamado.observacoes,
         "local_unidade": chamado.local_unidade,
         "anexos": [anexo.file_path for anexo in chamado.anexos],

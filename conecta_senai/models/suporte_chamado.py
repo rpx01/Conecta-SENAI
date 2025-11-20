@@ -33,6 +33,9 @@ class SuporteChamado(db.Model):
         onupdate=datetime.utcnow,
         nullable=False,
     )
+    # novos campos para registrar transições de status
+    inicio_atendimento_at = db.Column(db.DateTime, nullable=True)
+    encerrado_at = db.Column(db.DateTime, nullable=True)
 
     user = db.relationship("User", backref="suporte_chamados")
     tipo_equipamento = db.relationship("SuporteTipoEquipamento", backref="chamados")

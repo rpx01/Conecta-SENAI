@@ -1,0 +1,106 @@
+/* Global Styles & Overrides */
+
+:root {
+    --primary-color: #0066cc;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --info-color: #17a2b8;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    --accent-color: #0056b3;
+}
+
+/* Enhanced Footer Styles - Standardized across all pages */
+.enhanced-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    padding: 3rem 0 1.5rem;
+    margin-top: auto;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.footer-section h5 {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 1.2rem;
+    font-size: 1.1rem;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 0.8rem;
+}
+
+.footer-section ul li a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer-section ul li a:hover {
+    color: var(--primary-color);
+}
+
+.service-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--success-color);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    background-color: var(--success-color);
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
+    animation: pulse 2s infinite;
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(0,0,0,0.05);
+    padding-top: 1.5rem;
+    text-align: center;
+    color: #6c757d;
+}
+
+.footer-bottom p {
+    margin-bottom: 0.5rem;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); }
+    70% { box-shadow: 0 0 0 6px rgba(40, 167, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+/* UX Utilities */
+.btn-disabled-feature {
+    opacity: 0.6;
+    cursor: not-allowed !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}

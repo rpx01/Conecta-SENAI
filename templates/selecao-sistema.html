@@ -3,20 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seleção de Sistema - Conecta SENAI</title>
-    <meta name="description" content="Portal de seleção de sistemas do Conecta SENAI. Acesse laboratórios, treinamentos, notícias, suporte e gestão.">
+    <title>Seleção de Sistema - Sistema de Agenda de Laboratório</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/brand.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/styles.css">
-    <link rel="stylesheet" href="/static/css/selecao-sistema.css">
     <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAIEAYAAADIFSHsAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGYktHRAAAAAAAAPlDu38AAAAHdElNRQfpBgoBOhQj05UdAAADXUlEQVRIx92UbUzUdQDHP7/73zXgyjs6uPA8Kg82BgyYFDLNbt1YuWkOcqvZow8V4pouXYLQA3OSTHCGBBtl6RuaY7nVKtwCshU2EQRbK7BJhweUHOw87gTugfv/f72IttYbhRe59Xn/3b6f74uvsFpdrqam4ccBIK2DWyGRSNAe1Y7LfFjblWdZcQg2VjjrHKcheGGmLFoJ39T19nuq4KX3ntyYHYLwZ9FCNRcGbEMlXiukD6c6zQegs7TH5KkG+6b7ku+RMFY08W1wC/gGAlnhT2B3y7PHVo3AYdtHLT0GKGzLed9mg5ncuReijXCuqzc02giKouwXO27Z/l/4A7oF8c23nYkSQwMiRInB6oac6uXLQHVp3fIcBI7MPhx5HlIqLenGHkh6LfF0wna4kj9S7/saPMnX+wIDkOlytFqC8MzVJ5SMPZC119FniQNzeNlQXB8U3MjOSimGla22kyYV8iYziqz1kLIjadSYD9Yf7+1NMIAMy0xZu1jxv0k0LQxA2W1ndAgEiCThEdXQ++LPRde3grt2fHw6G9JrUucSi8HhsP9iPgOaTyuWd4N6VkuTN0GdVN+UzeCd8uXOlsLkO/7yuQdgnWvVyhWfgjESHzQkgLPpodX29XBjbfBgeBBcwwVj91+Eu07pm3XNIDvp4dpSxf+ps0TkZvbJzyGp3DwSPw0Pltl2m0YhWj7/lrofpk74j83lQNgebYhtg5QSi874FTh+tX9grofAczOm6Hpo93b/4K6BkTf+qAiYYPm2JI8xH7xW31NzVdB6vH3voAKqqtZrJyE+M67SUACzVaEP59uBt0Upa5Y+gH7RCQN6dCDShE+8C2fN5yfcW+DS5cGLE3qIbpiv0Log2DZ7JPI6nM+8/N24EwwX9BVKEELd4bZYB3T6e8qvbYXgyzNfRrbDgZKGNd/ng9KiuMXHMF8Tq9X6YfrKzRMRJwxYhgq9jaBoSp2YgtChyCNqKihduoO6XQC8upQhxF8nKOWikwo6BMhLDDIB8ieZIMtBbGCdcAAdtPA0yC+kX+4E+hnCCxwV+3gMyCNDJIP4XXSwC3DJV2gDeZVR/CBcFJAKwi3a2QkyKrOpBfkbY0yDOMwenCDOiKMUA2EixP7LAf4nLHyAP3Cni9wZYp1/AkYRW5V0uSBfAAAAAElFTkSuQmCC">
+    <link href="/static/css/styles.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Skip to content link for accessibility -->
-    <a href="#main-content" class="skip-to-content">Pular para o conteúdo principal</a>
-
-    <!-- Enhanced Navigation Header -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="#">
@@ -26,32 +20,15 @@
             <div class="ms-auto">
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
-                           data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu do usuário">
-                            <span class="user-status-indicator" aria-hidden="true"></span>
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle me-1"></i>
                             <span id="userName">Usuário</span>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end user-info-dropdown" aria-labelledby="userDropdown">
-                            <li class="px-3 py-2">
-                                <div class="fw-bold" id="userNameFull">Nome do Usuário</div>
-                                <small class="user-role-badge">Função/Papel</small>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="bi bi-gear"></i> Configurações
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="bi bi-translate"></i> Idioma
-                                </a>
-                            </li>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a class="dropdown-item" href="#" id="btnLogout">
-                                    <i class="bi bi-box-arrow-right"></i> Sair
+                                    <i class="bi bi-box-arrow-right me-2"></i> Sair
                                 </a>
                             </li>
                         </ul>
@@ -61,429 +38,190 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main id="main-content" class="container py-4">
+    <div class="container py-5">
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-8 text-center">
+                <h1 class="display-4 mb-4">Bem-vindo ao Portal de Sistemas</h1>
+                <p class="lead">Selecione o sistema que deseja acessar:</p>
+            </div>
+        </div>
+
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-4 text-center">
+                <div class="form-check d-inline-block">
+                    <input class="form-check-input" type="checkbox" id="rememberChoice">
+                    <label class="form-check-label" for="rememberChoice">Lembrar minha escolha</label>
+                </div>
+            </div>
+        </div>
         
-        <!-- Hero Section -->
-        <section class="hero-section">
-            <div class="hero-content text-center px-4">
-                <h1>Bem-vindo ao Portal de Sistemas</h1>
-                <p class="lead">
-                    Acesse os módulos integrados do Conecta SENAI para gestão de laboratórios, 
-                    treinamentos, comunicação institucional e suporte técnico.
-                </p>
-                <a href="#" id="quickAccessBtn" class="hero-cta" style="display: none;" aria-label="Acessar último módulo utilizado">
-                    <i class="bi bi-lightning-fill"></i>
-                    Acessar Último Módulo
-                </a>
-                <div class="hero-microcopy">
-                    <i class="bi bi-info-circle"></i>
-                    <a href="#" aria-label="Como alterar o módulo padrão">Como alterar o módulo padrão?</a> · 
-                    <a href="#" aria-label="Ver dicas de uso">Dicas de uso</a>
-                </div>
-            </div>
-        </section>
-
-        <!-- Search and Filter Section -->
-        <section class="filter-section">
-            <div class="search-wrapper">
-                <i class="bi bi-search search-icon" aria-hidden="true"></i>
-                <input type="text" 
-                       id="moduleSearch" 
-                       class="search-input" 
-                       placeholder="Buscar sistema por nome ou descrição..."
-                       aria-label="Buscar sistemas">
-                <span class="search-shortcut" aria-label="Atalho de teclado">/</span>
-            </div>
-
-            <div class="category-filters" role="group" aria-label="Filtrar por categoria">
-                <button class="category-filter-btn active" data-category="all" aria-pressed="true">
-                    Todos
-                </button>
-                <button class="category-filter-btn" data-category="operations" aria-pressed="false">
-                    <i class="bi bi-gear-fill"></i> Operações
-                </button>
-                <button class="category-filter-btn" data-category="communication" aria-pressed="false">
-                    <i class="bi bi-megaphone-fill"></i> Comunicação
-                </button>
-                <button class="category-filter-btn" data-category="support" aria-pressed="false">
-                    <i class="bi bi-headset"></i> Suporte
-                </button>
-                <button class="category-filter-btn" data-category="admin" aria-pressed="false">
-                    <i class="bi bi-shield-lock-fill"></i> Administração
-                </button>
-            </div>
-        </section>
-
-        <!-- Preference Toggle Section -->
-        <section class="preference-section">
-            <div class="toggle-switch-wrapper">
-                <div id="toggleSwitch" class="toggle-switch" role="switch" aria-checked="false" 
-                     aria-label="Lembrar minha escolha de módulo" tabindex="0">
-                    <div class="toggle-slider"></div>
-                </div>
-                <div>
-                    <p class="toggle-label">Lembrar minha escolha</p>
-                    <small class="toggle-microcopy" id="toggleMicrocopy">
-                        Ao ativar, o último módulo acessado será aberto automaticamente no próximo login. 
-                        Você pode desativar a qualquer momento.
-                    </small>
-                </div>
-            </div>
-            <a href="#" id="clearPreference" class="clear-preference-link" style="display: none;">
-                <i class="bi bi-x-circle"></i> Limpar preferência salva
-            </a>
-        </section>
-
-        <!-- Operations Category -->
-        <section class="category-section" data-category="operations">
-            <div class="category-header">
-                <div class="category-icon">
-                    <i class="bi bi-gear-fill"></i>
-                </div>
-                <h2>Operações</h2>
-                <span class="module-count">3</span>
-            </div>
-
-            <div class="row">
-                <!-- Agenda de Laboratórios -->
-                <div class="col-md-4 col-lg-4 col-sm-6 mb-4">
-                    <div class="module-card" 
-                         data-module-url="/laboratorios/calendario.html"
-                         data-module-name="Agenda de Laboratórios"
-                         data-module-description="Sistema para gerenciamento e agendamento de laboratórios, com visualização em calendário."
-                         data-module-category="operations">
-                        <div class="module-icon">
+        <div class="row justify-content-center">
+            <div class="col-md-5 mb-4">
+                <div class="card sistema-card h-100" data-url="/laboratorios/calendario.html">
+                    <div class="card-body text-center p-4 p-lg-5">
+                        <div class="sistema-icon">
                             <i class="bi bi-calendar-check"></i>
                         </div>
-                        <div class="module-header">
-                            <h3 class="module-name">Agenda de Laboratórios</h3>
-                        </div>
-                        <p class="module-description">
-                            Sistema para gerenciamento e agendamento de laboratórios, com visualização em calendário.
-                        </p>
-                        <div class="module-status">
-                            <span class="status-badge available">Disponível</span>
-                            <span class="keyboard-hint">Alt+1</span>
-                        </div>
-                        <div class="module-actions">
-                            <button class="btn-module-primary" aria-label="Entrar no módulo Agenda de Laboratórios">
-                                <i class="bi bi-box-arrow-in-right"></i>
-                                Entrar
-                            </button>
-                            <a href="#" class="btn-module-secondary" aria-label="Ver documentação">
-                                <i class="bi bi-book"></i>
-                                Documentação
-                            </a>
+                        <h2 class="card-title">Agenda de Laboratórios</h2>
+                        <p class="card-text">Sistema para gerenciamento e agendamento de laboratórios, com visualização em calendário.</p>
+                        <div class="mt-4">
+                            <span class="badge bg-success">Disponível</span>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Agenda de Treinamentos -->
-                <div class="col-md-4 col-lg-4 col-sm-6 mb-4">
-                    <div class="module-card" 
-                         data-module-url="/treinamentos/index.html"
-                         data-module-name="Agenda de Treinamentos"
-                         data-module-description="Módulo para programação e gestão de treinamentos por área técnica."
-                         data-module-category="operations">
-                        <div class="module-icon">
+            <div class="col-md-5 mb-4">
+                <div class="card sistema-card h-100" data-url="/treinamentos/index.html">
+                    <div class="card-body text-center p-4 p-lg-5">
+                        <div class="sistema-icon">
                             <i class="bi bi-easel2"></i>
                         </div>
-                        <div class="module-header">
-                            <h3 class="module-name">Agenda de Treinamentos</h3>
-                        </div>
-                        <p class="module-description">
-                            Módulo para programação e gestão de treinamentos por área técnica.
-                        </p>
-                        <div class="module-status">
-                            <span class="status-badge available">Disponível</span>
-                            <span class="keyboard-hint">Alt+2</span>
-                        </div>
-                        <div class="module-actions">
-                            <button class="btn-module-primary" aria-label="Entrar no módulo Agenda de Treinamentos">
-                                <i class="bi bi-box-arrow-in-right"></i>
-                                Entrar
-                            </button>
-                            <a href="#" class="btn-module-secondary" aria-label="Ver documentação">
-                                <i class="bi bi-book"></i>
-                                Documentação
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Controle de Ocupação de Salas -->
-                <div class="col-md-4 col-lg-4 col-sm-6 mb-4">
-                    <div class="module-card" 
-                         data-module-url="/ocupacao/dashboard.html"
-                         data-module-name="Controle de Ocupação de Salas"
-                         data-module-description="Sistema para monitoramento e controle de ocupação das salas de aula, com estatísticas de utilização."
-                         data-module-category="operations">
-                        <div class="module-icon">
-                            <i class="bi bi-building"></i>
-                        </div>
-                        <div class="module-header">
-                            <h3 class="module-name">Controle de Ocupação de Salas</h3>
-                        </div>
-                        <p class="module-description">
-                            Sistema para monitoramento e controle de ocupação das salas de aula, com estatísticas de utilização.
-                        </p>
-                        <div class="module-status">
-                            <span class="status-badge available">Disponível</span>
-                            <span class="keyboard-hint">Alt+3</span>
-                        </div>
-                        <div class="module-actions">
-                            <button class="btn-module-primary" aria-label="Entrar no módulo Controle de Ocupação de Salas">
-                                <i class="bi bi-box-arrow-in-right"></i>
-                                Entrar
-                            </button>
-                            <a href="#" class="btn-module-secondary" aria-label="Ver documentação">
-                                <i class="bi bi-book"></i>
-                                Documentação
-                            </a>
+                        <h2 class="card-title">Agenda de Treinamentos</h2>
+                        <p class="card-text">Módulo para programação e gestão de treinamentos por área técnica.</p>
+                        <div class="mt-4">
+                            <span class="badge bg-success">Disponível</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
 
-        <!-- Communication Category -->
-        <section class="category-section" data-category="communication">
-            <div class="category-header">
-                <div class="category-icon" style="background: var(--accent-color);">
-                    <i class="bi bi-megaphone-fill"></i>
-                </div>
-                <h2>Comunicação</h2>
-                <span class="module-count">1</span>
-            </div>
-
-            <div class="row">
-                <!-- Portal de Notícias -->
-                <div class="col-md-4 col-lg-4 col-sm-6 mb-4">
-                    <div class="module-card" 
-                         data-module-url="/noticias/index.html"
-                         data-module-name="Portal de Notícias"
-                         data-module-description="Acompanhe comunicados institucionais, destaques e aniversariantes do mês."
-                         data-module-category="communication">
-                        <div class="module-icon" style="background: linear-gradient(135deg, var(--accent-color), var(--info-color));">
+            <div class="col-md-5 mb-4">
+                <div class="card sistema-card h-100" data-url="/noticias/index.html">
+                    <div class="card-body text-center p-4 p-lg-5">
+                        <div class="sistema-icon">
                             <i class="bi bi-newspaper"></i>
                         </div>
-                        <div class="module-header">
-                            <h3 class="module-name">Portal de Notícias</h3>
-                        </div>
-                        <p class="module-description">
-                            Acompanhe comunicados institucionais, destaques e aniversariantes do mês.
-                        </p>
-                        <div class="module-status">
-                            <span class="status-badge available">Disponível</span>
-                            <span class="keyboard-hint">Alt+4</span>
-                        </div>
-                        <div class="module-actions">
-                            <button class="btn-module-primary" aria-label="Entrar no Portal de Notícias">
-                                <i class="bi bi-box-arrow-in-right"></i>
-                                Entrar
-                            </button>
-                            <a href="#" class="btn-module-secondary" aria-label="Ver documentação">
-                                <i class="bi bi-book"></i>
-                                Documentação
-                            </a>
+                        <h2 class="card-title">Portal de Notícias</h2>
+                        <p class="card-text">Acompanhe comunicados institucionais, destaques e aniversariantes do mês.</p>
+                        <div class="mt-4">
+                            <span class="badge bg-success">Disponível</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
 
-        <!-- Support Category -->
-        <section class="category-section" data-category="support">
-            <div class="category-header">
-                <div class="category-icon" style="background: var(--success-color);">
-                    <i class="bi bi-headset"></i>
+            <div class="col-md-5 mb-4">
+                <div class="card sistema-card h-100" data-url="/ocupacao/dashboard.html">
+                    <div class="card-body text-center p-4 p-lg-5">
+                        <div class="sistema-icon">
+                            <i class="bi bi-building"></i>
+                        </div>
+                        <h2 class="card-title">Controle de Ocupação de Salas de Aula</h2>
+                        <p class="card-text">Sistema para monitoramento e controle de ocupação das salas de aula, com estatísticas de utilização.</p>
+                        <div class="mt-4">
+                            <span class="badge bg-success">Disponível</span>
+                        </div>
+                    </div>
                 </div>
-                <h2>Suporte</h2>
-                <span class="module-count">1</span>
             </div>
-
-            <div class="row">
-                <!-- Suporte de TI -->
-                <div class="col-md-4 col-lg-4 col-sm-6 mb-4">
-                    <div class="module-card" 
-                         data-module-url="/suporte_ti/abertura.html"
-                         data-module-name="Suporte de TI"
-                         data-module-description="Abra chamados técnicos e acompanhe solicitações de suporte ao parque de TI."
-                         data-module-category="support">
-                        <div class="module-icon" style="background: linear-gradient(135deg, var(--success-color), #00a550);">
+            <div class="col-md-5 mb-4">
+                <div class="card sistema-card h-100" data-url="/suporte_ti/abertura.html">
+                    <div class="card-body text-center p-4 p-lg-5">
+                        <div class="sistema-icon">
                             <i class="bi bi-headset"></i>
                         </div>
-                        <div class="module-header">
-                            <h3 class="module-name">Suporte de TI</h3>
-                        </div>
-                        <p class="module-description">
-                            Abra chamados técnicos e acompanhe solicitações de suporte ao parque de TI.
-                        </p>
-                        <div class="module-status">
-                            <span class="status-badge available">Disponível</span>
-                            <span class="keyboard-hint">Alt+5</span>
-                        </div>
-                        <div class="module-actions">
-                            <button class="btn-module-primary" aria-label="Entrar no módulo Suporte de TI">
-                                <i class="bi bi-box-arrow-in-right"></i>
-                                Entrar
-                            </button>
-                            <a href="#" class="btn-module-secondary" aria-label="Ver documentação">
-                                <i class="bi bi-book"></i>
-                                Documentação
-                            </a>
+                        <h2 class="card-title">Suporte de TI</h2>
+                        <p class="card-text">Abra chamados técnicos e acompanhe solicitações de suporte ao parque de TI.</p>
+                        <div class="mt-4">
+                            <span class="badge bg-success">Disponível</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
-
-        <!-- Administration Category (Admin Only) -->
-        <section class="category-section admin-only" data-category="admin">
-            <div class="category-header">
-                <div class="category-icon" style="background: var(--danger-color);">
-                    <i class="bi bi-shield-lock-fill"></i>
-                </div>
-                <h2>Administração</h2>
-                <span class="module-count">2</span>
-            </div>
-
-            <div class="row">
-                <!-- Controle de Rateio -->
-                <div class="col-md-4 col-lg-4 col-sm-6 mb-4">
-                    <div class="module-card" 
-                         data-module-url="/rateio/dashboard.html"
-                         data-module-name="Controle de Rateio"
-                         data-module-description="Módulo para apuração de horas de instrutores e rateio de custos."
-                         data-module-category="admin">
-                        <div class="module-icon" style="background: linear-gradient(135deg, var(--danger-color), #ff4444);">
+            <div class="col-md-5 mb-4 admin-only">
+                <div class="card sistema-card h-100" data-url="/rateio/dashboard.html">
+                    <div class="card-body text-center p-4 p-lg-5">
+                        <div class="sistema-icon">
                             <i class="bi bi-coin"></i>
                         </div>
-                        <div class="module-header">
-                            <h3 class="module-name">Controle de Rateio</h3>
-                        </div>
-                        <p class="module-description">
-                            Módulo para apuração de horas de instrutores e rateio de custos.
-                        </p>
-                        <div class="module-status">
-                            <span class="status-badge available">Disponível</span>
-                            <span class="keyboard-hint">Alt+6</span>
-                        </div>
-                        <div class="module-actions">
-                            <button class="btn-module-primary" aria-label="Entrar no módulo Controle de Rateio">
-                                <i class="bi bi-box-arrow-in-right"></i>
-                                Entrar
-                            </button>
-                            <a href="#" class="btn-module-secondary" aria-label="Ver documentação">
-                                <i class="bi bi-book"></i>
-                                Documentação
-                            </a>
+                        <h2 class="card-title">Controle de Rateio</h2>
+                        <p class="card-text">Módulo para apuração de horas de instrutores e rateio de custos.</p>
+                        <div class="mt-4">
+                            <span class="badge bg-success">Disponível</span>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Gerenciamento de Usuários -->
-                <div class="col-md-4 col-lg-4 col-sm-6 mb-4">
-                    <div class="module-card" 
-                         data-module-url="/admin/usuarios.html"
-                         data-module-name="Gerenciamento de Usuários"
-                         data-module-description="Acesse a área de cadastro, edição e controle de permissões de usuários do sistema."
-                         data-module-category="admin">
-                        <div class="module-icon" style="background: linear-gradient(135deg, var(--danger-color), #ff4444);">
+            <div class="col-md-5 mb-4 admin-only">
+                <div class="card sistema-card h-100" data-url="/admin/usuarios.html">
+                    <div class="card-body text-center p-4 p-lg-5">
+                        <div class="sistema-icon">
                             <i class="bi bi-person-gear"></i>
                         </div>
-                        <div class="module-header">
-                            <h3 class="module-name">Gerenciamento de Usuários</h3>
-                        </div>
-                        <p class="module-description">
-                            Acesse a área de cadastro, edição e controle de permissões de usuários do sistema.
-                        </p>
-                        <div class="module-status">
-                            <span class="status-badge available">Disponível</span>
-                            <span class="keyboard-hint">Alt+7</span>
-                        </div>
-                        <div class="module-actions">
-                            <button class="btn-module-primary" aria-label="Entrar no módulo Gerenciamento de Usuários">
-                                <i class="bi bi-box-arrow-in-right"></i>
-                                Entrar
-                            </button>
-                            <a href="#" class="btn-module-secondary" aria-label="Ver documentação">
-                                <i class="bi bi-book"></i>
-                                Documentação
-                            </a>
+                        <h2 class="card-title">Gerenciamento de Usuários</h2>
+                        <p class="card-text">Acesse a área de cadastro, edição e controle de permissões de usuários do sistema.</p>
+                        <div class="mt-4">
+                            <span class="badge bg-success">Disponível</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
-
-        <!-- No Results Message -->
-        <div id="noResults" class="no-results" style="display: none;">
-            <i class="bi bi-search"></i>
-            <h3>Nenhum sistema encontrado</h3>
-            <p>Tente ajustar sua busca ou limpar os filtros.</p>
-            <button class="clear-filters-btn" onclick="clearSearchAndFilters()">
-                <i class="bi bi-x-circle"></i> Limpar Filtros
-            </button>
         </div>
+    </div>
+    
+<footer class="mt-5 py-3 bg-dark text-white text-center">
+    <div class="container">
+        <p class="mb-0">Sistema FIEMG | O futuro se faz juntos.</p>
+    </div>
+</footer>
 
-    </main>
-
-    <!-- Enhanced Footer -->
-    <footer class="enhanced-footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-section">
-                    <h5>Suporte</h5>
-                    <ul>
-                        <li><a href="/suporte_ti/abertura.html">Abrir Chamado</a></li>
-                        <li><a href="#">Central de Ajuda</a></li>
-                        <li><a href="#">FAQ</a></li>
-                        <li><a href="#">Tutoriais em Vídeo</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h5>Recursos</h5>
-                    <ul>
-                        <li><a href="#">Documentação</a></li>
-                        <li><a href="#">Guia de Uso</a></li>
-                        <li><a href="#">Novidades</a></li>
-                        <li><a href="#">Changelog</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h5>Políticas</h5>
-                    <ul>
-                        <li><a href="#">Privacidade</a></li>
-                        <li><a href="#">Termos de Uso</a></li>
-                        <li><a href="#">Segurança da Informação</a></li>
-                        <li><a href="#">Código de Conduta</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h5>Status do Sistema</h5>
-                    <div class="service-status">
-                        <span class="status-indicator" aria-label="Status: Operacional"></span>
-                        <span>Todos os sistemas operacionais</span>
-                    </div>
-                    <ul>
-                        <li><a href="#">Página de Status</a></li>
-                        <li><a href="#">Manutenções Programadas</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>© 2025 Sistema FIEMG | Conecta SENAI &middot; O futuro se faz juntos.</p>
-                <p><small>Versão 2.0.0 | Desenvolvido com ❤️ pela Equipe de TI</small></p>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.4/dist/purify.min.js"></script>
     <script src="/js/app.js"></script>
-    <script src="/static/js/selecao-sistema.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Apenas verifica se o usuário está logado
+            if (!verificarAutenticacao()) return;
+
+            // Atualiza o nome do usuário na navbar
+            const usuario = getUsuarioLogado();
+            if (usuario) {
+                document.getElementById('userName').textContent = usuario.nome;
+                const modulosDisponiveis = new Set(obterModulosDisponiveis(usuario));
+                document.querySelectorAll('.sistema-card').forEach(card => {
+                    const urlNormalizada = normalizarUrlModulo(card.getAttribute('data-url'));
+                    if (!urlNormalizada) {
+                        return;
+                    }
+
+                    if (!modulosDisponiveis.has(urlNormalizada)) {
+                        card.closest('.col-md-5').style.display = 'none';
+                    }
+                });
+            }
+
+            // LÓGICA PARA OCULTAR OS CARDS DE ADMIN PARA USUÁRIOS COMUNS
+            if (!isAdmin()) {
+                document.querySelectorAll('.admin-only').forEach(el => {
+                    el.style.display = 'none';
+                });
+            }
+
+            // Configura o botão de logout
+            document.getElementById('btnLogout').addEventListener('click', function(e) {
+                e.preventDefault();
+                realizarLogout();
+            });
+
+            const rememberCheckbox = document.getElementById('rememberChoice');
+            if (localStorage.getItem('moduloSelecionado')) {
+                rememberCheckbox.checked = true;
+            }
+
+            document.querySelectorAll('.sistema-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const url = card.getAttribute('data-url');
+                    if (rememberCheckbox.checked) {
+                        localStorage.setItem('moduloSelecionado', url);
+                    } else {
+                        localStorage.removeItem('moduloSelecionado');
+                    }
+                    window.location.href = url;
+                });
+            });
+        });
+    </script>
 </body>
 </html>
